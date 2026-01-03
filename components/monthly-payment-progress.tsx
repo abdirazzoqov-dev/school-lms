@@ -1,0 +1,100 @@
+'use client'
+
+import { Progress } from '@/components/ui/progress'
+import { Badge } from '@/components/ui/badge'
+import { CheckCircle2, Clock, AlertCircle } from 'lucide-react'
+import { formatMoney, getMonthNameUz } from '@/lib/utils/payment-helper'
+
+interface MonthlyPaymentProgressProps {
+  month: number
+  year: number
+  monthlyTuitionFee: number
+  totalPaid: number
+  remainingAmount: number
+  percentagePaid: number
+  isFullyPaid: boolean
+  dueDate: Date
+  paymentCount?: number
+}
+
+export function MonthlyPaymentProgress({
+  month,
+  year,
+  monthlyTuitionFee,
+  totalPaid,
+  remainingAmount,
+  percentagePaid,
+  isFullyPaid,
+  dueDate,
+  paymentCount = 0
+}: MonthlyPaymentProgressProps) {
+  const monthName = getMonthNameUz(month)
+  const isOverdue = new Date() > dueDate && !isFullyPaid
+  
+  return (
+    <div className="space-y-3 p-4 border rounded-lg">
+      <div className="flex items-center justify-between">
+        <div>
+          <h4 className="font-semibold text-sm">
+            {monthName} {year}
+          </h4>
+          <p className="text-xs text-muted-foreground">
+            Muddat: {dueDate.toLocaleDateString('uz-UZ')}
+          </p>
+        </div>
+        {isFullyPaid ? (
+          <Badge className="bg-green-500">
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            To'landi
+          </Badge>
+        ) : isOverdue ? (
+          <Badge variant="destructive">
+            <AlertCircle className="h-3 w-3 mr-1" />
+            Kechikkan
+          </Badge>
+        ) : (
+          <Badge variant="secondary">
+            <Clock className="h-3 w-3 mr-1" />
+            Kutilmoqda
+          </Badge>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm">
+          <span>To'langan:</span>
+          <span className="font-semibold">
+            {formatMoney(totalPaid)} so'm
+          </span>
+        </div>
+        
+        <Progress value={percentagePaid} className="h-2" />
+        
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">
+            {percentagePaid}% to'landi
+          </span>
+          <span className="text-muted-foreground">
+            {formatMoney(monthlyTuitionFee)} so'm
+          </span>
+        </div>
+
+        {!isFullyPaid && (
+          <div className="flex justify-between text-sm pt-2 border-t">
+            <span className="text-orange-600 font-medium">Qarz:</span>
+            <span className="text-orange-600 font-semibold">
+              {formatMoney(remainingAmount)} so'm
+            </span>
+          </div>
+        )}
+
+        {paymentCount > 1 && (
+          <p className="text-xs text-muted-foreground">
+            {paymentCount} ta to'lov amalga oshirildi
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+

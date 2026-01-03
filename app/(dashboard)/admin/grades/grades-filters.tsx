@@ -1,0 +1,221 @@
+'use client'
+
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Filter, X } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+
+interface Class {
+  id: string
+  name: string
+  _count: {
+    students: number
+  }
+}
+
+interface Subject {
+  id: string
+  name: string
+  code: string
+}
+
+interface GradesFiltersProps {
+  classes: Class[]
+  subjects: Subject[]
+  searchParams: {
+    classId?: string
+    subjectId?: string
+    quarter?: string
+    gradeType?: string
+    academicYear?: string
+  }
+  academicYear: string
+}
+
+export function GradesFilters({ classes, subjects, searchParams, academicYear }: GradesFiltersProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const urlSearchParams = useSearchParams()
+
+  const updateSearchParams = (key: string, value: string) => {
+    const params = new URLSearchParams(urlSearchParams.toString())
+    if (value && value !== 'all') {
+      params.set(key, value)
+    } else {
+      params.delete(key)
+    }
+    router.push(`${pathname}?${params.toString()}`)
+  }
+
+  const clearFilters = () => {
+    router.push(`${pathname}?academicYear=${academicYear}`)
+  }
+
+  const hasActiveFilters = searchParams.classId || searchParams.subjectId || 
+    searchParams.quarter || searchParams.gradeType
+
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="font-semibold text-sm">Filterlar</span>
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="h-7"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Tozalash
+              </Button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            {/* Academic Year */}
+            <div className="space-y-2">
+              <Label className="text-xs">O'quv yili</Label>
+              <Select
+                value={searchParams.academicYear || academicYear}
+                onValueChange={(value) => updateSearchParams('academicYear', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2024-2025">2024-2025</SelectItem>
+                  <SelectItem value="2023-2024">2023-2024</SelectItem>
+                  <SelectItem value="2022-2023">2022-2023</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Class Filter */}
+            <div className="space-y-2">
+              <Label className="text-xs">Sinf</Label>
+              <Select
+                value={searchParams.classId || 'all'}
+                onValueChange={(value) => updateSearchParams('classId', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Barcha sinflar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Barcha sinflar</SelectItem>
+                  {classes.map((cls) => (
+                    <SelectItem key={cls.id} value={cls.id}>
+                      {cls.name} ({cls._count.students} o'quvchi)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Subject Filter */}
+            <div className="space-y-2">
+              <Label className="text-xs">Fan</Label>
+              <Select
+                value={searchParams.subjectId || 'all'}
+                onValueChange={(value) => updateSearchParams('subjectId', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Barcha fanlar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Barcha fanlar</SelectItem>
+                  {subjects.map((subject) => (
+                    <SelectItem key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Quarter Filter */}
+            <div className="space-y-2">
+              <Label className="text-xs">Chorak</Label>
+              <Select
+                value={searchParams.quarter || 'all'}
+                onValueChange={(value) => updateSearchParams('quarter', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Barcha choraklar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Barcha choraklar</SelectItem>
+                  <SelectItem value="1">1-chorak</SelectItem>
+                  <SelectItem value="2">2-chorak</SelectItem>
+                  <SelectItem value="3">3-chorak</SelectItem>
+                  <SelectItem value="4">4-chorak</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Grade Type Filter */}
+            <div className="space-y-2">
+              <Label className="text-xs">Baho turi</Label>
+              <Select
+                value={searchParams.gradeType || 'all'}
+                onValueChange={(value) => updateSearchParams('gradeType', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Barcha turlar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Barcha turlar</SelectItem>
+                  <SelectItem value="ORAL">Og'zaki</SelectItem>
+                  <SelectItem value="WRITTEN">Yozma</SelectItem>
+                  <SelectItem value="TEST">Test</SelectItem>
+                  <SelectItem value="EXAM">Imtihon</SelectItem>
+                  <SelectItem value="QUARTER">Chorak</SelectItem>
+                  <SelectItem value="FINAL">Yillik</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Active Filters Display */}
+          {hasActiveFilters && (
+            <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
+              <span className="text-xs text-muted-foreground">Faol filterlar:</span>
+              {searchParams.classId && (
+                <Badge variant="secondary">
+                  {classes.find(c => c.id === searchParams.classId)?.name}
+                </Badge>
+              )}
+              {searchParams.subjectId && (
+                <Badge variant="secondary">
+                  {subjects.find(s => s.id === searchParams.subjectId)?.name}
+                </Badge>
+              )}
+              {searchParams.quarter && (
+                <Badge variant="secondary">
+                  {searchParams.quarter}-chorak
+                </Badge>
+              )}
+              {searchParams.gradeType && (
+                <Badge variant="secondary">
+                  {searchParams.gradeType}
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+

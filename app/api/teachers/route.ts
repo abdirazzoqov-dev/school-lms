@@ -1,0 +1,40 @@
+import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { db } from '@/lib/db'
+
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || !session.user.tenantId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const tenantId = session.user.tenantId
+
+    const teachers = await db.teacher.findMany({
+      where: {
+        tenantId,
+      },
+      include: {
+        user: {
+          select: {
+            fullName: true,
+            email: true,
+            phone: true,
+          }
+        }
+      },
+      orderBy: {
+        teacherCode: 'asc'
+      }
+    })
+
+    return NextResponse.json({ teachers })
+  } catch (error) {
+    console.error('Get teachers error:', error)
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+  }
+}
+

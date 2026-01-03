@@ -1,0 +1,1323 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Connection pooling (Production)
+  // directUrl = env("DIRECT_URL")    // Vaqtincha comment (IPv4 muammosi)
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  SUPER_ADMIN // Siz - tizim egasi, barcha maktablarni boshqaradi
+  ADMIN // Maktab administratori - o'z maktabini boshqaradi
+  MODERATOR // Moderator - cheklangan ruxsatlar bilan boshqaradi
+  TEACHER // O'qituvchi
+  PARENT // Ota-ona
+  STUDENT // O'quvchi (Phase 3)
+  COOK // Oshpaz - oshxona xodimi
+}
+
+enum TenantStatus {
+  TRIAL // Bepul sinov davri (30 kun)
+  ACTIVE // Faol - to'lov qilingan
+  GRACE_PERIOD // 7 kunlik muhlat - ogohlantirish ko'rsatiladi
+  SUSPENDED // To'xtatilgan - faqat to'lov sahifasiga kiradi
+  BLOCKED // Bloklangan - umuman kira olmaydi
+}
+
+enum SubscriptionPlan {
+  BASIC // 500,000 so'm/oy - 50 o'quvchi
+  STANDARD // 1,000,000 so'm/oy - 200 o'quvchi
+  PREMIUM // 2,000,000 so'm/oy - unlimited
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum AttendanceStatus {
+  PRESENT // Bor
+  ABSENT // Yo'q
+  LATE // Kech keldi
+  EXCUSED // Sababli
+}
+
+enum GradeType {
+  ORAL // Og'zaki
+  WRITTEN // Yozma
+  TEST // Test
+  EXAM // Imtihon
+  QUARTER // Chorak
+  FINAL // Yillik
+}
+
+enum PaymentMethod {
+  CASH // Naqd (MVP)
+  CLICK // Click (Phase 2)
+  PAYME // Payme (Phase 2)
+  UZUM // Uzum (Phase 2)
+}
+
+enum PaymentStatus {
+  PENDING // Kutilmoqda
+  PARTIALLY_PAID // Qisman to'langan (bo'lib-bo'lib to'lash)
+  COMPLETED // To'langan
+  FAILED // Muvaffaqiyatsiz
+  REFUNDED // Qaytarilgan
+}
+
+enum PaymentType {
+  TUITION // O'qish haqi
+  BOOKS // Darsliklar
+  UNIFORM // Forma
+  OTHER // Boshqa
+}
+
+enum MessageStatus {
+  SENT
+  READ
+}
+
+enum NotificationType {
+  GRADE // Yangi baho
+  ATTENDANCE // Davomat
+  PAYMENT // To'lov
+  ANNOUNCEMENT // E'lon
+  MESSAGE // Xabar
+  SYSTEM // Tizim
+}
+
+enum GuardianType {
+  FATHER // Ota
+  MOTHER // Ona
+  OTHER // Boshqa qarindosh (qo'lda kiritiladi)
+}
+
+// ============================================
+// CORE MODELS
+// ============================================
+
+// TENANT - Maktablar (Multi-tenant architecture)
+model Tenant {
+  id      String  @id @default(cuid())
+  name    String
+  slug    String  @unique // subdomain uchun: maktab1.lms.uz
+  logo    String?
+  address String?
+  phone   String?
+  email   String?
+
+  // Subscription Management - Blocking mexanizmi uchun
+  status            TenantStatus     @default(TRIAL)
+  subscriptionPlan  SubscriptionPlan @default(BASIC)
+  subscriptionStart DateTime?
+  subscriptionEnd   DateTime? // Subscription tugash sanasi
+  trialEndsAt       DateTime? // Trial tugash sanasi
+
+  // Limits based on plan
+  maxStudents Int @default(50) // BASIC: 50, STANDARD: 200, PREMIUM: 9999
+  maxTeachers Int @default(10) // BASIC: 10, STANDARD: 30, PREMIUM: 9999
+
+  // Settings
+  settings Json? // Maktab sozlamalari (JSON)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  users                    User[]
+  students                 Student[]
+  parents                  Parent[]
+  teachers                 Teacher[]
+  cooks                    Cook[]
+  classes                  Class[]
+  subjects                 Subject[]
+  schedules                Schedule[]
+  attendances              Attendance[]
+  grades                   Grade[]
+  assignments              Assignment[]
+  materials                Material[]
+  payments                 Payment[]
+  permissions              Permission[] // Moderator permissions
+  paymentPlans             PaymentPlan[]
+  messages                 Message[]
+  announcements            Announcement[]
+  notifications            Notification[]
+  activityLogs             ActivityLog[]
+  subscriptionPayments     SubscriptionPayment[]
+  expenseCategories        ExpenseCategory[]
+  expenses                 Expense[]
+  kitchenExpenseCategories KitchenExpenseCategory[]
+  kitchenExpenses          KitchenExpense[]
+  dormitoryBuildings       DormitoryBuilding[]
+  dormitoryRooms           DormitoryRoom[]
+  dormitoryBeds            DormitoryBed[]
+  dormitoryAssignments     DormitoryAssignment[]
+  salaryPayments           SalaryPayment[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([subscriptionPlan])
+  @@index([subscriptionEnd])
+  @@index([trialEndsAt])
+  @@index([createdAt])
+  @@index([status, subscriptionPlan])
+}
+
+// GLOBAL SETTINGS - Super Admin tomonidan boshqariladigan platform sozlamalari
+model GlobalSettings {
+  id String @id @default(cuid())
+
+  // Platform details
+  platformName        String  @default("School LMS")
+  platformDescription String  @default("Maktablar uchun zamonaviy boshqaruv tizimi")
+  supportPhone        String  @default("+998 71 123 45 67")
+  supportEmail        String?
+
+  // System settings
+  defaultLanguage    String  @default("uz")
+  timezone           String  @default("Asia/Tashkent")
+  maintenanceMode    Boolean @default(false)
+  maintenanceMessage String?
+
+  // Additional settings (JSON for flexibility)
+  settings Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// GLOBAL SUBSCRIPTION PLANS - Super Admin tomonidan boshqariladigan tarif rejalar
+model GlobalSubscriptionPlan {
+  id String @id @default(cuid())
+
+  // Plan details
+  planType    SubscriptionPlan @unique
+  name        String // "BASIC", "STANDARD", "PREMIUM"
+  displayName String // "Asosiy", "Standart", "Premium"
+  price       Decimal          @db.Decimal(10, 2)
+  description String?          @db.Text
+
+  // Limits
+  maxStudents Int
+  maxTeachers Int
+
+  // Features (JSON array of feature descriptions)
+  features Json
+
+  // Status
+  isActive  Boolean @default(true)
+  isPopular Boolean @default(false)
+
+  // Metadata
+  displayOrder Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([planType])
+  @@index([isActive])
+}
+
+// SUBSCRIPTION PAYMENTS - Sizning daromadingiz (Super Admin uchun)
+model SubscriptionPayment {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  amount        Decimal          @db.Decimal(10, 2)
+  plan          SubscriptionPlan
+  paymentMethod PaymentMethod    @default(CASH)
+
+  // Payment details
+  paymentDate DateTime?
+  dueDate     DateTime
+  paidBy      String? // Admin kim to'lagan
+  notes       String?
+
+  status PaymentStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+// USER - Barcha foydalanuvchilar
+model User {
+  id       String  @id @default(cuid())
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String? // Null for SUPER_ADMIN
+
+  email        String  @unique
+  phone        String?
+  passwordHash String
+  fullName     String
+  avatar       String?
+
+  role      UserRole
+  isActive  Boolean   @default(true)
+  lastLogin DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  student                     Student?
+  teacher                     Teacher?
+  parent                      Parent?
+  cook                        Cook?
+  sentMessages                Message[]             @relation("MessageSender")
+  receivedMessages            Message[]             @relation("MessageReceiver")
+  announcements               Announcement[]
+  notifications               Notification[]
+  activityLogs                ActivityLog[]
+  paymentsReceived            Payment[]             @relation("PaymentReceiver")
+  expensesPaid                Expense[]
+  dormitoryAssignmentsCreated DormitoryAssignment[]
+  permissions                 Permission[] // Moderator permissions
+  staffSalaryPayments         SalaryPayment[]       @relation("StaffSalary")
+  paidSalaries                SalaryPayment[]       @relation("SalaryPaidBy")
+
+  @@index([email])
+  @@index([tenantId])
+  @@index([role])
+  @@index([isActive])
+  @@index([tenantId, role])
+  @@index([tenantId, isActive])
+  @@index([createdAt])
+}
+
+// PERMISSION - Moderator ruxsatlari
+model Permission {
+  id       String @id @default(cuid())
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String // Moderator userId
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  // Resource va Action
+  resource String // Masalan: 'students', 'teachers', 'payments', 'expenses', 'attendance', 'grades'
+  action   String // 'CREATE', 'READ', 'UPDATE', 'DELETE'
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, tenantId, resource, action])
+  @@index([userId])
+  @@index([tenantId])
+  @@index([resource])
+  @@index([tenantId, resource])
+  @@index([userId, tenantId])
+}
+
+// STUDENT - O'quvchilar
+model Student {
+  id       String  @id @default(cuid())
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  user     User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId   String? @unique // Phase 3da qo'shiladi
+
+  studentCode String // Unique per tenant
+  dateOfBirth DateTime
+  gender      Gender
+  address     String?
+  medicalInfo Json?
+  documents   Json? // Shartnomalar, arizalar
+
+  // Class assignment
+  class   Class?  @relation(fields: [classId], references: [id], onDelete: SetNull)
+  classId String?
+
+  enrollmentDate DateTime @default(now())
+  status         String   @default("ACTIVE") // ACTIVE, GRADUATED, EXPELLED
+
+  // Trial Period (Sinov muddati)
+  trialEnabled   Boolean   @default(false) // Sinov rejimi yoqilganmi
+  trialStartDate DateTime? // Sinov boshlanish sanasi
+  trialEndDate   DateTime? // Sinov tugash sanasi
+  trialDays      Int? // Sinov davomiyligi (kunlarda)
+
+  // Payment Info (To'lov ma'lumotlari)
+  monthlyTuitionFee Decimal? @db.Decimal(10, 2) // Oylik o'qish to'lovi
+  paymentDueDay     Int?     @default(5) // Har oydagi to'lov sanasi (1-31)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  parents               StudentParent[]
+  attendances           Attendance[]
+  grades                Grade[]
+  assignmentSubmissions AssignmentSubmission[]
+  payments              Payment[]
+  dormitoryAssignment   DormitoryAssignment?
+
+  @@unique([tenantId, studentCode])
+  @@index([tenantId])
+  @@index([userId])
+  @@index([classId])
+  @@index([studentCode])
+  @@index([status])
+  @@index([enrollmentDate])
+  @@index([tenantId, status])
+  @@index([tenantId, classId])
+  @@index([createdAt])
+  @@index([trialEnabled]) // Sinov muddati filtrlash uchun
+  @@index([trialEndDate]) // Sinov muddati tugash sanasiga ko'ra filtrlash
+  @@index([tenantId, trialEnabled]) // Tenant va sinov muddati bo'yicha tez qidiruv
+}
+
+// GUARDIAN - Qarindoshlar (ota-ona va boshqa qarindoshlar)
+model Parent {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String @unique
+
+  // Qarindoshlik turi
+  guardianType       GuardianType @default(OTHER) // FATHER, MOTHER, OTHER
+  // Agar guardianType = OTHER bo'lsa, qo'lda kiritilgan nom
+  customRelationship String? // Masalan: "Amaki", "Xola", "Bobo", yoki eski "father", "mother"
+
+  // Qo'shimcha ma'lumotlar (optional)
+  occupation       String?
+  workAddress      String?
+  emergencyContact String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  students StudentParent[]
+  payments Payment[]
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([guardianType])
+}
+
+// STUDENT_GUARDIAN - O'quvchi va qarindosh aloqasi (Many-to-Many)
+model StudentParent {
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId String
+  parent    Parent  @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  parentId  String
+
+  // Nazoratchi panelga kirish huquqi (faqat bitta qarindosh bo'lishi mumkin)
+  hasAccess Boolean @default(false) // Parent/Guardian panel'ga kirish ruxsati
+
+  createdAt DateTime @default(now())
+
+  @@id([studentId, parentId])
+  @@index([studentId])
+  @@index([parentId])
+  @@index([hasAccess]) // Tez qidiruv uchun
+}
+
+// TEACHER - O'qituvchilar
+model Teacher {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String @unique
+
+  teacherCode     String // Unique per tenant
+  specialization  String // O'qitiladigan fanlar
+  education       String? // Ma'lumoti
+  experienceYears Int?
+  hireDate        DateTime @default(now())
+  salaryInfo      Json? // Encrypted in application layer
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  classTeacher   Class[]         @relation("ClassTeacher")
+  classSubjects  ClassSubject[]
+  schedules      Schedule[]
+  attendances    Attendance[]
+  grades         Grade[]
+  assignments    Assignment[]
+  materials      Material[]
+  salaryPayments SalaryPayment[]
+
+  @@unique([tenantId, teacherCode])
+  @@index([tenantId])
+  @@index([userId])
+  @@index([teacherCode])
+  @@index([tenantId, hireDate])
+}
+
+// CLASS - Sinflar
+model Class {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  name       String // 7-A, 8-B
+  gradeLevel Int // 7, 8, 9
+
+  classTeacher   Teacher? @relation("ClassTeacher", fields: [classTeacherId], references: [id], onDelete: SetNull)
+  classTeacherId String?
+
+  academicYear String // 2024-2025
+  maxStudents  Int     @default(30)
+  roomNumber   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  students      Student[]
+  classSubjects ClassSubject[]
+  schedules     Schedule[]
+  attendances   Attendance[]
+  assignments   Assignment[]
+  materials     Material[]
+  announcements Announcement[]
+
+  @@index([tenantId])
+  @@index([classTeacherId])
+  @@index([academicYear])
+  @@index([gradeLevel])
+  @@index([tenantId, academicYear])
+  @@index([tenantId, gradeLevel])
+}
+
+// SUBJECT - Fanlar
+model Subject {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  name        String // Matematika, Fizika
+  code        String // MATH, PHYS
+  description String?
+  color       String? // UI uchun
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  classSubjects ClassSubject[]
+  schedules     Schedule[]
+  attendances   Attendance[]
+  grades        Grade[]
+  assignments   Assignment[]
+  materials     Material[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+}
+
+// CLASS_SUBJECT - Sinfga fanlar biriktirish
+model ClassSubject {
+  id        String  @id @default(cuid())
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId   String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subjectId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId String
+
+  hoursPerWeek Int @default(2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([classId, subjectId])
+  @@index([classId])
+  @@index([subjectId])
+  @@index([teacherId])
+}
+
+// SCHEDULE TYPE - Dars jadvali turi
+enum ScheduleType {
+  LESSON  // Dars
+  BREAK   // Tanafus
+  LUNCH   // Ovqatlanish
+}
+
+// SCHEDULE - Dars jadvali
+model Schedule {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId   String
+  
+  type      ScheduleType @default(LESSON) // Tur: Dars/Tanafus/Ovqatlanish
+  title     String? // Tanafus/Ovqatlanish nomi
+  
+  // Lesson fields (optional for BREAK/LUNCH)
+  subject   Subject? @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subjectId String?
+  teacher   Teacher? @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId String?
+
+  dayOfWeek  Int // 1=Dushanba, 7=Yakshanba
+  startTime  String // "08:00"
+  endTime    String // "09:00"
+  roomNumber String?
+
+  academicYear String // 2024-2025
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([classId])
+  @@index([teacherId])
+  @@index([dayOfWeek])
+  @@index([type])
+}
+
+// ATTENDANCE - Davomat
+model Attendance {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId String
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId   String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subjectId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId String
+
+  date   DateTime         @db.Date
+  status AttendanceStatus
+  notes  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, classId, subjectId, date])
+  @@index([tenantId])
+  @@index([studentId])
+  @@index([classId])
+  @@index([subjectId])
+  @@index([teacherId])
+  @@index([date])
+  @@index([status])
+  @@index([classId, date])
+  @@index([studentId, date])
+}
+
+// GRADE - Baholar
+model Grade {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subjectId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId String
+
+  gradeType  GradeType
+  score      Decimal   @db.Decimal(5, 2)
+  maxScore   Decimal   @db.Decimal(5, 2)
+  percentage Decimal?  @db.Decimal(5, 2)
+
+  quarter      Int? // 1, 2, 3, 4
+  academicYear String
+  date         DateTime @db.Date
+  notes        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([studentId])
+  @@index([subjectId])
+  @@index([academicYear])
+  @@index([quarter])
+}
+
+// ASSIGNMENT - Uy vazifalari (Phase 2-3)
+model Assignment {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId String
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId   String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subjectId String
+
+  title       String
+  description String   @db.Text
+  attachments Json? // Array of file URLs
+  dueDate     DateTime
+  maxScore    Decimal  @db.Decimal(5, 2)
+  status      String   @default("ACTIVE") // ACTIVE, CLOSED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  submissions AssignmentSubmission[]
+
+  @@index([tenantId])
+  @@index([teacherId])
+  @@index([classId])
+  @@index([dueDate])
+}
+
+// ASSIGNMENT_SUBMISSION - Uy vazifalarini topshirish
+model AssignmentSubmission {
+  id           String     @id @default(cuid())
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  assignmentId String
+  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId    String
+
+  submittedAt DateTime @default(now())
+  attachments Json? // Array of file URLs
+  content     String?  @db.Text
+
+  score    Decimal?  @db.Decimal(5, 2)
+  feedback String?   @db.Text
+  gradedAt DateTime?
+  gradedBy String? // Teacher ID
+
+  status String @default("PENDING") // PENDING, GRADED, LATE
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([assignmentId, studentId])
+  @@index([assignmentId])
+  @@index([studentId])
+}
+
+// MATERIAL - Dars materiallari (Phase 3)
+model Material {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subjectId String
+  class     Class?  @relation(fields: [classId], references: [id], onDelete: SetNull)
+  classId   String? // null = hammaga
+
+  title       String
+  description String? @db.Text
+  type        String // pdf, link, presentation (video Phase 3+)
+  fileUrl     String
+  fileSize    Int? // bytes
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([teacherId])
+  @@index([subjectId])
+  @@index([classId])
+}
+
+// PAYMENT - To'lovlar
+model Payment {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId String
+  parent    Parent? @relation(fields: [parentId], references: [id], onDelete: SetNull)
+  parentId  String?
+
+  amount          Decimal       @db.Decimal(10, 2)
+  paidAmount      Decimal       @default(0) @db.Decimal(10, 2)
+  remainingAmount Decimal       @default(0) @db.Decimal(10, 2)
+  paymentType     PaymentType
+  paymentMethod   PaymentMethod @default(CASH)
+  status          PaymentStatus @default(PENDING)
+
+  // Payment Period (Qaysi oy uchun to'lov)
+  paymentMonth Int? // 1-12 (Yanvar-Dekabr)
+  paymentYear  Int? // 2024, 2025, etc.
+
+  // Transaction details
+  transactionId String? // Online payments uchun (Phase 2)
+  invoiceNumber String  @unique
+
+  // Dates
+  dueDate  DateTime  @db.Date
+  paidDate DateTime? @db.Date
+
+  // Naqd to'lov uchun (MVP)
+  receivedBy    User?   @relation("PaymentReceiver", fields: [receivedById], references: [id], onDelete: SetNull)
+  receivedById  String? // Qaysi xodim qabul qilgan
+  receiptNumber String? // Chek raqami
+
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([studentId])
+  @@index([parentId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([paidDate])
+  @@index([invoiceNumber])
+  @@index([paymentType])
+  @@index([paymentMonth])
+  @@index([paymentYear])
+  @@index([tenantId, status])
+  @@index([tenantId, dueDate])
+  @@index([studentId, status])
+  @@index([studentId, paymentMonth, paymentYear])
+  @@index([createdAt])
+}
+
+// PAYMENT_PLAN - To'lov rejalari
+model PaymentPlan {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  name               String // Oylik, 3 oylik, Yillik
+  description        String?  @db.Text
+  amount             Decimal  @db.Decimal(10, 2)
+  durationMonths     Int
+  discountPercentage Decimal? @db.Decimal(5, 2)
+  isActive           Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+}
+
+// MESSAGE - Xabarlar
+model Message {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  sender     User   @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId   String
+  receiver   User   @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiverId String
+
+  subject     String?
+  content     String  @db.Text
+  attachments Json?
+
+  status MessageStatus @default(SENT)
+  readAt DateTime?
+
+  parentMessage   Message?  @relation("MessageThread", fields: [parentMessageId], references: [id], onDelete: SetNull)
+  parentMessageId String?
+  replies         Message[] @relation("MessageThread")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
+  @@index([receiverId, status])
+  @@index([createdAt])
+}
+
+// ANNOUNCEMENT - E'lonlar
+model Announcement {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId String
+
+  title          String
+  content        String  @db.Text
+  targetAudience String // all, class, grade, parents, teachers
+  targetId       String? // classId or gradeLevel
+  priority       String  @default("MEDIUM") // LOW, MEDIUM, HIGH
+  isPinned       Boolean @default(false) // Muhim e'lon
+
+  publishedAt DateTime  @default(now())
+  expiresAt   DateTime?
+  attachments Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  class   Class?  @relation(fields: [classId], references: [id], onDelete: SetNull)
+  classId String?
+
+  @@index([tenantId])
+  @@index([publishedAt])
+  @@index([expiresAt])
+}
+
+// NOTIFICATION - Bildirishnomalar
+model Notification {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  type    NotificationType
+  title   String
+  content String           @db.Text
+  link    String?
+
+  isRead Boolean   @default(false)
+  readAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// ACTIVITY_LOG - Faoliyat loglar
+model ActivityLog {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  action       String // created_student, updated_grade, etc.
+  resourceType String // student, grade, payment, etc.
+  resourceId   String
+  metadata     Json? // Additional data
+
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([resourceType])
+}
+
+// ============================================
+// EXPENSE MANAGEMENT (Xarajatlar Boshqaruvi)
+// ============================================
+
+enum ExpensePeriod {
+  DAILY // Kunlik
+  WEEKLY // Haftalik
+  MONTHLY // Oylik
+  YEARLY // Yillik
+}
+
+// EXPENSE_CATEGORY - Xarajat turlari (Admin yaratadi)
+model ExpenseCategory {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  name        String // Soliq, Maosh, Kommunal, Remont
+  description String?       @db.Text
+  limitAmount Decimal       @db.Decimal(12, 2) // Limit miqdori
+  period      ExpensePeriod // Muddat
+  color       String? // UI uchun rang (#FF5733)
+  icon        String? // Icon nomi (masalan: "building", "users")
+  isActive    Boolean       @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  expenses Expense[]
+
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([tenantId, isActive])
+}
+
+// EXPENSE - Xarajatlar (Admin kiritadi)
+model Expense {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  category   ExpenseCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  categoryId String
+
+  amount        Decimal       @db.Decimal(12, 2)
+  date          DateTime      @db.Date
+  paymentMethod PaymentMethod // CASH, BANK, CARD
+  receiptNumber String?
+  description   String?       @db.Text
+
+  // Kim to'ladi / kim qabul qildi
+  paidBy   User?   @relation(fields: [paidById], references: [id], onDelete: SetNull)
+  paidById String?
+
+  // Chek/hujjat rasmlari
+  attachments Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([categoryId])
+  @@index([date])
+  @@index([tenantId, date])
+  @@index([tenantId, categoryId])
+  @@index([createdAt])
+}
+
+// ============================================
+// KITCHEN MANAGEMENT (Oshxona Boshqaruvi)
+// ============================================
+
+// COOK - Oshpazlar
+model Cook {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String @unique
+
+  cookCode        String // Oshpaz kodi - unique per tenant
+  specialization  String // Mutaxassisligi (osh, shirini, salat, etc.)
+  experienceYears Int?
+  hireDate        DateTime @default(now())
+  position        String   @default("COOK") // COOK, HEAD_COOK, ASSISTANT
+  salary          Decimal? @db.Decimal(12, 2)
+  workSchedule    String? // Ish grafigi (JSON yoki text)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  kitchenExpenses KitchenExpense[]
+
+  @@unique([tenantId, cookCode])
+  @@index([tenantId])
+  @@index([userId])
+  @@index([cookCode])
+  @@index([position])
+}
+
+// KITCHEN_EXPENSE_CATEGORY - Oshxona xarajat turlari
+model KitchenExpenseCategory {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  name        String // Oziq-ovqat, Idish-tovoq, Texnika, Gaz/Elektr
+  description String?       @db.Text
+  limitAmount Decimal       @db.Decimal(12, 2) // Oylik limit
+  period      ExpensePeriod @default(MONTHLY)
+  color       String? // UI uchun rang
+  icon        String? // Icon nomi
+  isActive    Boolean       @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  kitchenExpenses KitchenExpense[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([tenantId, isActive])
+}
+
+// KITCHEN_EXPENSE - Oshxona xarajatlari
+model KitchenExpense {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  category   KitchenExpenseCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  categoryId String
+
+  amount        Decimal       @db.Decimal(12, 2)
+  date          DateTime      @db.Date
+  paymentMethod PaymentMethod @default(CASH)
+  receiptNumber String?
+  description   String?       @db.Text
+  itemName      String? // Mahsulot nomi (go'sht, sabzavot, etc.)
+  quantity      Decimal?      @db.Decimal(10, 2) // Miqdori
+  unit          String? // Birlik (kg, dona, litr)
+  supplier      String? // Yetkazib beruvchi
+
+  // Kim kiritdi
+  createdBy   Cook?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdById String?
+
+  // Chek/hujjat rasmlari
+  attachments Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([categoryId])
+  @@index([date])
+  @@index([tenantId, date])
+  @@index([tenantId, categoryId])
+  @@index([createdById])
+  @@index([createdAt])
+}
+
+// ============================================
+// DORMITORY MANAGEMENT (Yotoqxona Boshqaruvi)
+// ============================================
+
+// DORMITORY_BUILDING - Yotoqxona binolari
+model DormitoryBuilding {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  name          String // "Bino A", "O'g'il bolalar yotoqxonasi"
+  code          String // "BLDG-A", "BOYS-1"
+  address       String?
+  description   String? @db.Text
+  totalFloors   Int     @default(1)
+  totalRooms    Int     @default(0) // Cache
+  totalCapacity Int     @default(0) // Cache - jami joy soni
+  occupiedBeds  Int     @default(0) // Cache - band joylar
+  gender        Gender? // MALE, FEMALE, yoki null = aralash
+  isActive      Boolean @default(true)
+
+  // Qo'shimcha ma'lumotlar
+  facilities    Json? // [Wi-Fi, Oshxona, Kir yuvish, Kitobxona]
+  rules         Json? // Ichki qoidalar
+  contactPerson String?
+  contactPhone  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  rooms DormitoryRoom[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([gender])
+  @@index([tenantId, isActive])
+}
+
+// DORMITORY_ROOM - Xonalar
+model DormitoryRoom {
+  id         String            @id @default(cuid())
+  tenant     Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId   String
+  building   DormitoryBuilding @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  buildingId String
+
+  roomNumber    String // "101", "A-205"
+  floor         Int
+  capacity      Int     @default(4) // Jami joy soni
+  occupiedBeds  Int     @default(0) // Band joylar
+  roomType      String  @default("STANDARD") // STANDARD, LUXURY, SUITE
+  pricePerMonth Decimal @db.Decimal(10, 2) // Oylik narx
+  gender        Gender? // MALE, FEMALE, null = aralash
+  isActive      Boolean @default(true)
+
+  // Xona haqida
+  description String? @db.Text
+  amenities   Json? // [TV, Konditsioner, Muzlatgich, Wi-Fi]
+  images      Json? // Rasm URLlari
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  beds        DormitoryBed[]
+  assignments DormitoryAssignment[]
+
+  @@unique([buildingId, roomNumber])
+  @@index([tenantId])
+  @@index([buildingId])
+  @@index([isActive])
+  @@index([gender])
+  @@index([floor])
+  @@index([tenantId, isActive])
+}
+
+// DORMITORY_BED - Joy/To'shak
+model DormitoryBed {
+  id       String        @id @default(cuid())
+  tenant   Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  room     DormitoryRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  roomId   String
+
+  bedNumber   String // "1", "2", "A", "B"
+  bedType     String  @default("SINGLE") // SINGLE, BUNK_TOP, BUNK_BOTTOM
+  isOccupied  Boolean @default(false)
+  isActive    Boolean @default(true)
+  description String? // "Deraza yonida", "Eshik oldida"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  currentAssignment DormitoryAssignment?
+
+  @@unique([roomId, bedNumber])
+  @@index([tenantId])
+  @@index([roomId])
+  @@index([isOccupied])
+  @@index([isActive])
+  @@index([tenantId, isOccupied, isActive])
+}
+
+// DORMITORY_ASSIGNMENT - O'quvchini joylashtirish
+model DormitoryAssignment {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId String  @unique
+
+  room   DormitoryRoom @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  roomId String
+
+  bed   DormitoryBed @relation(fields: [bedId], references: [id], onDelete: Restrict)
+  bedId String       @unique
+
+  checkInDate  DateTime  @default(now())
+  checkOutDate DateTime?
+  status       String    @default("ACTIVE") // ACTIVE, MOVED, CHECKED_OUT, SUSPENDED
+  monthlyFee   Decimal   @db.Decimal(10, 2)
+
+  // Qo'shimcha
+  notes        String? @db.Text
+  assignedBy   User?   @relation(fields: [assignedById], references: [id], onDelete: SetNull)
+  assignedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([studentId])
+  @@index([roomId])
+  @@index([bedId])
+  @@index([status])
+  @@index([checkInDate])
+  @@index([tenantId, status])
+  @@index([studentId, status])
+}
+
+// ============================================
+// SALARY & PAYROLL MANAGEMENT (Maosh Tizimi)
+// ============================================
+
+enum SalaryPaymentType {
+  FULL_SALARY // To'liq oylik
+  ADVANCE // Avans
+  BONUS // Mukofot
+  DEDUCTION // Ushlab qolish
+}
+
+enum SalaryPaymentStatus {
+  PENDING // Kutilmoqda
+  PAID // To'langan
+  PARTIALLY_PAID // Qisman to'langan
+  CANCELLED // Bekor qilingan
+}
+
+// SALARY_PAYMENT - Xodimlar va o'qituvchilar maoshi
+model SalaryPayment {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  // Qaysi xodim / o'qituvchi
+  teacherId String?
+  teacher   Teacher? @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  staffId String?
+  staff   User?   @relation("StaffSalary", fields: [staffId], references: [id], onDelete: Cascade)
+
+  // To'lov ma'lumotlari
+  type            SalaryPaymentType
+  status          SalaryPaymentStatus @default(PENDING)
+  amount          Decimal             @db.Decimal(12, 2)
+  paidAmount      Decimal             @default(0) @db.Decimal(12, 2)
+  remainingAmount Decimal             @default(0) @db.Decimal(12, 2)
+
+  // Oylik uchun
+  month           Int? // 1-12
+  year            Int? // 2024, 2025
+  baseSalary      Decimal? @db.Decimal(12, 2) // Asosiy maosh
+  bonusAmount     Decimal? @default(0) @db.Decimal(12, 2) // Bonus
+  deductionAmount Decimal? @default(0) @db.Decimal(12, 2) // Ushlab qolish
+
+  // To'lov sanasi
+  paymentDate DateTime?
+  dueDate     DateTime? @db.Date
+
+  // To'lov usuli
+  paymentMethod PaymentMethod?
+
+  // Izohlar
+  description String? @db.Text
+  notes       String? @db.Text
+
+  // Kim to'ladi
+  paidBy   User?   @relation("SalaryPaidBy", fields: [paidById], references: [id], onDelete: SetNull)
+  paidById String?
+
+  // Hujjatlar
+  attachments Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([teacherId])
+  @@index([staffId])
+  @@index([type])
+  @@index([status])
+  @@index([month, year])
+  @@index([tenantId, status])
+  @@index([tenantId, month, year])
+  @@index([paymentDate])
+  @@index([tenantId, type])
+}

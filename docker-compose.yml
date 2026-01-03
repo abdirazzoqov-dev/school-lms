@@ -1,0 +1,66 @@
+services:
+  # ============================================
+  # BIRINCHI POSTGRESQL CONTAINER
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: school_lms_db
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: school_lms
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5433:5432"  # Birinchi container port 5433'da
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    command: >
+      postgres
+      -c listen_addresses='*'
+      -c max_connections=100
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d school_lms"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lms_network
+
+  # ============================================
+  # IKKINCHI POSTGRESQL CONTAINER (ALOHIDA)
+  # ============================================
+  postgres2:
+    image: postgres:16-alpine
+    container_name: school_lms_db2
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres2
+      POSTGRES_DB: school_lms2
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5434:5432"  # Ikkinchi container port 5434'da
+    volumes:
+      - postgres_data2:/var/lib/postgresql/data
+    command: >
+      postgres
+      -c listen_addresses='*'
+      -c max_connections=100
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d school_lms2"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lms_network2
+
+volumes:
+  postgres_data:
+    driver: local
+  postgres_data2:
+    driver: local
+
+networks:
+  lms_network:
+    driver: bridge
+  lms_network2:
+    driver: bridge

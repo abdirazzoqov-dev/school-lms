@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School LMS Mobile - Demo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+        .phone-frame { max-width: 375px; margin: 20px auto; background: #000; border-radius: 40px; padding: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .screen { background: #fff; border-radius: 28px; overflow: hidden; height: 667px; }
+        .login-screen { display: flex; flex-direction: column; justify-content: center; padding: 40px 20px; height: 100%; background: #f5f5f5; }
+        .dashboard-screen { display: none; height: 100%; overflow-y: auto; background: #f5f5f5; }
+        .logo { font-size: 64px; text-align: center; margin-bottom: 16px; }
+        .title { font-size: 32px; font-weight: bold; text-align: center; margin-bottom: 8px; }
+        .subtitle { font-size: 16px; color: #666; text-align: center; margin-bottom: 32px; }
+        .form { display: flex; flex-direction: column; gap: 16px; }
+        .input { height: 48px; border: 1px solid #ddd; border-radius: 8px; padding: 0 16px; font-size: 16px; }
+        .button { height: 48px; background: #007AFF; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .button:hover { background: #0051D5; }
+        .demo-info { margin-top: 24px; padding: 16px; background: #E3F2FD; border-radius: 8px; text-align: center; }
+        .header { background: #007AFF; padding: 20px; color: white; }
+        .greeting { font-size: 16px; opacity: 0.9; }
+        .name { font-size: 24px; font-weight: bold; margin-top: 4px; }
+        .role { font-size: 14px; opacity: 0.8; margin-top: 4px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; }
+        .stat-card { padding: 20px; border-radius: 12px; text-align: center; }
+        .stat-number { font-size: 32px; font-weight: bold; color: #333; }
+        .stat-label { font-size: 14px; color: #666; margin-top: 4px; }
+        .section { padding: 16px; }
+        .section-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 12px; }
+        .action-button { display: flex; align-items: center; gap: 12px; background: white; padding: 16px; border-radius: 12px; margin-bottom: 12px; cursor: pointer; border: none; width: 100%; text-align: left; }
+        .action-button:hover { background: #f0f0f0; }
+        .action-icon { font-size: 24px; }
+        .action-text { font-size: 16px; color: #333; font-weight: 500; }
+        .logout-button { margin: 16px; padding: 16px; background: #FF3B30; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; width: calc(100% - 32px); }
+        .logout-button:hover { background: #DC1F14; }
+        .info-box { margin: 16px; padding: 16px; background: #FFF3CD; border: 1px solid #FFE69C; border-radius: 12px; }
+        .info-title { font-size: 16px; font-weight: bold; color: #856404; margin-bottom: 8px; }
+        .info-text { font-size: 14px; color: #856404; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="screen">
+            <!-- Login Screen -->
+            <div class="login-screen" id="loginScreen">
+                <div class="logo">🎓</div>
+                <div class="title">School LMS</div>
+                <div class="subtitle">Mobile App - Demo</div>
+                
+                <div class="form">
+                    <input type="email" class="input" placeholder="Email" id="emailInput">
+                    <input type="password" class="input" placeholder="Parol" id="passwordInput">
+                    <button class="button" onclick="handleLogin()">Kirish</button>
+                </div>
+
+                <div class="demo-info">
+                    <div style="font-weight: 600; margin-bottom: 4px;">📱 Demo Mode</div>
+                    <div style="font-size: 12px; color: #666;">Istalgan email/parol bilan kirish mumkin</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Screen -->
+            <div class="dashboard-screen" id="dashboardScreen">
+                <div class="header">
+                    <div class="greeting">Xush kelibsiz!</div>
+                    <div class="name" id="userName">Demo User</div>
+                    <div class="role">Role: ADMIN</div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card" style="background: #E3F2FD;">
+                        <div class="stat-number">150</div>
+                        <div class="stat-label">O'quvchilar</div>
+                    </div>
+                    <div class="stat-card" style="background: #E8F5E9;">
+                        <div class="stat-number">25</div>
+                        <div class="stat-label">O'qituvchilar</div>
+                    </div>
+                    <div class="stat-card" style="background: #FFF3E0;">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">Sinflar</div>
+                    </div>
+                    <div class="stat-card" style="background: #FCE4EC;">
+                        <div class="stat-number">85%</div>
+                        <div class="stat-label">Davomat</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">📊 Tez amallar</div>
+                    <button class="action-button">
+                        <span class="action-icon">👨‍🎓</span>
+                        <span class="action-text">O'quvchi qo'shish</span>
+                    </button>
+                    <button class="action-button">
+                        <span class="action-icon">✅</span>
+                        <span class="action-text">Davomat belgilash</span>
+                    </button>
+                    <button class="action-button">
+                        <span class="action-icon">💰</span>
+                        <span class="action-text">To'lov qabul qilish</span>
+                    </button>
+                    <button class="action-button">
+                        <span class="action-icon">📅</span>
+                        <span class="action-text">Dars jadvali</span>
+                    </button>
+                </div>
+
+                <div class="info-box">
+                    <div class="info-title">ℹ️ Demo Mode</div>
+                    <div class="info-text">Bu demo versiya. To'liq funksional ilova uchun backend API kerak.</div>
+                    <div class="info-text">Hozirgi versiyada barcha asosiy screen'lar va navigation tayyor.</div>
+                </div>
+
+                <button class="logout-button" onclick="handleLogout()">Chiqish</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function handleLogin() {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            
+            if (!email || !password) {
+                alert('Email va parolni kiriting');
+                return;
+            }
+
+            const userName = email.split('@')[0] || 'Demo User';
+            document.getElementById('userName').textContent = userName;
+            
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboardScreen').style.display = 'block';
+        }
+
+        function handleLogout() {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('dashboardScreen').style.display = 'none';
+            document.getElementById('emailInput').value = '';
+            document.getElementById('passwordInput').value = '';
+        }
+    </script>
+</body>
+</html>
+

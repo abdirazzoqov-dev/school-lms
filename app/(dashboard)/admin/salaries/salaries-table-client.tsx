@@ -1,0 +1,382 @@
+'use client'
+
+import { useState } from 'react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Users, Plus, ChevronDown, ChevronUp } from 'lucide-react'
+import { formatNumber } from '@/lib/utils'
+import { Progress } from '@/components/ui/progress'
+import { AddPartialSalaryModal } from '@/components/add-partial-salary-modal'
+import { SalaryPaymentHistory } from '@/components/salary-payment-history'
+import { monthNames } from '@/lib/validations/salary'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+
+interface SalaryPayment {
+  id: string
+  amount: any
+  paidAmount: any
+  remainingAmount: any
+  type: string
+  status: string
+  month: number | null
+  year: number | null
+  description: string | null
+  notes: string | null
+  paymentDate: Date | null
+  teacher: {
+    user: {
+      fullName: string
+      email: string | null
+      phone: string | null
+    }
+  } | null
+  staff: {
+    fullName: string
+    email: string | null
+    phone: string | null
+    role: string
+  } | null
+}
+
+interface SalariesTableClientProps {
+  salaryPayments: SalaryPayment[]
+  groupedByEmployee?: boolean
+}
+
+export function SalariesTableClient({ salaryPayments, groupedByEmployee = false }: SalariesTableClientProps) {
+  // Group payments by employee and month
+  const groupPaymentsByEmployee = () => {
+    const grouped = new Map<string, SalaryPayment[]>()
+    
+    salaryPayments.forEach(payment => {
+      const employeeId = payment.teacher?.user.fullName || payment.staff?.fullName || 'Unknown'
+      const monthYear = `${payment.month}-${payment.year}`
+      const key = `${employeeId}-${monthYear}`
+      
+      if (!grouped.has(key)) {
+        grouped.set(key, [])
+      }
+      grouped.get(key)!.push(payment)
+    })
+    
+    return Array.from(grouped.values())
+  }
+  
+  const employeeGroups = groupedByEmployee ? groupPaymentsByEmployee() : salaryPayments.map(p => [p])
+  const [partialPaymentModal, setPartialPaymentModal] = useState<{
+    open: boolean
+    payment: SalaryPayment | null
+  }>({
+    open: false,
+    payment: null
+  })
+  
+  const [expandedPayments, setExpandedPayments] = useState<string[]>([])
+
+  const handleAddPartialPayment = (payment: SalaryPayment) => {
+    setPartialPaymentModal({
+      open: true,
+      payment
+    })
+  }
+
+  const toggleExpand = (paymentId: string) => {
+    setExpandedPayments(prev => 
+      prev.includes(paymentId) 
+        ? prev.filter(id => id !== paymentId)
+        : [...prev, paymentId]
+    )
+  }
+
+  const calculateProgress = (payment: SalaryPayment) => {
+    const totalAmount = Number(payment.amount) || 0
+    const paidAmount = Number(payment.paidAmount) || 0
+    
+    if (totalAmount === 0) return { percentage: 0, paid: 0, total: 0, remaining: 0 }
+    
+    const percentage = Math.min(Math.round((paidAmount / totalAmount) * 100), 100)
+    
+    return {
+      percentage,
+      paid: paidAmount,
+      total: totalAmount,
+      remaining: totalAmount - paidAmount
+    }
+  }
+  
+  // Calculate cumulative progress for grouped payments (relative to monthly salary)
+  const calculateGroupProgress = (payments: SalaryPayment[]) => {
+    // Find monthly salary amount (the reference point)
+    const monthlyPayment = payments.find(p => p.type === 'FULL_SALARY')
+    const monthlySalary = monthlyPayment ? Number(monthlyPayment.amount) : 0
+    
+    // Calculate total paid from all payments
+    const totalPaid = payments.reduce((sum, p) => sum + Number(p.paidAmount || 0), 0)
+    
+    // If no monthly salary, just sum all payments
+    const referenceAmount = monthlySalary > 0 ? monthlySalary : payments.reduce((sum, p) => sum + Number(p.amount), 0)
+    
+    if (referenceAmount === 0) return { percentage: 0, paid: 0, total: 0, remaining: 0 }
+    
+    const percentage = Math.min(Math.round((totalPaid / referenceAmount) * 100), 100)
+    
+    return {
+      percentage,
+      paid: totalPaid,
+      total: referenceAmount,
+      remaining: Math.max(0, referenceAmount - totalPaid)
+    }
+  }
+
+  const getProgressColor = (percentage: number) => {
+    if (percentage === 0) return 'text-red-600'
+    if (percentage < 100) return 'text-yellow-600'
+    return 'text-green-600'
+  }
+
+  return (
+    <>
+      <div className="space-y-3">
+        {employeeGroups.map((payments, groupIndex) => {
+          // For grouped view, use first payment as representative
+          const payment = payments[0]
+          const employee = payment.teacher ? payment.teacher.user : payment.staff
+          const employeeType = payment.teacher ? 'O\'qituvchi' : 'Xodim'
+          
+          // Calculate progress based on all payments in group
+          const groupProgress = groupedByEmployee ? calculateGroupProgress(payments) : calculateProgress(payment)
+          const progress = groupProgress
+          
+          const isExpanded = expandedPayments.includes(`group-${groupIndex}`)
+          const hasHistory = payments.some(p => p.notes && p.notes.includes('['))
+          const hasMultiplePayments = payments.length > 1
+
+          return (
+            <Collapsible
+              key={`group-${groupIndex}`}
+              open={isExpanded}
+              onOpenChange={() => toggleExpand(`group-${groupIndex}`)}
+            >
+              <div className="p-4 border-2 rounded-lg hover:bg-muted/50 transition-colors">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3 flex-1">
+                    <div className="p-2 bg-blue-100 rounded-full shrink-0">
+                      <Users className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold">{employee?.fullName}</h3>
+                        <Badge variant="outline" className="text-xs">
+                          {employeeType}
+                        </Badge>
+                        {payment.month && payment.year && (
+                          <Badge variant="secondary" className="text-xs">
+                            {monthNames[payment.month - 1]} {payment.year}
+                          </Badge>
+                        )}
+                        
+                        {/* Show count if multiple payments */}
+                        {hasMultiplePayments && (
+                          <Badge variant="outline" className="text-xs bg-blue-50">
+                            {payments.length} ta to'lov
+                          </Badge>
+                        )}
+                        
+                        {/* Show expand toggle if has multiple payments or history */}
+                        {(hasMultiplePayments || hasHistory) && (
+                          <CollapsibleTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 px-2">
+                              {isExpanded ? (
+                                <>
+                                  <ChevronUp className="h-3 w-3 mr-1" />
+                                  Yashirish
+                                </>
+                              ) : (
+                                <>
+                                  <ChevronDown className="h-3 w-3 mr-1" />
+                                  Batafsil
+                                </>
+                              )}
+                            </Button>
+                          </CollapsibleTrigger>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        {employee?.email} • {employee?.phone || 'Tel yo\'q'}
+                      </p>
+                      {payment.description && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {payment.description}
+                        </p>
+                      )}
+
+                      {/* Progress Bar */}
+                      {progress.total > 0 && (
+                        <div className="mt-3 space-y-1 max-w-md">
+                          <div className="flex items-center gap-2">
+                            <Progress value={progress.percentage} className="h-2 flex-1" />
+                            <span className={`text-sm font-semibold ${getProgressColor(progress.percentage)}`}>
+                              {progress.percentage}%
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-green-600 font-medium">
+                              {formatNumber(progress.paid)} so'm
+                            </span>
+                            <span className="text-muted-foreground">/ {formatNumber(progress.total)} so'm</span>
+                          </div>
+                          {progress.percentage > 0 && progress.percentage < 100 && (
+                            <div className="flex items-center gap-1 text-xs text-orange-600">
+                              <span>Qoldi:</span>
+                              <span className="font-semibold">{formatNumber(progress.remaining)} so'm</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="flex items-center gap-2 justify-end mb-2 flex-wrap">
+                      {/* Show all payment types if multiple */}
+                      {hasMultiplePayments ? (
+                        <>
+                          {payments.some(p => p.type === 'FULL_SALARY') && (
+                            <Badge className="bg-blue-600">Oylik</Badge>
+                          )}
+                          {payments.some(p => p.type === 'ADVANCE') && (
+                            <Badge className="bg-purple-600">Avans</Badge>
+                          )}
+                          {payments.some(p => p.type === 'BONUS') && (
+                            <Badge className="bg-green-600">Mukofot</Badge>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {payment.type === 'FULL_SALARY' && (
+                            <Badge className="bg-blue-600">Oylik</Badge>
+                          )}
+                          {payment.type === 'ADVANCE' && (
+                            <Badge className="bg-purple-600">Avans</Badge>
+                          )}
+                          {payment.type === 'BONUS' && (
+                            <Badge className="bg-green-600">Mukofot</Badge>
+                          )}
+                          {payment.type === 'DEDUCTION' && (
+                            <Badge className="bg-red-600">Ushlab qolish</Badge>
+                          )}
+                        </>
+                      )}
+                      
+                      {/* Status badge based on progress */}
+                      {progress.percentage === 100 && (
+                        <Badge className="bg-green-600">To'langan</Badge>
+                      )}
+                      {progress.percentage === 0 && (
+                        <Badge className="bg-amber-600">Kutilmoqda</Badge>
+                      )}
+                      {progress.percentage > 0 && progress.percentage < 100 && (
+                        <Badge className="bg-orange-600">Qisman</Badge>
+                      )}
+                    </div>
+
+                    <p className="text-2xl font-bold mb-2">
+                      {formatNumber(progress.total)} so'm
+                    </p>
+                    {hasMultiplePayments && (
+                      <p className="text-xs text-muted-foreground">
+                        Oylik maosh (100%)
+                      </p>
+                    )}
+
+                    {payment.paymentDate && !hasMultiplePayments && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(payment.paymentDate).toLocaleDateString('uz-UZ')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Detailed Payments (Collapsible) */}
+                {(hasMultiplePayments || hasHistory) && (
+                  <CollapsibleContent className="mt-4 pt-4 border-t">
+                    <div className="space-y-3">
+                      {payments.map(p => (
+                        <div key={p.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-md">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              {p.type === 'FULL_SALARY' && (
+                                <Badge className="bg-blue-600 text-xs">Oylik</Badge>
+                              )}
+                              {p.type === 'ADVANCE' && (
+                                <Badge className="bg-purple-600 text-xs">Avans</Badge>
+                              )}
+                              {p.type === 'BONUS' && (
+                                <Badge className="bg-green-600 text-xs">Mukofot</Badge>
+                              )}
+                              {p.type === 'DEDUCTION' && (
+                                <Badge className="bg-red-600 text-xs">Ushlab qolish</Badge>
+                              )}
+                              
+                              {p.status === 'PAID' && (
+                                <Badge className="bg-green-600 text-xs">To'langan</Badge>
+                              )}
+                              {p.status === 'PENDING' && (
+                                <Badge className="bg-amber-600 text-xs">Kutilmoqda</Badge>
+                              )}
+                              {p.status === 'PARTIALLY_PAID' && (
+                                <Badge className="bg-orange-600 text-xs">Qisman</Badge>
+                              )}
+                            </div>
+                            <p className="text-sm font-medium">
+                              {formatNumber(Number(p.paidAmount || 0))} / {formatNumber(Number(p.amount))} so'm
+                            </p>
+                            {p.description && (
+                              <p className="text-xs text-muted-foreground">{p.description}</p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            {Number(p.paidAmount || 0) < Number(p.amount) && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleAddPartialPayment(p)}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                To'lov
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                )}
+              </div>
+            </Collapsible>
+          )
+        })}
+      </div>
+
+      {/* Partial Payment Modal */}
+      {partialPaymentModal.payment && (
+        <AddPartialSalaryModal
+          open={partialPaymentModal.open}
+          onOpenChange={(open) => setPartialPaymentModal({ open, payment: null })}
+          payment={{
+            id: partialPaymentModal.payment.id,
+            amount: Number(partialPaymentModal.payment.amount),
+            paidAmount: Number(partialPaymentModal.payment.paidAmount || 0),
+            remainingAmount: Number(partialPaymentModal.payment.remainingAmount || partialPaymentModal.payment.amount),
+            type: partialPaymentModal.payment.type,
+            employeeName: partialPaymentModal.payment.teacher 
+              ? partialPaymentModal.payment.teacher.user.fullName 
+              : partialPaymentModal.payment.staff?.fullName || 'N/A',
+            employeeType: partialPaymentModal.payment.teacher ? 'teacher' : 'staff'
+          }}
+        />
+      )}
+    </>
+  )
+}
+

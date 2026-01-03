@@ -1,0 +1,23 @@
+import { z } from 'zod'
+
+export const messageSchema = z.object({
+  recipientId: z.string().min(1, 'Qabul qiluvchi tanlanishi shart'),
+  subject: z.string().min(1, 'Mavzu kiritilishi shart').max(200),
+  content: z.string().min(1, 'Xabar matni kiritilishi shart').max(5000),
+})
+
+export const messageReplySchema = z.object({
+  content: z.string().min(1, 'Javob matni kiritilishi shart').max(5000),
+})
+
+export type MessageFormData = z.infer<typeof messageSchema>
+export type MessageReplyData = z.infer<typeof messageReplySchema>
+
+export const MESSAGE_STATUS = {
+  UNREAD: 'UNREAD',
+  READ: 'READ',
+  ARCHIVED: 'ARCHIVED',
+} as const
+
+export type MessageStatus = keyof typeof MESSAGE_STATUS
+
