@@ -26,7 +26,7 @@ interface Student {
 }
 
 interface AttendanceFiltersProps {
-  children: Student[]
+  students: Student[]
   searchParams: {
     period?: string
     studentId?: string
@@ -34,7 +34,7 @@ interface AttendanceFiltersProps {
   selectedStudent: Student
 }
 
-export function AttendanceFilters({ children, searchParams, selectedStudent }: AttendanceFiltersProps) {
+export function AttendanceFilters({ students, searchParams, selectedStudent }: AttendanceFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
   const urlSearchParams = useSearchParams()
@@ -60,18 +60,18 @@ export function AttendanceFilters({ children, searchParams, selectedStudent }: A
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Student Selection */}
-            {children.length > 1 && (
+            {students.length > 1 && (
               <div className="space-y-2">
                 <Label className="text-xs">Farzand</Label>
                 <Select
-                  value={searchParams.studentId || children[0].id}
+                  value={searchParams.studentId || students[0].id}
                   onValueChange={(value) => updateSearchParams('studentId', value)}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {children.map((child) => (
+                    {students.map((child) => (
                       <SelectItem key={child.id} value={child.id}>
                         <div className="flex items-center gap-2">
                           <span>{child.user?.fullName || 'N/A'}</span>

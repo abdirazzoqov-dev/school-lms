@@ -188,7 +188,7 @@ export default async function ParentAttendancePage({
 
       {/* Filters */}
       <AttendanceFilters
-        children={children}
+        students={children}
         searchParams={searchParams}
         selectedStudent={selectedStudent}
       />

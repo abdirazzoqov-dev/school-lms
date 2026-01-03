@@ -28,7 +28,8 @@ import {
   MoreHorizontal,
   Edit,
   Trash2,
-  Building2
+  Building2,
+  DoorClosed
 } from 'lucide-react'
 import {
   DropdownMenu,
