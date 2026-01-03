@@ -32,6 +32,7 @@ interface Assignment {
   checkOutDate: Date | null
   monthlyFee: any
   student: {
+    id: string
     studentCode: string
     gender: 'MALE' | 'FEMALE'
     user: {

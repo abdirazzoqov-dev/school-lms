@@ -25,7 +25,10 @@ export default async function AssignmentsPage() {
     where: { tenantId },
     include: {
       student: {
-        include: {
+        select: {
+          id: true,
+          studentCode: true,
+          gender: true,
           user: {
             select: {
               fullName: true,
