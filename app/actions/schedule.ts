@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { getCurrentAcademicYear } from '@/lib/utils'
+import { scheduleSchema, checkTimeConflict } from '@/lib/validations/schedule'
 
 interface TimeSlot {
   id: string
@@ -135,6 +136,115 @@ export async function saveSchedules(
     }
   } catch (error) {
     console.error('Save schedules error:', error)
+    return { success: false, error: 'Xatolik yuz berdi' }
+  }
+}
+
+export async function createSchedule(data: {
+  classId: string
+  subjectId: string
+  teacherId: string
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  roomNumber?: string
+  academicYear: string
+}) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+      return { success: false, error: 'Ruxsat berilmagan' }
+    }
+
+    const tenantId = session.user.tenantId!
+    const validatedData = scheduleSchema.parse(data)
+
+    const classItem = await db.class.findFirst({
+      where: {
+        id: validatedData.classId,
+        ...(session.user.role !== 'SUPER_ADMIN' && { tenantId }),
+      },
+      select: {
+        id: true,
+        tenantId: true,
+      },
+    })
+
+    if (!classItem) {
+      return { success: false, error: 'Sinf topilmadi' }
+    }
+
+    const [subject, teacher] = await Promise.all([
+      db.subject.findFirst({
+        where: {
+          id: validatedData.subjectId,
+          ...(session.user.role !== 'SUPER_ADMIN' && { tenantId: classItem.tenantId }),
+        },
+        select: { id: true },
+      }),
+      db.teacher.findFirst({
+        where: {
+          id: validatedData.teacherId,
+          ...(session.user.role !== 'SUPER_ADMIN' && { tenantId: classItem.tenantId }),
+        },
+        select: { id: true },
+      }),
+    ])
+
+    if (!subject) {
+      return { success: false, error: 'Fan topilmadi' }
+    }
+
+    if (!teacher) {
+      return { success: false, error: 'O\'qituvchi topilmadi' }
+    }
+
+    const existingSchedules = await db.schedule.findMany({
+      where: {
+        tenantId: classItem.tenantId,
+        classId: validatedData.classId,
+        dayOfWeek: validatedData.dayOfWeek,
+        academicYear: validatedData.academicYear,
+      },
+      select: {
+        startTime: true,
+        endTime: true,
+      },
+    })
+
+    const hasConflict = existingSchedules.some((schedule) =>
+      checkTimeConflict(
+        { startTime: schedule.startTime, endTime: schedule.endTime },
+        { startTime: validatedData.startTime, endTime: validatedData.endTime }
+      )
+    )
+
+    if (hasConflict) {
+      return { success: false, error: 'Bu vaqt oralig\'ida dars mavjud' }
+    }
+
+    await db.schedule.create({
+      data: {
+        tenantId: classItem.tenantId,
+        classId: validatedData.classId,
+        subjectId: validatedData.subjectId,
+        teacherId: validatedData.teacherId,
+        dayOfWeek: validatedData.dayOfWeek,
+        startTime: validatedData.startTime,
+        endTime: validatedData.endTime,
+        roomNumber: validatedData.roomNumber || null,
+        academicYear: validatedData.academicYear || getCurrentAcademicYear(),
+      },
+    })
+
+    revalidatePath('/admin/schedules')
+    revalidatePath('/admin/schedules/builder')
+    revalidatePath('/admin')
+
+    return { success: true }
+  } catch (error) {
+    console.error('Create schedule error:', error)
     return { success: false, error: 'Xatolik yuz berdi' }
   }
 }

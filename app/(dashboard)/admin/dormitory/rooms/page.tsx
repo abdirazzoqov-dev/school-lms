@@ -104,6 +104,10 @@ export default async function RoomsPage({
     (r) => r.occupiedBeds > 0 && r.occupiedBeds < r.capacity
   ).length
   const emptyRooms = rooms.filter((r) => r.occupiedBeds === 0).length
+  const serializedRooms = rooms.map((room) => ({
+    ...room,
+    pricePerMonth: Number(room.pricePerMonth),
+  }))
 
   return (
     <div className="space-y-6">
@@ -202,7 +206,7 @@ export default async function RoomsPage({
         </CardHeader>
         <CardContent>
           <RoomsTable 
-            rooms={rooms} 
+            rooms={serializedRooms} 
             buildings={buildings}
             searchParams={searchParams}
           />
@@ -211,4 +215,3 @@ export default async function RoomsPage({
     </div>
   )
 }
-
