@@ -48,6 +48,7 @@ interface Room {
   capacity: number
   occupiedBeds: number
   roomType: string
+  pricePerMonth: number | string
   gender: 'MALE' | 'FEMALE' | null
   building: {
     name: string
