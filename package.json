@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "vercel-build": "node scripts/vercel-build.js",
+    "vercel-build": "prisma generate",
     "netlify-build": "node scripts/vercel-build.js",
     "start": "next start",
     "lint": "next lint",
