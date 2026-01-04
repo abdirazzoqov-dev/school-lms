@@ -62,7 +62,12 @@ export function SubscriptionPlans() {
     try {
       setIsLoading(true)
       const data = await getSubscriptionPlans()
-      setPlans(data as PlanData[])
+      // Convert Decimal price to number
+      const convertedData = data.map(plan => ({
+        ...plan,
+        price: Number(plan.price)
+      }))
+      setPlans(convertedData as PlanData[])
     } catch (error) {
       console.error('Error loading plans:', error)
       // If no plans exist, initialize defaults
@@ -71,7 +76,12 @@ export function SubscriptionPlans() {
         try {
           await initializeDefaultPlans()
           const data = await getSubscriptionPlans()
-          setPlans(data as PlanData[])
+          // Convert Decimal price to number
+          const convertedData = data.map(plan => ({
+            ...plan,
+            price: Number(plan.price)
+          }))
+          setPlans(convertedData as PlanData[])
           toast.success('Tarif rejalar yaratildi')
         } catch (initError) {
           console.error('Error initializing plans:', initError)
