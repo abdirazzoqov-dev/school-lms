@@ -12,62 +12,63 @@ export const revalidate = 30
 export const dynamic = 'auto' // Allows Next.js to optimize route caching
 
 export default async function TeacherDetailPage({ params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions)
+  try {
+    const session = await getServerSession(authOptions)
 
-  if (!session || session.user.role !== 'ADMIN') {
-    redirect('/unauthorized')
-  }
+    if (!session || session.user.role !== 'ADMIN') {
+      redirect('/unauthorized')
+    }
 
-  const tenantId = session.user.tenantId!
+    const tenantId = session.user.tenantId!
 
-  const teacher = await db.teacher.findFirst({
-    where: { id: params.id, tenantId },
-    include: {
-      user: {
-        select: {
-          fullName: true,
-          email: true,
-          phone: true,
-          createdAt: true,
-        }
-      },
-      classSubjects: {
-        include: {
-          class: true,
-          subject: true,
-        }
-      },
-      classTeacher: {
-        include: {
-          _count: {
-            select: {
-              students: true
-            }
+    const teacher = await db.teacher.findFirst({
+      where: { id: params.id, tenantId },
+      include: {
+        user: {
+          select: {
+            fullName: true,
+            email: true,
+            phone: true,
+            createdAt: true,
           }
-        }
-      },
-      grades: {
-        take: 10,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          student: {
-            include: {
-              user: {
-                select: {
-                  fullName: true
-                }
+        },
+        classSubjects: {
+          include: {
+            class: true,
+            subject: true,
+          }
+        },
+        classTeacher: {
+          include: {
+            _count: {
+              select: {
+                students: true
               }
             }
-          },
-          subject: true,
+          }
+        },
+        grades: {
+          take: 10,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            student: {
+              include: {
+                user: {
+                  select: {
+                    fullName: true
+                  }
+                }
+              }
+            },
+            subject: true,
+          }
         }
       }
-    }
-  })
+    }).catch(() => null)
 
-  if (!teacher) {
-    redirect('/admin/teachers')
-  }
+    if (!teacher) {
+      redirect('/admin/teachers')
+    }
 
   return (
     <div className="space-y-6">
@@ -313,4 +314,10 @@ export default async function TeacherDetailPage({ params }: { params: { id: stri
       </Card>
     </div>
   )
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Teacher detail page error:', error)
+    }
+    throw error
+  }
 }

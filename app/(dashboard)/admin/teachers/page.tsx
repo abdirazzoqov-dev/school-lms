@@ -78,32 +78,32 @@ export default async function TeachersPage({
     const totalPages = Math.ceil(totalTeachers / pageSize)
 
     const teachers = await db.teacher.findMany({
-    where: whereClause,
-    orderBy: getOrderBy(),
-    skip,
-    take: pageSize,
-    include: {
-      user: {
-        select: {
-          fullName: true,
-          email: true,
-          phone: true,
-          isActive: true,
-        }
-      },
-      classSubjects: {
-        include: {
-          class: true,
-          subject: true
-        }
-      },
-      _count: {
-        select: {
-          classSubjects: true
+      where: whereClause,
+      orderBy: getOrderBy(),
+      skip,
+      take: pageSize,
+      include: {
+        user: {
+          select: {
+            fullName: true,
+            email: true,
+            phone: true,
+            isActive: true,
+          }
+        },
+        classSubjects: {
+          include: {
+            class: true,
+            subject: true
+          }
+        },
+        _count: {
+          select: {
+            classSubjects: true
+          }
         }
       }
-    }
-  })
+    }).catch(() => [])
 
   return (
     <div className="space-y-6">
