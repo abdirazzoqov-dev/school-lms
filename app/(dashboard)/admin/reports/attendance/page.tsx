@@ -63,12 +63,16 @@ export default async function AttendanceReportPage() {
       return aDate.toDateString() === date.toDateString()
     })
 
+    const presentCount = dayAttendances.filter(a => a.status === 'PRESENT').length
+    const totalCount = dayAttendances.length
+
     return {
       date: date.toLocaleDateString('uz-UZ', { month: 'short', day: 'numeric' }),
-      present: dayAttendances.filter(a => a.status === 'PRESENT').length,
+      present: presentCount,
       absent: dayAttendances.filter(a => a.status === 'ABSENT').length,
       late: dayAttendances.filter(a => a.status === 'LATE').length,
-      total: dayAttendances.length
+      total: totalCount,
+      rate: totalCount > 0 ? Number(((presentCount / totalCount) * 100).toFixed(1)) : 0
     }
   })
 
@@ -220,4 +224,3 @@ export default async function AttendanceReportPage() {
     </div>
   )
 }
-
