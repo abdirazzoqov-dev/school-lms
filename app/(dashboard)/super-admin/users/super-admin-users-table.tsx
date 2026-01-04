@@ -100,17 +100,17 @@ export function SuperAdminUsersTable({ users }: { users: User[] }) {
                 />
               </th>
               <th className="p-4 text-left text-sm font-medium">
-                <SortableHeader label="Ism" sortKey="fullName" />
+                <SortableHeader label="Ism" column="fullName" />
               </th>
               <th className="p-4 text-left text-sm font-medium">
-                <SortableHeader label="Maktab" sortKey="tenant" />
+                <SortableHeader label="Maktab" column="tenant" />
               </th>
               <th className="p-4 text-left text-sm font-medium">
-                <SortableHeader label="Rol" sortKey="role" />
+                <SortableHeader label="Rol" column="role" />
               </th>
               <th className="p-4 text-left text-sm font-medium">Bog'lanish</th>
               <th className="p-4 text-left text-sm font-medium">
-                <SortableHeader label="Oxirgi kirish" sortKey="lastLogin" />
+                <SortableHeader label="Oxirgi kirish" column="lastLogin" />
               </th>
               <th className="p-4 text-left text-sm font-medium">Status</th>
               <th className="p-4 text-left text-sm font-medium">Harakatlar</th>
