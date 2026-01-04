@@ -14,6 +14,9 @@ export enum LogLevel {
 interface LogContext {
   userId?: string
   tenantId?: string
+  studentId?: string
+  month?: number
+  year?: number
   action?: string
   resourceType?: string
   resourceId?: string
