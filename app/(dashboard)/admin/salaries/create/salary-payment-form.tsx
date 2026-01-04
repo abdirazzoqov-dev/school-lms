@@ -134,6 +134,8 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
       // BUGFIX: Only send teacherId OR staffId, not both
       const submitData = {
         ...formData,
+        type: formData.type as "FULL_SALARY" | "ADVANCE" | "BONUS" | "DEDUCTION",
+        paymentMethod: (formData.paymentMethod || undefined) as "CASH" | "CLICK" | "PAYME" | "UZUM" | "BANK" | "OTHER" | undefined,
         amount: finalAmount,
         // Clear the other ID to prevent foreign key constraint error
         teacherId: employeeType === 'teacher' ? formData.teacherId : undefined,
@@ -527,4 +529,3 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
     </form>
   )
 }
-
