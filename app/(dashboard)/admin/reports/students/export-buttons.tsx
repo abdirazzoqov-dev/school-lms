@@ -64,9 +64,9 @@ export function ExportButtons({ students, byClass, byGrade, stats }: ExportButto
         doc.setTextColor(107, 114, 128)
         doc.text(label, 20, yPos)
         doc.setTextColor(37, 99, 235)
-        doc.setFont(undefined, 'bold')
+        doc.setFont('helvetica', 'bold')
         doc.text(value, 80, yPos)
-        doc.setFont(undefined, 'normal')
+        doc.setFont('helvetica', 'normal')
         yPos += 7
       })
       
@@ -206,4 +206,3 @@ export function ExportButtons({ students, byClass, byGrade, stats }: ExportButto
     </div>
   )
 }
-
