@@ -85,7 +85,7 @@ export default async function TeacherMaterialsPage({
     _count: true
   })
 
-  const totalSize = materials.reduce((sum, m) => sum + m.fileSize, 0)
+  const totalSize = materials.reduce((sum, m) => sum + (m.fileSize || 0), 0)
 
   return (
     <div className="space-y-6">
@@ -226,12 +226,12 @@ export default async function TeacherMaterialsPage({
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
                     <div className="text-4xl">
-                      {getFileIcon(material.fileType)}
+                      {getFileIcon(material.type)}
                     </div>
                     <div className="flex gap-2">
                       <a 
                         href={material.fileUrl} 
-                        download={material.fileName}
+                        download={material.title}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -242,6 +242,7 @@ export default async function TeacherMaterialsPage({
                       <DeleteButton
                         itemId={material.id}
                         itemName={material.title}
+                        itemType="material"
                         onDelete={deleteMaterial}
                         size="sm"
                       />
@@ -261,7 +262,7 @@ export default async function TeacherMaterialsPage({
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Turi:</span>
                       <span className="font-medium">
-                        {MATERIAL_TYPES.find(t => t.value === material.materialType)?.label}
+                        {MATERIAL_TYPES.find(t => t.value === material.type)?.label}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -276,7 +277,7 @@ export default async function TeacherMaterialsPage({
                     )}
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Hajm:</span>
-                      <span className="font-medium">{formatFileSize(material.fileSize)}</span>
+                      <span className="font-medium">{material.fileSize ? formatFileSize(material.fileSize) : 'Noma\'lum'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Sana:</span>
@@ -286,11 +287,6 @@ export default async function TeacherMaterialsPage({
                     </div>
                   </div>
 
-                  {material.isPublic && (
-                    <div className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                      Hammaga ochiq
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
