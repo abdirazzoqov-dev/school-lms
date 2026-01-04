@@ -200,7 +200,7 @@ export default async function KitchenDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-700">
-              {formatNumber(thisMonthExpenses._sum.amount?.toNumber() || 0)}
+              {formatNumber(Number(thisMonthExpenses._sum.amount || 0))}
             </div>
             <p className="text-xs text-red-600 mt-1">
               {thisMonthExpenses._count} ta xarajat
@@ -256,7 +256,7 @@ export default async function KitchenDashboardPage() {
                         <div 
                           className="h-2 rounded-full transition-all duration-300"
                           style={{ 
-                            width: `${(stat.amount / (Number(thisMonthExpenses._sum.amount) || 1)) * 100}%`,
+                            width: `${(stat.amount / (Number(thisMonthExpenses._sum.amount || 0) || 1)) * 100}%`,
                             backgroundColor: stat.color
                           }}
                         />
@@ -390,4 +390,3 @@ export default async function KitchenDashboardPage() {
     </div>
   )
 }
-

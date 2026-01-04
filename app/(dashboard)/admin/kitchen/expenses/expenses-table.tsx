@@ -252,7 +252,7 @@ export function ExpensesTable({ expenses, categories }: ExpensesTableProps) {
               </TableCell>
               <TableCell>
                 <span className="font-bold text-red-600">
-                  -{formatNumber(expense.amount)}
+                  -{formatNumber(Number(expense.amount))}
                 </span>
               </TableCell>
               <TableCell>
@@ -303,7 +303,7 @@ export function ExpensesTable({ expenses, categories }: ExpensesTableProps) {
             <AlertDialogDescription>
               Haqiqatan ham bu xarajatni o'chirmoqchimisiz?
               <br />
-              <strong>{formatNumber(selectedExpense?.amount || 0)} so'm</strong> - {selectedExpense?.category.name}
+              <strong>{formatNumber(Number(selectedExpense?.amount || 0))} so'm</strong> - {selectedExpense?.category.name}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -321,4 +321,3 @@ export function ExpensesTable({ expenses, categories }: ExpensesTableProps) {
     </div>
   )
 }
-

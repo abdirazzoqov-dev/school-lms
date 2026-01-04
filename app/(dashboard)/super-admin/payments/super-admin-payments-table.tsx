@@ -190,10 +190,7 @@ export function SuperAdminPaymentsTable({ payments }: { payments: Payment[] }) {
         onClearSelection={() => setSelectedIds([])}
         onExport={handleExport}
         entityName="to'lov"
-        showDelete={false}
-        showStatusChange={false}
       />
     </>
   )
 }
-
