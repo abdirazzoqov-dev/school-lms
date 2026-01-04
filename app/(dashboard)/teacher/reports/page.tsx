@@ -94,7 +94,8 @@ export default async function TeacherReportsPage() {
         present,
         absent,
         late,
-        total: attendance.length
+        total: attendance.length,
+        rate: attendance.length > 0 ? (present / attendance.length) * 100 : 0
       }
     })
   )
