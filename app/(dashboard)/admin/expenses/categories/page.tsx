@@ -207,10 +207,10 @@ export default async function ExpenseCategoriesPage() {
 
                 {/* Warning Alert */}
                 {category.percentage >= 85 && (
-                  <Alert variant={category.percentage >= 100 ? 'destructive' : 'warning'}>
+                  <Alert variant={category.percentage >= 100 ? 'destructive' : 'default'}>
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription className="text-xs">
-                      {category.percentage >= 100 
+                      {category.percentage >= 100
                         ? `Limit ${formatCurrency(Math.abs(category.remaining))} oshdi!`
                         : `Diqqat! Limit ${category.percentage}% ishlatilgan`
                       }
