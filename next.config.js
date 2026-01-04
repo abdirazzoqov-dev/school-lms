@@ -23,8 +23,6 @@ const nextConfig = {
   swcMinify: true,
   // Production optimizations
   ...(process.env.NODE_ENV === 'production' && {
-    // Enable output optimization for Vercel
-    output: 'standalone',
     // Optimize images
     images: {
       formats: ['image/webp', 'image/avif'],
