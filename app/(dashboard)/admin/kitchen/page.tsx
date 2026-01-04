@@ -200,7 +200,7 @@ export default async function KitchenDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-700">
-              {formatNumber(thisMonthExpenses._sum.amount || 0)}
+              {formatNumber(thisMonthExpenses._sum.amount?.toNumber() || 0)}
             </div>
             <p className="text-xs text-red-600 mt-1">
               {thisMonthExpenses._count} ta xarajat
