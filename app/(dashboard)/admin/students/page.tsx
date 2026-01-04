@@ -31,13 +31,14 @@ export default async function StudentsPage({
     order?: 'asc' | 'desc'
   }
 }) {
-  const session = await getServerSession(authOptions)
+  try {
+    const session = await getServerSession(authOptions)
 
-  if (!session || session.user.role !== 'ADMIN') {
-    redirect('/unauthorized')
-  }
+    if (!session || session.user.role !== 'ADMIN') {
+      redirect('/unauthorized')
+    }
 
-  const tenantId = session.user.tenantId!
+    const tenantId = session.user.tenantId!
 
   // Pagination
   const currentPage = parseInt(searchParams.page || '1')
@@ -94,47 +95,47 @@ export default async function StudentsPage({
     }
   }
 
-  // Get total count for pagination
-  const totalStudents = await db.student.count({ where: whereClause })
-  const totalPages = Math.ceil(totalStudents / pageSize)
+    // Get total count for pagination
+    const totalStudents = await db.student.count({ where: whereClause }).catch(() => 0)
+    const totalPages = Math.ceil(totalStudents / pageSize)
 
-  const students = await db.student.findMany({
-    where: whereClause,
-    orderBy: getOrderBy(),
-    skip,
-    take: pageSize,
-    include: {
-      user: {
-        select: {
-          fullName: true,
-          email: true,
-          phone: true
-        }
-      },
-      class: true,
-      parents: {
-        include: {
-          parent: {
-            include: {
-              user: {
-                select: {
-                  fullName: true,
-                  phone: true
+    const students = await db.student.findMany({
+      where: whereClause,
+      orderBy: getOrderBy(),
+      skip,
+      take: pageSize,
+      include: {
+        user: {
+          select: {
+            fullName: true,
+            email: true,
+            phone: true
+          }
+        },
+        class: true,
+        parents: {
+          include: {
+            parent: {
+              include: {
+                user: {
+                  select: {
+                    fullName: true,
+                    phone: true
+                  }
                 }
               }
             }
           }
         }
       }
-    }
-  })
+    }).catch(() => [])
 
-  // Get all classes for filter
-  const classes = await db.class.findMany({
-    where: { tenantId },
-    select: { id: true, name: true },
-    orderBy: { name: 'asc' }
-  })
+    // Get all classes for filter
+    const classes = await db.class.findMany({
+      where: { tenantId },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' }
+    }).catch(() => [])
 
   return (
     <div className="space-y-6">
@@ -277,4 +278,10 @@ export default async function StudentsPage({
       </div>
     </div>
   )
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Students page error:', error)
+    }
+    throw error
+  }
 }

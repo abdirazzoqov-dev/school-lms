@@ -27,56 +27,57 @@ export default async function TeachersPage({
     order?: 'asc' | 'desc'
   }
 }) {
-  const session = await getServerSession(authOptions)
+  try {
+    const session = await getServerSession(authOptions)
 
-  if (!session || session.user.role !== 'ADMIN') {
-    redirect('/unauthorized')
-  }
-
-  const tenantId = session.user.tenantId!
-
-  // Pagination
-  const currentPage = parseInt(searchParams.page || '1')
-  const pageSize = parseInt(searchParams.pageSize || '25')
-  const skip = (currentPage - 1) * pageSize
-
-  // Build where clause
-  const whereClause: any = { tenantId }
-
-  // Search filter
-  if (searchParams.search) {
-    whereClause.OR = [
-      { teacherCode: { contains: searchParams.search, mode: 'insensitive' } },
-      { specialization: { contains: searchParams.search, mode: 'insensitive' } },
-      { user: { fullName: { contains: searchParams.search, mode: 'insensitive' } } },
-      { user: { email: { contains: searchParams.search, mode: 'insensitive' } } },
-    ]
-  }
-
-  // Sorting
-  const sortBy = searchParams.sortBy || 'createdAt'
-  const order = searchParams.order || 'desc'
-  
-  const getOrderBy = () => {
-    switch (sortBy) {
-      case 'name':
-        return { user: { fullName: order } }
-      case 'code':
-        return { teacherCode: order }
-      case 'specialization':
-        return { specialization: order }
-      case 'experience':
-        return { experienceYears: order }
-      default:
-        return { createdAt: order }
+    if (!session || session.user.role !== 'ADMIN') {
+      redirect('/unauthorized')
     }
-  }
 
-  // Get total count for pagination
-  const totalTeachers = await db.teacher.count({ where: whereClause })
-  const totalPages = Math.ceil(totalTeachers / pageSize)
+    const tenantId = session.user.tenantId!
 
-  const teachers = await db.teacher.findMany({
+    // Pagination
+    const currentPage = parseInt(searchParams.page || '1')
+    const pageSize = parseInt(searchParams.pageSize || '25')
+    const skip = (currentPage - 1) * pageSize
+
+    // Build where clause
+    const whereClause: any = { tenantId }
+
+    // Search filter
+    if (searchParams.search) {
+      whereClause.OR = [
+        { teacherCode: { contains: searchParams.search, mode: 'insensitive' } },
+        { specialization: { contains: searchParams.search, mode: 'insensitive' } },
+        { user: { fullName: { contains: searchParams.search, mode: 'insensitive' } } },
+        { user: { email: { contains: searchParams.search, mode: 'insensitive' } } },
+      ]
+    }
+
+    // Sorting
+    const sortBy = searchParams.sortBy || 'createdAt'
+    const order = searchParams.order || 'desc'
+    
+    const getOrderBy = () => {
+      switch (sortBy) {
+        case 'name':
+          return { user: { fullName: order } }
+        case 'code':
+          return { teacherCode: order }
+        case 'specialization':
+          return { specialization: order }
+        case 'experience':
+          return { experienceYears: order }
+        default:
+          return { createdAt: order }
+      }
+    }
+
+    // Get total count for pagination
+    const totalTeachers = await db.teacher.count({ where: whereClause }).catch(() => 0)
+    const totalPages = Math.ceil(totalTeachers / pageSize)
+
+    const teachers = await db.teacher.findMany({
     where: whereClause,
     orderBy: getOrderBy(),
     skip,
@@ -208,4 +209,10 @@ export default async function TeachersPage({
       </div>
     </div>
   )
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Teachers page error:', error)
+    }
+    throw error
+  }
 }

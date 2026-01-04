@@ -4,80 +4,97 @@ import { UserRole, TenantStatus } from '@prisma/client'
 
 export default withAuth(
   function middleware(req) {
-    const token = req.nextauth.token
-    const path = req.nextUrl.pathname
+    try {
+      const token = req.nextauth.token
+      const path = req.nextUrl.pathname
 
-    // Super Admin routes
-    if (path.startsWith('/super-admin')) {
-      if (token?.role !== 'SUPER_ADMIN') {
-        return NextResponse.redirect(new URL('/unauthorized', req.url))
-      }
-      return NextResponse.next()
-    }
-
-    // Role-based routing
-    const role = token?.role as UserRole
-
-    // Admin routes - SUPER_ADMIN ham kirishi mumkin
-    if (path.startsWith('/admin')) {
-      if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
-        return NextResponse.redirect(new URL('/unauthorized', req.url))
-      }
-    }
-
-    // Check tenant status for non-super-admin users (after role check)
-    if (token?.role !== 'SUPER_ADMIN' && token?.tenant) {
-      const tenantStatus = token.tenant.status as TenantStatus
-
-      // BLOCKED - umuman kira olmaydi
-      if (tenantStatus === 'BLOCKED') {
-        return NextResponse.redirect(new URL('/blocked', req.url))
+      // If no token, let withAuth handle it (redirect to login)
+      if (!token) {
+        return NextResponse.next()
       }
 
-      // SUSPENDED - faqat to'lov sahifasiga kiradi
-      if (tenantStatus === 'SUSPENDED') {
-        if (!path.startsWith('/payment-required') && !path.startsWith('/api')) {
-          return NextResponse.redirect(new URL('/payment-required', req.url))
+      // Super Admin routes
+      if (path.startsWith('/super-admin')) {
+        if (token?.role !== 'SUPER_ADMIN') {
+          return NextResponse.redirect(new URL('/unauthorized', req.url))
+        }
+        return NextResponse.next()
+      }
+
+      // Role-based routing
+      const role = token?.role as UserRole
+
+      // Admin routes - SUPER_ADMIN ham kirishi mumkin
+      if (path.startsWith('/admin')) {
+        if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+          return NextResponse.redirect(new URL('/unauthorized', req.url))
         }
       }
 
-      // GRACE_PERIOD - warning banner ko'rsatiladi (middleware'da to'xtatmaydi)
-      // TRIAL va ACTIVE - to'liq access
-    }
+      // Check tenant status for non-super-admin users (after role check)
+      if (token?.role !== 'SUPER_ADMIN' && token?.tenant) {
+        const tenantStatus = token.tenant.status as TenantStatus
 
-    // Teacher routes
-    if (path.startsWith('/teacher')) {
-      if (role !== 'TEACHER') {
-        return NextResponse.redirect(new URL('/unauthorized', req.url))
+        // BLOCKED - umuman kira olmaydi
+        if (tenantStatus === 'BLOCKED') {
+          return NextResponse.redirect(new URL('/blocked', req.url))
+        }
+
+        // SUSPENDED - faqat to'lov sahifasiga kiradi
+        if (tenantStatus === 'SUSPENDED') {
+          if (!path.startsWith('/payment-required') && !path.startsWith('/api')) {
+            return NextResponse.redirect(new URL('/payment-required', req.url))
+          }
+        }
+
+        // GRACE_PERIOD - warning banner ko'rsatiladi (middleware'da to'xtatmaydi)
+        // TRIAL va ACTIVE - to'liq access
       }
-    }
 
-    // Parent routes
-    if (path.startsWith('/parent')) {
-      if (role !== 'PARENT') {
-        return NextResponse.redirect(new URL('/unauthorized', req.url))
+      // Teacher routes
+      if (path.startsWith('/teacher')) {
+        if (role !== 'TEACHER') {
+          return NextResponse.redirect(new URL('/unauthorized', req.url))
+        }
       }
-    }
 
-    // Student routes (Phase 3)
-    if (path.startsWith('/student')) {
-      if (role !== 'STUDENT') {
-        return NextResponse.redirect(new URL('/unauthorized', req.url))
+      // Parent routes
+      if (path.startsWith('/parent')) {
+        if (role !== 'PARENT') {
+          return NextResponse.redirect(new URL('/unauthorized', req.url))
+        }
       }
-    }
 
-    // Cook routes (Oshxona)
-    if (path.startsWith('/cook')) {
-      if (role !== 'COOK') {
-        return NextResponse.redirect(new URL('/unauthorized', req.url))
+      // Student routes (Phase 3)
+      if (path.startsWith('/student')) {
+        if (role !== 'STUDENT') {
+          return NextResponse.redirect(new URL('/unauthorized', req.url))
+        }
       }
-    }
 
-    return NextResponse.next()
+      // Cook routes (Oshxona)
+      if (path.startsWith('/cook')) {
+        if (role !== 'COOK') {
+          return NextResponse.redirect(new URL('/unauthorized', req.url))
+        }
+      }
+
+      return NextResponse.next()
+    } catch (error) {
+      // Log error in development
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Middleware error:', error)
+      }
+      // In production, allow request to continue (let error boundary handle it)
+      return NextResponse.next()
+    }
   },
   {
     callbacks: {
       authorized: ({ token }) => !!token,
+    },
+    pages: {
+      signIn: '/login',
     },
   }
 )

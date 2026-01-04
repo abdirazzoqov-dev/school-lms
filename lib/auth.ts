@@ -242,3 +242,22 @@ export function canAccessAdmin(role: UserRole): boolean {
   return role === 'ADMIN' || role === 'SUPER_ADMIN'
 }
 
+/**
+ * Safe getServerSession wrapper with error handling
+ * Prevents crashes when database connection fails
+ */
+export async function getSafeSession() {
+  try {
+    const { getServerSession } = await import('next-auth')
+    const session = await getServerSession(authOptions)
+    return session
+  } catch (error) {
+    // Log error in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error getting session:', error)
+    }
+    // Return null in production to prevent crash
+    return null
+  }
+}
+

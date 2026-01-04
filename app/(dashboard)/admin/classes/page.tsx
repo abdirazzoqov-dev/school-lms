@@ -21,49 +21,50 @@ export default async function ClassesPage({
 }: {
   searchParams: { search?: string; gradeLevel?: string }
 }) {
-  const session = await getServerSession(authOptions)
+  try {
+    const session = await getServerSession(authOptions)
 
-  if (!session || session.user.role !== 'ADMIN') {
-    redirect('/unauthorized')
-  }
+    if (!session || session.user.role !== 'ADMIN') {
+      redirect('/unauthorized')
+    }
 
-  const tenantId = session.user.tenantId!
-  const academicYear = getCurrentAcademicYear()
+    const tenantId = session.user.tenantId!
+    const academicYear = getCurrentAcademicYear()
 
-  const whereClause: any = { tenantId, academicYear }
+    const whereClause: any = { tenantId, academicYear }
 
-  if (searchParams.search) {
-    whereClause.OR = [
-      { name: { contains: searchParams.search, mode: 'insensitive' } },
-      { roomNumber: { contains: searchParams.search, mode: 'insensitive' } },
-    ]
-  }
+    if (searchParams.search) {
+      whereClause.OR = [
+        { name: { contains: searchParams.search, mode: 'insensitive' } },
+        { roomNumber: { contains: searchParams.search, mode: 'insensitive' } },
+      ]
+    }
 
-  if (searchParams.gradeLevel) {
-    whereClause.gradeLevel = parseInt(searchParams.gradeLevel)
-  }
+    if (searchParams.gradeLevel) {
+      whereClause.gradeLevel = parseInt(searchParams.gradeLevel)
+    }
 
-  const classes = await db.class.findMany({
-    where: whereClause,
-    orderBy: { gradeLevel: 'asc' },
-    include: {
-      classTeacher: {
+      const classes = await db.class.findMany({
+        where: whereClause,
+        orderBy: { gradeLevel: 'asc' },
         include: {
-          user: {
+          classTeacher: {
+            include: {
+              user: {
+                select: {
+                  fullName: true
+                }
+              }
+            }
+          },
+          _count: {
             select: {
-              fullName: true
+              students: { where: { status: 'ACTIVE' } },
+              classSubjects: true
             }
           }
         }
-      },
-      _count: {
-        select: {
-          students: { where: { status: 'ACTIVE' } },
-          classSubjects: true
-        }
-      }
-    }
-  })
+      }).catch(() => [])
 
   return (
     <div className="space-y-6 p-6">
@@ -297,4 +298,10 @@ export default async function ClassesPage({
       )}
     </div>
   )
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Classes page error:', error)
+    }
+    throw error
+  }
 }

@@ -22,83 +22,84 @@ export default async function ParentsPage({
 }: {
   searchParams: SearchParams
 }) {
-  const session = await getServerSession(authOptions)
+  try {
+    const session = await getServerSession(authOptions)
 
-  if (!session || session.user.role !== 'ADMIN') {
-    redirect('/unauthorized')
-  }
-
-  const tenantId = session.user.tenantId!
-
-  // Build where clause
-  const whereClause: any = {
-    tenantId,
-  }
-
-  // Search filter
-  if (searchParams.search) {
-    whereClause.user = {
-      OR: [
-        { fullName: { contains: searchParams.search, mode: 'insensitive' } },
-        { email: { contains: searchParams.search, mode: 'insensitive' } },
-        { phone: { contains: searchParams.search, mode: 'insensitive' } },
-      ],
+    if (!session || session.user.role !== 'ADMIN') {
+      redirect('/unauthorized')
     }
-  }
 
-  // Status filter
-  if (searchParams.status) {
-    whereClause.user = {
-      ...whereClause.user,
-      isActive: searchParams.status === 'active',
+    const tenantId = session.user.tenantId!
+
+    // Build where clause
+    const whereClause: any = {
+      tenantId,
     }
-  }
 
-  // Get parents with their children
-  const parents = await db.parent.findMany({
-    where: whereClause,
-    include: {
-      user: {
-        select: {
-          fullName: true,
-          email: true,
-          phone: true,
-          isActive: true,
+    // Search filter
+    if (searchParams.search) {
+      whereClause.user = {
+        OR: [
+          { fullName: { contains: searchParams.search, mode: 'insensitive' } },
+          { email: { contains: searchParams.search, mode: 'insensitive' } },
+          { phone: { contains: searchParams.search, mode: 'insensitive' } },
+        ],
+      }
+    }
+
+    // Status filter
+    if (searchParams.status) {
+      whereClause.user = {
+        ...whereClause.user,
+        isActive: searchParams.status === 'active',
+      }
+    }
+
+    // Get parents with their children
+    const parents = await db.parent.findMany({
+      where: whereClause,
+      include: {
+        user: {
+          select: {
+            fullName: true,
+            email: true,
+            phone: true,
+            isActive: true,
+          },
         },
-      },
-      students: {
-        include: {
-          student: {
-            include: {
-              user: {
-                select: {
-                  fullName: true,
+        students: {
+          include: {
+            student: {
+              include: {
+                user: {
+                  select: {
+                    fullName: true,
+                  },
                 },
-              },
-              class: {
-                select: {
-                  name: true,
+                class: {
+                  select: {
+                    name: true,
+                  },
                 },
               },
             },
           },
         },
       },
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  })
+      orderBy: {
+        createdAt: 'desc',
+      },
+    }).catch(() => [])
 
-  // Get all classes for filter
-  const classes = await db.class.findMany({
-    where: { tenantId },
-    select: {
-      id: true,
-      name: true,
-    },
-    orderBy: { name: 'asc' },
-  })
+    // Get all classes for filter
+    const classes = await db.class.findMany({
+      where: { tenantId },
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: { name: 'asc' },
+    }).catch(() => [])
 
   // Filter by class if specified
   let filteredParents = parents
@@ -229,5 +230,11 @@ export default async function ParentsPage({
       </Card>
     </div>
   )
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Parents page error:', error)
+    }
+    throw error
+  }
 }
 

@@ -32,16 +32,17 @@ interface PageProps {
 }
 
 export default async function ParentDetailPage({ params }: PageProps) {
-  const session = await getServerSession(authOptions)
+  try {
+    const session = await getServerSession(authOptions)
 
-  if (!session || session.user.role !== 'ADMIN') {
-    redirect('/unauthorized')
-  }
+    if (!session || session.user.role !== 'ADMIN') {
+      redirect('/unauthorized')
+    }
 
-  const tenantId = session.user.tenantId!
+    const tenantId = session.user.tenantId!
 
-  // Get parent details
-  const parent = await db.parent.findFirst({
+    // Get parent details
+    const parent = await db.parent.findFirst({
     where: {
       id: params.id,
       tenantId,
@@ -440,4 +441,10 @@ export default async function ParentDetailPage({ params }: PageProps) {
       </Card>
     </div>
   )
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Parent detail page error:', error)
+    }
+    throw error
+  }
 }
