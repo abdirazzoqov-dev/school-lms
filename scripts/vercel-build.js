@@ -10,7 +10,10 @@ try {
     console.log('Seed script failed, continuing build:', seedError.message)
   }
   console.log('Database synced.')
+
+  console.log('Running Next.js build...')
+  execSync('npm run build', { stdio: 'inherit' })
 } catch (error) {
-  console.error('Migration failed:', error)
+  console.error('Build failed:', error)
   process.exit(1)
 }
