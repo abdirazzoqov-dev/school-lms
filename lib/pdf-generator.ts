@@ -39,9 +39,9 @@ export function generatePaymentReceipt(data: PaymentReceiptData): jsPDF {
   const doc = new jsPDF()
   
   // Colors
-  const primaryColor = [37, 99, 235] // Blue
-  const successColor = [34, 197, 94] // Green
-  const textColor = [55, 65, 81] // Gray
+  const primaryColor: [number, number, number] = [37, 99, 235] // Blue
+  const successColor: [number, number, number] = [34, 197, 94] // Green
+  const textColor: [number, number, number] = [55, 65, 81] // Gray
   
   let yPos = 20
   
