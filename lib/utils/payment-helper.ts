@@ -178,7 +178,6 @@ export async function getAllStudentsCurrentMonthStatus(tenantId: string) {
       results.push({
         studentId: student.id,
         studentCode: student.studentCode,
-        studentName: student.user?.fullName || 'Noma\'lum',
         ...progress
       })
     }
