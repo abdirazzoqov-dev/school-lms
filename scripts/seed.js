@@ -37,7 +37,7 @@ async function main() {
       data: {
         email: 'admin@school.com',
         fullName: 'Administrator',
-        password: hashedPassword,
+        passwordHash: hashedPassword,
         role: 'ADMIN',
         phone: '+998901234567',
         tenantId: tenant.id
