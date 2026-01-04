@@ -157,23 +157,8 @@ export default async function CookDashboard() {
             <ShoppingCart className="h-5 w-5 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-700">
-              {myTotalExpenses._count}
-            </div>
-            <p className="text-xs text-blue-600 mt-1">
-              ta xarajat
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-red-800">Jami Summa</CardTitle>
-            <TrendingDown className="h-5 w-5 text-red-600" />
-          </CardHeader>
-          <CardContent>
             <div className="text-xl font-bold text-red-700">
-              {formatNumber(myTotalExpenses._sum.amount || 0)}
+              {formatNumber(Number(myTotalExpenses._sum.amount || 0))}
             </div>
             <p className="text-xs text-red-600 mt-1">
               so'm sarflangan
@@ -183,12 +168,12 @@ export default async function CookDashboard() {
 
         <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-orange-800">Bu Oy</CardTitle>
+            <CardTitle className="text-sm font-medium text-blue-800">Bu Oy</CardTitle>
             <Calendar className="h-5 w-5 text-orange-600" />
           </CardHeader>
           <CardContent>
             <div className="text-xl font-bold text-orange-700">
-              {formatNumber(myThisMonthExpenses._sum.amount || 0)}
+              {formatNumber(Number(myThisMonthExpenses._sum.amount || 0))}
             </div>
             <p className="text-xs text-orange-600 mt-1">
               {myThisMonthExpenses._count} ta xarajat
@@ -203,7 +188,7 @@ export default async function CookDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-xl font-bold text-green-700">
-              {formatNumber(myTodayExpenses._sum.amount || 0)}
+              {formatNumber(Number(myTodayExpenses._sum.amount || 0))}
             </div>
             <p className="text-xs text-green-600 mt-1">
               {myTodayExpenses._count} ta xarajat
@@ -248,7 +233,7 @@ export default async function CookDashboard() {
                       </div>
                     </div>
                     <span className="font-bold text-red-600">
-                      -{formatNumber(expense.amount)}
+                      -{formatNumber(Number(expense.amount))}
                     </span>
                   </div>
                 ))
@@ -296,4 +281,3 @@ export default async function CookDashboard() {
     </div>
   )
 }
-
