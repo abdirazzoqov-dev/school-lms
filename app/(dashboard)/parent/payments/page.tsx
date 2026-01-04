@@ -107,7 +107,7 @@ export default async function ParentPaymentsPage() {
     .reduce((sum, p) => sum + Number(p.amount), 0)
 
   const totalOverdue = payments
-    .filter(p => p.status === 'OVERDUE')
+    .filter(p => p.status === 'PENDING' && p.dueDate < new Date())
     .reduce((sum, p) => sum + Number(p.amount), 0)
 
   const totalAmount = payments.reduce((sum, p) => sum + Number(p.amount), 0)
@@ -190,7 +190,7 @@ export default async function ParentPaymentsPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>{child.user.fullName}</CardTitle>
+                    <CardTitle>{child.user?.fullName || 'O\'quvchi'}</CardTitle>
                     <p className="text-sm text-muted-foreground">
                       {child.class?.name || 'Sinfga biriktirilmagan'}
                     </p>
@@ -225,12 +225,10 @@ export default async function ParentPaymentsPage() {
                             </td>
                             <td className="p-3">
                               <Badge variant="outline">
-                                {payment.type === 'TUITION' && 'O\'quv to\'lovi'}
-                                {payment.type === 'REGISTRATION' && 'Ro\'yxatga olish'}
-                                {payment.type === 'EXAM' && 'Imtihon'}
-                                {payment.type === 'LIBRARY' && 'Kutubxona'}
-                                {payment.type === 'TRANSPORT' && 'Transport'}
-                                {payment.type === 'OTHER' && 'Boshqa'}
+                                {payment.paymentType === 'TUITION' && 'O\'quv to\'lovi'}
+                                {payment.paymentType === 'BOOKS' && 'Kitoblar'}
+                                {payment.paymentType === 'UNIFORM' && 'Forma'}
+                                {payment.paymentType === 'OTHER' && 'Boshqa'}
                               </Badge>
                             </td>
                             <td className="p-3 font-semibold">
@@ -247,17 +245,17 @@ export default async function ParentPaymentsPage() {
                               )}
                               {payment.status === 'PENDING' && (
                                 <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-                                  Kutilmoqda
+                                  {payment.dueDate < new Date() ? 'Muddati o\'tgan' : 'Kutilmoqda'}
                                 </Badge>
                               )}
-                              {payment.status === 'OVERDUE' && (
+                              {payment.status === 'FAILED' && (
                                 <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
-                                  Muddati o'tgan
+                                  Muvaffaqiyatsiz
                                 </Badge>
                               )}
-                              {payment.status === 'CANCELLED' && (
+                              {payment.status === 'REFUNDED' && (
                                 <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">
-                                  Bekor qilingan
+                                  Qaytarilgan
                                 </Badge>
                               )}
                             </td>
@@ -294,4 +292,3 @@ export default async function ParentPaymentsPage() {
     </div>
   )
 }
-

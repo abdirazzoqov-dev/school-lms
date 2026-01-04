@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { gradeSchema, GradeFormData, bulkGradeSchema, BulkGradeFormData } from '@/lib/validations/grade'
 import { revalidatePath } from 'next/cache'
+import { Decimal } from '@prisma/client/runtime/library'
 
 export async function createGrade(data: GradeFormData) {
   try {
@@ -149,10 +150,10 @@ export async function updateGrade(gradeId: string, data: Partial<GradeFormData>)
       updateData.percentage = (data.score / data.maxScore) * 100
     } else if (data.score !== undefined) {
       updateData.score = data.score
-      updateData.percentage = (data.score / existingGrade.maxScore.toNumber()) * 100
+      updateData.percentage = (data.score / Number(existingGrade.maxScore)) * 100
     } else if (data.maxScore !== undefined) {
       updateData.maxScore = data.maxScore
-      updateData.percentage = (existingGrade.score.toNumber() / data.maxScore) * 100
+      updateData.percentage = (Number(existingGrade.score) / data.maxScore) * 100
     }
 
     const grade = await db.grade.update({
@@ -204,4 +205,3 @@ export async function deleteGrade(gradeId: string) {
     return { success: false, error: error.message || 'Xatolik yuz berdi' }
   }
 }
-
