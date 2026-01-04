@@ -36,60 +36,87 @@ export default async function AdminDashboard() {
   today.setHours(0, 0, 0, 0)
   const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1)
 
-  // ✅ Optimized parallel queries
-  const [
-    stats,
-    recentStudents,
-    recentPayments,
-    attendanceData,
-    gradeDistribution,
-    paymentChartData
-  ] = await Promise.all([
-    // Core statistics
-    getDashboardStats(tenantId, thisMonthStart, today, academicYear),
-    
-    // Recent students (top 5)
-    db.student.findMany({
-      where: { tenantId },
-      take: 5,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        studentCode: true,
-        status: true,
-        createdAt: true,
-        user: { select: { fullName: true } },
-        class: { select: { name: true } }
-      }
-    }),
-    
-    // Recent payments (top 5)
-    db.payment.findMany({
-      where: { tenantId, status: 'COMPLETED' },
-      take: 5,
-      orderBy: { paidDate: 'desc' },
-      select: {
-        id: true,
-        amount: true,
-        paidDate: true,
-        paymentMethod: true,
-        student: {
-          select: {
-            user: { select: { fullName: true } }
+  // ✅ Optimized parallel queries with error handling
+  let stats, recentStudents, recentPayments, attendanceData, gradeDistribution, paymentChartData
+
+  try {
+    [
+      stats,
+      recentStudents,
+      recentPayments,
+      attendanceData,
+      gradeDistribution,
+      paymentChartData
+    ] = await Promise.all([
+      // Core statistics
+      getDashboardStats(tenantId, thisMonthStart, today, academicYear),
+
+      // Recent students (top 5)
+      db.student.findMany({
+        where: { tenantId },
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          studentCode: true,
+          status: true,
+          createdAt: true,
+          user: { select: { fullName: true } },
+          class: { select: { name: true } }
+        }
+      }),
+
+      // Recent payments (top 5)
+      db.payment.findMany({
+        where: { tenantId, status: 'COMPLETED' },
+        take: 5,
+        orderBy: { paidDate: 'desc' },
+        select: {
+          id: true,
+          amount: true,
+          paidDate: true,
+          paymentMethod: true,
+          student: {
+            select: {
+              user: { select: { fullName: true } }
+            }
           }
         }
-      }
-    }),
-    
-    // Attendance data (last 7 days)
-    getAttendanceData(tenantId, 7),
-    
-    // Grade distribution
-    getGradeDistribution(tenantId),
-    
-    // Payment chart data
-    getPaymentChartData(tenantId)
-  ])
+      }),
+
+      // Attendance data (last 7 days)
+      getAttendanceData(tenantId, 7),
+
+      // Grade distribution
+      getGradeDistribution(tenantId),
+
+      // Payment chart data
+      getPaymentChartData(tenantId)
+    ])
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error)
+    // Default values
+    stats = {
+      totalStudents: 0,
+      activeStudents: 0,
+      trialStudents: 0,
+      totalTeachers: 0,
+      totalClasses: 0,
+      totalSubjects: 0,
+      presentToday: 0,
+      completedPayments: 0,
+      pendingPayments: 0,
+      overduePayments: 0,
+      income: 0,
+      totalExpenses: 0,
+      expenseCategories: []
+    }
+    recentStudents = []
+    recentPayments = []
+    attendanceData = []
+    gradeDistribution = []
+    paymentChartData = []
+  }
 
   const balance = stats.income - stats.totalExpenses
   const attendanceRate = stats.totalStudents > 0 
