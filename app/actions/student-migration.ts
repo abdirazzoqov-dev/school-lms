@@ -52,7 +52,7 @@ export async function migrateStudentsWithoutUsers() {
     for (const student of studentsWithoutUser) {
       try {
         // Get student's name from parent
-        const primaryParent = student.parents.find(p => p.isPrimary)
+        const primaryParent = student.parents.find(p => p.hasAccess)
         const parentName = primaryParent?.parent.user.fullName || 'O\'quvchi'
         
         // Extract first name or use student code
@@ -170,7 +170,7 @@ export async function createUserForStudent(studentId: string, fullName: string, 
 
     // Create user
     const defaultPassword = await hashPassword('Student123!')
-    const primaryParent = student.parents.find(p => p.isPrimary)
+    const primaryParent = student.parents.find(p => p.hasAccess)
     
     const user = await db.user.create({
       data: {
@@ -206,4 +206,3 @@ export async function createUserForStudent(studentId: string, fullName: string, 
     }
   }
 }
-

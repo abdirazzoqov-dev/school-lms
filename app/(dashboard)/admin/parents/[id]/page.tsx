@@ -63,11 +63,9 @@ export default async function ParentDetailPage({ params }: PageProps) {
         },
       },
       students: {
-        select: {
-          isPrimary: true,
+        include: {
           student: {
-            select: {
-              id: true,
+            include: {
               user: {
                 select: {
                   fullName: true,
@@ -345,7 +343,7 @@ export default async function ParentDetailPage({ params }: PageProps) {
                               {sp.student.class?.name || 'Sinf biriktirilmagan'}
                             </span>
                           </div>
-                          {sp.isPrimary && (
+                          {sp.hasAccess && (
                             <Badge variant="outline" className="mt-2 text-xs">
                               Asosiy ota-ona
                             </Badge>
@@ -400,7 +398,7 @@ export default async function ParentDetailPage({ params }: PageProps) {
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-lg">
-                      {formatNumber(payment.amount)} so'm
+                      {formatNumber(Number(payment.amount))} so'm
                     </p>
                     <Badge
                       variant={
@@ -441,4 +439,3 @@ export default async function ParentDetailPage({ params }: PageProps) {
     </div>
   )
 }
-
