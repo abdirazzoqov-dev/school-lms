@@ -41,7 +41,7 @@ export default async function ParentMaterialsPage({
           },
           class: {
             include: {
-              subjects: {
+              classSubjects: {
                 include: {
                   subject: true
                 }
@@ -85,7 +85,7 @@ export default async function ParentMaterialsPage({
   }
 
   // Get subjects for this class
-  const classSubjects = selectedStudent.class?.subjects || []
+  const classSubjects = selectedStudent.class?.classSubjects || []
   const subjects = classSubjects.map(cs => cs.subject)
 
   // Build where clause for materials
@@ -282,11 +282,11 @@ export default async function ParentMaterialsPage({
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
                     <div className="text-4xl">
-                      {getFileIcon(material.fileType)}
+                      {getFileIcon(material.type)}
                     </div>
                     <a 
                       href={material.fileUrl} 
-                      download={material.fileName}
+                      download={material.title}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -309,7 +309,7 @@ export default async function ParentMaterialsPage({
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Turi:</span>
                       <span className="font-medium">
-                        {MATERIAL_TYPES.find(t => t.value === material.materialType)?.label}
+                        {MATERIAL_TYPES.find(t => t.value === material.type)?.label}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -328,7 +328,7 @@ export default async function ParentMaterialsPage({
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Hajm:</span>
-                      <span className="font-medium">{formatFileSize(material.fileSize)}</span>
+                      <span className="font-medium">{formatFileSize(material.fileSize || 0)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Sana:</span>
@@ -354,4 +354,3 @@ export default async function ParentMaterialsPage({
     </div>
   )
 }
-
