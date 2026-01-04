@@ -13,13 +13,6 @@ export const db = globalForPrisma.prisma || new PrismaClient({
       url: process.env.DATABASE_URL,
     },
   },
-  // Performance optimizations
-  __internal: {
-    engine: {
-      // Preconnect to database for faster first query
-      connectTimeout: 10000,
-    },
-  },
 })
 
 // Warm up connection pool on first import in development
