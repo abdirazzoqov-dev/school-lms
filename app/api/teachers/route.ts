@@ -17,7 +17,11 @@ export async function GET() {
       where: {
         tenantId,
       },
-      include: {
+      select: {
+        id: true,
+        teacherCode: true,
+        specialization: true,
+        experienceYears: true,
         user: {
           select: {
             fullName: true,
