@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,16 +27,32 @@ export default function CreateClassPage() {
     maxStudents: 30,
   })
 
-  useEffect(() => {
-    // Load teachers
-    fetch('/api/teachers')
-      .then(res => res.json())
-      .then(data => {
-        setTeachers(data.teachers || [])
-        setLoadingTeachers(false)
-      })
-      .catch(() => setLoadingTeachers(false))
+  const loadTeachers = useCallback(async () => {
+    try {
+      setLoadingTeachers(true)
+      const res = await fetch('/api/teachers', { cache: 'no-store' })
+      const data = await res.json()
+      setTeachers(data.teachers || [])
+    } catch (error) {
+      console.error('Error loading teachers:', error)
+      setTeachers([])
+    } finally {
+      setLoadingTeachers(false)
+    }
   }, [])
+
+  useEffect(() => {
+    // Load teachers on mount
+    loadTeachers()
+
+    // Reload teachers when window gains focus (user might have created a teacher in another tab)
+    const handleFocus = () => {
+      loadTeachers()
+    }
+
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [loadTeachers])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -138,7 +154,23 @@ export default function CreateClassPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="classTeacherId">Sinf Rahbari</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="classTeacherId">Sinf Rahbari</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={loadTeachers}
+                    disabled={loadingTeachers}
+                    className="h-7 text-xs"
+                  >
+                    {loadingTeachers ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      '↻ Yangilash'
+                    )}
+                  </Button>
+                </div>
                 <Select
                   value={formData.classTeacherId}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, classTeacherId: value }))}
@@ -147,13 +179,24 @@ export default function CreateClassPage() {
                     <SelectValue placeholder="Sinf rahbarini tanlang" />
                   </SelectTrigger>
                   <SelectContent>
-                    {teachers.map((teacher) => (
-                      <SelectItem key={teacher.id} value={teacher.id}>
-                        {teacher.user?.fullName || 'No name'} ({teacher.specialization})
+                    {teachers.length === 0 && !loadingTeachers ? (
+                      <SelectItem value="none" disabled>
+                        O'qituvchilar topilmadi
                       </SelectItem>
-                    ))}
+                    ) : (
+                      teachers.map((teacher) => (
+                        <SelectItem key={teacher.id} value={teacher.id}>
+                          {teacher.user?.fullName || 'No name'} {teacher.specialization && `(${teacher.specialization})`}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
+                {teachers.length === 0 && !loadingTeachers && (
+                  <p className="text-xs text-muted-foreground">
+                    O'qituvchilar ro'yxati bo'sh. Avval o'qituvchi yarating.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
