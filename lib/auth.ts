@@ -165,10 +165,6 @@ export const authOptions: NextAuthOptions = {
       }
       return session
     },
-    async signOut() {
-      // Clean up any additional session data if needed
-      return true
-    },
   },
   debug: process.env.NODE_ENV === 'development',
 }
