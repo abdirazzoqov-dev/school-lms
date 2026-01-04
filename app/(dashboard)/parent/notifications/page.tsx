@@ -143,7 +143,7 @@ export default async function ParentNotificationsPage() {
                         <Badge variant="secondary" className="text-xs">Yangi</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mb-2">
-                        {notification.message}
+                        {notification.content}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {formatDateTime(notification.createdAt)}
@@ -182,7 +182,7 @@ export default async function ParentNotificationsPage() {
                         {notification.title}
                       </h4>
                       <p className="text-sm text-muted-foreground mb-2 opacity-75">
-                        {notification.message}
+                        {notification.content}
                       </p>
                       <p className="text-xs text-muted-foreground opacity-75">
                         {formatDateTime(notification.createdAt)}
@@ -232,4 +232,3 @@ export default async function ParentNotificationsPage() {
     </div>
   )
 }
-
