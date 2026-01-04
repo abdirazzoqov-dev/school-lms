@@ -46,20 +46,20 @@ export default async function FinancialReportPage() {
     .reduce((sum, p) => sum + Number(p.amount), 0)
 
   const overdueAmount = payments
-    .filter(p => p.status === 'OVERDUE')
+    .filter(p => p.status === 'PENDING' && p.dueDate < new Date())
     .reduce((sum, p) => sum + Number(p.amount), 0)
 
   const completedCount = payments.filter(p => p.status === 'COMPLETED').length
   const pendingCount = payments.filter(p => p.status === 'PENDING').length
-  const overdueCount = payments.filter(p => p.status === 'OVERDUE').length
+  const overdueCount = payments.filter(p => p.status === 'PENDING' && p.dueDate < new Date()).length
 
   // By payment type
   const byType = payments.reduce((acc, payment) => {
     if (payment.status === 'COMPLETED') {
-      if (!acc[payment.type]) {
-        acc[payment.type] = 0
+      if (!acc[payment.paymentType]) {
+        acc[payment.paymentType] = 0
       }
-      acc[payment.type] += Number(payment.amount)
+      acc[payment.paymentType] += Number(payment.amount)
     }
     return acc
   }, {} as Record<string, number>)
@@ -256,4 +256,3 @@ export default async function FinancialReportPage() {
     </div>
   )
 }
-
