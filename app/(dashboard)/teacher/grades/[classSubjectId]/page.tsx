@@ -136,7 +136,7 @@ export default async function GradeEntryPage({
                 </thead>
                 <tbody className="divide-y">
                   {recentGrades.map((grade) => {
-                    const percentage = (grade.score / grade.maxScore) * 100
+                    const percentage = (Number(grade.score) / Number(grade.maxScore)) * 100
                     return (
                       <tr key={grade.id} className="hover:bg-muted/50">
                         <td className="p-4">
@@ -148,7 +148,7 @@ export default async function GradeEntryPage({
                           </span>
                         </td>
                         <td className="p-4">
-                          <span className="font-mono">{grade.score}/{grade.maxScore}</span>
+                          <span className="font-mono">{Number(grade.score)}/{Number(grade.maxScore)}</span>
                         </td>
                         <td className="p-4">
                           <span className={`font-bold ${
