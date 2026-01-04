@@ -16,19 +16,18 @@ interface Teacher {
   id: string
   teacherCode: string
   specialization: string
-  experienceYears: number
-  qualification: string | null
-  salary: any
+  experienceYears: number | null
   user: {
-    id: string
     fullName: string
     email: string
     phone: string | null
     isActive: boolean
   }
-  classTeacher: Array<{
-    id: string
-    name: string
+  classSubjects?: Array<{
+    class: {
+      id: string
+      name: string
+    }
   }>
 }
 
@@ -185,4 +184,3 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
     </>
   )
 }
-
