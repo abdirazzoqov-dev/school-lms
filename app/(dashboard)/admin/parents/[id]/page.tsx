@@ -64,7 +64,6 @@ export default async function ParentDetailPage({ params }: PageProps) {
       },
       students: {
         select: {
-          studentId: true,
           isPrimary: true,
           student: {
             select: {
