@@ -28,7 +28,12 @@ export default async function EditParentPage({ params }: PageProps) {
       id: params.id,
       tenantId,
     },
-    include: {
+    select: {
+      id: true,
+      relationship: true,
+      occupation: true,
+      workAddress: true,
+      emergencyContact: true,
       user: {
         select: {
           fullName: true,
