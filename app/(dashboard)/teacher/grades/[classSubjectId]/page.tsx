@@ -34,8 +34,7 @@ export default async function GradeEntryPage({
   const classSubject = await db.classSubject.findFirst({
     where: {
       id: params.classSubjectId,
-      teacherId: teacher.id,
-      tenantId
+      teacherId: teacher.id
     },
     include: {
       class: {
