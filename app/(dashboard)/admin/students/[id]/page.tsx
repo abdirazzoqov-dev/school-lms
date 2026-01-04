@@ -406,8 +406,8 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
                         <tr key={grade.id}>
                           <td className="p-3">{grade.subject.name}</td>
                           <td className="p-3">
-                            <span className="font-bold text-lg">{grade.grade}</span>
-                            <span className="text-muted-foreground">/{grade.maxGrade}</span>
+                            <span className="font-bold text-lg">{Number(grade.score)}</span>
+                            <span className="text-muted-foreground">/{Number(grade.maxScore)}</span>
                           </td>
                           <td className="p-3">
                             <span className="text-xs bg-slate-100 px-2 py-1 rounded">
@@ -466,7 +466,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
                             </span>
                           </td>
                           <td className="p-3 text-sm text-muted-foreground">
-                            {att.remarks || '-'}
+                            {att.notes || '-'}
                           </td>
                         </tr>
                       ))}
@@ -561,7 +561,7 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-lg">{formatNumber(payment.amount)} so'm</p>
+                          <p className="font-bold text-lg">{formatNumber(Number(payment.amount))} so'm</p>
                           <span className={`text-xs px-2 py-1 rounded-full ${
                             payment.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
                             payment.status === 'PENDING' ? 'bg-orange-100 text-orange-800' :
@@ -586,4 +586,3 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
     </div>
   )
 }
-

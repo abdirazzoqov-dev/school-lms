@@ -9,18 +9,20 @@ interface Schedule {
   startTime: string
   endTime: string
   roomNumber: string | null
-  subject: {
+  type?: string
+  title?: string | null
+  subject?: {
     name: string
     code?: string
-  }
+  } | null
   teacher?: {
     user: {
       fullName: string
     }
-  }
+  } | null
   class?: {
     name: string
-  }
+  } | null
 }
 
 interface TimetableProps {
@@ -184,4 +186,3 @@ export function Timetable({ schedules, title = 'Dars Jadvali', showTeacher = tru
     </Card>
   )
 }
-
