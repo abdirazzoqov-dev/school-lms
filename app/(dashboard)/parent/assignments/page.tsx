@@ -227,7 +227,7 @@ export default async function ParentAssignmentsPage({
 
                         <div className="flex flex-wrap gap-2 text-sm">
                           <Badge variant="outline">
-                            {assignment.subject.name}
+                            {assignment.subject!.name}
                           </Badge>
                           <span className="text-muted-foreground flex items-center gap-1">
                             <User className="h-3 w-3" />

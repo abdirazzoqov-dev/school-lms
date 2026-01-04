@@ -152,7 +152,7 @@ export default async function TeacherAssignmentsPage() {
 
                           <div className="flex flex-wrap gap-2 text-sm">
                             <Badge variant="outline">
-                              {assignment.subject.name}
+                              {assignment.subject!.name}
                             </Badge>
                             <Badge variant="outline">
                               {assignment.class.name}
