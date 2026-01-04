@@ -666,8 +666,8 @@ model Assignment {
   teacherId String
   class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
   classId   String
-  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  subjectId String
+  subject   Subject? @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subjectId String?
 
   title       String
   description String   @db.Text

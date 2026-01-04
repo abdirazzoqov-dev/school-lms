@@ -16,8 +16,8 @@ export type AttendanceFormData = z.infer<typeof attendanceSchema>
 
 export const bulkAttendanceSchema = z.object({
   classId: z.string().min(1, 'Sinf tanlanishi shart'),
-  subjectId: z.string().min(1, 'Fan tanlanishi shart'),
-  teacherId: z.string().min(1, 'O\'qituvchi tanlanishi shart'),
+  subjectId: z.string().optional(),
+  teacherId: z.string().optional(),
   date: z.string().min(1, 'Sana kiritilishi shart'),
   attendances: z.array(z.object({
     studentId: z.string(),

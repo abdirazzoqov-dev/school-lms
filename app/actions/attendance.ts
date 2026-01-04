@@ -122,16 +122,21 @@ export async function createBulkAttendance(data: BulkAttendanceFormData) {
 
     // Create new attendance records
     const attendances = await db.attendance.createMany({
-      data: validatedData.attendances.map(a => ({
-        tenantId,
-        studentId: a.studentId,
-        classId: validatedData.classId,
-        subjectId: validatedData.subjectId,
-        teacherId: teacherId || validatedData.teacherId,
-        date: date,
-        status: a.status,
-        notes: validatedData.notes || null,
-      }))
+      data: validatedData.attendances.map(a => {
+        const record: any = {
+          tenantId,
+          studentId: a.studentId,
+          classId: validatedData.classId,
+          teacherId: teacherId || validatedData.teacherId,
+          date: date,
+          status: a.status,
+          notes: validatedData.notes || null,
+        }
+        if (validatedData.subjectId) {
+          record.subjectId = validatedData.subjectId
+        }
+        return record
+      })
     })
 
     revalidatePath('/teacher/attendance')
