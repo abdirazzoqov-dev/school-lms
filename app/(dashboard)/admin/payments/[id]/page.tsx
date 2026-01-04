@@ -124,6 +124,18 @@ export default async function PaymentDetailPage({ params }: { params: { id: stri
               amount: Number(payment.amount),
               paidAmount: payment.paidAmount ? Number(payment.paidAmount) : null,
               remainingAmount: payment.remainingAmount ? Number(payment.remainingAmount) : null,
+              student: {
+                ...payment.student,
+                user: payment.student.user || undefined,
+                class: payment.student.class || undefined,
+              },
+              parent: payment.parent ? {
+                ...payment.parent,
+                user: payment.parent.user || undefined
+              } : undefined,
+              receivedBy: payment.receivedBy ? {
+                fullName: payment.receivedBy.fullName
+              } : undefined
             }}
             schoolName={tenant?.name || 'Maktab'}
             schoolAddress={tenant?.address}
@@ -155,7 +167,7 @@ export default async function PaymentDetailPage({ params }: { params: { id: stri
               </div>
             </div>
             <div className="text-right">
-              <p className="text-3xl font-bold">{formatNumber(payment.amount)} so'm</p>
+              <p className="text-3xl font-bold">{formatNumber(Number(payment.amount))} so'm</p>
               <p className="text-sm text-muted-foreground">{payment.paymentType}</p>
             </div>
           </div>
@@ -188,9 +200,6 @@ export default async function PaymentDetailPage({ params }: { params: { id: stri
                 {payment.paymentType === 'TUITION' && "O'qish haqi"}
                 {payment.paymentType === 'BOOKS' && 'Kitoblar'}
                 {payment.paymentType === 'UNIFORM' && 'Forma'}
-                {payment.paymentType === 'TRANSPORT' && 'Transport'}
-                {payment.paymentType === 'MEALS' && 'Ovqatlanish'}
-                {payment.paymentType === 'EXAM' && 'Imtihon'}
                 {payment.paymentType === 'OTHER' && 'Boshqa'}
               </Badge>
             </div>
@@ -198,15 +207,15 @@ export default async function PaymentDetailPage({ params }: { params: { id: stri
               <p className="text-sm text-muted-foreground">To'lov Usuli</p>
               <Badge className="font-medium">
                 {payment.paymentMethod === 'CASH' && '💵 Naqd pul'}
-                {payment.paymentMethod === 'CARD' && '💳 Plastik karta'}
-                {payment.paymentMethod === 'BANK_TRANSFER' && '🏦 Bank o\'tkazmasi'}
-                {payment.paymentMethod === 'ONLINE' && '🌐 Online to\'lov'}
+                {payment.paymentMethod === 'CLICK' && '💳 Click'}
+                {payment.paymentMethod === 'PAYME' && '💳 Payme'}
+                {payment.paymentMethod === 'UZUM' && '💳 Uzum'}
               </Badge>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Summa</p>
               <p className="font-bold text-2xl text-blue-600">
-                {formatNumber(payment.amount)} so'm
+                {formatNumber(Number(payment.amount))} so'm
               </p>
             </div>
           </CardContent>
@@ -330,4 +339,3 @@ export default async function PaymentDetailPage({ params }: { params: { id: stri
     </div>
   )
 }
-
