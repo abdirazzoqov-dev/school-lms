@@ -194,11 +194,11 @@ export default async function TeacherGradesPage() {
                       </td>
                       <td className="p-4">
                         <span className={`font-bold ${
-                          (grade.score / grade.maxScore) >= 0.7 ? 'text-green-600' :
-                          (grade.score / grade.maxScore) >= 0.4 ? 'text-orange-600' :
+                          (Number(grade.score) / Number(grade.maxScore)) >= 0.7 ? 'text-green-600' :
+                          (Number(grade.score) / Number(grade.maxScore)) >= 0.4 ? 'text-orange-600' :
                           'text-red-600'
                         }`}>
-                          {grade.score}/{grade.maxScore}
+                          {Number(grade.score)}/{Number(grade.maxScore)}
                         </span>
                       </td>
                       <td className="p-4 text-sm text-muted-foreground">
