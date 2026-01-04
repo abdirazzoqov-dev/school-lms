@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client'
 const globalForPrisma = global as unknown as { prisma: PrismaClient }
 
 // Optimized Prisma Client with connection pooling for faster queries
-export const db = globalForPrisma.prisma || new PrismaClient({
+export const db = globalForPrisma.prisma || (process.env.DATABASE_URL ? new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'], // Reduced logging for better performance
   // Connection pool settings for better performance
   datasources: {
@@ -13,7 +13,7 @@ export const db = globalForPrisma.prisma || new PrismaClient({
       url: process.env.DATABASE_URL,
     },
   },
-})
+}) : null as any)
 
 // Warm up connection pool on first import in development
 if (process.env.NODE_ENV !== 'production') {
