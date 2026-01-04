@@ -310,7 +310,7 @@ export default async function KitchenDashboardPage() {
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-red-600">
-                        -{formatNumber(expense.amount)}
+                        -{formatNumber(Number(expense.amount))}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {expense.paymentMethod}
