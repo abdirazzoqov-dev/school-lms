@@ -307,7 +307,7 @@ export async function createStudent(data: StudentFormData) {
     }
 
     // ✅ Revalidate multiple related paths
-    revalidateMultiplePaths(REVALIDATION_PATHS.STUDENT_CHANGED, revalidatePath)
+    revalidateMultiplePaths([...REVALIDATION_PATHS.STUDENT_CHANGED], revalidatePath)
     revalidatePath('/admin/students')
     revalidatePath('/admin/dormitory')
     
@@ -373,7 +373,7 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
     })
 
     // ✅ Revalidate multiple related paths
-    revalidateMultiplePaths(REVALIDATION_PATHS.STUDENT_CHANGED, revalidatePath)
+    revalidateMultiplePaths([...REVALIDATION_PATHS.STUDENT_CHANGED], revalidatePath)
     revalidatePath('/admin/students')
     
     logger.info('Student updated successfully', {
@@ -412,7 +412,7 @@ export async function deactivateStudent(studentId: string) {
     })
 
     // ✅ Revalidate multiple related paths
-    revalidateMultiplePaths(REVALIDATION_PATHS.STUDENT_CHANGED, revalidatePath)
+    revalidateMultiplePaths([...REVALIDATION_PATHS.STUDENT_CHANGED], revalidatePath)
     revalidatePath('/admin/students')
     
     logger.info('Student deactivated successfully', {
@@ -501,10 +501,16 @@ export async function deleteStudent(studentId: string) {
     })
 
     // 5. Free dormitory bed if occupied
-    if (student.dormitoryBedId) {
+    const dormitoryAssignment = await db.dormitoryAssignment.findUnique({
+      where: { studentId }
+    })
+    if (dormitoryAssignment) {
       await db.dormitoryBed.update({
-        where: { id: student.dormitoryBedId },
+        where: { id: dormitoryAssignment.bedId },
         data: { isOccupied: false }
+      })
+      await db.dormitoryAssignment.delete({
+        where: { studentId }
       })
     }
 
@@ -669,4 +675,3 @@ export async function convertTrialToRegular(studentId: string) {
     return handleError(error)
   }
 }
-
