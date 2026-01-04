@@ -30,7 +30,8 @@ export default async function EditParentPage({ params }: PageProps) {
     },
     select: {
       id: true,
-      relationship: true,
+      guardianType: true,
+      customRelationship: true,
       occupation: true,
       workAddress: true,
       emergencyContact: true,

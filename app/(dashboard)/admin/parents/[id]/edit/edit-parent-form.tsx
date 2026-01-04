@@ -33,7 +33,8 @@ const formSchema = z.object({
   fullName: z.string().min(3, 'Ism kamida 3 ta harf bo\'lishi kerak'),
   email: z.string().email('Email noto\'g\'ri'),
   phone: z.string().min(9, 'Telefon raqam noto\'g\'ri').optional().or(z.literal('')),
-  relationship: z.string().min(1, 'Qarindoshlik turi majburiy'),
+  guardianType: z.string().min(1, 'Qarindoshlik turi majburiy'),
+  customRelationship: z.string().optional().or(z.literal('')),
   occupation: z.string().optional().or(z.literal('')),
   workAddress: z.string().optional().or(z.literal('')),
   emergencyContact: z.string().optional().or(z.literal('')),
@@ -44,7 +45,8 @@ type FormData = z.infer<typeof formSchema>
 
 interface Parent {
   id: string
-  relationship: string
+  guardianType: string
+  customRelationship: string | null
   occupation: string | null
   workAddress: string | null
   emergencyContact: string | null
@@ -71,7 +73,8 @@ export function EditParentForm({ parent }: EditParentFormProps) {
       fullName: parent.user?.fullName || '',
       email: parent.user?.email || '',
       phone: parent.user?.phone || '',
-      relationship: parent.relationship || '',
+      guardianType: parent.guardianType || '',
+      customRelationship: parent.customRelationship || '',
       occupation: parent.occupation || '',
       workAddress: parent.workAddress || '',
       emergencyContact: parent.emergencyContact || '',
@@ -142,7 +145,7 @@ export function EditParentForm({ parent }: EditParentFormProps) {
 
               <FormField
                 control={form.control}
-                name="relationship"
+                name="guardianType"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Qarindoshlik *</FormLabel>
@@ -156,14 +159,9 @@ export function EditParentForm({ parent }: EditParentFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="father">Ota</SelectItem>
-                        <SelectItem value="mother">Ona</SelectItem>
-                        <SelectItem value="guardian">Vasiy</SelectItem>
-                        <SelectItem value="grandfather">Bobo</SelectItem>
-                        <SelectItem value="grandmother">Buvi</SelectItem>
-                        <SelectItem value="uncle">Amaki/Tog'a</SelectItem>
-                        <SelectItem value="aunt">Xola/Amma</SelectItem>
-                        <SelectItem value="other">Boshqa</SelectItem>
+                        <SelectItem value="FATHER">Ota</SelectItem>
+                        <SelectItem value="MOTHER">Ona</SelectItem>
+                        <SelectItem value="OTHER">Boshqa</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -197,6 +195,20 @@ export function EditParentForm({ parent }: EditParentFormProps) {
                     <FormLabel>Telefon</FormLabel>
                     <FormControl>
                       <Input placeholder="+998 90 123 45 67" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="customRelationship"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Qarindoshlik (Agar "Boshqa" tanlansa)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Amaki, Xola, Bobo, etc." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
