@@ -30,9 +30,24 @@ export default function CreateClassPage() {
   const loadTeachers = useCallback(async () => {
     try {
       setLoadingTeachers(true)
-      const res = await fetch('/api/teachers', { cache: 'no-store' })
+      const res = await fetch('/api/teachers', { 
+        cache: 'no-store',
+        credentials: 'include'
+      })
+      
+      if (!res.ok) {
+        console.error('Failed to fetch teachers:', res.status, res.statusText)
+        setTeachers([])
+        return
+      }
+      
       const data = await res.json()
-      setTeachers(data.teachers || [])
+      if (data.teachers && Array.isArray(data.teachers)) {
+        setTeachers(data.teachers)
+      } else {
+        console.error('Invalid teachers data format:', data)
+        setTeachers([])
+      }
     } catch (error) {
       console.error('Error loading teachers:', error)
       setTeachers([])
