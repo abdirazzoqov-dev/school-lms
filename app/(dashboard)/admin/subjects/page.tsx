@@ -13,32 +13,33 @@ export const revalidate = 60
 export const dynamic = 'auto'
 
 export default async function SubjectsPage() {
-  const session = await getServerSession(authOptions)
+  try {
+    const session = await getServerSession(authOptions)
 
-  if (!session || session.user.role !== 'ADMIN') {
-    redirect('/unauthorized')
-  }
+    if (!session || session.user.role !== 'ADMIN') {
+      redirect('/unauthorized')
+    }
 
-  const tenantId = session.user.tenantId!
+    const tenantId = session.user.tenantId!
 
-  // Get all subjects
-  const subjects = await db.subject.findMany({
-    where: { tenantId },
-    include: {
-      _count: {
-        select: {
-          classSubjects: true,
-          schedules: true,
-          grades: true
+    // Get all subjects
+    const subjects = await db.subject.findMany({
+      where: { tenantId },
+      include: {
+        _count: {
+          select: {
+            classSubjects: true,
+            schedules: true,
+            grades: true
+          }
         }
-      }
-    },
-    orderBy: { name: 'asc' }
-  })
+      },
+      orderBy: { name: 'asc' }
+    }).catch(() => [])
 
-  // Get statistics
-  const totalSubjects = subjects.length
-  const activeSubjects = subjects.filter(s => s._count.schedules > 0).length
+    // Get statistics
+    const totalSubjects = subjects.length
+    const activeSubjects = subjects.filter(s => s._count.schedules > 0).length
 
   return (
     <div className="space-y-6">
@@ -188,5 +189,11 @@ export default async function SubjectsPage() {
       )}
     </div>
   )
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Subjects page error:', error)
+    }
+    throw error
+  }
 }
 

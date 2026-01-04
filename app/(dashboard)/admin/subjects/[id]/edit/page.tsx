@@ -13,25 +13,26 @@ export default async function EditSubjectPage({
 }: {
   params: { id: string }
 }) {
-  const session = await getServerSession(authOptions)
+  try {
+    const session = await getServerSession(authOptions)
 
-  if (!session || session.user.role !== 'ADMIN') {
-    redirect('/unauthorized')
-  }
-
-  const tenantId = session.user.tenantId!
-
-  // Get subject
-  const subject = await db.subject.findFirst({
-    where: {
-      id: params.id,
-      tenantId
+    if (!session || session.user.role !== 'ADMIN') {
+      redirect('/unauthorized')
     }
-  })
 
-  if (!subject) {
-    notFound()
-  }
+    const tenantId = session.user.tenantId!
+
+    // Get subject
+    const subject = await db.subject.findFirst({
+      where: {
+        id: params.id,
+        tenantId
+      }
+    }).catch(() => null)
+
+    if (!subject) {
+      notFound()
+    }
 
   return (
     <div className="space-y-6">
@@ -68,5 +69,11 @@ export default async function EditSubjectPage({
       </Card>
     </div>
   )
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Edit subject page error:', error)
+    }
+    throw error
+  }
 }
 
