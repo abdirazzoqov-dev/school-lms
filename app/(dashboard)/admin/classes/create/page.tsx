@@ -43,6 +43,7 @@ export default function CreateClassPage() {
       
       const data = await res.json()
       if (data.teachers && Array.isArray(data.teachers)) {
+        console.log('Loaded teachers:', data.teachers.length, data.teachers)
         setTeachers(data.teachers)
       } else {
         console.error('Invalid teachers data format:', data)
