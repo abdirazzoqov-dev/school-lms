@@ -175,7 +175,7 @@ export default async function TeacherDashboard() {
 
   const teacherGradeDistribution = gradeRanges.map(({ range, min, max }) => {
     const count = teacherGrades.filter(g => {
-      const percentage = (g.score / g.maxScore) * 100
+      const percentage = (Number(g.score) / Number(g.maxScore)) * 100
       return percentage >= min && percentage <= max
     }).length
     return {
