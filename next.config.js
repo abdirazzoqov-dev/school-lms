@@ -21,13 +21,21 @@ const nextConfig = {
   generateEtags: true,
   // Enable SWC minification for faster builds
   swcMinify: true,
-  // Optimize route prefetching
-  onDemandEntries: {
-    // Period (in ms) where the server will keep pages in the buffer
-    maxInactiveAge: 25 * 1000,
-    // Number of pages that should be kept simultaneously without being disposed
-    pagesBufferLength: 2,
-  },
+  // Production optimizations
+  ...(process.env.NODE_ENV === 'production' && {
+    // Enable output optimization for Vercel
+    output: 'standalone',
+    // Optimize images
+    images: {
+      formats: ['image/webp', 'image/avif'],
+      remotePatterns: [
+        {
+          protocol: 'https',
+          hostname: '**',
+        },
+      ],
+    },
+  }),
 }
 
 module.exports = nextConfig
