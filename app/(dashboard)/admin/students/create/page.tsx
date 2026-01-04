@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -59,6 +59,52 @@ export default function CreateStudentPage() {
     paymentDueDay: 5, // Default: har oydagi 5-kun
   })
 
+  const generateStudentCode = useCallback(async () => {
+    try {
+      const response = await fetch('/api/generate-code?type=student')
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        
+        // If session expired or tenant not found, suggest relogin
+        if (errorData.needsRelogin || response.status === 401 || response.status === 404) {
+          toast({
+            title: 'Session muddati tugagan',
+            description: 'Iltimos logout qiling va qaytadan login qiling.',
+            variant: 'destructive',
+            duration: 5000,
+          })
+          // Redirect to login after 2 seconds
+          setTimeout(() => {
+            window.location.href = '/api/auth/signout?callbackUrl=/login'
+          }, 2000)
+          return
+        }
+        
+        throw new Error(errorData.error || 'Server xatosi')
+      }
+      
+      const data = await response.json()
+      
+      if (data.success && data.code) {
+        setFormData(prev => ({ ...prev, studentCode: data.code }))
+        toast({
+          title: 'Kod yaratildi',
+          description: `O'quvchi kodi: ${data.code}`,
+        })
+      } else {
+        throw new Error(data.error || 'Kod yaratishda xato')
+      }
+    } catch (error: any) {
+      console.error('Generate student code error:', error)
+      toast({
+        title: 'Xato',
+        description: error.message || 'Kod generatsiya qilishda xatolik',
+        variant: 'destructive'
+      })
+    }
+  }, [toast])
+
   useEffect(() => {
     // Load classes
     fetch('/api/classes')
@@ -71,7 +117,7 @@ export default function CreateStudentPage() {
     
     // Auto-generate student code
     generateStudentCode()
-  }, [])
+  }, [generateStudentCode])
 
   useEffect(() => {
     // Load available rooms when dormitory is needed and gender is selected
@@ -224,51 +270,6 @@ export default function CreateStudentPage() {
     }
   }
 
-  const generateStudentCode = async () => {
-    try {
-      const response = await fetch('/api/generate-code?type=student')
-      
-      if (!response.ok) {
-        const errorData = await response.json()
-        
-        // If session expired or tenant not found, suggest relogin
-        if (errorData.needsRelogin || response.status === 401 || response.status === 404) {
-          toast({
-            title: 'Session muddati tugagan',
-            description: 'Iltimos logout qiling va qaytadan login qiling.',
-            variant: 'destructive',
-            duration: 5000,
-          })
-          // Redirect to login after 2 seconds
-          setTimeout(() => {
-            window.location.href = '/api/auth/signout?callbackUrl=/login'
-          }, 2000)
-          return
-        }
-        
-        throw new Error(errorData.error || 'Server xatosi')
-      }
-      
-      const data = await response.json()
-      
-      if (data.success && data.code) {
-        setFormData(prev => ({ ...prev, studentCode: data.code }))
-        toast({
-          title: 'Kod yaratildi',
-          description: `O'quvchi kodi: ${data.code}`,
-        })
-      } else {
-        throw new Error(data.error || 'Kod yaratishda xato')
-      }
-    } catch (error: any) {
-      console.error('Generate student code error:', error)
-      toast({
-        title: 'Xato',
-        description: error.message || 'Kod generatsiya qilishda xatolik',
-        variant: 'destructive'
-      })
-    }
-  }
 
   return (
     <div className="space-y-6">

@@ -106,19 +106,26 @@ export default async function AdminDashboard() {
       getPaymentChartData(tenantId)
     ])
 
-    stats = results[0] || stats
-    recentStudents = results[1] || []
-    recentPayments = results[2] || []
-    attendanceData = results[3] || []
-    gradeDistribution = results[4] || []
-    paymentChartData = results[5] || []
+    if (results) {
+      stats = results[0] || stats
+      recentStudents = results[1] || []
+      recentPayments = results[2] || []
+      attendanceData = results[3] || []
+      gradeDistribution = results[4] || []
+      paymentChartData = results[5] || []
+    }
   } catch (error) {
-    console.error('Error fetching dashboard data:', error)
+    // Log error in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error fetching dashboard data:', error)
+    }
+    // In production, continue with default values (already set above)
+    // This prevents the page from crashing
   }
 
-  const balance = stats.income - stats.totalExpenses
-  const attendanceRate = stats.totalStudents > 0 
-    ? (stats.presentToday / stats.totalStudents) * 100 
+  const balance = (stats?.income || 0) - (stats?.totalExpenses || 0)
+  const attendanceRate = (stats?.totalStudents || 0) > 0 
+    ? ((stats?.presentToday || 0) / stats.totalStudents) * 100 
     : 0
 
   return (
@@ -307,7 +314,7 @@ export default async function AdminDashboard() {
                       <div 
                         className="h-1 rounded-full transition-all"
                         style={{ 
-                          width: `${(cat.amount / stats.totalExpenses) * 100}%`,
+                          width: `${(cat.amount / (stats.totalExpenses || 1)) * 100}%`,
                           backgroundColor: cat.color || '#ef4444'
                         }}
                       />
@@ -447,7 +454,7 @@ export default async function AdminDashboard() {
                   >
                     <div className="flex-1">
                       <p className="font-medium text-sm">
-                        {payment.student.user?.fullName || 'Noma\'lum'}
+                        {payment.student?.user?.fullName || 'Noma\'lum'}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('uz-UZ') : 'N/A'}

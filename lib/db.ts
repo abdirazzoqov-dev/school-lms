@@ -33,3 +33,17 @@ if (process.env.NODE_ENV === 'production') {
   })
 }
 
+// Database connection health check
+export async function checkDatabaseConnection(): Promise<boolean> {
+  try {
+    if (!db) {
+      return false
+    }
+    await db.$queryRaw`SELECT 1`
+    return true
+  } catch (error) {
+    console.error('Database connection check failed:', error)
+    return false
+  }
+}
+

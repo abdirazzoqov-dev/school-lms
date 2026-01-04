@@ -63,9 +63,11 @@ export default async function ParentDetailPage({ params }: PageProps) {
         },
       },
       students: {
-        include: {
+        select: {
+          hasAccess: true,
           student: {
-            include: {
+            select: {
+              id: true,
               user: {
                 select: {
                   fullName: true,

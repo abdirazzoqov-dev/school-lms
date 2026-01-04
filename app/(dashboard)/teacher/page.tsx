@@ -13,16 +13,17 @@ export const revalidate = 60
 export const dynamic = 'auto' // Optimized for better caching
 
 export default async function TeacherDashboard() {
-  const session = await getServerSession(authOptions)
+  try {
+    const session = await getServerSession(authOptions)
 
-  if (!session || session.user.role !== 'TEACHER') {
-    redirect('/unauthorized')
-  }
+    if (!session || session.user.role !== 'TEACHER') {
+      redirect('/unauthorized')
+    }
 
-  const tenantId = session.user.tenantId!
+    const tenantId = session.user.tenantId!
 
-  // Get teacher record
-  const teacher = await db.teacher.findUnique({
+    // Get teacher record
+    const teacher = await db.teacher.findUnique({
     where: { userId: session.user.id },
     include: {
       classSubjects: {
@@ -381,5 +382,13 @@ export default async function TeacherDashboard() {
       </Card>
     </div>
   )
+  } catch (error) {
+    // Log error in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Teacher dashboard error:', error)
+    }
+    // Re-throw to trigger error boundary
+    throw error
+  }
 }
 

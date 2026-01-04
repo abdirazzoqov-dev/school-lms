@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,43 +28,7 @@ export default function CreateTeacherPage() {
     password: '',
   })
 
-  // Auto-generate teacher code on mount
-  useEffect(() => {
-    generateTeacherCode()
-  }, [])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-
-    try {
-      const result = await createTeacher(formData)
-
-      if (result.success) {
-        toast({
-          title: 'Muvaffaqiyatli!',
-          description: `O'qituvchi qo'shildi. Login: ${result.credentials?.email}`,
-        })
-        router.push('/admin/teachers')
-      } else {
-        toast({
-          title: 'Xato!',
-          description: result.error,
-          variant: 'destructive',
-        })
-      }
-    } catch (error) {
-      toast({
-        title: 'Xato!',
-        description: 'Kutilmagan xatolik yuz berdi',
-        variant: 'destructive',
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const generateTeacherCode = async () => {
+  const generateTeacherCode = useCallback(async () => {
     try {
       const response = await fetch('/api/generate-code?type=teacher')
       
@@ -108,7 +72,44 @@ export default function CreateTeacherPage() {
         variant: 'destructive'
       })
     }
+  }, [toast])
+
+  // Auto-generate teacher code on mount
+  useEffect(() => {
+    generateTeacherCode()
+  }, [generateTeacherCode])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const result = await createTeacher(formData)
+
+      if (result.success) {
+        toast({
+          title: 'Muvaffaqiyatli!',
+          description: `O'qituvchi qo'shildi. Login: ${result.credentials?.email}`,
+        })
+        router.push('/admin/teachers')
+      } else {
+        toast({
+          title: 'Xato!',
+          description: result.error,
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      toast({
+        title: 'Xato!',
+        description: 'Kutilmagan xatolik yuz berdi',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
   }
+
 
   const generatePassword = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$'

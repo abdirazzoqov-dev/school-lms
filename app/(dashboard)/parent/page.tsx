@@ -10,16 +10,17 @@ export const revalidate = 60
 export const dynamic = 'auto' // Optimized for better caching
 
 export default async function ParentDashboard() {
-  const session = await getServerSession(authOptions)
+  try {
+    const session = await getServerSession(authOptions)
 
-  if (!session || session.user.role !== 'PARENT') {
-    redirect('/unauthorized')
-  }
+    if (!session || session.user.role !== 'PARENT') {
+      redirect('/unauthorized')
+    }
 
-  const tenantId = session.user.tenantId!
+    const tenantId = session.user.tenantId!
 
-  // Get parent record with children
-  const parent = await db.parent.findUnique({
+    // Get parent record with children
+    const parent = await db.parent.findUnique({
     where: { userId: session.user.id },
     include: {
       students: {
@@ -63,14 +64,14 @@ export default async function ParentDashboard() {
 
   const yearStart = new Date(new Date().getFullYear(), 0, 1)
 
-  // Get all data for children
-  const [
-    recentGrades,
-    recentAttendance,
-    pendingPayments,
-    totalPayments,
-    thisWeekAttendance
-  ] = await Promise.all([
+    // Get all data for children
+    const [
+      recentGrades,
+      recentAttendance,
+      pendingPayments,
+      totalPayments,
+      thisWeekAttendance
+    ] = await Promise.all([
     // Recent grades
     db.grade.findMany({
       where: {
@@ -349,5 +350,13 @@ export default async function ParentDashboard() {
       </div>
     </div>
   )
+  } catch (error) {
+    // Log error in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Parent dashboard error:', error)
+    }
+    // Re-throw to trigger error boundary
+    throw error
+  }
 }
 

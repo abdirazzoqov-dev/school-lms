@@ -142,7 +142,7 @@ export function ScheduleBuilder({
       }))
       setSchedules(mapped)
     }
-  }, [existingSchedules])
+  }, [existingSchedules, timeSlots])
 
   const getScheduleForCell = (day: number, slotId: string) => {
     return schedules.find(s => s.dayOfWeek === day && s.timeSlotId === slotId)

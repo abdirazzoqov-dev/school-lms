@@ -26,11 +26,37 @@ export function handleError(error: unknown, context?: {
     }
   }
 
-  // In production, generic message
+  // In production, generic message (no information disclosure)
   return {
     success: false,
     error: 'Xatolik yuz berdi. Iltimos, keyinroq urinib ko\'ring.',
   }
+}
+
+/**
+ * Safe error message for production
+ * Prevents information disclosure
+ */
+export function getSafeErrorMessage(error: unknown): string {
+  if (process.env.NODE_ENV === 'development') {
+    return error instanceof Error ? error.message : 'Unknown error'
+  }
+  
+  // Production: generic message
+  if (error instanceof Error) {
+    // Check for specific error types
+    if (error.message.includes('P1001') || error.message.includes('Can\'t reach database')) {
+      return 'Ma\'lumotlar bazasiga ulanib bo\'lmadi. Iltimos, keyinroq urinib ko\'ring.'
+    }
+    if (error.message.includes('P2002') || error.message.includes('Unique constraint')) {
+      return 'Bu ma\'lumot allaqachon mavjud.'
+    }
+    if (error.message.includes('P2025') || error.message.includes('Record not found')) {
+      return 'Ma\'lumot topilmadi.'
+    }
+  }
+  
+  return 'Xatolik yuz berdi. Iltimos, keyinroq urinib ko\'ring.'
 }
 
 /**
