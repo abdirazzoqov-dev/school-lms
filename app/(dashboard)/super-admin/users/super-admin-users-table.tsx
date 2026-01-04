@@ -213,8 +213,6 @@ export function SuperAdminUsersTable({ users }: { users: User[] }) {
         onClearSelection={() => setSelectedIds([])}
         onExport={handleExport}
         entityName="foydalanuvchi"
-        showDelete={false}
-        showStatusChange={false}
       />
     </>
   )
