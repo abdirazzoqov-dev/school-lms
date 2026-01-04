@@ -119,7 +119,7 @@ export default async function KitchenExpensesPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-red-700">
-                  {formatNumber(thisMonthTotal._sum.amount || 0)}
+                  {formatNumber(thisMonthTotal._sum.amount?.toNumber() || 0)}
                 </p>
                 <p className="text-xs text-red-600">Bu oyda sarflangan</p>
               </div>
@@ -134,7 +134,7 @@ export default async function KitchenExpensesPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-orange-700">
-                  {formatNumber(todayTotal._sum.amount || 0)}
+                  {formatNumber(todayTotal._sum.amount?.toNumber() || 0)}
                 </p>
                 <p className="text-xs text-orange-600">Bugun sarflangan</p>
               </div>
