@@ -30,12 +30,7 @@ async function checkAndUpdateMonthlyTuitionStatus(
     )
     return completedCount > 0
   } catch (error) {
-    logger.error('Failed to check monthly tuition status', error, {
-      studentId,
-      tenantId,
-      month,
-      year,
-    })
+    logger.error('Failed to check monthly tuition status', error as Error)
     return false
   }
 }
@@ -461,7 +456,7 @@ export async function addPartialPayment(paymentId: string, amount: number, payme
     if (newPaidAmount > totalAmount) {
       return { 
         success: false, 
-        error: `Qo'shilayotgan summa jami summadan oshib ketdi. Maksimal: ${formatNumber(totalAmount - currentPaidAmount)} so'm` 
+        error: `Qo'shilayotgan summa jami summadan oshib ketdi. Maksimal: ${formatNumber(Number(totalAmount - currentPaidAmount))} so'm` 
       }
     }
 
@@ -488,7 +483,7 @@ export async function addPartialPayment(paymentId: string, amount: number, payme
         status: newStatus,
         paidDate: newStatus === 'COMPLETED' ? new Date() : (currentPayment.paidDate || new Date()), // Keep first payment date or set current
         receivedById: session.user.id,
-        notes: notes ? `${currentPayment.notes || ''}\n[${new Date().toLocaleDateString('uz-UZ')}] +${formatNumber(amount)} so'm (${paymentMethod || 'N/A'})${notes ? ': ' + notes : ''}`.trim() : currentPayment.notes,
+        notes: notes ? `${currentPayment.notes || ''}\n[${new Date().toLocaleDateString('uz-UZ')}] +${formatNumber(Number(amount))} so'm (${paymentMethod || 'N/A'})${notes ? ': ' + notes : ''}`.trim() : currentPayment.notes,
       }
     })
 
@@ -510,7 +505,7 @@ export async function addPartialPayment(paymentId: string, amount: number, payme
     return { 
       success: true, 
       payment: updatedPayment,
-      message: `${formatNumber(amount)} so'm qo'shildi. ${newStatus === 'COMPLETED' ? '✅ To\'lov to\'liq yakunlandi!' : `Qoldi: ${formatNumber(newRemainingAmount)} so'm`}`,
+      message: `${formatNumber(Number(amount))} so'm qo'shildi. ${newStatus === 'COMPLETED' ? '✅ To\'lov to\'liq yakunlandi!' : `Qoldi: ${formatNumber(Number(newRemainingAmount))} so'm`}`,
       studentName: currentPayment.student.user?.fullName || 'N/A',
       isCompleted: newStatus === 'COMPLETED'
     }
@@ -518,4 +513,3 @@ export async function addPartialPayment(paymentId: string, amount: number, payme
     return handleError(error)
   }
 }
-

@@ -288,8 +288,8 @@ export default async function TeacherDetailPage({ params }: { params: { id: stri
                       </td>
                       <td className="p-3">{grade.subject.name}</td>
                       <td className="p-3">
-                        <span className="font-bold text-lg">{grade.grade}</span>
-                        <span className="text-muted-foreground">/{grade.maxGrade}</span>
+                        <span className="font-bold text-lg">{Number(grade.score)}</span>
+                        <span className="text-muted-foreground">/{Number(grade.maxScore)}</span>
                       </td>
                       <td className="p-3">
                         <span className="text-xs bg-slate-100 px-2 py-1 rounded">
@@ -314,4 +314,3 @@ export default async function TeacherDetailPage({ params }: { params: { id: stri
     </div>
   )
 }
-
