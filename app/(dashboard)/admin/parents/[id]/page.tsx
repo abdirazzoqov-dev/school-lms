@@ -46,7 +46,13 @@ export default async function ParentDetailPage({ params }: PageProps) {
       id: params.id,
       tenantId,
     },
-    include: {
+    select: {
+      id: true,
+      guardianType: true,
+      customRelationship: true,
+      occupation: true,
+      workAddress: true,
+      emergencyContact: true,
       user: {
         select: {
           fullName: true,
@@ -57,9 +63,12 @@ export default async function ParentDetailPage({ params }: PageProps) {
         },
       },
       students: {
-        include: {
+        select: {
+          studentId: true,
+          isPrimary: true,
           student: {
-            include: {
+            select: {
+              id: true,
               user: {
                 select: {
                   fullName: true,
@@ -80,9 +89,15 @@ export default async function ParentDetailPage({ params }: PageProps) {
         orderBy: {
           createdAt: 'desc',
         },
-        include: {
+        select: {
+          id: true,
+          amount: true,
+          paymentType: true,
+          paymentMethod: true,
+          status: true,
+          createdAt: true,
           student: {
-            include: {
+            select: {
               user: {
                 select: {
                   fullName: true,
@@ -163,7 +178,10 @@ export default async function ParentDetailPage({ params }: PageProps) {
                   {parent.user?.fullName || 'N/A'}
                 </h2>
                 <p className="text-muted-foreground capitalize">
-                  {parent.relationship || 'Qarib'}
+                  {parent.customRelationship ||
+                   (parent.guardianType === 'FATHER' ? 'Ota' :
+                    parent.guardianType === 'MOTHER' ? 'Ona' :
+                    parent.guardianType === 'OTHER' ? 'Boshqa' : 'Qarib')}
                 </p>
                 <div className="mt-2">
                   <Badge
