@@ -37,17 +37,29 @@ export default async function AdminDashboard() {
   const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1)
 
   // ✅ Optimized parallel queries with error handling
-  let stats, recentStudents, recentPayments, attendanceData, gradeDistribution, paymentChartData
+  let stats: any = {
+    totalStudents: 0,
+    activeStudents: 0,
+    trialStudents: 0,
+    totalTeachers: 0,
+    totalClasses: 0,
+    totalSubjects: 0,
+    presentToday: 0,
+    completedPayments: 0,
+    pendingPayments: 0,
+    overduePayments: 0,
+    income: 0,
+    totalExpenses: 0,
+    expenseCategories: []
+  }
+  let recentStudents: any[] = []
+  let recentPayments: any[] = []
+  let attendanceData: any[] = []
+  let gradeDistribution: any[] = []
+  let paymentChartData: any[] = []
 
   try {
-    [
-      stats,
-      recentStudents,
-      recentPayments,
-      attendanceData,
-      gradeDistribution,
-      paymentChartData
-    ] = await Promise.all([
+    const results = await Promise.all([
       // Core statistics
       getDashboardStats(tenantId, thisMonthStart, today, academicYear),
 
@@ -93,29 +105,15 @@ export default async function AdminDashboard() {
       // Payment chart data
       getPaymentChartData(tenantId)
     ])
+
+    stats = results[0] || stats
+    recentStudents = results[1] || []
+    recentPayments = results[2] || []
+    attendanceData = results[3] || []
+    gradeDistribution = results[4] || []
+    paymentChartData = results[5] || []
   } catch (error) {
     console.error('Error fetching dashboard data:', error)
-    // Default values
-    stats = {
-      totalStudents: 0,
-      activeStudents: 0,
-      trialStudents: 0,
-      totalTeachers: 0,
-      totalClasses: 0,
-      totalSubjects: 0,
-      presentToday: 0,
-      completedPayments: 0,
-      pendingPayments: 0,
-      overduePayments: 0,
-      income: 0,
-      totalExpenses: 0,
-      expenseCategories: []
-    }
-    recentStudents = []
-    recentPayments = []
-    attendanceData = []
-    gradeDistribution = []
-    paymentChartData = []
   }
 
   const balance = stats.income - stats.totalExpenses
@@ -396,7 +394,7 @@ export default async function AdminDashboard() {
           <CardContent>
             <div className="space-y-3">
               {recentStudents.length > 0 ? (
-                recentStudents.map((student) => (
+                recentStudents.map((student: any) => (
                   <div
                     key={student.id}
                     className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
@@ -442,7 +440,7 @@ export default async function AdminDashboard() {
           <CardContent>
             <div className="space-y-3">
               {recentPayments.length > 0 ? (
-                recentPayments.map((payment) => (
+                recentPayments.map((payment: any) => (
                   <div
                     key={payment.id}
                     className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
