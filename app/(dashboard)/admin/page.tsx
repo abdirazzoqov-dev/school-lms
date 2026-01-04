@@ -430,7 +430,7 @@ export default async function AdminDashboard() {
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-sm text-green-600">
-                        +{formatNumber(payment.amount)}
+                        +{formatNumber(Number(payment.amount))}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {payment.paymentMethod}
