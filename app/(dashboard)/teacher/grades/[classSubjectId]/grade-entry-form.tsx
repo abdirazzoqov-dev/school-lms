@@ -80,6 +80,7 @@ export function GradeEntryForm({
         subjectId: classSubject.subjectId,
         gradeType: gradeType as any,
         maxScore: maxScoreNum,
+        academicYear: '2024-2025', // TODO: Get from class or settings
         date,
         notes,
         grades: enteredScores.map(([studentId, scoreStr]) => ({
