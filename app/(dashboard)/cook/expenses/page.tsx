@@ -162,7 +162,7 @@ export default async function CookExpensesPage() {
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-lg text-red-600">
-                      -{formatNumber(expense.amount)}
+                      -{formatNumber(Number(expense.amount))}
                     </p>
                     <Badge variant="outline" className="text-xs">
                       {paymentMethodLabels[expense.paymentMethod] || expense.paymentMethod}
@@ -191,4 +191,3 @@ export default async function CookExpensesPage() {
     </div>
   )
 }
-
