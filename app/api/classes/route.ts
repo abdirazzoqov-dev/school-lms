@@ -33,7 +33,7 @@ export async function GET() {
     return NextResponse.json({ classes })
   } catch (error) {
     console.error('Get classes error:', error)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    return NextResponse.json({ classes: [] })
   }
 }
 

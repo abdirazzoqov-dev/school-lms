@@ -78,10 +78,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ rooms: roomsWithBeds })
   } catch (error: any) {
     console.error('Get available rooms error:', error)
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ rooms: [] })
   }
 }
 

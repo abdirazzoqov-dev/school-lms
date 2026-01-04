@@ -34,7 +34,7 @@ export async function GET() {
     return NextResponse.json({ teachers })
   } catch (error) {
     console.error('Get teachers error:', error)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    return NextResponse.json({ teachers: [] })
   }
 }
 

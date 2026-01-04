@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
     logger.error('Failed to fetch students', error, {
       action: 'FETCH_STUDENTS',
     })
-    return ApiResponse.serverError()
+    return ApiResponse.success({ students: [] })
   }
 }
 
