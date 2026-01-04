@@ -97,7 +97,7 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
     const totalAmount = Number(payment.amount) || 0
     const paidAmount = Number(payment.paidAmount) || 0
     
-    if (totalAmount === 0) return { percentage: 0, paid: 0, total: 0 }
+    if (totalAmount === 0) return { percentage: 0, paid: 0, total: 0, remaining: 0 }
     
     const percentage = Math.min(Math.round((paidAmount / totalAmount) * 100), 100)
     
@@ -168,11 +168,11 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                   <td className="p-4">
                     <div>
                       <div className="font-medium">
-                        {formatNumber(payment.amount)} so'm
+                        {formatNumber(Number(payment.amount))} so'm
                       </div>
                       {payment.paidAmount && Number(payment.paidAmount) > 0 && (
                         <div className="text-sm text-muted-foreground">
-                          To'langan: {formatNumber(payment.paidAmount)}
+                          To'langan: {formatNumber(Number(payment.paidAmount))}
                         </div>
                       )}
                     </div>
@@ -329,4 +329,3 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
     </>
   )
 }
-
