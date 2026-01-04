@@ -59,22 +59,22 @@ export default async function GradesReportPage() {
     {
       range: '5 (85-100)',
       count: grade5,
-      percentage: (grade5 / (totalGrades || 1)) * 100
+      percentage: Number(((grade5 / (totalGrades || 1)) * 100).toFixed(1))
     },
     {
       range: '4 (70-84)',
       count: grade4,
-      percentage: (grade4 / (totalGrades || 1)) * 100
+      percentage: Number(((grade4 / (totalGrades || 1)) * 100).toFixed(1))
     },
     {
       range: '3 (55-69)',
       count: grade3,
-      percentage: (grade3 / (totalGrades || 1)) * 100
+      percentage: Number(((grade3 / (totalGrades || 1)) * 100).toFixed(1))
     },
     {
       range: '2 (0-54)',
       count: grade2,
-      percentage: (grade2 / (totalGrades || 1)) * 100
+      percentage: Number(((grade2 / (totalGrades || 1)) * 100).toFixed(1))
     },
   ]
 
@@ -254,4 +254,3 @@ export default async function GradesReportPage() {
     </div>
   )
 }
-

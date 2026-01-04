@@ -176,10 +176,12 @@ export default async function ScheduleBuilderPage({
       <ScheduleBuilder
         classItem={classItem}
         teachers={teachers}
-        subjects={subjects}
+        subjects={subjects.map(s => ({
+          ...s,
+          color: s.color || undefined
+        }))}
         existingSchedules={existingSchedules}
       />
     </div>
   )
 }
-

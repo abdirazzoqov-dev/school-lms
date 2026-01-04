@@ -63,14 +63,14 @@ export async function createSalaryPayment(data: SalaryPaymentFormData) {
         deductionAmount: validatedData.deductionAmount || 0,
         paymentDate: validatedData.paymentDate ? new Date(validatedData.paymentDate) : undefined,
         dueDate: validatedData.dueDate ? new Date(validatedData.dueDate) : undefined,
-        paymentMethod: validatedData.paymentMethod,
+        paymentMethod: validatedData.paymentMethod as any,
         description: validatedData.description,
         notes: validatedData.notes,
         paidById: session.user.id,
       }
     })
 
-    revalidateMultiplePaths(REVALIDATION_PATHS.SALARY_CHANGED, revalidatePath)
+    revalidateMultiplePaths([...REVALIDATION_PATHS.SALARY_CHANGED], revalidatePath)
     
     return { success: true, payment }
   } catch (error: any) {
@@ -122,7 +122,7 @@ export async function paySalary(paymentId: string, amount: number, paymentMethod
       }
     })
 
-    revalidateMultiplePaths(REVALIDATION_PATHS.SALARY_CHANGED, revalidatePath)
+    revalidateMultiplePaths([...REVALIDATION_PATHS.SALARY_CHANGED], revalidatePath)
     
     return { success: true, payment: updatedPayment }
   } catch (error: any) {
@@ -165,7 +165,7 @@ export async function updateSalaryPayment(paymentId: string, data: Partial<Salar
       }
     })
 
-    revalidateMultiplePaths(REVALIDATION_PATHS.SALARY_CHANGED, revalidatePath)
+    revalidateMultiplePaths([...REVALIDATION_PATHS.SALARY_CHANGED], revalidatePath)
     
     return { success: true, payment: updatedPayment }
   } catch (error: any) {
@@ -197,7 +197,7 @@ export async function deleteSalaryPayment(paymentId: string) {
       where: { id: paymentId }
     })
 
-    revalidateMultiplePaths(REVALIDATION_PATHS.SALARY_CHANGED, revalidatePath)
+    revalidateMultiplePaths([...REVALIDATION_PATHS.SALARY_CHANGED], revalidatePath)
     
     return { success: true }
   } catch (error: any) {
@@ -304,7 +304,7 @@ export async function addPartialSalaryPayment(
     if (newPaidAmount > totalAmount) {
       return { 
         success: false, 
-        error: `Qo'shilayotgan summa jami summadan oshib ketdi. Maksimal: ${formatNumber(totalAmount - currentPaidAmount)} so'm` 
+        error: `Qo'shilayotgan summa jami summadan oshib ketdi. Maksimal: ${formatNumber(Number(totalAmount - currentPaidAmount))} so'm` 
       }
     }
 
@@ -332,18 +332,18 @@ export async function addPartialSalaryPayment(
         paidAmount: new Decimal(newPaidAmount),
         remainingAmount: new Decimal(newRemainingAmount >= 0 ? newRemainingAmount : 0),
         status: newStatus,
-        paidDate: newStatus === 'PAID' ? new Date() : (currentPayment.paidDate || new Date()), // Keep first payment date or set current
+        paymentDate: newStatus === 'PAID' ? new Date() : (currentPayment.paymentDate || new Date()), // Keep first payment date or set current
         paidById: session.user.id,
-        notes: notes ? `${currentPayment.notes || ''}\n[${new Date().toLocaleDateString('uz-UZ')}] +${formatNumber(amount)} so'm (${paymentMethod || 'N/A'})${notes ? ': ' + notes : ''}`.trim() : currentPayment.notes,
+        notes: notes ? `${currentPayment.notes || ''}\n[${new Date().toLocaleDateString('uz-UZ')}] +${formatNumber(Number(amount))} so'm (${paymentMethod || 'N/A'})${notes ? ': ' + notes : ''}`.trim() : currentPayment.notes,
       }
     })
 
-    revalidateMultiplePaths(REVALIDATION_PATHS.SALARY_CHANGED, revalidatePath)
+    revalidateMultiplePaths([...REVALIDATION_PATHS.SALARY_CHANGED], revalidatePath)
     
     return { 
       success: true, 
       payment: updatedPayment,
-      message: `${formatNumber(amount)} so'm qo'shildi. ${newStatus === 'PAID' ? '✅ To\'lov to\'liq yakunlandi!' : `Qoldi: ${formatNumber(newRemainingAmount)} so'm`}`,
+      message: `${formatNumber(Number(amount))} so'm qo'shildi. ${newStatus === 'PAID' ? '✅ To\'lov to\'liq yakunlandi!' : `Qoldi: ${formatNumber(Number(newRemainingAmount))} so'm`}`,
       employeeName,
       isCompleted: newStatus === 'PAID'
     }
@@ -351,4 +351,3 @@ export async function addPartialSalaryPayment(
     return handleError(error)
   }
 }
-
