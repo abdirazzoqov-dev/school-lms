@@ -17,30 +17,18 @@ if (process.env.DATABASE_URL) {
 }
 
 try {
-  console.log('Starting custom Vercel build process...')
+  console.log('Starting optimized Vercel build process...')
 
-  // 1. Database synchronization
-  try {
-    console.log('Running Prisma db push...')
-    execSync('npx prisma db push --skip-generate', { stdio: 'inherit' })
-  } catch (error) {
-    console.error('Prisma db push failed, but continuing:', error.message)
-  }
+  // Production build: Only generate Prisma Client and build Next.js
+  // NOTE: db push and seed are NOT needed in production builds
+  // They should be run manually via migrations or CI/CD if needed
 
-  // 2. Seeding
-  try {
-    console.log('Running seed script...')
-    execSync('node scripts/seed.js', { stdio: 'inherit' })
-  } catch (error) {
-    console.error('Seeding failed, but continuing:', error.message)
-  }
-
-  // 3. The actual Next.js build
-  console.log('Running Next.js build...')
+  // The actual Next.js build (includes prisma generate via package.json)
+  console.log('Running Next.js build (includes Prisma generate)...')
   execSync('npm run build', { stdio: 'inherit' })
 
-  console.log('Vercel build process completed successfully.')
+  console.log('✅ Vercel build process completed successfully.')
 } catch (error) {
-  console.error('Vercel build process failed:', error)
+  console.error('❌ Vercel build process failed:', error)
   process.exit(1)
 }

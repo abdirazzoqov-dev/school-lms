@@ -6,6 +6,7 @@
       "maxDuration": 30
     }
   },
-  "regions": ["sin1"]
+  "regions": ["sin1"],
+  "framework": "nextjs"
 }
 
