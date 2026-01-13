@@ -12,8 +12,31 @@ if (process.env.DATABASE_URL) {
       url += '&connection_limit=1'
     }
     process.env.DATABASE_URL = url
-    console.log('Optimized DATABASE_URL for connection pooling during build')
+    console.log('✅ Optimized DATABASE_URL for connection pooling')
   }
+}
+
+// Set DIRECT_URL if not provided (for migrations)
+// Prisma schema requires DIRECT_URL, but we can use DATABASE_URL as fallback
+if (!process.env.DIRECT_URL && process.env.DATABASE_URL) {
+  // Use DATABASE_URL as fallback for migrations
+  // For Supabase, migrations can work with pooling connection too
+  let directUrl = process.env.DATABASE_URL
+  // If using pooler, try to use direct connection format (optional optimization)
+  if (directUrl.includes('pooler') && directUrl.includes(':6543')) {
+    // Try to convert to direct connection format
+    // Replace pooler port with direct port (if available)
+    directUrl = directUrl.replace(':6543', ':5432').replace('pooler.', 'db.')
+    // Remove pgbouncer=true for direct connection (optional)
+    directUrl = directUrl.replace(/[?&]pgbouncer=true/g, '')
+    directUrl = directUrl.replace(/[?&]connection_limit=\d+/g, '')
+    // Ensure sslmode is present
+    if (!directUrl.includes('sslmode=')) {
+      directUrl += (directUrl.includes('?') ? '&' : '?') + 'sslmode=require'
+    }
+  }
+  process.env.DIRECT_URL = directUrl
+  console.log('✅ Set DIRECT_URL from DATABASE_URL (fallback for migrations)')
 }
 
 try {
