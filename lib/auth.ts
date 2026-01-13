@@ -25,12 +25,13 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Telefon/Email va parol kiriting')
         }
 
-        // Determine if input is phone or email
-        const isPhone = /^[\d\s\+\-\(\)]+$/.test(credentials.email.trim())
-        
-        // Find user by phone or email
-        let user
-        if (isPhone) {
+        try {
+          // Determine if input is phone or email
+          const isPhone = /^[\d\s\+\-\(\)]+$/.test(credentials.email.trim())
+          
+          // Find user by phone or email
+          let user
+          if (isPhone) {
           // Clean phone number (remove spaces, +, -, etc.)
           const cleanPhone = credentials.email.replace(/[\s\+\-\(\)]/g, '')
           
@@ -124,20 +125,29 @@ export const authOptions: NextAuthOptions = {
         // Allow GRACE_PERIOD with warning
         // Allow ACTIVE and TRIAL
 
-        // Update last login
-        await db.user.update({
-          where: { id: user.id },
-          data: { lastLogin: new Date() },
-        })
+          // Update last login
+          await db.user.update({
+            where: { id: user.id },
+            data: { lastLogin: new Date() },
+          })
 
-        return {
-          id: user.id,
-          email: user.email,
-          fullName: user.fullName,
-          avatar: user.avatar,
-          role: user.role,
-          tenantId: user.tenantId,
-          tenant: user.tenant,
+          return {
+            id: user.id,
+            email: user.email,
+            fullName: user.fullName,
+            avatar: user.avatar,
+            role: user.role,
+            tenantId: user.tenantId,
+            tenant: user.tenant,
+          }
+        } catch (error: any) {
+          // Database connection error or table not found
+          if (error.code === 'P1001' || error.message?.includes('does not exist')) {
+            console.error('Database error:', error)
+            throw new Error('Database connection failed. Please contact administrator.')
+          }
+          // Re-throw other errors
+          throw error
         }
       },
     }),

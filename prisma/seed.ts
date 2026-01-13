@@ -14,11 +14,21 @@ async function main() {
     where: { email: superAdminEmail },
   })
 
-  if (existingSuperAdmin) {
-    console.log('✅ Super Admin already exists')
-  } else {
-    const hashedPassword = await bcrypt.hash(superAdminPassword, 12)
+  const hashedPassword = await bcrypt.hash(superAdminPassword, 12)
 
+  if (existingSuperAdmin) {
+    // Update password and ensure role is correct (idempotent)
+    await prisma.user.update({
+      where: { email: superAdminEmail },
+      data: {
+        passwordHash: hashedPassword,
+        role: 'SUPER_ADMIN',
+        isActive: true,
+        fullName: existingSuperAdmin.fullName || 'Super Administrator',
+      },
+    })
+    console.log('✅ Super Admin updated (password refreshed)')
+  } else {
     await prisma.user.create({
       data: {
         email: superAdminEmail,
@@ -28,11 +38,11 @@ async function main() {
         isActive: true,
       },
     })
-
     console.log('✅ Super Admin created')
-    console.log(`   Email: ${superAdminEmail}`)
-    console.log(`   Password: ${superAdminPassword}`)
   }
+
+  console.log(`   Email: ${superAdminEmail}`)
+  console.log(`   Password: ${superAdminPassword}`)
 
   // Create Demo Tenant (Maktab)
   const demoTenant = await prisma.tenant.upsert({
