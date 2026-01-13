@@ -6,9 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL") // Connection pooling (Production)
-  // directUrl = env("DIRECT_URL")    // Vaqtincha comment (IPv4 muammosi)
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")      // Connection pooling (Production)
+  directUrl = env("DIRECT_URL")       // Direct connection (Migrations) - optional
 }
 
 // ============================================
@@ -165,6 +165,7 @@ model Tenant {
   dormitoryAssignments     DormitoryAssignment[]
   salaryPayments           SalaryPayment[]
 
+  @@map("tenants")  // PostgreSQL standard: lowercase, plural
   @@index([slug])
   @@index([status])
   @@index([subscriptionPlan])
@@ -291,6 +292,7 @@ model User {
   staffSalaryPayments         SalaryPayment[]       @relation("StaffSalary")
   paidSalaries                SalaryPayment[]       @relation("SalaryPaidBy")
 
+  @@map("users")  // PostgreSQL standard: lowercase, plural
   @@index([email])
   @@index([tenantId])
   @@index([role])

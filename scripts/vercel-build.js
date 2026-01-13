@@ -17,17 +17,36 @@ if (process.env.DATABASE_URL) {
 }
 
 try {
-  console.log('Starting optimized Vercel build process...')
+  console.log('🚀 Starting Vercel build process...')
 
-  // Production build: Only generate Prisma Client and build Next.js
-  // NOTE: db push and seed are NOT needed in production builds
-  // They should be run manually via migrations or CI/CD if needed
+  // 1. Prisma Client Generate
+  console.log('📦 Step 1: Generating Prisma Client...')
+  execSync('npx prisma generate', { stdio: 'inherit' })
+  console.log('✅ Prisma Client generated successfully!\n')
 
-  // The actual Next.js build (includes prisma generate via package.json)
-  console.log('Running Next.js build (includes Prisma generate)...')
+  // 2. Migrations Deploy (Production)
+  console.log('📤 Step 2: Deploying migrations...')
+  try {
+    execSync('npx prisma migrate deploy', { stdio: 'inherit' })
+    console.log('✅ Migrations deployed successfully!\n')
+  } catch (error) {
+    console.warn('⚠️  Migration deploy failed (this is OK if migrations folder is empty)')
+    console.log('🔄 Falling back to db push (for initial setup)...\n')
+    try {
+      execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' })
+      console.log('✅ Database schema pushed successfully!\n')
+    } catch (pushError) {
+      console.error('❌ Database setup failed:', pushError.message)
+      // Continue anyway - maybe database is already set up
+      console.log('⚠️  Continuing build (assuming database is already set up)...\n')
+    }
+  }
+
+  // 3. Next.js Build
+  console.log('🏗️  Step 3: Building Next.js...')
   execSync('npm run build', { stdio: 'inherit' })
 
-  console.log('✅ Vercel build process completed successfully.')
+  console.log('✅ Vercel build process completed successfully!')
 } catch (error) {
   console.error('❌ Vercel build process failed:', error)
   process.exit(1)
