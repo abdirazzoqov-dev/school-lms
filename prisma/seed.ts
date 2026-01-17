@@ -463,7 +463,7 @@ async function main() {
         }
       })
 
-      console.log(`   ✅ Created 6 payments for: ${student.user.fullName}`)
+      console.log(`   ✅ Created 6 payments for: ${student.user?.fullName || 'Unknown'}`)
     }
     console.log(`✅ Demo Payments created: ${allStudents.length * 6} payments`)
   }
