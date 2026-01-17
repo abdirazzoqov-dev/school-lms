@@ -30,7 +30,7 @@ export default function EditClassPage({ params }: { params: { id: string } }) {
     // Load class and teachers data
     Promise.all([
       fetch(`/api/classes/${params.id}`).then(res => res.json()),
-      fetch('/api/teachers').then(res => res.json())
+      fetch('/api/admin/teachers').then(res => res.json())
     ]).then(([classData, teachersData]) => {
       if (classData.class) {
         setFormData({

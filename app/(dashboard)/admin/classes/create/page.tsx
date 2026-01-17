@@ -30,7 +30,7 @@ export default function CreateClassPage() {
   const loadTeachers = useCallback(async () => {
     try {
       setLoadingTeachers(true)
-      const res = await fetch('/api/teachers', { 
+      const res = await fetch('/api/admin/teachers', { 
         cache: 'no-store',
         credentials: 'include'
       })

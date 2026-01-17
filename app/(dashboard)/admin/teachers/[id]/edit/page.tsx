@@ -28,7 +28,7 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
 
   useEffect(() => {
     // Load teacher data
-    fetch(`/api/teachers/${params.id}`)
+    fetch(`/api/admin/teachers/${params.id}`)
       .then(res => res.json())
       .then(data => {
         if (data.teacher) {
