@@ -183,16 +183,13 @@ export async function GET(req: NextRequest) {
     })
   } catch (error: any) {
     console.error('Generate code error:', error)
+    
+    // Return error instead of DEFAULT code
     return NextResponse.json({
-      code: 'DEFAULT-001',
-      success: true,
-      metadata: {
-        prefix: 'DEFAULT',
-        year: '24',
-        number: 1,
-        type: 'Default'
-      }
-    })
+      error: `Kod yaratishda xatolik: ${error.message}`,
+      success: false,
+      details: error.toString()
+    }, { status: 500 })
   }
 }
 
