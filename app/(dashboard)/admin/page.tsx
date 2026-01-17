@@ -129,19 +129,19 @@ export default async function AdminDashboard() {
     : 0
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground mt-1 text-sm md:text-base">
             Salom, {session.user.fullName} • {session.user.tenant?.name}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="text-right">
-            <p className="text-sm text-muted-foreground">O'quv yili</p>
-            <p className="text-lg font-semibold">{academicYear}</p>
+          <div className="text-left sm:text-right">
+            <p className="text-xs md:text-sm text-muted-foreground">O'quv yili</p>
+            <p className="text-base md:text-lg font-semibold">{academicYear}</p>
           </div>
         </div>
       </div>
@@ -159,27 +159,27 @@ export default async function AdminDashboard() {
       )}
 
       {/* Main Stats - 4 Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {/* Students */}
         <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               O'quvchilar
             </CardTitle>
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Users className="h-4 w-4 text-blue-600" />
+            <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg shrink-0">
+              <Users className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.totalStudents}</div>
-            <div className="flex items-center gap-2 mt-2 text-xs">
-              <span className="flex items-center gap-1 text-green-600">
-                <CheckCircle2 className="h-3 w-3" />
+            <div className="text-2xl sm:text-3xl font-bold">{stats.totalStudents}</div>
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-2 text-[10px] sm:text-xs">
+              <span className="flex items-center gap-0.5 sm:gap-1 text-green-600">
+                <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 {stats.activeStudents} faol
               </span>
               {stats.trialStudents > 0 && (
-                <span className="flex items-center gap-1 text-orange-600">
-                  <Clock className="h-3 w-3" />
+                <span className="flex items-center gap-0.5 sm:gap-1 text-orange-600">
+                  <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                   {stats.trialStudents} sinov
                 </span>
               )}
@@ -189,17 +189,17 @@ export default async function AdminDashboard() {
 
         {/* Teachers & Classes */}
         <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Xodimlar
             </CardTitle>
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <GraduationCap className="h-4 w-4 text-purple-600" />
+            <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg shrink-0">
+              <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.totalTeachers}</div>
-            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+            <div className="text-2xl sm:text-3xl font-bold">{stats.totalTeachers}</div>
+            <div className="flex items-center gap-2 sm:gap-3 mt-2 text-[10px] sm:text-xs text-muted-foreground">
               <span>{stats.totalClasses} ta sinf</span>
               <span>•</span>
               <span>{stats.totalSubjects} fan</span>
@@ -209,18 +209,18 @@ export default async function AdminDashboard() {
 
         {/* Today's Attendance */}
         <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               Bugungi Davomat
             </CardTitle>
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Activity className="h-4 w-4 text-green-600" />
+            <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg shrink-0">
+              <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.presentToday}</div>
+            <div className="text-2xl sm:text-3xl font-bold">{stats.presentToday}</div>
             <div className="mt-2 space-y-1">
-              <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center justify-between text-[10px] sm:text-xs">
                 <span className="text-muted-foreground">Davomat darajasi</span>
                 <span className="font-medium">{attendanceRate.toFixed(0)}%</span>
               </div>
@@ -231,24 +231,24 @@ export default async function AdminDashboard() {
 
         {/* Payments */}
         <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               To'lovlar
             </CardTitle>
-            <div className="p-2 bg-amber-100 rounded-lg">
-              <DollarSign className="h-4 w-4 text-amber-600" />
+            <div className="p-1.5 sm:p-2 bg-amber-100 rounded-lg shrink-0">
+              <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats.completedPayments}</div>
-            <div className="flex items-center gap-2 mt-2 text-xs">
-              <span className="flex items-center gap-1 text-orange-600">
-                <Clock className="h-3 w-3" />
+            <div className="text-2xl sm:text-3xl font-bold">{stats.completedPayments}</div>
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-2 text-[10px] sm:text-xs">
+              <span className="flex items-center gap-0.5 sm:gap-1 text-orange-600">
+                <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 {stats.pendingPayments} kutilmoqda
               </span>
               {stats.overduePayments > 0 && (
-                <span className="flex items-center gap-1 text-red-600">
-                  <XCircle className="h-3 w-3" />
+                <span className="flex items-center gap-0.5 sm:gap-1 text-red-600">
+                  <XCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                   {stats.overduePayments} kechikkan
                 </span>
               )}
@@ -258,7 +258,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Financial Overview - 3 Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-3">
         {/* Income */}
         <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
           <CardHeader className="pb-3">
@@ -376,7 +376,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Charts - 2 Column Grid */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2">
         <AttendanceChart data={attendanceData} />
         <PaymentChart data={paymentChartData} />
       </div>
@@ -385,15 +385,15 @@ export default async function AdminDashboard() {
       <GradeDistributionChart data={gradeDistribution} />
 
       {/* Recent Activity - 2 Columns */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2">
         {/* Recent Students */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Yangi O'quvchilar</CardTitle>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-base sm:text-lg">Yangi O'quvchilar</CardTitle>
               <Link href="/admin/students">
-                <Button variant="ghost" size="sm" className="text-xs">
-                  Barchasi <ArrowUpRight className="ml-1 h-3 w-3" />
+                <Button variant="ghost" size="sm" className="text-[10px] sm:text-xs h-7 sm:h-8">
+                  Barchasi <ArrowUpRight className="ml-0.5 sm:ml-1 h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 </Button>
               </Link>
             </div>
@@ -435,11 +435,11 @@ export default async function AdminDashboard() {
         {/* Recent Payments */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>So'nggi To'lovlar</CardTitle>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-base sm:text-lg">So'nggi To'lovlar</CardTitle>
               <Link href="/admin/payments">
-                <Button variant="ghost" size="sm" className="text-xs">
-                  Barchasi <ArrowUpRight className="ml-1 h-3 w-3" />
+                <Button variant="ghost" size="sm" className="text-[10px] sm:text-xs h-7 sm:h-8">
+                  Barchasi <ArrowUpRight className="ml-0.5 sm:ml-1 h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 </Button>
               </Link>
             </div>
@@ -483,31 +483,31 @@ export default async function AdminDashboard() {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Tezkor Amallar</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Tezkor Amallar</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             <Link href="/admin/students/create">
-              <Button variant="outline" className="w-full justify-start">
-                <Users className="mr-2 h-4 w-4" />
+              <Button variant="outline" className="w-full justify-start text-xs sm:text-sm h-9 sm:h-10">
+                <Users className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 Yangi o'quvchi
               </Button>
             </Link>
             <Link href="/admin/payments/create">
-              <Button variant="outline" className="w-full justify-start">
-                <DollarSign className="mr-2 h-4 w-4" />
+              <Button variant="outline" className="w-full justify-start text-xs sm:text-sm h-9 sm:h-10">
+                <DollarSign className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 To'lov qabul qilish
               </Button>
             </Link>
             <Link href="/admin/attendance">
-              <Button variant="outline" className="w-full justify-start">
-                <Calendar className="mr-2 h-4 w-4" />
+              <Button variant="outline" className="w-full justify-start text-xs sm:text-sm h-9 sm:h-10">
+                <Calendar className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 Davomat belgilash
               </Button>
             </Link>
             <Link href="/admin/reports">
-              <Button variant="outline" className="w-full justify-start">
-                <BookOpen className="mr-2 h-4 w-4" />
+              <Button variant="outline" className="w-full justify-start text-xs sm:text-sm h-9 sm:h-10">
+                <BookOpen className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 Hisobotlar
               </Button>
             </Link>

@@ -138,25 +138,30 @@ export default async function StudentsPage({
     }).catch(() => [])
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">O'quvchilar</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+            <Users className="h-6 w-6 md:h-8 md:w-8" />
+            O'quvchilar
+          </h1>
+          <p className="text-muted-foreground text-sm md:text-base">
             Barcha o'quvchilarni boshqaring
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild className="flex-1 sm:flex-none text-xs sm:text-sm">
             <Link href="/admin/students/migrate">
-              <Users className="mr-2 h-4 w-4" />
-              Migration
+              <Users className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Migration</span>
+              <span className="sm:hidden">Migrate</span>
             </Link>
           </Button>
-          <Button asChild>
+          <Button asChild className="flex-1 sm:flex-none text-xs sm:text-sm">
             <Link href="/admin/students/create">
-              <Plus className="mr-2 h-4 w-4" />
-              Yangi O'quvchi
+              <Plus className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Yangi O'quvchi</span>
+              <span className="sm:hidden">Yangi</span>
             </Link>
           </Button>
         </div>
@@ -164,43 +169,45 @@ export default async function StudentsPage({
 
       {/* Search and Filter */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-4 md:flex-row">
+        <CardContent className="pt-4 md:pt-6">
+          <div className="flex flex-col gap-3 md:gap-4">
+            <div className="flex flex-col gap-2 md:gap-4 md:flex-row">
               <SearchBar 
                 placeholder="O'quvchi qidirish (ism, kod)..." 
                 className="flex-1"
               />
-              <FilterSelect
-                paramName="status"
-                options={[
-                  { label: 'Faol', value: 'ACTIVE' },
-                  { label: 'Bitirgan', value: 'GRADUATED' },
-                  { label: 'Chiqarilgan', value: 'EXPELLED' },
-                ]}
-                placeholder="Barcha statuslar"
-                className="w-full md:w-[200px]"
-              />
-              <FilterSelect
-                paramName="classId"
-                options={classes.map(c => ({ label: c.name, value: c.id }))}
-                placeholder="Barcha sinflar"
-                className="w-full md:w-[200px]"
-              />
-              <FilterSelect
-                paramName="trialStatus"
-                options={[
-                  { label: 'Sinov muddatida', value: 'trial' },
-                  { label: 'Asosiy o\'quvchilar', value: 'regular' },
-                ]}
-                placeholder="Barcha o'quvchilar"
-                className="w-full md:w-[200px]"
-              />
-              <ClearFilters />
+              <div className="grid grid-cols-2 md:flex gap-2">
+                <FilterSelect
+                  paramName="status"
+                  options={[
+                    { label: 'Faol', value: 'ACTIVE' },
+                    { label: 'Bitirgan', value: 'GRADUATED' },
+                    { label: 'Chiqarilgan', value: 'EXPELLED' },
+                  ]}
+                  placeholder="Barcha statuslar"
+                  className="w-full md:w-[200px]"
+                />
+                <FilterSelect
+                  paramName="classId"
+                  options={classes.map(c => ({ label: c.name, value: c.id }))}
+                  placeholder="Barcha sinflar"
+                  className="w-full md:w-[200px]"
+                />
+                <FilterSelect
+                  paramName="trialStatus"
+                  options={[
+                    { label: 'Sinov muddatida', value: 'trial' },
+                    { label: 'Asosiy o\'quvchilar', value: 'regular' },
+                  ]}
+                  placeholder="Barcha o'quvchilar"
+                  className="w-full md:w-[200px] col-span-2 md:col-span-1"
+                />
+                <ClearFilters className="col-span-2 md:col-span-1" />
+              </div>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
               <PageSizeSelector currentPageSize={pageSize} />
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 Jami: <span className="font-medium">{totalStudents}</span> ta o'quvchi
               </div>
             </div>
