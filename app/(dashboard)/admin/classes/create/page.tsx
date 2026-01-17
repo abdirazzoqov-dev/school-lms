@@ -234,14 +234,17 @@ export default function CreateClassPage() {
                   </Button>
                 </div>
                 <Select
-                  value={formData.classTeacherId}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, classTeacherId: value }))}
+                  value={formData.classTeacherId || 'none'}
+                  onValueChange={(value) => setFormData(prev => ({ 
+                    ...prev, 
+                    classTeacherId: value === 'none' ? '' : value 
+                  }))}
                 >
                   <SelectTrigger disabled={loadingTeachers}>
                     <SelectValue placeholder="Sinf rahbarini tanlang (keyin ham tayinlash mumkin)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">
+                    <SelectItem value="none">
                       Hozircha tayinlanmasin
                     </SelectItem>
                     {teachers.length === 0 && !loadingTeachers ? (
