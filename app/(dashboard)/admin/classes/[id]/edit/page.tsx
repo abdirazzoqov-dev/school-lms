@@ -28,10 +28,25 @@ export default function EditClassPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     // Load class and teachers data
+    console.log('🔄 Loading class and teachers data...')
+    
     Promise.all([
-      fetch(`/api/classes/${params.id}`).then(res => res.json()),
-      fetch('/api/admin/teachers').then(res => res.json())
+      fetch(`/api/classes/${params.id}`).then(res => {
+        console.log('📡 Class API response status:', res.status)
+        return res.json()
+      }),
+      fetch('/api/admin/teachers', {
+        cache: 'no-store',
+        credentials: 'include'
+      }).then(res => {
+        console.log('📡 Teachers API response status:', res.status)
+        return res.json()
+      })
     ]).then(([classData, teachersData]) => {
+      console.log('✅ Class data:', classData)
+      console.log('✅ Teachers data:', teachersData)
+      console.log('✅ Teachers count:', teachersData?.teachers?.length || 0)
+      
       if (classData.class) {
         setFormData({
           name: classData.class.name,
@@ -41,12 +56,21 @@ export default function EditClassPage({ params }: { params: { id: string } }) {
           maxStudents: classData.class.maxStudents,
         })
       }
-      setTeachers(teachersData.teachers || [])
+      
+      const teachersList = teachersData.teachers || []
+      setTeachers(teachersList)
+      
+      toast({
+        title: 'Ma\'lumotlar yuklandi',
+        description: `${teachersList.length} ta o'qituvchi topildi`,
+      })
+      
       setDataLoading(false)
-    }).catch(() => {
+    }).catch((error) => {
+      console.error('❌ Error loading data:', error)
       toast({
         title: 'Xato!',
-        description: 'Ma\'lumotlarni yuklashda xatolik',
+        description: 'Ma\'lumotlarni yuklashda xatolik: ' + error.message,
         variant: 'destructive',
       })
       setDataLoading(false)
@@ -150,9 +174,16 @@ export default function EditClassPage({ params }: { params: { id: string } }) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="classTeacherId">Sinf Rahbari</Label>
+                <Label htmlFor="classTeacherId">
+                  Sinf Rahbari 
+                  {teachers.length > 0 && (
+                    <span className="ml-2 text-xs text-green-600">
+                      ({teachers.length} ta o'qituvchi)
+                    </span>
+                  )}
+                </Label>
                 <Select
-                  value={formData.classTeacherId || undefined}
+                  value={formData.classTeacherId || 'none'}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, classTeacherId: value === 'none' ? '' : value }))}
                 >
                   <SelectTrigger>
@@ -160,13 +191,24 @@ export default function EditClassPage({ params }: { params: { id: string } }) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Biriktirilmagan</SelectItem>
-                    {teachers.map((teacher) => (
-                      <SelectItem key={teacher.id} value={teacher.id}>
-                        {teacher.user?.fullName || 'No name'} ({teacher.specialization})
+                    {teachers.length === 0 ? (
+                      <SelectItem value="empty" disabled>
+                        O'qituvchilar topilmadi
                       </SelectItem>
-                    ))}
+                    ) : (
+                      teachers.map((teacher: any) => (
+                        <SelectItem key={teacher.id} value={teacher.id}>
+                          {teacher.user?.fullName || 'No name'} ({teacher.specialization || 'N/A'})
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
+                {teachers.length === 0 && (
+                  <p className="text-xs text-red-600">
+                    ⚠️ O'qituvchilar topilmadi. Avval o'qituvchi yarating.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
