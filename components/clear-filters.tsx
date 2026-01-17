@@ -3,8 +3,13 @@
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
-export function ClearFilters() {
+interface ClearFiltersProps {
+  className?: string
+}
+
+export function ClearFilters({ className }: ClearFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -18,7 +23,7 @@ export function ClearFilters() {
   if (!hasFilters) return null
 
   return (
-    <Button variant="ghost" size="sm" onClick={handleClear}>
+    <Button variant="ghost" size="sm" onClick={handleClear} className={cn(className)}>
       <X className="h-4 w-4 mr-2" />
       Tozalash
     </Button>
