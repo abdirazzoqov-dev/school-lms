@@ -67,14 +67,14 @@ async function main() {
   const adminPassword = 'Admin123!'
   const adminEmail = 'admin@demo-maktab.uz'
 
-  const existingAdmin = await prisma.user.findUnique({
+  let demoAdmin = await prisma.user.findUnique({
     where: { email: adminEmail },
   })
 
-  if (!existingAdmin) {
+  if (!demoAdmin) {
     const hashedAdminPassword = await bcrypt.hash(adminPassword, 12)
 
-    await prisma.user.create({
+    demoAdmin = await prisma.user.create({
       data: {
         email: adminEmail,
         fullName: 'Maktab Administratori',
@@ -356,6 +356,116 @@ async function main() {
 
       console.log(`✅ Demo Student created: ${studentData.fullName}`)
     }
+  }
+
+  // Create Demo Payments for Students
+  console.log('\n💰 Creating demo payments...')
+  
+  // Delete existing demo payments first (idempotent)
+  await prisma.payment.deleteMany({
+    where: { tenantId: demoTenant.id }
+  })
+  
+  const allStudents = await prisma.student.findMany({
+    where: { tenantId: demoTenant.id },
+    include: { 
+      user: { select: { fullName: true } },
+      parents: { include: { parent: true }, where: { hasAccess: true }, take: 1 } 
+    }
+  })
+
+  if (allStudents.length > 0) {
+    for (const student of allStudents) {
+      const primaryGuardian = student.parents[0]?.parent
+      const thisMonth = new Date()
+      const lastMonth = new Date(thisMonth.getFullYear(), thisMonth.getMonth() - 1, 1)
+      
+      // Create 3 completed payments for last month
+      for (let i = 0; i < 3; i++) {
+        const paidDate = new Date(lastMonth)
+        paidDate.setDate(5 + i * 3)
+        
+        const invoiceNumber = `INV-${lastMonth.getFullYear()}-${(lastMonth.getMonth() + 1).toString().padStart(2, '0')}${student.studentCode}${i}`
+        
+        await prisma.payment.create({
+          data: {
+            tenantId: demoTenant.id,
+            studentId: student.id,
+            parentId: primaryGuardian?.id || null,
+            amount: student.monthlyTuitionFee || 2000000,
+            paidAmount: student.monthlyTuitionFee || 2000000,
+            remainingAmount: 0,
+            paymentType: 'TUITION',
+            paymentMethod: i === 0 ? 'CASH' : i === 1 ? 'CLICK' : 'PAYME',
+            status: 'COMPLETED',
+            paymentMonth: lastMonth.getMonth() + 1,
+            paymentYear: lastMonth.getFullYear(),
+            invoiceNumber,
+            dueDate: new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 5),
+            paidDate,
+            receivedById: demoAdmin.id,
+            receiptNumber: `RCP${lastMonth.getFullYear()}${(lastMonth.getMonth() + 1).toString().padStart(2, '0')}${student.studentCode}${i}`,
+            notes: 'Demo to\'lov - O\'tgan oy',
+          }
+        })
+      }
+
+      // Create 2 completed payments for this month
+      for (let i = 0; i < 2; i++) {
+        const paidDate = new Date(thisMonth)
+        paidDate.setDate(3 + i * 2)
+        
+        const invoiceNumber = `INV-${thisMonth.getFullYear()}-${(thisMonth.getMonth() + 1).toString().padStart(2, '0')}${student.studentCode}${i}`
+        
+        await prisma.payment.create({
+          data: {
+            tenantId: demoTenant.id,
+            studentId: student.id,
+            parentId: primaryGuardian?.id || null,
+            amount: student.monthlyTuitionFee || 2000000,
+            paidAmount: student.monthlyTuitionFee || 2000000,
+            remainingAmount: 0,
+            paymentType: 'TUITION',
+            paymentMethod: i === 0 ? 'CASH' : 'CLICK',
+            status: 'COMPLETED',
+            paymentMonth: thisMonth.getMonth() + 1,
+            paymentYear: thisMonth.getFullYear(),
+            invoiceNumber,
+            dueDate: new Date(thisMonth.getFullYear(), thisMonth.getMonth(), 5),
+            paidDate,
+            receivedById: demoAdmin.id,
+            receiptNumber: `RCP${thisMonth.getFullYear()}${(thisMonth.getMonth() + 1).toString().padStart(2, '0')}${student.studentCode}${i}`,
+            notes: 'Demo to\'lov - Bu oy',
+          }
+        })
+      }
+
+      // Create 1 pending payment for this month
+      const invoiceNumber = `INV-${thisMonth.getFullYear()}-${(thisMonth.getMonth() + 1).toString().padStart(2, '0')}${student.studentCode}-PENDING`
+      
+      await prisma.payment.create({
+        data: {
+          tenantId: demoTenant.id,
+          studentId: student.id,
+          parentId: primaryGuardian?.id || null,
+          amount: student.monthlyTuitionFee || 2000000,
+          paidAmount: 0,
+          remainingAmount: student.monthlyTuitionFee || 2000000,
+          paymentType: 'TUITION',
+          paymentMethod: 'CASH',
+          status: 'PENDING',
+          paymentMonth: thisMonth.getMonth() + 1,
+          paymentYear: thisMonth.getFullYear(),
+          invoiceNumber,
+          dueDate: new Date(thisMonth.getFullYear(), thisMonth.getMonth(), 25),
+          paidDate: null,
+          notes: 'Demo to\'lov - Kutilmoqda',
+        }
+      })
+
+      console.log(`   ✅ Created 6 payments for: ${student.user.fullName}`)
+    }
+    console.log(`✅ Demo Payments created: ${allStudents.length * 6} payments`)
   }
 
   // Create Global Subscription Plans
