@@ -42,23 +42,23 @@ export default async function SubjectsPage() {
     const activeSubjects = subjects.filter(s => s._count.schedules > 0).length
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Fanlar</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold">Fanlar</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             O'quv fanlarini boshqarish
           </p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/admin/subjects/quick-setup">
-            <Button variant="outline">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Link href="/admin/subjects/quick-setup" className="flex-1 sm:flex-none">
+            <Button variant="outline" className="w-full">
               <BookOpen className="mr-2 h-4 w-4" />
               Tez sozlash
             </Button>
           </Link>
-          <Link href="/admin/subjects/create">
-            <Button>
+          <Link href="/admin/subjects/create" className="flex-1 sm:flex-none">
+            <Button className="w-full">
               <Plus className="mr-2 h-4 w-4" />
               Yangi fan
             </Button>
@@ -67,16 +67,16 @@ export default async function SubjectsPage() {
       </div>
 
       {/* Statistics */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-2">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
+            <CardTitle className="text-xs md:text-sm font-medium">
               Jami Fanlar
             </CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalSubjects}</div>
+          <CardContent className="p-4 md:p-6 pt-0">
+            <div className="text-xl md:text-2xl font-bold">{totalSubjects}</div>
             <p className="text-xs text-muted-foreground">
               Barcha fanlar
             </p>
@@ -84,14 +84,14 @@ export default async function SubjectsPage() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
+            <CardTitle className="text-xs md:text-sm font-medium">
               Faol Fanlar
             </CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeSubjects}</div>
+          <CardContent className="p-4 md:p-6 pt-0">
+            <div className="text-xl md:text-2xl font-bold">{activeSubjects}</div>
             <p className="text-xs text-muted-foreground">
               Dars jadvalida bor
             </p>
@@ -125,28 +125,28 @@ export default async function SubjectsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {subjects.map((subject) => (
             <Card key={subject.id}>
-              <CardHeader>
+              <CardHeader className="p-4 md:p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     {subject.color && (
                       <div 
-                        className="w-3 h-3 rounded-full" 
+                        className="w-3 h-3 rounded-full flex-shrink-0" 
                         style={{ backgroundColor: subject.color }}
                       />
                     )}
-                    <div>
-                      <CardTitle className="text-lg">{subject.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{subject.code}</p>
+                    <div className="min-w-0">
+                      <CardTitle className="text-base md:text-lg truncate">{subject.name}</CardTitle>
+                      <p className="text-xs md:text-sm text-muted-foreground truncate">{subject.code}</p>
                     </div>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 md:space-y-4 p-4 md:p-6 pt-0">
                 {subject.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
+                  <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
                     {subject.description}
                   </p>
                 )}
@@ -154,15 +154,15 @@ export default async function SubjectsPage() {
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-2 text-center text-sm">
                   <div>
-                    <div className="font-semibold">{subject._count.classSubjects}</div>
+                    <div className="font-semibold text-base md:text-lg">{subject._count.classSubjects}</div>
                     <div className="text-xs text-muted-foreground">Sinf</div>
                   </div>
                   <div>
-                    <div className="font-semibold">{subject._count.schedules}</div>
+                    <div className="font-semibold text-base md:text-lg">{subject._count.schedules}</div>
                     <div className="text-xs text-muted-foreground">Dars</div>
                   </div>
                   <div>
-                    <div className="font-semibold">{subject._count.grades}</div>
+                    <div className="font-semibold text-base md:text-lg">{subject._count.grades}</div>
                     <div className="text-xs text-muted-foreground">Baho</div>
                   </div>
                 </div>

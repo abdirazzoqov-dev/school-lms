@@ -212,11 +212,11 @@ export default async function PaymentsPage({
   })
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">To'lovlar</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold">To'lovlar</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Barcha to'lovlarni boshqaring
           </p>
         </div>
@@ -224,57 +224,59 @@ export default async function PaymentsPage({
 
       {/* Search and Filter */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-4 md:flex-row">
+        <CardContent className="pt-4 md:pt-6">
+          <div className="flex flex-col gap-3 md:gap-4">
+            <div className="flex flex-col gap-2 md:gap-4 md:flex-row md:flex-wrap">
               <SearchBar 
-                placeholder="To'lov qidirish (invoice, o'quvchi)..." 
-                className="flex-1"
+                placeholder="To'lov qidirish..." 
+                className="flex-1 min-w-full md:min-w-0"
               />
-              <FilterSelect
-                paramName="status"
-                options={[
-                  { label: 'To\'langan', value: 'COMPLETED' },
-                  { label: 'Qisman to\'langan', value: 'PARTIALLY_PAID' },
-                  { label: 'Kutilmoqda', value: 'PENDING' },
-                  { label: 'Muvaffaqiyatsiz', value: 'FAILED' },
-                  { label: 'Qaytarilgan', value: 'REFUNDED' },
-                ]}
-                placeholder="Barcha statuslar"
-                className="w-full md:w-[180px]"
-              />
-              <FilterSelect
-                paramName="paymentType"
-                options={[
-                  { label: 'O\'qish haqi', value: 'TUITION' },
-                  { label: 'Kitoblar', value: 'BOOKS' },
-                  { label: 'Forma', value: 'UNIFORM' },
-                  { label: 'Boshqa', value: 'OTHER' },
-                ]}
-                placeholder="Barcha turlar"
-                className="w-full md:w-[180px]"
-              />
-              <FilterSelect
-                paramName="classId"
-                options={classes.map(c => ({ label: c.name, value: c.id }))}
-                placeholder="Barcha sinflar"
-                className="w-full md:w-[180px]"
-              />
-              <FilterSelect
-                paramName="studentId"
-                options={students.map(s => ({ 
-                  label: `${s.user?.fullName || s.studentCode} - ${s.class?.name || 'Sinfsiz'}`, 
-                  value: s.id 
-                }))}
-                placeholder="Barcha o'quvchilar"
-                className="w-full md:w-[200px]"
-              />
-              <ClearFilters />
+              <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap">
+                <FilterSelect
+                  paramName="status"
+                  options={[
+                    { label: 'To\'langan', value: 'COMPLETED' },
+                    { label: 'Qisman', value: 'PARTIALLY_PAID' },
+                    { label: 'Kutilmoqda', value: 'PENDING' },
+                    { label: 'Xato', value: 'FAILED' },
+                    { label: 'Qaytarilgan', value: 'REFUNDED' },
+                  ]}
+                  placeholder="Status"
+                  className="w-full md:w-[140px]"
+                />
+                <FilterSelect
+                  paramName="paymentType"
+                  options={[
+                    { label: 'O\'qish', value: 'TUITION' },
+                    { label: 'Kitob', value: 'BOOKS' },
+                    { label: 'Forma', value: 'UNIFORM' },
+                    { label: 'Boshqa', value: 'OTHER' },
+                  ]}
+                  placeholder="Turi"
+                  className="w-full md:w-[130px]"
+                />
+                <FilterSelect
+                  paramName="classId"
+                  options={classes.map(c => ({ label: c.name, value: c.id }))}
+                  placeholder="Sinf"
+                  className="w-full md:w-[140px]"
+                />
+                <FilterSelect
+                  paramName="studentId"
+                  options={students.map(s => ({ 
+                    label: `${s.user?.fullName || s.studentCode}`, 
+                    value: s.id 
+                  }))}
+                  placeholder="O'quvchi"
+                  className="w-full md:w-[180px]"
+                />
+              </div>
+              <ClearFilters className="w-full md:w-auto" />
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <PageSizeSelector currentPageSize={pageSize} />
               <div className="text-sm text-muted-foreground">
-                Jami: <span className="font-medium">{totalPayments}</span> ta to'lov
+                Jami: <span className="font-medium">{totalPayments}</span> ta
               </div>
             </div>
           </div>
@@ -301,34 +303,34 @@ export default async function PaymentsPage({
               </Button>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <div className="bg-white rounded-lg p-4">
-                <p className="text-sm text-muted-foreground">Oylik to'lov</p>
-                <p className="text-2xl font-bold text-blue-600">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4">
+              <div className="bg-white rounded-lg p-3 md:p-4">
+                <p className="text-xs md:text-sm text-muted-foreground">Oylik to'lov</p>
+                <p className="text-lg md:text-2xl font-bold text-blue-600">
                   {formatNumber(studentStats.monthlyTuitionFee)}
                 </p>
-                <p className="text-xs text-blue-600">{studentStats.monthsEnrolled} oy o'qiydi</p>
+                <p className="text-xs text-blue-600">{studentStats.monthsEnrolled} oy</p>
               </div>
 
-              <div className="bg-white rounded-lg p-4">
-                <p className="text-sm text-muted-foreground">To'lashi kerak</p>
-                <p className="text-2xl font-bold text-purple-600">
+              <div className="bg-white rounded-lg p-3 md:p-4">
+                <p className="text-xs md:text-sm text-muted-foreground">To'lashi kerak</p>
+                <p className="text-lg md:text-2xl font-bold text-purple-600">
                   {formatNumber(studentStats.expectedTotal)}
                 </p>
                 <p className="text-xs text-purple-600">Jami ({studentStats.monthsEnrolled} oy)</p>
               </div>
               
-              <div className="bg-white rounded-lg p-4">
-                <p className="text-sm text-muted-foreground">To'langan</p>
-                <p className="text-2xl font-bold text-green-600">
+              <div className="bg-white rounded-lg p-3 md:p-4">
+                <p className="text-xs md:text-sm text-muted-foreground">To'langan</p>
+                <p className="text-lg md:text-2xl font-bold text-green-600">
                   {formatNumber(studentStats.totalPaid)}
                 </p>
-                <p className="text-xs text-green-600">{studentStats.completedCount} ta to'lov</p>
+                <p className="text-xs text-green-600">{studentStats.completedCount} ta</p>
               </div>
               
-              <div className="bg-white rounded-lg p-4">
-                <p className="text-sm text-muted-foreground">Qarzi</p>
-                <p className={`text-2xl font-bold ${
+              <div className="bg-white rounded-lg p-3 md:p-4">
+                <p className="text-xs md:text-sm text-muted-foreground">Qarzi</p>
+                <p className={`text-lg md:text-2xl font-bold ${
                   (studentStats.expectedTotal - studentStats.totalPaid) > 0 
                     ? 'text-red-600' 
                     : 'text-green-600'
@@ -341,8 +343,8 @@ export default async function PaymentsPage({
                     : 'text-green-600'
                 }`}>
                   {(studentStats.expectedTotal - studentStats.totalPaid) > 0 
-                    ? 'To\'lash kerak' 
-                    : 'To\'liq to\'langan'}
+                    ? 'To\'lash' 
+                    : 'To\'liq'}
                 </p>
               </div>
             </div>
@@ -419,37 +421,37 @@ export default async function PaymentsPage({
       )}
 
       {/* Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-green-600">
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
+            <div className="text-xl md:text-2xl font-bold text-green-600">
               {formatNumber(totalRevenue)}
             </div>
-            <p className="text-sm text-muted-foreground">To'langan (so'm)</p>
+            <p className="text-xs md:text-sm text-muted-foreground">To'langan</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-orange-600">
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
+            <div className="text-xl md:text-2xl font-bold text-orange-600">
               {formatNumber(pendingAmount)}
             </div>
-            <p className="text-sm text-muted-foreground">Kutilmoqda (so'm)</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Kutilmoqda</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold">
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
+            <div className="text-xl md:text-2xl font-bold">
               {payments.filter(p => p.status === 'COMPLETED').length}
             </div>
-            <p className="text-sm text-muted-foreground">To'langan to'lovlar</p>
+            <p className="text-xs md:text-sm text-muted-foreground">To'langan</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-orange-600">
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
+            <div className="text-xl md:text-2xl font-bold text-orange-600">
               {payments.filter(p => p.status === 'PENDING' && p.dueDate < new Date()).length}
             </div>
-            <p className="text-sm text-muted-foreground">Muddati o'tgan</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Muddati o'tgan</p>
           </CardContent>
         </Card>
       </div>

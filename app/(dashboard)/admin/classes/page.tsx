@@ -67,16 +67,16 @@ export default async function ClassesPage({
       }).catch(() => [])
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 md:space-y-6 p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Sinflar</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Sinflar</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
             {academicYear} o'quv yili • {classes.length} ta sinf
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="w-full md:w-auto">
           <Link href="/admin/classes/create">
             <Plus className="mr-2 h-4 w-4" />
             Yangi Sinf
@@ -86,10 +86,10 @@ export default async function ClassesPage({
 
       {/* Search and Filter */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4 md:flex-row">
+        <CardContent className="pt-4 md:pt-6">
+          <div className="flex flex-col gap-3 md:gap-4 md:flex-row">
             <SearchBar 
-              placeholder="Sinf qidirish (nom, xona)..." 
+              placeholder="Sinf qidirish..." 
               className="flex-1"
             />
             <FilterSelect
@@ -101,13 +101,13 @@ export default async function ClassesPage({
               placeholder="Barcha darajalar"
               className="w-full md:w-[200px]"
             />
-            <ClearFilters />
+            <ClearFilters className="w-full md:w-auto" />
           </div>
         </CardContent>
       </Card>
 
       {/* Classes Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {classes.map((classItem) => {
           const capacity = (classItem._count.students / classItem.maxStudents) * 100
           const isFull = capacity >= 100
@@ -115,11 +115,11 @@ export default async function ClassesPage({
           return (
             <Link key={classItem.id} href={`/admin/classes/${classItem.id}`}>
               <Card className="h-full hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer border-l-4 border-l-blue-500">
-                <CardHeader>
+                <CardHeader className="p-4 md:p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-2xl mb-1">{classItem.name}</CardTitle>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <CardTitle className="text-xl md:text-2xl mb-1">{classItem.name}</CardTitle>
+                      <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm text-muted-foreground">
                         <Badge variant="outline">{classItem.gradeLevel}-sinf</Badge>
                         {classItem.roomNumber && (
                           <div className="flex items-center gap-1">
@@ -130,13 +130,13 @@ export default async function ClassesPage({
                       </div>
                     </div>
                     {isFull && (
-                      <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                      <Badge variant="secondary" className="bg-orange-100 text-orange-800 text-xs">
                         To'lgan
                       </Badge>
                     )}
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3 md:space-y-4 p-4 md:p-6 pt-0">
                   {/* O'quvchilar */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
@@ -155,7 +155,7 @@ export default async function ClassesPage({
                   </div>
 
                   {/* Sinf rahbari */}
-                  <div className="p-3 rounded-lg bg-muted/50">
+                  <div className="p-2.5 md:p-3 rounded-lg bg-muted/50">
                     {classItem.classTeacher ? (
                       <div>
                         <p className="text-xs text-muted-foreground mb-1">Sinf rahbari:</p>
@@ -187,6 +187,7 @@ export default async function ClassesPage({
                   <Button 
                     className="w-full" 
                     variant="outline"
+                    size="sm"
                     asChild
                   >
                     <Link href={`/admin/classes/${classItem.id}`}>
@@ -232,64 +233,64 @@ export default async function ClassesPage({
 
       {/* Summary Stats */}
       {classes.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-4">
           <Card className="border-l-4 border-l-blue-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <BookOpen className="h-5 w-5 text-blue-600" />
+            <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="p-1.5 md:p-2 bg-blue-100 rounded-lg">
+                  <BookOpen className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold">{classes.length}</div>
-                  <p className="text-sm text-muted-foreground">Jami sinflar</p>
+                  <div className="text-xl md:text-2xl font-bold">{classes.length}</div>
+                  <p className="text-xs md:text-sm text-muted-foreground">Jami sinflar</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-l-4 border-l-green-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Users className="h-5 w-5 text-green-600" />
+            <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="p-1.5 md:p-2 bg-green-100 rounded-lg">
+                  <Users className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-xl md:text-2xl font-bold text-green-600">
                     {classes.reduce((acc, c) => acc + c._count.students, 0)}
                   </div>
-                  <p className="text-sm text-muted-foreground">Jami o'quvchilar</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Jami o'quvchilar</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-l-4 border-l-purple-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <GraduationCap className="h-5 w-5 text-purple-600" />
+            <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="p-1.5 md:p-2 bg-purple-100 rounded-lg">
+                  <GraduationCap className="h-4 w-4 md:h-5 md:w-5 text-purple-600" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-purple-600">
+                  <div className="text-xl md:text-2xl font-bold text-purple-600">
                     {classes.filter(c => c.classTeacher).length}
                   </div>
-                  <p className="text-sm text-muted-foreground">Rahbar tayinlangan</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Rahbar tayinlangan</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-l-4 border-l-amber-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-100 rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-amber-600" />
+            <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="p-1.5 md:p-2 bg-amber-100 rounded-lg">
+                  <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-amber-600" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-amber-600">
+                  <div className="text-xl md:text-2xl font-bold text-amber-600">
                     {classes.reduce((acc, c) => acc + c._count.classSubjects, 0)}
                   </div>
-                  <p className="text-sm text-muted-foreground">Jami fanlar</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Jami fanlar</p>
                 </div>
               </div>
             </CardContent>

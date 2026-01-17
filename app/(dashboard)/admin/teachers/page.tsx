@@ -106,15 +106,15 @@ export default async function TeachersPage({
     }).catch(() => [])
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">O'qituvchilar</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold">O'qituvchilar</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Barcha o'qituvchilarni boshqaring
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="w-full md:w-auto">
           <Link href="/admin/teachers/create">
             <Plus className="mr-2 h-4 w-4" />
             Yangi O'qituvchi
@@ -124,19 +124,19 @@ export default async function TeachersPage({
 
       {/* Search */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-4">
+        <CardContent className="pt-4 md:pt-6">
+          <div className="flex flex-col gap-3 md:gap-4">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-4">
               <SearchBar 
-                placeholder="O'qituvchi qidirish (ism, email, kod, fan)..." 
+                placeholder="O'qituvchi qidirish..." 
                 className="flex-1"
               />
-              <ClearFilters />
+              <ClearFilters className="w-full md:w-auto" />
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <PageSizeSelector currentPageSize={pageSize} />
               <div className="text-sm text-muted-foreground">
-                Jami: <span className="font-medium">{totalTeachers}</span> ta o'qituvchi
+                Jami: <span className="font-medium">{totalTeachers}</span> ta
               </div>
             </div>
           </div>
@@ -181,29 +181,29 @@ export default async function TeachersPage({
       )}
 
       {/* Statistics */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
         <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{teachers.length}</div>
-            <p className="text-sm text-muted-foreground">
+          <CardContent className="pt-4 md:pt-6">
+            <div className="text-xl md:text-2xl font-bold">{teachers.length}</div>
+            <p className="text-xs md:text-sm text-muted-foreground">
               {searchParams.search ? 'Topilgan natijalar' : 'Jami o\'qituvchilar'}
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-green-600">
+          <CardContent className="pt-4 md:pt-6">
+            <div className="text-xl md:text-2xl font-bold text-green-600">
               {teachers.filter(t => t._count.classSubjects > 0).length}
             </div>
-            <p className="text-sm text-muted-foreground">Faol o'qituvchilar</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Faol o'qituvchilar</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-orange-600">
+          <CardContent className="pt-4 md:pt-6">
+            <div className="text-xl md:text-2xl font-bold text-orange-600">
               {teachers.filter(t => t._count.classSubjects === 0).length}
             </div>
-            <p className="text-sm text-muted-foreground">Sinfga biriktirilmagan</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Sinfga biriktirilmagan</p>
           </CardContent>
         </Card>
       </div>
