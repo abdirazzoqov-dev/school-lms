@@ -90,43 +90,68 @@ async function main() {
     console.log(`   Password: ${adminPassword}`)
   }
 
-  // Create Demo Teacher
+  // Create Demo Teachers
   const teacherPassword = 'Teacher123!'
-  const teacherEmail = 'teacher@demo-maktab.uz'
+  const demoTeachers = [
+    {
+      email: 'teacher1@demo-maktab.uz',
+      fullName: 'Aziza Karimova',
+      specialization: 'Matematika',
+      education: 'Toshkent Davlat Pedagogika Universiteti',
+      experienceYears: 5,
+    },
+    {
+      email: 'teacher2@demo-maktab.uz',
+      fullName: 'Botir Rahmonov',
+      specialization: 'Fizika',
+      education: 'O\'zbekiston Milliy Universiteti',
+      experienceYears: 8,
+    },
+    {
+      email: 'teacher3@demo-maktab.uz',
+      fullName: 'Dilnoza Yusupova',
+      specialization: 'Ona tili',
+      education: 'Samarqand Davlat Universiteti',
+      experienceYears: 3,
+    },
+  ]
 
-  const existingTeacher = await prisma.user.findUnique({
-    where: { email: teacherEmail },
-  })
-
-  if (!existingTeacher) {
-    const hashedTeacherPassword = await bcrypt.hash(teacherPassword, 12)
-
-    const teacherUser = await prisma.user.create({
-      data: {
-        email: teacherEmail,
-        fullName: 'Aziza Karimova',
-        passwordHash: hashedTeacherPassword,
-        role: 'TEACHER',
-        tenantId: demoTenant.id,
-        isActive: true,
-      },
+  for (let i = 0; i < demoTeachers.length; i++) {
+    const teacherData = demoTeachers[i]
+    const existingTeacher = await prisma.user.findUnique({
+      where: { email: teacherData.email },
     })
 
-    await prisma.teacher.create({
-      data: {
-        tenantId: demoTenant.id,
-        userId: teacherUser.id,
-        teacherCode: 'T001',
-        specialization: 'Matematika, Fizika',
-        education: 'Toshkent Davlat Pedagogika Universiteti',
-        experienceYears: 5,
-      },
-    })
+    if (!existingTeacher) {
+      const hashedTeacherPassword = await bcrypt.hash(teacherPassword, 12)
 
-    console.log('✅ Demo Teacher created')
-    console.log(`   Email: ${teacherEmail}`)
-    console.log(`   Password: ${teacherPassword}`)
+      const teacherUser = await prisma.user.create({
+        data: {
+          email: teacherData.email,
+          fullName: teacherData.fullName,
+          passwordHash: hashedTeacherPassword,
+          role: 'TEACHER',
+          tenantId: demoTenant.id,
+          isActive: true,
+        },
+      })
+
+      await prisma.teacher.create({
+        data: {
+          tenantId: demoTenant.id,
+          userId: teacherUser.id,
+          teacherCode: `T${String(i + 1).padStart(3, '0')}`,
+          specialization: teacherData.specialization,
+          education: teacherData.education,
+          experienceYears: teacherData.experienceYears,
+        },
+      })
+
+      console.log(`✅ Demo Teacher ${i + 1} created: ${teacherData.fullName}`)
+    }
   }
+  
+  console.log(`   Password for all teachers: ${teacherPassword}`)
 
   // Create Demo Parent
   const parentPassword = 'Parent123!'
@@ -427,8 +452,8 @@ async function main() {
   console.log('\n👤 Demo Admin:')
   console.log(`   Email: ${adminEmail}`)
   console.log(`   Password: ${adminPassword}`)
-  console.log('\n👨‍🏫 Demo Teacher:')
-  console.log(`   Email: ${teacherEmail}`)
+  console.log('\n👨‍🏫 Demo Teachers:')
+  console.log(`   Email: teacher1@demo-maktab.uz, teacher2@demo-maktab.uz, ...`)
   console.log(`   Password: ${teacherPassword}`)
   console.log('\n👨‍👩‍👧 Demo Parent:')
   console.log(`   Email: ${parentEmail}`)
