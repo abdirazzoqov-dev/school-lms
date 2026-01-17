@@ -61,7 +61,7 @@ export default function CreateClassPage() {
       
       if (data.teachers && Array.isArray(data.teachers)) {
         console.log('✅ Loaded teachers:', data.teachers.length)
-        console.log('Teachers:', data.teachers.map(t => ({
+        console.log('Teachers:', data.teachers.map((t: any) => ({
           name: t.user?.fullName,
           code: t.teacherCode
         })))
