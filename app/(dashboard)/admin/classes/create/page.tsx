@@ -30,32 +30,75 @@ export default function CreateClassPage() {
   const loadTeachers = useCallback(async () => {
     try {
       setLoadingTeachers(true)
+      console.log('🔄 Fetching teachers from /api/admin/teachers...')
+      
       const res = await fetch('/api/admin/teachers', { 
         cache: 'no-store',
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        }
       })
       
+      console.log('📡 Response status:', res.status, res.statusText)
+      
       if (!res.ok) {
-        console.error('Failed to fetch teachers:', res.status, res.statusText)
+        console.error('❌ Failed to fetch teachers:', res.status, res.statusText)
+        const errorText = await res.text()
+        console.error('Error response:', errorText)
         setTeachers([])
+        toast({
+          title: 'Xato!',
+          description: 'O\'qituvchilarni yuklashda xatolik',
+          variant: 'destructive',
+        })
         return
       }
       
       const data = await res.json()
+      console.log('📦 Received data:', data)
+      
       if (data.teachers && Array.isArray(data.teachers)) {
-        console.log('Loaded teachers:', data.teachers.length, data.teachers)
+        console.log('✅ Loaded teachers:', data.teachers.length)
+        console.log('Teachers:', data.teachers.map(t => ({
+          name: t.user?.fullName,
+          code: t.teacherCode
+        })))
         setTeachers(data.teachers)
+        
+        if (data.teachers.length === 0) {
+          toast({
+            title: 'Ma\'lumot',
+            description: 'Hozircha o\'qituvchilar yo\'q. Avval o\'qituvchi yarating.',
+          })
+        } else {
+          toast({
+            title: 'Muvaffaqiyat!',
+            description: `${data.teachers.length} ta o'qituvchi yuklandi`,
+          })
+        }
       } else {
-        console.error('Invalid teachers data format:', data)
+        console.error('❌ Invalid teachers data format:', data)
         setTeachers([])
+        toast({
+          title: 'Xato!',
+          description: 'Noto\'g\'ri ma\'lumot formati',
+          variant: 'destructive',
+        })
       }
     } catch (error) {
-      console.error('Error loading teachers:', error)
+      console.error('❌ Error loading teachers:', error)
       setTeachers([])
+      toast({
+        title: 'Xato!',
+        description: 'Tarmoq xatosi',
+        variant: 'destructive',
+      })
     } finally {
       setLoadingTeachers(false)
     }
-  }, [])
+  }, [toast])
 
   useEffect(() => {
     // Load teachers on mount
@@ -171,7 +214,10 @@ export default function CreateClassPage() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="classTeacherId">Sinf Rahbari</Label>
+                  <Label htmlFor="classTeacherId">
+                    Sinf Rahbari 
+                    <span className="text-xs text-muted-foreground ml-2">(ixtiyoriy)</span>
+                  </Label>
                   <Button
                     type="button"
                     variant="ghost"
@@ -192,9 +238,12 @@ export default function CreateClassPage() {
                   onValueChange={(value) => setFormData(prev => ({ ...prev, classTeacherId: value }))}
                 >
                   <SelectTrigger disabled={loadingTeachers}>
-                    <SelectValue placeholder="Sinf rahbarini tanlang" />
+                    <SelectValue placeholder="Sinf rahbarini tanlang (keyin ham tayinlash mumkin)" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="">
+                      Hozircha tayinlanmasin
+                    </SelectItem>
                     {teachers.length === 0 && !loadingTeachers ? (
                       <SelectItem value="none" disabled>
                         O'qituvchilar topilmadi
@@ -209,8 +258,13 @@ export default function CreateClassPage() {
                   </SelectContent>
                 </Select>
                 {teachers.length === 0 && !loadingTeachers && (
-                  <p className="text-xs text-muted-foreground">
-                    O'qituvchilar ro'yxati bo'sh. Avval o'qituvchi yarating.
+                  <p className="text-xs text-yellow-600 dark:text-yellow-500">
+                    ⚠️ O'qituvchilar topilmadi. Sinf yaratib, keyin rahbar tayinlashingiz mumkin.
+                  </p>
+                )}
+                {teachers.length > 0 && (
+                  <p className="text-xs text-green-600 dark:text-green-500">
+                    ✅ {teachers.length} ta o'qituvchi mavjud
                   </p>
                 )}
               </div>
