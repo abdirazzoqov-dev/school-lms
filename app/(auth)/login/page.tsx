@@ -117,40 +117,41 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-3 sm:p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary text-white">
-            <GraduationCap className="h-10 w-10" />
+        <CardHeader className="space-y-3 sm:space-y-4 text-center px-4 sm:px-6">
+          <div className="mx-auto flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-primary text-white">
+            <GraduationCap className="h-8 w-8 sm:h-10 sm:w-10" />
           </div>
-          <div className="space-y-2">
-            <CardTitle className="text-3xl font-bold">{platformName}</CardTitle>
-            <CardDescription className="text-base">
+          <div className="space-y-1 sm:space-y-2">
+            <CardTitle className="text-2xl sm:text-3xl font-bold">{platformName}</CardTitle>
+            <CardDescription className="text-sm sm:text-base">
               {platformDescription}
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Telefon / Email</Label>
+        <CardContent className="px-4 sm:px-6">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="email" className="text-sm">Telefon / Email</Label>
               <Input
                 id="email"
                 type="text"
-                placeholder="+998 90 123 45 67 yoki email@example.com"
+                placeholder="+998 90 123 45 67"
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
                 required
                 disabled={isLoading}
+                className="h-10 sm:h-11"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
                 Qarindoshlar: telefon raqam bilan kiradi
               </p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Parol</Label>
+            <div className="space-y-1.5 sm:space-y-2">
+              <Label htmlFor="password" className="text-sm">Parol</Label>
               <Input
                 id="password"
                 type="password"
@@ -161,24 +162,25 @@ export default function LoginPage() {
                 }
                 required
                 disabled={isLoading}
+                className="h-10 sm:h-11"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full h-10 sm:h-11 text-sm sm:text-base" disabled={isLoading}>
               {isLoading ? 'Kirish...' : 'Kirish'}
             </Button>
           </form>
           
-          <div className="mt-6 border-t pt-6">
-            <div className="text-center text-sm text-muted-foreground space-y-2">
+          <div className="mt-4 sm:mt-6 border-t pt-4 sm:pt-6">
+            <div className="text-center text-xs sm:text-sm text-muted-foreground space-y-1.5 sm:space-y-2">
               <p className="font-medium">Demo hisoblar:</p>
               <p>
                 <strong>Admin:</strong><br />
-                <span className="font-mono">admin@schoollms.uz</span>
+                <span className="font-mono text-[10px] sm:text-xs">admin@schoollms.uz</span>
               </p>
               <p>
                 <strong>Qarindosh:</strong><br />
-                <span className="font-mono">+998901234567</span><br />
-                <span className="text-xs">(Telefon raqam bilan)</span>
+                <span className="font-mono text-[10px] sm:text-xs">+998901234567</span><br />
+                <span className="text-[9px] sm:text-xs">(Telefon raqam bilan)</span>
               </p>
             </div>
           </div>
