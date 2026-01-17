@@ -49,31 +49,31 @@ export default async function ReportsPage() {
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Hisobotlar</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl md:text-3xl font-bold">Hisobotlar</h1>
+        <p className="text-sm md:text-base text-muted-foreground">
           Turli hisobotlarni ko\'ring va yuklab oling
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {reportTypes.map((report) => {
           const Icon = report.icon
           return (
             <Card key={report.href} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-center gap-4">
-                  <div className={`p-3 rounded-lg ${report.color}`}>
-                    <Icon className="h-6 w-6" />
+              <CardHeader className="p-4 md:p-6">
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className={`p-2 md:p-3 rounded-lg ${report.color}`}>
+                    <Icon className="h-5 w-5 md:h-6 md:w-6" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">{report.title}</CardTitle>
+                    <CardTitle className="text-base md:text-lg">{report.title}</CardTitle>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
+              <CardContent className="p-4 md:p-6 pt-0">
+                <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
                   {report.description}
                 </p>
                 <Link href={report.href}>
@@ -89,38 +89,38 @@ export default async function ReportsPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Tezkor hisobotlar</CardTitle>
+        <CardHeader className="p-4 md:p-6">
+          <CardTitle className="text-base md:text-lg">Tezkor hisobotlar</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
+        <CardContent className="p-4 md:p-6 pt-0">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
             <div className="space-y-2">
-              <h3 className="font-semibold">Oylik hisobotlar</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="font-semibold text-sm md:text-base">Oylik hisobotlar</h3>
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Oxirgi oy uchun avtomatik hisobotlar
               </p>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="flex-1 md:flex-none">
                   <Download className="mr-2 h-4 w-4" />
                   PDF
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="flex-1 md:flex-none">
                   <Download className="mr-2 h-4 w-4" />
                   Excel
                 </Button>
               </div>
             </div>
             <div className="space-y-2">
-              <h3 className="font-semibold">Choraklik hisobotlar</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="font-semibold text-sm md:text-base">Choraklik hisobotlar</h3>
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Oxirgi chorak uchun umumiy hisobot
               </p>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="flex-1 md:flex-none">
                   <Download className="mr-2 h-4 w-4" />
                   PDF
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="flex-1 md:flex-none">
                   <Download className="mr-2 h-4 w-4" />
                   Excel
                 </Button>

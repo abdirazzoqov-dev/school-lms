@@ -52,67 +52,67 @@ export default async function AdminMessagesPage({
   ).length
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Xabarlar Tizimi</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl md:text-3xl font-bold">Xabarlar Tizimi</h1>
+        <p className="text-sm md:text-base text-muted-foreground">
           Barcha xabarlarni kuzatish va monitoring
         </p>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <MessageSquare className="h-6 w-6 text-blue-600" />
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
+            <div className="flex items-center gap-2 md:gap-4">
+              <div className="p-1.5 md:p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                <MessageSquare className="h-4 w-4 md:h-6 md:w-6 text-blue-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{totalMessages}</div>
-                <p className="text-sm text-muted-foreground">Jami xabarlar</p>
+                <div className="text-xl md:text-2xl font-bold">{totalMessages}</div>
+                <p className="text-xs md:text-sm text-muted-foreground">Jami</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Mail className="h-6 w-6 text-yellow-600" />
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
+            <div className="flex items-center gap-2 md:gap-4">
+              <div className="p-1.5 md:p-2 bg-yellow-100 rounded-lg flex-shrink-0">
+                <Mail className="h-4 w-4 md:h-6 md:w-6 text-yellow-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{unreadMessages}</div>
-                <p className="text-sm text-muted-foreground">O'qilmagan</p>
+                <div className="text-xl md:text-2xl font-bold">{unreadMessages}</div>
+                <p className="text-xs md:text-sm text-muted-foreground">Yangi</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Users className="h-6 w-6 text-green-600" />
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
+            <div className="flex items-center gap-2 md:gap-4">
+              <div className="p-1.5 md:p-2 bg-green-100 rounded-lg flex-shrink-0">
+                <Users className="h-4 w-4 md:h-6 md:w-6 text-green-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{teacherMessages}</div>
-                <p className="text-sm text-muted-foreground">O'qituvchilar</p>
+                <div className="text-xl md:text-2xl font-bold">{teacherMessages}</div>
+                <p className="text-xs md:text-sm text-muted-foreground">O'qituvchilar</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Send className="h-6 w-6 text-purple-600" />
+              <div className="p-1.5 md:p-2 bg-purple-100 rounded-lg flex-shrink-0">
+                <Send className="h-4 w-4 md:h-6 md:w-6 text-purple-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{parentMessages}</div>
-                <p className="text-sm text-muted-foreground">Ota-onalar</p>
+                <div className="text-xl md:text-2xl font-bold">{parentMessages}</div>
+                <p className="text-xs md:text-sm text-muted-foreground">Ota-onalar</p>
               </div>
             </div>
           </CardContent>
@@ -141,43 +141,47 @@ export default async function AdminMessagesPage({
               {allMessages.map((message) => (
                 <div
                   key={message.id}
-                  className={`p-4 rounded-lg border ${
+                  className={`p-3 md:p-4 rounded-lg border ${
                     !message.readAt ? 'bg-blue-50 border-blue-200' : 'bg-muted/50'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-4 mb-2">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2 md:gap-4 mb-2">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline" className="text-xs">
-                          {message.sender.role === 'TEACHER' && '👨‍🏫 O\'qituvchi'}
-                          {message.sender.role === 'PARENT' && '👨‍👩‍👧 Ota-ona'}
-                          {message.sender.role === 'ADMIN' && '👤 Admin'}
-                        </Badge>
-                        <span className="font-medium text-sm">
-                          {message.sender.fullName}
-                        </span>
-                        <span className="text-muted-foreground text-sm">→</span>
-                        <Badge variant="outline" className="text-xs">
-                          {message.receiver.role === 'TEACHER' && '👨‍🏫 O\'qituvchi'}
-                          {message.receiver.role === 'PARENT' && '👨‍👩‍👧 Ota-ona'}
-                          {message.receiver.role === 'ADMIN' && '👤 Admin'}
-                        </Badge>
-                        <span className="font-medium text-sm">
-                          {message.receiver.fullName}
-                        </span>
+                      <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2 mb-2">
+                        <div className="flex items-center gap-1 md:gap-2 flex-wrap">
+                          <Badge variant="outline" className="text-xs">
+                            {message.sender.role === 'TEACHER' && '👨‍🏫'}
+                            {message.sender.role === 'PARENT' && '👨‍👩‍👧'}
+                            {message.sender.role === 'ADMIN' && '👤'}
+                          </Badge>
+                          <span className="font-medium text-sm truncate">
+                            {message.sender.fullName}
+                          </span>
+                        </div>
+                        <span className="text-muted-foreground text-sm hidden md:inline">→</span>
+                        <div className="flex items-center gap-1 md:gap-2 flex-wrap">
+                          <Badge variant="outline" className="text-xs">
+                            {message.receiver.role === 'TEACHER' && '👨‍🏫'}
+                            {message.receiver.role === 'PARENT' && '👨‍👩‍👧'}
+                            {message.receiver.role === 'ADMIN' && '👤'}
+                          </Badge>
+                          <span className="font-medium text-sm truncate">
+                            {message.receiver.fullName}
+                          </span>
+                        </div>
                       </div>
                       {message.subject && (
                         <h4 className="font-semibold text-sm mb-1">
                           {message.subject}
                         </h4>
                       )}
-                      <p className="text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
                         {message.content}
                       </p>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
+                    <div className="flex md:flex-col items-center md:items-end justify-between md:justify-start gap-2">
                       {!message.readAt && (
-                        <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+                        <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 text-xs">
                           Yangi
                         </Badge>
                       )}
