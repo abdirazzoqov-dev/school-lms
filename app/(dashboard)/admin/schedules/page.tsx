@@ -47,14 +47,14 @@ export default async function SchedulesPage({
     academicYear
   }
 
-  let groupSchedules: any[] = []
+  let schedules: any[] = []
 
   if (activeType === 'class') {
     if (searchParams.classId) {
       whereClause.classId = searchParams.classId
     }
 
-    var schedules = await db.schedule.findMany({
+    schedules = await db.schedule.findMany({
       where: whereClause,
       include: {
         subject: true,
@@ -82,7 +82,7 @@ export default async function SchedulesPage({
       groupWhereClause.groupId = searchParams.groupId
     }
 
-    groupSchedules = await db.groupSchedule.findMany({
+    schedules = await db.groupSchedule.findMany({
       where: groupWhereClause,
       include: {
         subject: true,
@@ -100,8 +100,6 @@ export default async function SchedulesPage({
         { startTime: 'asc' }
       ]
     })
-
-    var schedules = groupSchedules
   }
 
   // Get statistics
