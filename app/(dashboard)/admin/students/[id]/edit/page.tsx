@@ -22,6 +22,8 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
   const [loading, setLoading] = useState(false)
   const [dataLoading, setDataLoading] = useState(true)
   const [classes, setClasses] = useState<any[]>([])
+  const [groups, setGroups] = useState<any[]>([])
+  const [assignmentType, setAssignmentType] = useState<'class' | 'group' | 'none'>('none')
   const [needsDormitory, setNeedsDormitory] = useState(false)
   const [availableRooms, setAvailableRooms] = useState<any[]>([])
   const [selectedRoom, setSelectedRoom] = useState<any>(null)
@@ -47,6 +49,7 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
     dateOfBirth: '',
     gender: 'MALE' as 'MALE' | 'FEMALE',
     classId: '',
+    groupId: '',
     address: '',
     trialEnabled: false,
     trialDays: 30,
@@ -57,13 +60,23 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
   })
 
   useEffect(() => {
-    // Load student, classes data
+    // Load student, classes, groups data
     Promise.all([
       fetch(`/api/students/${params.id}`).then(res => res.json()),
-      fetch('/api/admin/classes').then(res => res.json())
-    ]).then(([studentData, classesData]) => {
+      fetch('/api/admin/classes').then(res => res.json()),
+      fetch('/api/admin/groups').then(res => res.json())
+    ]).then(([studentData, classesData, groupsData]) => {
       if (studentData.student) {
         const student = studentData.student
+        
+        // Determine assignment type
+        let assignmentTypeValue: 'class' | 'group' | 'none' = 'none'
+        if (student.classId) {
+          assignmentTypeValue = 'class'
+        } else if (student.groupId) {
+          assignmentTypeValue = 'group'
+        }
+        setAssignmentType(assignmentTypeValue)
         
         setFormData({
           fullName: student.user?.fullName || '',
@@ -74,6 +87,7 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
             : '',
           gender: student.gender,
           classId: student.classId || '',
+          groupId: student.groupId || '',
           address: student.address || '',
           trialEnabled: student.trialEnabled || false,
           trialDays: student.trialDays || 30,
@@ -104,6 +118,7 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
         }
       }
       setClasses(classesData.classes || [])
+      setGroups(groupsData.groups || [])
       setDataLoading(false)
     }).catch((error) => {
       console.error('Error loading data:', error)
@@ -364,25 +379,116 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="classId">Sinf</Label>
-                <Select
-                  value={formData.classId || 'none'}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, classId: value === 'none' ? '' : value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sinfni tanlang" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Biriktirilmagan</SelectItem>
-                    {classes.map((cls) => (
-                      <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name} ({cls._count?.students || 0} o'quvchi)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Biriktirish turi</Label>
+                <div className="flex gap-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="assignment-class"
+                      name="assignmentType"
+                      value="class"
+                      checked={assignmentType === 'class'}
+                      onChange={() => {
+                        setAssignmentType('class')
+                        setFormData(prev => ({ ...prev, groupId: '' }))
+                      }}
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="assignment-class" className="font-normal cursor-pointer">
+                      Sinfga biriktirish
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="assignment-group"
+                      name="assignmentType"
+                      value="group"
+                      checked={assignmentType === 'group'}
+                      onChange={() => {
+                        setAssignmentType('group')
+                        setFormData(prev => ({ ...prev, classId: '' }))
+                      }}
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="assignment-group" className="font-normal cursor-pointer">
+                      Guruhga biriktirish
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="assignment-none"
+                      name="assignmentType"
+                      value="none"
+                      checked={assignmentType === 'none'}
+                      onChange={() => {
+                        setAssignmentType('none')
+                        setFormData(prev => ({ ...prev, classId: '', groupId: '' }))
+                      }}
+                      className="h-4 w-4"
+                    />
+                    <Label htmlFor="assignment-none" className="font-normal cursor-pointer">
+                      Biriktirilmagan
+                    </Label>
+                  </div>
+                </div>
               </div>
+
+              {assignmentType === 'class' && (
+                <div className="space-y-2">
+                  <Label htmlFor="classId">Sinf *</Label>
+                  <Select
+                    value={formData.classId}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, classId: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sinfni tanlang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classes.length === 0 ? (
+                        <SelectItem value="none" disabled>
+                          Sinflar topilmadi
+                        </SelectItem>
+                      ) : (
+                        classes.map((cls) => (
+                          <SelectItem key={cls.id} value={cls.id}>
+                            {cls.name} ({cls._count?.students || 0} o'quvchi)
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {assignmentType === 'group' && (
+                <div className="space-y-2">
+                  <Label htmlFor="groupId">Guruh *</Label>
+                  <Select
+                    value={formData.groupId}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, groupId: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Guruhni tanlang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {groups.length === 0 ? (
+                        <SelectItem value="none" disabled>
+                          Guruhlar topilmadi
+                        </SelectItem>
+                      ) : (
+                        groups.map((grp: any) => (
+                          <SelectItem key={grp.id} value={grp.id}>
+                            {grp.name} {grp.code && `(${grp.code})`} - {grp._count?.students || 0} o'quvchi
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

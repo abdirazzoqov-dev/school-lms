@@ -35,6 +35,7 @@ export const studentSchema = z.object({
   dateOfBirth: z.string().min(1, 'Tug\'ilgan sanani kiriting'),
   gender: z.enum(['MALE', 'FEMALE']),
   classId: z.string().optional(),
+  groupId: z.string().optional(),
   address: z.string().optional(),
   
   // Qarindoshlar ma'lumotlari (array) - kamida 1 ta bo'lishi kerak

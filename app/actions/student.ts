@@ -164,6 +164,7 @@ export async function createStudent(data: StudentFormData) {
         dateOfBirth: new Date(validatedData.dateOfBirth),
         gender: validatedData.gender,
         classId: validatedData.classId || null,
+        groupId: validatedData.groupId || null,
         address: validatedData.address || null,
         status: 'ACTIVE',
         // Trial period
@@ -434,6 +435,7 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
         dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : undefined,
         gender: data.gender,
         classId: data.classId || null,
+        groupId: data.groupId || null,
         address: data.address || null,
         // Trial period
         trialEnabled: data.trialEnabled !== undefined ? data.trialEnabled : undefined,

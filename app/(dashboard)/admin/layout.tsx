@@ -62,6 +62,11 @@ export default async function AdminLayout({
       icon: 'BookOpen',
     },
     {
+      title: 'Guruhlar',
+      href: '/admin/groups',
+      icon: 'Users',
+    },
+    {
       title: 'Fanlar',
       href: '/admin/subjects',
       icon: 'Book',

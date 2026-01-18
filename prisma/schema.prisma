@@ -141,8 +141,10 @@ model Tenant {
   teachers                 Teacher[]
   cooks                    Cook[]
   classes                  Class[]
+  groups                   Group[]
   subjects                 Subject[]
   schedules                Schedule[]
+  groupSchedules           GroupSchedule[]
   attendances              Attendance[]
   grades                   Grade[]
   assignments              Assignment[]
@@ -340,9 +342,13 @@ model Student {
   medicalInfo Json?
   documents   Json? // Shartnomalar, arizalar
 
-  // Class assignment
+  // Class assignment (Sinf yoki Guruh - faqat bittasi bo'lishi kerak)
   class   Class?  @relation(fields: [classId], references: [id], onDelete: SetNull)
   classId String?
+
+  // Group assignment (Alternative to Class)
+  group   Group?  @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  groupId String?
 
   enrollmentDate DateTime @default(now())
   status         String   @default("ACTIVE") // ACTIVE, GRADUATED, EXPELLED
@@ -372,11 +378,13 @@ model Student {
   @@index([tenantId])
   @@index([userId])
   @@index([classId])
+  @@index([groupId])
   @@index([studentCode])
   @@index([status])
   @@index([enrollmentDate])
   @@index([tenantId, status])
   @@index([tenantId, classId])
+  @@index([tenantId, groupId])
   @@index([createdAt])
   @@index([trialEnabled]) // Sinov muddati filtrlash uchun
   @@index([trialEndDate]) // Sinov muddati tugash sanasiga ko'ra filtrlash
@@ -450,9 +458,12 @@ model Teacher {
   updatedAt DateTime @updatedAt
 
   // Relations
-  classTeacher   Class[]         @relation("ClassTeacher")
+  classTeacher   Class[]          @relation("ClassTeacher")
   classSubjects  ClassSubject[]
+  groupTeacher   Group[]          @relation("GroupTeacher")
+  groupSubjects  GroupSubject[]
   schedules      Schedule[]
+  groupSchedules GroupSchedule[]
   attendances    Attendance[]
   grades         Grade[]
   assignments    Assignment[]
@@ -502,6 +513,90 @@ model Class {
   @@index([tenantId, gradeLevel])
 }
 
+// GROUP - Guruhlar (Class'dan alohida tushuncha - moslashuvchanlik uchun)
+model Group {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  name        String // "Ingliz tili A2+", "Matematika guruh 1"
+  description String? // Qisqa tavsif
+  code        String? // Guruh kodi (ixtiyoriy): "ENG-A2", "MATH-01"
+
+  groupTeacher   Teacher? @relation("GroupTeacher", fields: [groupTeacherId], references: [id], onDelete: SetNull)
+  groupTeacherId String?
+
+  academicYear String // 2024-2025
+  maxStudents  Int    @default(20)
+  roomNumber   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  students      Student[]
+  groupSubjects GroupSubject[]
+  schedules     GroupSchedule[]
+
+  @@index([tenantId])
+  @@index([groupTeacherId])
+  @@index([academicYear])
+  @@index([tenantId, academicYear])
+}
+
+// GROUP SUBJECT - Guruh va Fanlar bog'lash
+model GroupSubject {
+  id        String  @id @default(cuid())
+  group     Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId   String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subjectId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId String
+
+  hoursPerWeek Int @default(2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([groupId, subjectId])
+  @@index([groupId])
+  @@index([subjectId])
+  @@index([teacherId])
+}
+
+// GROUP SCHEDULE - Guruh dars jadvali
+model GroupSchedule {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  group     Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId   String
+
+  type      ScheduleType @default(LESSON)
+  title     String?
+
+  subject   Subject? @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subjectId String?
+  teacher   Teacher? @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId String?
+
+  dayOfWeek Int // 1 = Dushanba, 7 = Yakshanba
+  startTime String // "08:00"
+  endTime   String // "08:45"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([groupId])
+  @@index([subjectId])
+  @@index([teacherId])
+  @@index([dayOfWeek])
+  @@index([groupId, dayOfWeek])
+}
+
 // SUBJECT - Fanlar
 model Subject {
   id       String @id @default(cuid())
@@ -517,12 +612,14 @@ model Subject {
   updatedAt DateTime @updatedAt
 
   // Relations
-  classSubjects ClassSubject[]
-  schedules     Schedule[]
-  attendances   Attendance[]
-  grades        Grade[]
-  assignments   Assignment[]
-  materials     Material[]
+  classSubjects  ClassSubject[]
+  groupSubjects  GroupSubject[]
+  schedules      Schedule[]
+  groupSchedules GroupSchedule[]
+  attendances    Attendance[]
+  grades         Grade[]
+  assignments    Assignment[]
+  materials      Material[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
