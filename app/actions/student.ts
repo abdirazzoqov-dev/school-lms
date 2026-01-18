@@ -342,9 +342,28 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
 
     const tenantId = session.user.tenantId!
 
+    // Get existing student data
+    const existingStudent = await db.student.findFirst({
+      where: { id: studentId, tenantId },
+      include: {
+        user: true,
+        parents: {
+          include: {
+            parent: {
+              include: { user: true }
+            }
+          }
+        }
+      }
+    })
+
+    if (!existingStudent) {
+      return { success: false, error: 'O\'quvchi topilmadi' }
+    }
+
     // Check if student code is being changed and is unique
-    if (data.studentCode) {
-      const existingStudent = await db.student.findFirst({
+    if (data.studentCode && data.studentCode !== existingStudent.studentCode) {
+      const codeExists = await db.student.findFirst({
         where: {
           tenantId,
           studentCode: data.studentCode,
@@ -352,8 +371,55 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
         }
       })
 
-      if (existingStudent) {
+      if (codeExists) {
         return { success: false, error: 'Bu o\'quvchi kodi allaqachon ishlatilgan' }
+      }
+    }
+
+    // Update student user (fullName, email)
+    if (existingStudent.userId && (data.fullName || data.email)) {
+      const updateUserData: any = {}
+      
+      if (data.fullName) {
+        updateUserData.fullName = data.fullName
+      }
+      
+      if (data.email && data.email !== existingStudent.user?.email) {
+        // Check if email already exists
+        const emailExists = await db.user.findFirst({
+          where: {
+            email: data.email,
+            NOT: { id: existingStudent.userId }
+          }
+        })
+        
+        if (emailExists) {
+          return { success: false, error: 'Bu email allaqachon ishlatilgan' }
+        }
+        
+        updateUserData.email = data.email
+      }
+
+      if (Object.keys(updateUserData).length > 0) {
+        await db.user.update({
+          where: { id: existingStudent.userId },
+          data: updateUserData
+        })
+      }
+    }
+
+    // Calculate trial period dates if changed
+    let trialStartDate = existingStudent.trialStartDate
+    let trialEndDate = existingStudent.trialEndDate
+    
+    if (data.trialEnabled !== undefined) {
+      if (data.trialEnabled && data.trialDays) {
+        trialStartDate = trialStartDate || new Date()
+        trialEndDate = new Date()
+        trialEndDate.setDate(trialEndDate.getDate() + data.trialDays)
+      } else {
+        trialStartDate = null
+        trialEndDate = null
       }
     }
 
@@ -369,12 +435,265 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
         gender: data.gender,
         classId: data.classId || null,
         address: data.address || null,
+        // Trial period
+        trialEnabled: data.trialEnabled !== undefined ? data.trialEnabled : undefined,
+        trialStartDate: data.trialEnabled !== undefined ? trialStartDate : undefined,
+        trialEndDate: data.trialEnabled !== undefined ? trialEndDate : undefined,
+        trialDays: data.trialDays !== undefined ? data.trialDays : undefined,
+        // Payment info
+        monthlyTuitionFee: data.monthlyTuitionFee !== undefined ? data.monthlyTuitionFee : undefined,
+        paymentDueDay: data.paymentDueDay !== undefined ? data.paymentDueDay : undefined,
       }
     })
+
+    // Update guardians if provided
+    if (data.guardians && data.guardians.length > 0) {
+      const defaultPassword = await hashPassword('Parent123!')
+      const guardianResults = []
+
+      // Process each guardian
+      for (const guardianData of data.guardians) {
+        let guardian = null
+
+        // Check if this guardian already exists (by phone or parentId)
+        const existingParentRelation = existingStudent.parents.find(
+          (sp: any) => sp.parent.user?.phone === guardianData.phone
+        )
+
+        if (existingParentRelation) {
+          // Update existing guardian
+          guardian = existingParentRelation.parent
+          
+          // Update guardian user
+          await db.user.update({
+            where: { id: guardian.userId },
+            data: {
+              fullName: guardianData.fullName,
+              phone: guardianData.phone,
+            }
+          })
+
+          // Update parent record
+          await db.parent.update({
+            where: { id: guardian.id },
+            data: {
+              guardianType: guardianData.guardianType,
+              customRelationship: guardianData.customRelationship || null,
+              occupation: guardianData.occupation || null,
+              workAddress: guardianData.workAddress || null,
+            }
+          })
+
+          // Update access
+          await db.studentParent.updateMany({
+            where: {
+              studentId,
+              parentId: guardian.id
+            },
+            data: {
+              hasAccess: guardianData.hasAccess
+            }
+          })
+        } else {
+          // Check if guardian exists in system by phone
+          guardian = await db.parent.findFirst({
+            where: {
+              tenantId,
+              user: {
+                phone: guardianData.phone
+              }
+            },
+            include: {
+              user: true
+            }
+          })
+
+          // If not, create new guardian
+          if (!guardian) {
+            const guardianEmail = `parent_${guardianData.phone.replace(/[^0-9]/g, '')}@temp.local`
+            
+            const existingEmail = await db.user.findUnique({
+              where: { email: guardianEmail }
+            })
+
+            if (existingEmail) {
+              return { 
+                success: false, 
+                error: `Qarindosh telefon raqami ${guardianData.phone} allaqachon ishlatilgan` 
+              }
+            }
+
+            const guardianUser = await db.user.create({
+              data: {
+                email: guardianEmail,
+                fullName: guardianData.fullName,
+                phone: guardianData.phone,
+                passwordHash: defaultPassword,
+                role: 'PARENT',
+                tenantId,
+                isActive: true,
+              }
+            })
+
+            guardian = await db.parent.create({
+              data: {
+                tenantId,
+                userId: guardianUser.id,
+                guardianType: guardianData.guardianType,
+                customRelationship: guardianData.customRelationship || null,
+                occupation: guardianData.occupation || null,
+                workAddress: guardianData.workAddress || null,
+              },
+              include: {
+                user: true
+              }
+            })
+          }
+
+          // Link to student
+          await db.studentParent.create({
+            data: {
+              studentId,
+              parentId: guardian.id,
+              hasAccess: guardianData.hasAccess
+            }
+          })
+        }
+
+        guardianResults.push({
+          guardian,
+          hasAccess: guardianData.hasAccess
+        })
+      }
+
+      // Remove guardians that are no longer in the list
+      const currentGuardianPhones = data.guardians.map(g => g.phone)
+      const guardiansToRemove = existingStudent.parents.filter(
+        (sp: any) => !currentGuardianPhones.includes(sp.parent.user?.phone)
+      )
+
+      for (const relation of guardiansToRemove) {
+        await db.studentParent.delete({
+          where: {
+            studentId_parentId: {
+              studentId,
+              parentId: relation.parentId
+            }
+          }
+        })
+      }
+    }
+
+    // Handle dormitory updates
+    if (data.dormitoryBedId !== undefined) {
+      // Check existing dormitory assignment
+      const existingAssignment = await db.dormitoryAssignment.findUnique({
+        where: { studentId }
+      })
+
+      if (data.dormitoryBedId) {
+        // Assign or update dormitory
+        const bed = await db.dormitoryBed.findFirst({
+          where: {
+            id: data.dormitoryBedId,
+            tenantId,
+            isActive: true,
+          },
+          include: {
+            room: true,
+          },
+        })
+
+        if (!bed) {
+          return { success: false, error: 'Tanlangan joy mavjud emas' }
+        }
+
+        // Check if bed is occupied by another student
+        if (bed.isOccupied && bed.id !== existingAssignment?.bedId) {
+          return { success: false, error: 'Tanlangan joy band' }
+        }
+
+        if (existingAssignment) {
+          // Free old bed if different
+          if (existingAssignment.bedId !== data.dormitoryBedId) {
+            await db.dormitoryBed.update({
+              where: { id: existingAssignment.bedId },
+              data: { isOccupied: false }
+            })
+            await db.dormitoryRoom.update({
+              where: { id: existingAssignment.roomId },
+              data: { occupiedBeds: { decrement: 1 } }
+            })
+          }
+
+          // Update assignment
+          await db.dormitoryAssignment.update({
+            where: { studentId },
+            data: {
+              roomId: bed.roomId,
+              bedId: bed.id,
+              monthlyFee: data.dormitoryMonthlyFee || 0,
+            }
+          })
+
+          // Occupy new bed if different
+          if (existingAssignment.bedId !== data.dormitoryBedId) {
+            await db.dormitoryBed.update({
+              where: { id: bed.id },
+              data: { isOccupied: true }
+            })
+            await db.dormitoryRoom.update({
+              where: { id: bed.roomId },
+              data: { occupiedBeds: { increment: 1 } }
+            })
+          }
+        } else {
+          // Create new assignment
+          await db.dormitoryAssignment.create({
+            data: {
+              tenantId,
+              studentId,
+              roomId: bed.roomId,
+              bedId: bed.id,
+              monthlyFee: data.dormitoryMonthlyFee || 0,
+              status: 'ACTIVE',
+              assignedById: session.user.id,
+            }
+          })
+
+          await db.dormitoryBed.update({
+            where: { id: bed.id },
+            data: { isOccupied: true }
+          })
+
+          await db.dormitoryRoom.update({
+            where: { id: bed.roomId },
+            data: { occupiedBeds: { increment: 1 } }
+          })
+        }
+      } else if (existingAssignment) {
+        // Remove dormitory assignment
+        await db.dormitoryBed.update({
+          where: { id: existingAssignment.bedId },
+          data: { isOccupied: false }
+        })
+
+        await db.dormitoryRoom.update({
+          where: { id: existingAssignment.roomId },
+          data: { occupiedBeds: { decrement: 1 } }
+        })
+
+        await db.dormitoryAssignment.delete({
+          where: { studentId }
+        })
+      }
+    }
 
     // ✅ Revalidate multiple related paths
     revalidateMultiplePaths([...REVALIDATION_PATHS.STUDENT_CHANGED], revalidatePath)
     revalidatePath('/admin/students')
+    revalidatePath(`/admin/students/${studentId}`)
+    revalidatePath('/admin/dormitory')
     
     logger.info('Student updated successfully', {
       userId: session.user.id,
@@ -385,6 +704,7 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
     
     return { success: true, student }
   } catch (error: any) {
+    console.error('Update student error:', error)
     return handleError(error)
   }
 }
