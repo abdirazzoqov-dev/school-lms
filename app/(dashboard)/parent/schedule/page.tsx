@@ -40,7 +40,8 @@ export default async function ParentSchedulePage({
           user: {
             select: { fullName: true }
           },
-          class: true
+          class: true,
+          group: true
         }
       }
     }
@@ -63,14 +64,14 @@ export default async function ParentSchedulePage({
   const selectedStudentId = searchParams.studentId || children[0].student.id
   const selectedStudent = children.find(c => c.student.id === selectedStudentId)?.student
 
-  if (!selectedStudent || !selectedStudent.classId) {
+  if (!selectedStudent || (!selectedStudent.classId && !selectedStudent.groupId)) {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Dars Jadvali</h1>
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Farzandingiz sinfga biriktirilmagan</p>
+            <p>Farzandingiz hali sinfga yoki guruhga biriktirilmagan</p>
           </CardContent>
         </Card>
       </div>
@@ -79,28 +80,55 @@ export default async function ParentSchedulePage({
 
   const academicYear = getCurrentAcademicYear()
 
-  // Get class schedule
-  const schedules = await db.schedule.findMany({
-    where: {
-      tenantId,
-      classId: selectedStudent.classId,
-      academicYear
-    },
-    include: {
-      subject: true,
-      teacher: {
-        include: {
-          user: {
-            select: { fullName: true }
+  // Get schedule (class or group)
+  let schedules: any[] = []
+
+  if (selectedStudent.classId) {
+    // Get class schedule
+    schedules = await db.schedule.findMany({
+      where: {
+        tenantId,
+        classId: selectedStudent.classId,
+        academicYear
+      },
+      include: {
+        subject: true,
+        teacher: {
+          include: {
+            user: {
+              select: { fullName: true }
+            }
           }
         }
-      }
-    },
-    orderBy: [
-      { dayOfWeek: 'asc' },
-      { startTime: 'asc' }
-    ]
-  })
+      },
+      orderBy: [
+        { dayOfWeek: 'asc' },
+        { startTime: 'asc' }
+      ]
+    })
+  } else if (selectedStudent.groupId) {
+    // Get group schedule
+    schedules = await db.groupSchedule.findMany({
+      where: {
+        tenantId,
+        groupId: selectedStudent.groupId
+      },
+      include: {
+        subject: true,
+        teacher: {
+          include: {
+            user: {
+              select: { fullName: true }
+            }
+          }
+        }
+      },
+      orderBy: [
+        { dayOfWeek: 'asc' },
+        { startTime: 'asc' }
+      ]
+    })
+  }
 
   return (
     <div className="space-y-6">
@@ -116,19 +144,22 @@ export default async function ParentSchedulePage({
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-wrap gap-2">
-              {children.map(({ student }) => (
-                <Link 
-                  key={student.id} 
-                  href={`/parent/schedule?studentId=${student.id}`}
-                >
-                  <Button 
-                    variant={selectedStudentId === student.id ? 'default' : 'outline'}
-                    size="sm"
+              {children.map(({ student }) => {
+                const assignmentName = student.class?.name || student.group?.name || 'Biriktirilmagan'
+                return (
+                  <Link 
+                    key={student.id} 
+                    href={`/parent/schedule?studentId=${student.id}`}
                   >
-                    {student.user?.fullName} ({student.class?.name})
-                  </Button>
-                </Link>
-              ))}
+                    <Button 
+                      variant={selectedStudentId === student.id ? 'default' : 'outline'}
+                      size="sm"
+                    >
+                      {student.user?.fullName} ({assignmentName})
+                    </Button>
+                  </Link>
+                )
+              })}
             </div>
           </CardContent>
         </Card>
@@ -137,7 +168,7 @@ export default async function ParentSchedulePage({
       {/* Timetable */}
       <Timetable 
         schedules={schedules}
-        title={`${selectedStudent.user?.fullName} - ${selectedStudent.class?.name}`}
+        title={`${selectedStudent.user?.fullName} - ${selectedStudent.class?.name || selectedStudent.group?.name}`}
         showTeacher={true}
         showClass={false}
       />

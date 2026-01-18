@@ -16,7 +16,7 @@ export const dynamic = 'auto'
 export default async function SchedulesPage({
   searchParams,
 }: {
-  searchParams: { classId?: string }
+  searchParams: { classId?: string; groupId?: string; type?: 'class' | 'group' }
 }) {
   const session = await getServerSession(authOptions)
 
@@ -27,49 +27,103 @@ export default async function SchedulesPage({
   const tenantId = session.user.tenantId!
   const academicYear = getCurrentAcademicYear()
 
-  // Get all classes
+  // Get all classes and groups
   const classes = await db.class.findMany({
     where: { tenantId, academicYear },
     orderBy: { name: 'asc' }
   })
 
-  // Get schedules (filtered by class if selected)
+  const groups = await db.group.findMany({
+    where: { tenantId, academicYear },
+    orderBy: { name: 'asc' }
+  })
+
+  // Determine which type to show
+  const activeType = searchParams.type || (searchParams.classId ? 'class' : searchParams.groupId ? 'group' : 'class')
+
+  // Get schedules (filtered by class or group if selected)
   const whereClause: any = {
     tenantId,
     academicYear
   }
 
-  if (searchParams.classId) {
-    whereClause.classId = searchParams.classId
+  let groupSchedules: any[] = []
+
+  if (activeType === 'class') {
+    if (searchParams.classId) {
+      whereClause.classId = searchParams.classId
+    }
+
+    var schedules = await db.schedule.findMany({
+      where: whereClause,
+      include: {
+        subject: true,
+        teacher: {
+          include: {
+            user: {
+              select: { fullName: true }
+            }
+          }
+        },
+        class: true
+      },
+      orderBy: [
+        { dayOfWeek: 'asc' },
+        { startTime: 'asc' }
+      ]
+    })
+  } else {
+    // Group schedules
+    const groupWhereClause: any = {
+      tenantId
+    }
+
+    if (searchParams.groupId) {
+      groupWhereClause.groupId = searchParams.groupId
+    }
+
+    groupSchedules = await db.groupSchedule.findMany({
+      where: groupWhereClause,
+      include: {
+        subject: true,
+        teacher: {
+          include: {
+            user: {
+              select: { fullName: true }
+            }
+          }
+        },
+        group: true
+      },
+      orderBy: [
+        { dayOfWeek: 'asc' },
+        { startTime: 'asc' }
+      ]
+    })
+
+    var schedules = groupSchedules
   }
 
-  const schedules = await db.schedule.findMany({
-    where: whereClause,
-    include: {
-      subject: true,
-      teacher: {
-        include: {
-          user: {
-            select: { fullName: true }
-          }
-        }
-      },
-      class: true
-    },
-    orderBy: [
-      { dayOfWeek: 'asc' },
-      { startTime: 'asc' }
-    ]
-  })
-
   // Get statistics
-  const totalSchedules = await db.schedule.count({
+  const totalClassSchedules = await db.schedule.count({
     where: { tenantId, academicYear }
   })
+
+  const totalGroupSchedules = await db.groupSchedule.count({
+    where: { tenantId }
+  })
+
+  const totalSchedules = totalClassSchedules + totalGroupSchedules
 
   const schedulesByClass = await db.schedule.groupBy({
     by: ['classId'],
     where: { tenantId, academicYear },
+    _count: true
+  })
+
+  const schedulesByGroup = await db.groupSchedule.groupBy({
+    by: ['groupId'],
+    where: { tenantId },
     _count: true
   })
 
@@ -79,7 +133,7 @@ export default async function SchedulesPage({
         <div>
           <h1 className="text-3xl font-bold">Dars Jadvali</h1>
           <p className="text-muted-foreground">
-            Sinflar uchun dars jadvalini boshqaring
+            Sinflar va guruhlar uchun dars jadvalini boshqaring
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -99,7 +153,7 @@ export default async function SchedulesPage({
       </div>
 
       {/* Statistics */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
@@ -129,6 +183,19 @@ export default async function SchedulesPage({
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Calendar className="h-6 w-6 text-orange-600" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold">{schedulesByGroup.length}</div>
+                <p className="text-sm text-muted-foreground">Guruhlar</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <Calendar className="h-6 w-6 text-purple-600" />
               </div>
@@ -141,14 +208,42 @@ export default async function SchedulesPage({
         </Card>
       </div>
 
-      {/* Class Filter */}
+      {/* Type Tabs */}
       <Card>
         <CardHeader>
-          <CardTitle>Sinf tanlang</CardTitle>
+          <CardTitle>Turi</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/admin/schedules">
+          <div className="flex gap-2">
+            <Link href="/admin/schedules?type=class" className="flex-1">
+              <Button
+                variant={activeType === 'class' ? 'default' : 'outline'}
+                className="w-full"
+              >
+                Sinflar
+              </Button>
+            </Link>
+            <Link href="/admin/schedules?type=group" className="flex-1">
+              <Button
+                variant={activeType === 'group' ? 'default' : 'outline'}
+                className="w-full"
+              >
+                Guruhlar
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Class/Group Filter */}
+      {activeType === 'class' ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Sinf tanlang</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+            <Link href="/admin/schedules?type=class">
               <Button 
                 variant={!searchParams.classId ? 'default' : 'outline'} 
                 size="sm"
@@ -157,7 +252,7 @@ export default async function SchedulesPage({
               </Button>
             </Link>
             {classes.map(cls => (
-              <Link key={cls.id} href={`/admin/schedules?classId=${cls.id}`}>
+              <Link key={cls.id} href={`/admin/schedules?type=class&classId=${cls.id}`}>
                 <Button 
                   variant={searchParams.classId === cls.id ? 'default' : 'outline'} 
                   size="sm"
@@ -169,25 +264,71 @@ export default async function SchedulesPage({
           </div>
         </CardContent>
       </Card>
-
-      {/* Timetable */}
-      {searchParams.classId ? (
-        <Timetable 
-          schedules={schedules} 
-          title={`${classes.find(c => c.id === searchParams.classId)?.name} - Dars Jadvali`}
-          showTeacher={true}
-        />
       ) : (
         <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Jadvalini ko'rish uchun sinfni tanlang</p>
-          </CardContent>
-        </Card>
+          <CardHeader>
+            <CardTitle>Guruh tanlang</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+            <Link href="/admin/schedules?type=group">
+              <Button 
+                variant={!searchParams.groupId ? 'default' : 'outline'} 
+                size="sm"
+              >
+                Barcha guruhlar
+              </Button>
+            </Link>
+            {groups.map(grp => (
+              <Link key={grp.id} href={`/admin/schedules?type=group&groupId=${grp.id}`}>
+                <Button 
+                  variant={searchParams.groupId === grp.id ? 'default' : 'outline'} 
+                  size="sm"
+                >
+                  {grp.name}
+                </Button>
+              </Link>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      )}
+
+      {/* Timetable */}
+      {activeType === 'class' ? (
+        searchParams.classId ? (
+          <Timetable 
+            schedules={schedules} 
+            title={`${classes.find(c => c.id === searchParams.classId)?.name} - Dars Jadvali`}
+            showTeacher={true}
+          />
+        ) : (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">
+              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Jadvalini ko'rish uchun sinfni tanlang</p>
+            </CardContent>
+          </Card>
+        )
+      ) : (
+        searchParams.groupId ? (
+          <Timetable 
+            schedules={schedules} 
+            title={`${groups.find(g => g.id === searchParams.groupId)?.name} - Dars Jadvali`}
+            showTeacher={true}
+          />
+        ) : (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">
+              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Jadvalini ko'rish uchun guruhni tanlang</p>
+            </CardContent>
+          </Card>
+        )
       )}
 
       {/* All Schedules List */}
-      {!searchParams.classId && schedules.length > 0 && (
+      {((activeType === 'class' && !searchParams.classId) || (activeType === 'group' && !searchParams.groupId)) && schedules.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Barcha darslar</CardTitle>
@@ -197,7 +338,7 @@ export default async function SchedulesPage({
               <table className="w-full">
                 <thead className="border-b bg-muted/50">
                   <tr>
-                    <th className="p-4 text-left text-sm font-medium">Sinf</th>
+                    <th className="p-4 text-left text-sm font-medium">{activeType === 'class' ? 'Sinf' : 'Guruh'}</th>
                     <th className="p-4 text-left text-sm font-medium">Fan</th>
                     <th className="p-4 text-left text-sm font-medium">O'qituvchi</th>
                     <th className="p-4 text-left text-sm font-medium">Kun</th>
@@ -206,7 +347,7 @@ export default async function SchedulesPage({
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {schedules.map(schedule => {
+                  {schedules.map((schedule: any) => {
                     const days = ['', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba']
                     const isBreak = schedule.type === 'BREAK'
                     const isLunch = schedule.type === 'LUNCH'
@@ -214,7 +355,9 @@ export default async function SchedulesPage({
                     
                     return (
                       <tr key={schedule.id} className="hover:bg-muted/50">
-                        <td className="p-4 font-medium">{schedule.class.name}</td>
+                        <td className="p-4 font-medium">
+                          {activeType === 'class' ? schedule.class?.name : schedule.group?.name}
+                        </td>
                         <td className="p-4">
                           {isBreak && <span className="inline-flex items-center gap-1 text-amber-700">☕ {schedule.title || 'Tanafus'}</span>}
                           {isLunch && <span className="inline-flex items-center gap-1 text-green-700">🍽️ {schedule.title || 'Tushlik'}</span>}
