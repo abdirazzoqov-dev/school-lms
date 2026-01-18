@@ -3,21 +3,21 @@
 import { ReactNode } from 'react'
 
 interface ResponsiveTableWrapperProps {
-  desktopTable: ReactNode
-  mobileCards: ReactNode
+  desktopContent: ReactNode
+  mobileContent: ReactNode
 }
 
-export function ResponsiveTableWrapper({ desktopTable, mobileCards }: ResponsiveTableWrapperProps) {
+export function ResponsiveTableWrapper({ desktopContent, mobileContent }: ResponsiveTableWrapperProps) {
   return (
     <>
       {/* Desktop Table */}
       <div className="hidden md:block">
-        {desktopTable}
+        {desktopContent}
       </div>
 
       {/* Mobile Cards */}
       <div className="md:hidden">
-        {mobileCards}
+        {mobileContent}
       </div>
     </>
   )
