@@ -51,7 +51,7 @@ interface Class {
 interface Group {
   id: string
   name: string
-  description?: string
+  description?: string | null
 }
 
 interface TimeSlot {
