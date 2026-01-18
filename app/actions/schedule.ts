@@ -40,9 +40,10 @@ const DEFAULT_TIME_SLOTS: TimeSlot[] = [
 ]
 
 export async function saveSchedules(
-  classId: string,
+  targetId: string,
   schedules: ScheduleItemInput[],
-  customTimeSlots?: TimeSlot[]
+  customTimeSlots?: TimeSlot[],
+  type: 'class' | 'group' = 'class'
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -54,16 +55,52 @@ export async function saveSchedules(
     const tenantId = session.user.tenantId!
     const academicYear = getCurrentAcademicYear()
 
-    // Validate class belongs to tenant (skip for SUPER_ADMIN)
-    const classItem = await db.class.findFirst({
-      where: { 
-        id: classId, 
-        ...(session.user.role !== 'SUPER_ADMIN' && { tenantId })
-      }
-    })
+    let targetTenantId = tenantId
 
-    if (!classItem) {
-      return { success: false, error: 'Sinf topilmadi' }
+    // Validate target (class or group)
+    if (type === 'class') {
+      const classItem = await db.class.findFirst({
+        where: { 
+          id: targetId, 
+          ...(session.user.role !== 'SUPER_ADMIN' && { tenantId })
+        }
+      })
+
+      if (!classItem) {
+        return { success: false, error: 'Sinf topilmadi' }
+      }
+
+      targetTenantId = classItem.tenantId
+
+      // Delete existing schedules for this class
+      await db.schedule.deleteMany({
+        where: {
+          tenantId: classItem.tenantId,
+          classId: targetId,
+          academicYear
+        }
+      })
+    } else {
+      const groupItem = await db.group.findFirst({
+        where: { 
+          id: targetId, 
+          ...(session.user.role !== 'SUPER_ADMIN' && { tenantId })
+        }
+      })
+
+      if (!groupItem) {
+        return { success: false, error: 'Guruh topilmadi' }
+      }
+
+      targetTenantId = groupItem.tenantId
+
+      // Delete existing schedules for this group
+      await db.groupSchedule.deleteMany({
+        where: {
+          tenantId: groupItem.tenantId,
+          groupId: targetId
+        }
+      })
     }
 
     const timeSlots = customTimeSlots || DEFAULT_TIME_SLOTS
@@ -82,15 +119,6 @@ export async function saveSchedules(
       return { success: false, error: 'Hech bo\'lmaganda bitta element qo\'shing' }
     }
 
-    // Delete existing schedules for this class
-    await db.schedule.deleteMany({
-      where: {
-        tenantId: classItem.tenantId,
-        classId,
-        academicYear
-      }
-    })
-
     // Create new schedules
     const schedulesToCreate = validSchedules.map(s => {
       let startTime = s.startTime
@@ -105,9 +133,8 @@ export async function saveSchedules(
         }
       }
       
-      return {
-        tenantId: classItem.tenantId,
-        classId,
+      const baseData = {
+        tenantId: targetTenantId,
         type: s.type,
         title: s.title || null,
         subjectId: s.subjectId || null,
@@ -116,14 +143,32 @@ export async function saveSchedules(
         startTime: startTime || '08:00',
         endTime: endTime || '08:45',
         roomNumber: s.roomNumber || null,
-        academicYear
+      }
+
+      if (type === 'class') {
+        return {
+          ...baseData,
+          classId: targetId,
+          academicYear
+        }
+      } else {
+        return {
+          ...baseData,
+          groupId: targetId
+        }
       }
     })
 
     if (schedulesToCreate.length > 0) {
-      await db.schedule.createMany({
-        data: schedulesToCreate
-      })
+      if (type === 'class') {
+        await db.schedule.createMany({
+          data: schedulesToCreate as any
+        })
+      } else {
+        await db.groupSchedule.createMany({
+          data: schedulesToCreate as any
+        })
+      }
     }
 
     revalidatePath('/admin/schedules')

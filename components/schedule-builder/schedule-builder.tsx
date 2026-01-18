@@ -48,6 +48,12 @@ interface Class {
   gradeLevel: number
 }
 
+interface Group {
+  id: string
+  name: string
+  description?: string
+}
+
 interface TimeSlot {
   id: string
   startTime: string
@@ -70,7 +76,9 @@ interface ScheduleItem {
 }
 
 interface ScheduleBuilderProps {
-  classItem: Class
+  classItem?: Class
+  groupItem?: Group
+  type: 'class' | 'group'
   teachers: Teacher[]
   subjects: Subject[]
   existingSchedules?: any[]
@@ -108,10 +116,15 @@ const SUBJECT_COLORS = [
 
 export function ScheduleBuilder({
   classItem,
+  groupItem,
+  type,
   teachers,
   subjects,
   existingSchedules = []
 }: ScheduleBuilderProps) {
+  const targetItem = type === 'class' ? classItem : groupItem
+  const targetId = targetItem?.id
+  const targetName = type === 'class' ? classItem?.name : groupItem?.name
   const [schedules, setSchedules] = useState<ScheduleItem[]>([])
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>(DEFAULT_TIME_SLOTS)
   const [selectedCell, setSelectedCell] = useState<{ day: number; slot: string } | null>(null)
@@ -238,6 +251,11 @@ export function ScheduleBuilder({
   }
 
   const handleSave = async () => {
+    if (!targetId) {
+      toast.error(type === 'class' ? 'Sinf tanlanmagan' : 'Guruh tanlanmagan')
+      return
+    }
+
     // Only validate lessons, not breaks/lunch
     const incompleteLessons = schedules.filter(s => 
       s.type === 'LESSON' && (!s.subjectId || !s.teacherId)
@@ -257,7 +275,7 @@ export function ScheduleBuilder({
     setIsSaving(true)
     try {
       const { saveSchedules } = await import('@/app/actions/schedule')
-      const result = await saveSchedules(classItem.id, schedules as any, timeSlots)
+      const result = await saveSchedules(targetId, schedules as any, timeSlots, type)
       
       if (result.success) {
         setHasChanges(false)
@@ -381,7 +399,7 @@ export function ScheduleBuilder({
                 <div>
                   <CardTitle className="text-lg lg:text-xl flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
-                    {classItem.name}
+                    {targetName}
                   </CardTitle>
                   <CardDescription className="text-xs mt-1">
                     {timeSlots.length} dars × {DAYS.length} kun = {totalCells} jami slot
