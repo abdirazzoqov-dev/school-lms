@@ -32,7 +32,7 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
     // Load student and classes data
     Promise.all([
       fetch(`/api/students/${params.id}`).then(res => res.json()),
-      fetch('/api/classes').then(res => res.json())
+      fetch('/api/admin/classes').then(res => res.json())
     ]).then(([studentData, classesData]) => {
       if (studentData.student) {
         setFormData({

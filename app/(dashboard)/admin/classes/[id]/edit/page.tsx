@@ -31,7 +31,7 @@ export default function EditClassPage({ params }: { params: { id: string } }) {
     console.log('🔄 Loading class and teachers data...')
     
     Promise.all([
-      fetch(`/api/classes/${params.id}`).then(res => {
+      fetch(`/api/admin/classes/${params.id}`).then(res => {
         console.log('📡 Class API response status:', res.status)
         return res.json()
       }),

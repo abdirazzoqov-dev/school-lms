@@ -108,7 +108,7 @@ export default function CreateStudentPage() {
   useEffect(() => {
     // Load classes
     console.log('🔄 Loading classes...')
-    fetch('/api/classes', {
+    fetch('/api/admin/classes', {
       cache: 'no-store',
       credentials: 'include'
     })

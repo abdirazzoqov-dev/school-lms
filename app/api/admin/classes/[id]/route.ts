@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 
+// ✅ Prevent static rendering issues with cookies
+export const dynamic = 'force-dynamic'
+
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -10,8 +13,12 @@ export async function GET(
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || !session.user.tenantId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!session) {
+      return NextResponse.json({ error: 'No session' }, { status: 401 })
+    }
+    
+    if (!session.user.tenantId) {
+      return NextResponse.json({ error: 'No tenant found' }, { status: 401 })
     }
 
     const tenantId = session.user.tenantId
@@ -61,7 +68,9 @@ export async function GET(
     return NextResponse.json({ class: classItem })
   } catch (error) {
     console.error('Get class error:', error)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : 'Internal error' 
+    }, { status: 500 })
   }
 }
 
