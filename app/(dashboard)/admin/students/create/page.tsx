@@ -107,17 +107,44 @@ export default function CreateStudentPage() {
 
   useEffect(() => {
     // Load classes
-    fetch('/api/classes')
+    console.log('🔄 Loading classes...')
+    fetch('/api/classes', {
+      cache: 'no-store',
+      credentials: 'include'
+    })
       .then(res => res.json())
       .then(data => {
+        console.log('📡 Classes API response:', data)
+        console.log('✅ Classes count:', (data.classes || []).length)
         setClasses(data.classes || [])
         setLoadingClasses(false)
+        
+        if (data.classes && data.classes.length > 0) {
+          toast({
+            title: 'Sinflar yuklandi',
+            description: `${data.classes.length} ta sinf topildi.`,
+          })
+        } else {
+          toast({
+            title: 'Diqqat!',
+            description: 'Hozircha sinflar mavjud emas. Avval sinf yarating.',
+            variant: 'destructive',
+          })
+        }
       })
-      .catch(() => setLoadingClasses(false))
+      .catch((error) => {
+        console.error('❌ Error loading classes:', error)
+        setLoadingClasses(false)
+        toast({
+          title: 'Xato!',
+          description: 'Sinflarni yuklashda xatolik: ' + (error.message || 'Noma\'lum xato'),
+          variant: 'destructive',
+        })
+      })
     
     // Auto-generate student code
     generateStudentCode()
-  }, [generateStudentCode])
+  }, [generateStudentCode, toast])
 
   useEffect(() => {
     // Load available rooms when dormitory is needed and gender is selected
