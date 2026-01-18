@@ -76,8 +76,8 @@ interface ScheduleItem {
 }
 
 interface ScheduleBuilderProps {
-  classItem?: Class
-  groupItem?: Group
+  classItem?: Class | null
+  groupItem?: Group | null
   type: 'class' | 'group'
   teachers: Teacher[]
   subjects: Subject[]
