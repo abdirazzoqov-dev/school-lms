@@ -141,7 +141,8 @@ export async function saveSchedules(
 }
 
 export async function createSchedule(data: {
-  classId: string
+  classId?: string
+  groupId?: string
   subjectId: string
   teacherId: string
   dayOfWeek: number
@@ -149,6 +150,7 @@ export async function createSchedule(data: {
   endTime: string
   roomNumber?: string
   academicYear: string
+  type?: 'class' | 'group'
 }) {
   try {
     const session = await getServerSession(authOptions)
@@ -158,85 +160,185 @@ export async function createSchedule(data: {
     }
 
     const tenantId = session.user.tenantId!
-    const validatedData = scheduleSchema.parse(data)
+    const scheduleType = data.type || (data.classId ? 'class' : 'group')
 
-    const classItem = await db.class.findFirst({
-      where: {
-        id: validatedData.classId,
-        ...(session.user.role !== 'SUPER_ADMIN' && { tenantId }),
-      },
-      select: {
-        id: true,
-        tenantId: true,
-      },
-    })
+    // Validate and get tenant ID
+    let targetTenantId = tenantId
 
-    if (!classItem) {
-      return { success: false, error: 'Sinf topilmadi' }
-    }
+    if (scheduleType === 'class') {
+      if (!data.classId) {
+        return { success: false, error: 'Sinf tanlanmagan' }
+      }
 
-    const [subject, teacher] = await Promise.all([
-      db.subject.findFirst({
+      const classItem = await db.class.findFirst({
         where: {
-          id: validatedData.subjectId,
-          ...(session.user.role !== 'SUPER_ADMIN' && { tenantId: classItem.tenantId }),
+          id: data.classId,
+          ...(session.user.role !== 'SUPER_ADMIN' && { tenantId }),
         },
-        select: { id: true },
-      }),
-      db.teacher.findFirst({
+        select: {
+          id: true,
+          tenantId: true,
+        },
+      })
+
+      if (!classItem) {
+        return { success: false, error: 'Sinf topilmadi' }
+      }
+
+      targetTenantId = classItem.tenantId
+
+      // Check for conflicts
+      const existingSchedules = await db.schedule.findMany({
         where: {
-          id: validatedData.teacherId,
-          ...(session.user.role !== 'SUPER_ADMIN' && { tenantId: classItem.tenantId }),
+          tenantId: classItem.tenantId,
+          classId: data.classId,
+          dayOfWeek: data.dayOfWeek,
+          academicYear: data.academicYear,
         },
-        select: { id: true },
-      }),
-    ])
+        select: {
+          startTime: true,
+          endTime: true,
+        },
+      })
 
-    if (!subject) {
-      return { success: false, error: 'Fan topilmadi' }
-    }
-
-    if (!teacher) {
-      return { success: false, error: 'O\'qituvchi topilmadi' }
-    }
-
-    const existingSchedules = await db.schedule.findMany({
-      where: {
-        tenantId: classItem.tenantId,
-        classId: validatedData.classId,
-        dayOfWeek: validatedData.dayOfWeek,
-        academicYear: validatedData.academicYear,
-      },
-      select: {
-        startTime: true,
-        endTime: true,
-      },
-    })
-
-    const hasConflict = existingSchedules.some((schedule) =>
-      checkTimeConflict(
-        { startTime: schedule.startTime, endTime: schedule.endTime },
-        { startTime: validatedData.startTime, endTime: validatedData.endTime }
+      const hasConflict = existingSchedules.some((schedule) =>
+        checkTimeConflict(
+          { startTime: schedule.startTime, endTime: schedule.endTime },
+          { startTime: data.startTime, endTime: data.endTime }
+        )
       )
-    )
 
-    if (hasConflict) {
-      return { success: false, error: 'Bu vaqt oralig\'ida dars mavjud' }
+      if (hasConflict) {
+        return { success: false, error: 'Bu vaqt oralig\'ida dars mavjud' }
+      }
+
+      // Validate subject and teacher
+      const [subject, teacher] = await Promise.all([
+        db.subject.findFirst({
+          where: {
+            id: data.subjectId,
+            ...(session.user.role !== 'SUPER_ADMIN' && { tenantId: classItem.tenantId }),
+          },
+          select: { id: true },
+        }),
+        db.teacher.findFirst({
+          where: {
+            id: data.teacherId,
+            ...(session.user.role !== 'SUPER_ADMIN' && { tenantId: classItem.tenantId }),
+          },
+          select: { id: true },
+        }),
+      ])
+
+      if (!subject) {
+        return { success: false, error: 'Fan topilmadi' }
+      }
+
+      if (!teacher) {
+        return { success: false, error: 'O\'qituvchi topilmadi' }
+      }
+
+      // Create schedule for class
+      await db.schedule.create({
+        data: {
+          tenantId: classItem.tenantId,
+          classId: data.classId,
+          subjectId: data.subjectId,
+          teacherId: data.teacherId,
+          dayOfWeek: data.dayOfWeek,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          roomNumber: data.roomNumber || null,
+          academicYear: data.academicYear || getCurrentAcademicYear(),
+        },
+      })
+    } else {
+      // Group schedule
+      if (!data.groupId) {
+        return { success: false, error: 'Guruh tanlanmagan' }
+      }
+
+      const groupItem = await db.group.findFirst({
+        where: {
+          id: data.groupId,
+          ...(session.user.role !== 'SUPER_ADMIN' && { tenantId }),
+        },
+        select: {
+          id: true,
+          tenantId: true,
+        },
+      })
+
+      if (!groupItem) {
+        return { success: false, error: 'Guruh topilmadi' }
+      }
+
+      targetTenantId = groupItem.tenantId
+
+      // Check for conflicts
+      const existingSchedules = await db.groupSchedule.findMany({
+        where: {
+          tenantId: groupItem.tenantId,
+          groupId: data.groupId,
+          dayOfWeek: data.dayOfWeek,
+        },
+        select: {
+          startTime: true,
+          endTime: true,
+        },
+      })
+
+      const hasConflict = existingSchedules.some((schedule) =>
+        checkTimeConflict(
+          { startTime: schedule.startTime, endTime: schedule.endTime },
+          { startTime: data.startTime, endTime: data.endTime }
+        )
+      )
+
+      if (hasConflict) {
+        return { success: false, error: 'Bu vaqt oralig\'ida dars mavjud' }
+      }
+
+      // Validate subject and teacher
+      const [subject, teacher] = await Promise.all([
+        db.subject.findFirst({
+          where: {
+            id: data.subjectId,
+            ...(session.user.role !== 'SUPER_ADMIN' && { tenantId: groupItem.tenantId }),
+          },
+          select: { id: true },
+        }),
+        db.teacher.findFirst({
+          where: {
+            id: data.teacherId,
+            ...(session.user.role !== 'SUPER_ADMIN' && { tenantId: groupItem.tenantId }),
+          },
+          select: { id: true },
+        }),
+      ])
+
+      if (!subject) {
+        return { success: false, error: 'Fan topilmadi' }
+      }
+
+      if (!teacher) {
+        return { success: false, error: 'O\'qituvchi topilmadi' }
+      }
+
+      // Create schedule for group
+      await db.groupSchedule.create({
+        data: {
+          tenantId: groupItem.tenantId,
+          groupId: data.groupId,
+          subjectId: data.subjectId,
+          teacherId: data.teacherId,
+          dayOfWeek: data.dayOfWeek,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          roomNumber: data.roomNumber || null,
+        },
+      })
     }
-
-    await db.schedule.create({
-      data: {
-        tenantId: classItem.tenantId,
-        classId: validatedData.classId,
-        subjectId: validatedData.subjectId,
-        teacherId: validatedData.teacherId,
-        dayOfWeek: validatedData.dayOfWeek,
-        startTime: validatedData.startTime,
-        endTime: validatedData.endTime,
-        roomNumber: validatedData.roomNumber || null,
-        academicYear: validatedData.academicYear || getCurrentAcademicYear(),
-      },
-    })
 
     revalidatePath('/admin/schedules')
     revalidatePath('/admin/schedules/builder')

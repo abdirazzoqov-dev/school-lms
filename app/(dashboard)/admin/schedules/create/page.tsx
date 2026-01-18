@@ -25,6 +25,12 @@ export default async function CreateSchedulePage() {
     orderBy: { name: 'asc' }
   })
 
+  // Get groups
+  const groups = await db.group.findMany({
+    where: { tenantId, academicYear },
+    orderBy: { name: 'asc' }
+  })
+
   // Get subjects
   const subjects = await db.subject.findMany({
     where: { tenantId },
@@ -58,7 +64,7 @@ export default async function CreateSchedulePage() {
         <div>
           <h1 className="text-3xl font-bold">Dars Qo'shish</h1>
           <p className="text-muted-foreground">
-            Yangi dars jadvaliga qo'shing
+            Sinf yoki guruh uchun yangi dars qo'shing
           </p>
         </div>
       </div>
@@ -70,6 +76,7 @@ export default async function CreateSchedulePage() {
         <CardContent>
           <ScheduleForm
             classes={classes}
+            groups={groups}
             subjects={subjects}
             teachers={teachers}
             academicYear={academicYear}

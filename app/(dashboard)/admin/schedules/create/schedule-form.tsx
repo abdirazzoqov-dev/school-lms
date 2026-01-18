@@ -14,16 +14,19 @@ import { DAYS_OF_WEEK, TIME_SLOTS } from '@/lib/validations/schedule'
 
 interface ScheduleFormProps {
   classes: Array<{ id: string; name: string }>
+  groups: Array<{ id: string; name: string }>
   subjects: Array<{ id: string; name: string }>
   teachers: Array<{ id: string; user: { fullName: string } }>
   academicYear: string
 }
 
-export function ScheduleForm({ classes, subjects, teachers, academicYear }: ScheduleFormProps) {
+export function ScheduleForm({ classes, groups, subjects, teachers, academicYear }: ScheduleFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [assignmentType, setAssignmentType] = useState<'class' | 'group'>('class')
   const [formData, setFormData] = useState({
     classId: '',
+    groupId: '',
     subjectId: '',
     teacherId: '',
     dayOfWeek: '1',
@@ -38,14 +41,17 @@ export function ScheduleForm({ classes, subjects, teachers, academicYear }: Sche
     setIsLoading(true)
 
     try {
-      const result = await createSchedule({
+      const scheduleData = {
         ...formData,
-        dayOfWeek: parseInt(formData.dayOfWeek)
-      })
+        dayOfWeek: parseInt(formData.dayOfWeek),
+        type: assignmentType
+      }
+
+      const result = await createSchedule(scheduleData)
 
       if (result.success) {
         toast.success('Dars jadvali qo\'shildi')
-        router.push('/admin/schedules')
+        router.push(`/admin/schedules?type=${assignmentType}`)
         router.refresh()
       } else {
         toast.error(result.error || 'Xatolik yuz berdi')
@@ -59,26 +65,90 @@ export function ScheduleForm({ classes, subjects, teachers, academicYear }: Sche
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <Label htmlFor="classId">Sinf *</Label>
-          <Select
-            value={formData.classId}
-            onValueChange={(value) => setFormData({ ...formData, classId: value })}
-            required
-          >
-            <SelectTrigger id="classId">
-              <SelectValue placeholder="Sinf tanlang" />
-            </SelectTrigger>
-            <SelectContent>
-              {classes.map((cls) => (
-                <SelectItem key={cls.id} value={cls.id}>
-                  {cls.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Assignment Type Selection */}
+      <div className="space-y-2">
+        <Label>Turi *</Label>
+        <div className="flex gap-4">
+          <div className="flex items-center space-x-2">
+            <input
+              type="radio"
+              id="type-class"
+              name="assignmentType"
+              value="class"
+              checked={assignmentType === 'class'}
+              onChange={() => {
+                setAssignmentType('class')
+                setFormData({ ...formData, groupId: '' })
+              }}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="type-class" className="font-normal cursor-pointer">
+              Sinfga dars qo'shish
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="radio"
+              id="type-group"
+              name="assignmentType"
+              value="group"
+              checked={assignmentType === 'group'}
+              onChange={() => {
+                setAssignmentType('group')
+                setFormData({ ...formData, classId: '' })
+              }}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="type-group" className="font-normal cursor-pointer">
+              Guruhga dars qo'shish
+            </Label>
+          </div>
         </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Class or Group Selection */}
+        {assignmentType === 'class' ? (
+          <div>
+            <Label htmlFor="classId">Sinf *</Label>
+            <Select
+              value={formData.classId}
+              onValueChange={(value) => setFormData({ ...formData, classId: value })}
+              required
+            >
+              <SelectTrigger id="classId">
+                <SelectValue placeholder="Sinf tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                {classes.map((cls) => (
+                  <SelectItem key={cls.id} value={cls.id}>
+                    {cls.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : (
+          <div>
+            <Label htmlFor="groupId">Guruh *</Label>
+            <Select
+              value={formData.groupId}
+              onValueChange={(value) => setFormData({ ...formData, groupId: value })}
+              required
+            >
+              <SelectTrigger id="groupId">
+                <SelectValue placeholder="Guruh tanlang" />
+              </SelectTrigger>
+              <SelectContent>
+                {groups.map((grp) => (
+                  <SelectItem key={grp.id} value={grp.id}>
+                    {grp.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div>
           <Label htmlFor="subjectId">Fan *</Label>
