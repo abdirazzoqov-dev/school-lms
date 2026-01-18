@@ -13,6 +13,8 @@ import { exportToCSV, formatPaymentsForExport } from '@/lib/export'
 import { formatNumber } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
 import { AddPartialPaymentModal } from '@/components/add-partial-payment-modal'
+import { ResponsiveTableWrapper } from '@/components/responsive-table-wrapper'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface Payment {
   id: string
@@ -123,10 +125,9 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
     return 'text-green-700'
   }
 
-  return (
-    <>
-      <div className="rounded-md border overflow-x-auto">
-        <table className="w-full">
+  const renderDesktopTable = () => (
+    <div className="rounded-md border overflow-x-auto">
+      <table className="w-full">
           <thead className="border-b bg-muted/50">
             <tr>
               <th className="p-4 text-left w-12">
@@ -300,6 +301,142 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
           </tbody>
         </table>
       </div>
+  )
+
+  const renderMobileCards = () => (
+    <div className="space-y-3">
+      {payments.map((payment) => {
+        const progress = calculateProgress(payment)
+        
+        return (
+          <Card key={payment.id}>
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-start gap-3 flex-1">
+                  <Checkbox
+                    checked={selectedIds.includes(payment.id)}
+                    onCheckedChange={(checked) => handleSelectOne(payment.id, checked as boolean)}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <code className="text-xs bg-muted px-2 py-0.5 rounded">
+                        {payment.invoiceNumber}
+                      </code>
+                      <Badge variant={
+                        payment.status === 'COMPLETED' ? 'default' : 
+                        payment.status === 'PARTIALLY_PAID' ? 'outline' :
+                        payment.status === 'PENDING' ? 'secondary' : 
+                        'destructive'
+                      } className="text-xs">
+                        {payment.status === 'COMPLETED' ? 'To\'langan' :
+                         payment.status === 'PARTIALLY_PAID' ? 'Qisman' :
+                         payment.status === 'PENDING' ? 'Kutilmoqda' : 
+                         payment.status === 'REFUNDED' ? 'Qaytarilgan' :
+                         'Xato'}
+                      </Badge>
+                    </div>
+                    
+                    <div className="font-medium text-base mb-2">
+                      {payment.student?.user?.fullName || 'N/A'}
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <Progress 
+                            value={progress.percentage} 
+                            className="h-2"
+                            indicatorClassName={getProgressColor(progress.percentage)}
+                          />
+                        </div>
+                        <span className={`text-sm font-semibold ${getProgressTextColor(progress.percentage)}`}>
+                          {progress.percentage}%
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <span className={`font-medium ${getProgressTextColor(progress.percentage)}`}>
+                          {formatNumber(progress.paid)} so'm
+                        </span>
+                        <span className="text-muted-foreground">/ {formatNumber(progress.total)} so'm</span>
+                      </div>
+                      
+                      {progress.percentage > 0 && progress.percentage < 100 && (
+                        <div className="flex items-center gap-1 text-xs text-orange-600">
+                          <span>Qoldi:</span>
+                          <span className="font-semibold">{formatNumber(progress.remaining)} so'm</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-1 text-sm text-muted-foreground">
+                      <div className="flex items-start gap-2">
+                        <span className="font-medium min-w-[70px]">Turi:</span>
+                        <span>{payment.paymentType} ({payment.paymentMethod})</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="font-medium min-w-[70px]">Muddat:</span>
+                        <span>{new Date(payment.dueDate).toLocaleDateString('uz-UZ')}</span>
+                      </div>
+                      {payment.paidDate && (
+                        <div className="flex items-start gap-2">
+                          <span className="font-medium min-w-[70px]">To'langan:</span>
+                          <span>{new Date(payment.paidDate).toLocaleDateString('uz-UZ')}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 pt-3 border-t">
+                {progress.percentage < 100 && (
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => handleAddPartialPayment(payment)}
+                    className="bg-green-600 hover:bg-green-700 flex-1"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    To'lov
+                  </Button>
+                )}
+                
+                <Link href={`/admin/payments/${payment.id}`} className={progress.percentage < 100 ? '' : 'flex-1'}>
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Eye className="h-4 w-4 mr-2" />
+                    Ko'rish
+                  </Button>
+                </Link>
+                <Link href={`/admin/payments/${payment.id}/edit`} className={progress.percentage < 100 ? '' : 'flex-1'}>
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Tahrirlash
+                  </Button>
+                </Link>
+                {payment.status !== 'COMPLETED' && (
+                  <DeleteButton
+                    itemId={payment.id}
+                    itemName={payment.invoiceNumber}
+                    itemType="payment"
+                    onDelete={deletePayment}
+                  />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )
+      })}
+    </div>
+  )
+
+  return (
+    <>
+      <ResponsiveTableWrapper
+        desktopContent={renderDesktopTable()}
+        mobileContent={renderMobileCards()}
+      />
 
       <BulkActionsToolbar
         selectedCount={selectedIds.length}

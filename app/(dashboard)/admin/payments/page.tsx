@@ -220,6 +220,12 @@ export default async function PaymentsPage({
             Barcha to'lovlarni boshqaring
           </p>
         </div>
+        <Button asChild className="w-full md:w-auto">
+          <Link href="/admin/payments/create">
+            <Plus className="mr-2 h-4 w-4" />
+            To'lov qabul qilish
+          </Link>
+        </Button>
       </div>
 
       {/* Search and Filter */}
