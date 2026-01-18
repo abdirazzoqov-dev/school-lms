@@ -585,6 +585,7 @@ model GroupSchedule {
   dayOfWeek Int // 1 = Dushanba, 7 = Yakshanba
   startTime String // "08:00"
   endTime   String // "08:45"
+  roomNumber String? // Xona raqami (ixtiyoriy)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
