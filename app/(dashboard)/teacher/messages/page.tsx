@@ -58,61 +58,67 @@ export default async function TeacherMessagesPage() {
   const totalSent = sentMessages.length
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Xabarlar</h1>
-          <p className="text-muted-foreground">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Xabarlar
+          </h1>
+          <p className="text-lg text-muted-foreground">
             Ota-onalar bilan muloqot qiling
           </p>
         </div>
         <Link href="/teacher/messages/compose">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
+          <Button 
+            size="lg" 
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all"
+          >
+            <Plus className="mr-2 h-5 w-5" />
             Yangi Xabar
           </Button>
         </Link>
       </div>
 
       {/* Statistics */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="border-none shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 hover:shadow-xl transition-shadow">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Mail className="h-6 w-6 text-blue-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
+                <Mail className="h-6 w-6" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{unreadCount}</div>
-                <p className="text-sm text-muted-foreground">O'qilmagan</p>
+                <div className="text-3xl font-bold text-blue-600">{unreadCount}</div>
+                <p className="text-sm text-muted-foreground font-medium">O'qilmagan</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-none shadow-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 hover:shadow-xl transition-shadow">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Inbox className="h-6 w-6 text-green-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
+                <Inbox className="h-6 w-6" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{totalReceived}</div>
-                <p className="text-sm text-muted-foreground">Qabul qilingan</p>
+                <div className="text-3xl font-bold text-green-600">{totalReceived}</div>
+                <p className="text-sm text-muted-foreground font-medium">Qabul qilingan</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-none shadow-lg bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 hover:shadow-xl transition-shadow">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Send className="h-6 w-6 text-purple-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-lg">
+                <Send className="h-6 w-6" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{totalSent}</div>
-                <p className="text-sm text-muted-foreground">Yuborilgan</p>
+                <div className="text-3xl font-bold text-purple-600">{totalSent}</div>
+                <p className="text-sm text-muted-foreground font-medium">Yuborilgan</p>
               </div>
             </div>
           </CardContent>
