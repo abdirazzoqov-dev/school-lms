@@ -3,7 +3,8 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, BookOpen, ClipboardCheck, FileText, Calendar, TrendingUp } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Users, BookOpen, ClipboardCheck, FileText, Calendar, TrendingUp, Award, UserCheck, Clock } from 'lucide-react'
 import { getCurrentAcademicYear } from '@/lib/utils'
 import { GradeDistributionChart } from '@/components/charts/grade-distribution-chart'
 import { AttendanceChart } from '@/components/charts/attendance-chart'
@@ -188,64 +189,73 @@ export default async function TeacherDashboard() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">O'qituvchi Dashboard</h1>
-        <p className="text-muted-foreground">
-          Salom, {session.user.fullName}!
+      {/* Header */}
+      <div className="space-y-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          O'qituvchi Dashboard
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Salom, <span className="font-semibold text-gray-900 dark:text-gray-100">{session.user.fullName}</span>! 👋
         </p>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Mening O'quvchilarim</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalStudents}</div>
-            <p className="text-xs text-muted-foreground">
-              {teacher.classSubjects.length} ta sinf
-            </p>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-none shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 hover:shadow-xl transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
+                <UserCheck className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-blue-600">{totalStudents}</div>
+                <p className="text-sm text-muted-foreground font-medium">
+                  {teacher.classSubjects.length} ta sinf
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Bugungi Davomat</CardTitle>
-            <ClipboardCheck className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{todayAttendance}</div>
-            <p className="text-xs text-muted-foreground">
-              Belgilangan
-            </p>
+        <Card className="border-none shadow-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 hover:shadow-xl transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
+                <ClipboardCheck className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-green-600">{todayAttendance}</div>
+                <p className="text-sm text-muted-foreground font-medium">Bugungi davomat</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tekshirish Kerak</CardTitle>
-            <FileText className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{pendingGrades}</div>
-            <p className="text-xs text-muted-foreground">
-              Topshirilgan vazifalar
-            </p>
+        <Card className="border-none shadow-lg bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 hover:shadow-xl transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-lg">
+                <FileText className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-orange-600">{pendingGrades}</div>
+                <p className="text-sm text-muted-foreground font-medium">Tekshirish kerak</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Uy Vazifalari</CardTitle>
-            <BookOpen className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalAssignments}</div>
-            <p className="text-xs text-muted-foreground">
-              Jami topshiriqlar
-            </p>
+        <Card className="border-none shadow-lg bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 hover:shadow-xl transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-lg">
+                <BookOpen className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-purple-600">{totalAssignments}</div>
+                <p className="text-sm text-muted-foreground font-medium">Uy vazifalari</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -256,17 +266,19 @@ export default async function TeacherDashboard() {
         <GradeDistributionChart data={teacherGradeDistribution} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2">
         {/* Today's Schedule */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+        <Card className="border-none shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
+            <CardTitle className="flex items-center gap-2 text-blue-600">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+                <Calendar className="h-5 w-5" />
+              </div>
               Bugungi Darslar
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+          <CardContent className="pt-6">
+            <div className="space-y-3">
               {todaySchedule.map((schedule) => {
                 const isBreak = schedule.type === 'BREAK'
                 const isLunch = schedule.type === 'LUNCH'
@@ -274,112 +286,103 @@ export default async function TeacherDashboard() {
                 return (
                   <div
                     key={schedule.id}
-                    className="flex items-center justify-between border-b pb-3 last:border-0"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 hover:shadow-md transition-shadow"
                   >
-                    <div>
-                      <p className="font-medium">
-                        {isBreak && <span className="text-amber-700">☕ {schedule.title || 'Tanafus'}</span>}
-                        {isLunch && <span className="text-green-700">🍽️ {schedule.title || 'Tushlik'}</span>}
-                        {!isBreak && !isLunch && schedule.subject?.name}
+                    <div className="flex-1">
+                      <p className="font-semibold">
+                        {isBreak && <span className="text-amber-600">☕ {schedule.title || 'Tanafus'}</span>}
+                        {isLunch && <span className="text-green-600">🍽️ {schedule.title || 'Tushlik'}</span>}
+                        {!isBreak && !isLunch && <span className="text-gray-900 dark:text-gray-100">{schedule.subject?.name}</span>}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {schedule.class.name} {schedule.roomNumber && `- Xona ${schedule.roomNumber}`}
-                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="text-xs">
+                          {schedule.class.name}
+                        </Badge>
+                        {schedule.roomNumber && (
+                          <span className="text-xs text-muted-foreground">
+                            Xona {schedule.roomNumber}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-mono text-sm font-semibold">
-                        {schedule.startTime} - {schedule.endTime}
-                      </p>
+                      <div className="flex items-center gap-1 text-sm font-mono font-semibold bg-blue-100 dark:bg-blue-950/50 px-3 py-1.5 rounded-lg">
+                        <Clock className="h-3 w-3" />
+                        {schedule.startTime}
+                      </div>
                     </div>
                   </div>
                 )
               })}
               {todaySchedule.length === 0 && (
-                <p className="text-center text-sm text-muted-foreground">
-                  Bugun darslar yo'q
-                </p>
+                <div className="text-center py-8">
+                  <Calendar className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                  <p className="text-sm text-muted-foreground">Bugun darslar yo'q</p>
+                </div>
               )}
             </div>
           </CardContent>
         </Card>
 
         {/* Recent Grades */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
+        <Card className="border-none shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20">
+            <CardTitle className="flex items-center gap-2 text-purple-600">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 text-white">
+                <Award className="h-5 w-5" />
+              </div>
               Oxirgi Baholar
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentGrades.map((grade) => (
-                <div
-                  key={grade.id}
-                  className="flex items-center justify-between border-b pb-3 last:border-0"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {grade.student.user?.fullName || 'Noma\'lum'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {grade.subject.name}
-                    </p>
+          <CardContent className="pt-6">
+            <div className="space-y-3">
+              {recentGrades.map((grade) => {
+                const percentage = (Number(grade.score) / Number(grade.maxScore)) * 100
+                const gradeColor = 
+                  percentage >= 90 ? 'text-green-600' :
+                  percentage >= 70 ? 'text-blue-600' :
+                  percentage >= 40 ? 'text-orange-600' :
+                  'text-red-600'
+                
+                return (
+                  <div
+                    key={grade.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">
+                        {grade.student.user?.fullName || 'Noma\'lum'}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-sm text-muted-foreground">
+                          {grade.subject.name}
+                        </span>
+                        <Badge variant="secondary" className="text-xs">
+                          {grade.gradeType}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-2xl font-bold ${gradeColor}`}>
+                        {Number(grade.score)}/{Number(grade.maxScore)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {percentage.toFixed(0)}%
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-primary">
-                      {Number(grade.score)}/{Number(grade.maxScore)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {grade.gradeType}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
               {recentGrades.length === 0 && (
-                <p className="text-center text-sm text-muted-foreground">
-                  Hozircha baholar yo'q
-                </p>
+                <div className="text-center py-8">
+                  <Award className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                  <p className="text-sm text-muted-foreground">Hozircha baholar yo'q</p>
+                </div>
               )}
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Classes */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Mening Sinflarim</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {teacher.classSubjects.map((cs) => (
-              <Card key={cs.id}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">{cs.class.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{cs.subject.name}</p>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-2xl font-bold">{cs.class._count.students}</p>
-                      <p className="text-xs text-muted-foreground">o'quvchi</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{cs.hoursPerWeek} soat/hafta</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            {teacher.classSubjects.length === 0 && (
-              <p className="col-span-full text-center text-muted-foreground">
-                Sinflar biriktirilmagan
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
   } catch (error) {
