@@ -52,11 +52,6 @@ export default async function TeacherLayout({
       icon: 'Award',
     },
     {
-      title: 'Uy Vazifalari',
-      href: '/teacher/assignments',
-      icon: 'FileText',
-    },
-    {
       title: 'Dars Materiallari',
       href: '/teacher/materials',
       icon: 'BookOpen',
@@ -65,11 +60,6 @@ export default async function TeacherLayout({
       title: 'Xabarlar',
       href: '/teacher/messages',
       icon: 'MessageSquare',
-    },
-    {
-      title: 'Hisobotlar',
-      href: '/teacher/reports',
-      icon: 'BarChart3',
     },
   ]
 
