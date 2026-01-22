@@ -175,12 +175,7 @@ export default function TeacherClassDetailPage() {
         description: 'Baholar saqlandi',
       })
 
-      // Clear grades
-      const clearedGrades: Record<string, string> = {}
-      classData?.students.forEach((student) => {
-        clearedGrades[student.id] = ''
-      })
-      setGrades(clearedGrades)
+      // Don't clear grades - keep them visible after saving
     } catch (error) {
       console.error('Error saving grades:', error)
       toast({
