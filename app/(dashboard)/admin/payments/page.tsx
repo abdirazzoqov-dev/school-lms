@@ -144,7 +144,7 @@ export default async function PaymentsPage({
   })
 
   const totalRevenue = payments
-    .filter(p => p.status === 'COMPLETED')
+    .filter(p => Number(p.paidAmount) > 0)
     .reduce((sum, p) => sum + Number(p.paidAmount), 0)
 
   const pendingAmount = payments
@@ -185,8 +185,8 @@ export default async function PaymentsPage({
       monthlyTuitionFee: monthlyFee,
       monthsEnrolled: monthsDiff,
       expectedTotal,
-      totalPaid: allStudentPayments.filter(p => p.status === 'COMPLETED').reduce((sum, p) => sum + Number(p.paidAmount), 0),
-      totalPending: allStudentPayments.filter(p => p.status === 'PENDING').reduce((sum, p) => sum + Number(p.remainingAmount), 0),
+      totalPaid: allStudentPayments.reduce((sum, p) => sum + Number(p.paidAmount), 0),
+      totalPending: allStudentPayments.reduce((sum, p) => sum + Number(p.remainingAmount), 0),
       completedCount: allStudentPayments.filter(p => p.status === 'COMPLETED').length,
       pendingCount: allStudentPayments.filter(p => p.status === 'PENDING').length,
       allPayments: allStudentPayments

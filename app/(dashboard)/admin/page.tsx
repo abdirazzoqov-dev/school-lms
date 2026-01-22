@@ -577,7 +577,7 @@ async function getDashboardStats(
     db.payment.aggregate({
       where: {
         tenantId,
-        status: 'COMPLETED',
+        paidAmount: { gt: 0 },
         paidDate: { gte: thisMonthStart }
       },
       _sum: { paidAmount: true }
