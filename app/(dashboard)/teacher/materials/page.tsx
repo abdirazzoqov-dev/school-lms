@@ -237,10 +237,7 @@ export default async function TeacherMaterialsPage({
                   </div>
                   <div className="flex gap-1">
                     <a 
-                      href={material.fileUrl} 
-                      download={material.title}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={`/api/download/${material.id}`}
                     >
                       <Button 
                         variant="ghost" 
