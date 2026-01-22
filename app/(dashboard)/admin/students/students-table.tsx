@@ -4,13 +4,21 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Eye, Edit, Pencil } from 'lucide-react'
+import { Eye, Edit, Pencil, MoreVertical, Trash2, UserX } from 'lucide-react'
 import { DeleteButton } from '@/components/delete-button'
 import { DeactivateButton } from '@/components/deactivate-button'
 import { deleteStudent, deactivateStudent, bulkDeleteStudents, bulkChangeStudentStatus } from '@/app/actions/student'
 import { Checkbox } from '@/components/ui/checkbox'
 import { BulkActionsToolbar } from '@/components/bulk-actions-toolbar'
 import { exportToCSV, formatStudentsForExport } from '@/lib/export'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface Student {
   id: string
@@ -200,40 +208,68 @@ export function StudentsTable({ students }: { students: Student[] }) {
                     </div>
                   </td>
                   <td className="p-3">
-                    <div className="flex items-center gap-1">
-                      <Link href={`/admin/students/${student.id}`}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-950 transition-colors"
+                          className="h-8 w-8 p-0 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-950/50 dark:hover:to-indigo-950/50"
                         >
-                          <Eye className="h-3.5 w-3.5" />
+                          <MoreVertical className="h-4 w-4" />
+                          <span className="sr-only">Harakatlar menusi</span>
                         </Button>
-                      </Link>
-                      <Link href={`/admin/students/${student.id}/edit`}>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-indigo-100 hover:text-indigo-700 dark:hover:bg-indigo-950 transition-colors"
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuLabel className="font-semibold">Harakatlar</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                          <Link 
+                            href={`/admin/students/${student.id}`}
+                            className="flex items-center gap-2 cursor-pointer"
+                          >
+                            <Eye className="h-4 w-4 text-blue-600" />
+                            <span>Ko'rish</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link 
+                            href={`/admin/students/${student.id}/edit`}
+                            className="flex items-center gap-2 cursor-pointer"
+                          >
+                            <Pencil className="h-4 w-4 text-indigo-600" />
+                            <span>Tahrirlash</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        {student.status === 'ACTIVE' && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="flex items-center gap-2 cursor-pointer text-orange-600 focus:text-orange-600"
+                              onClick={async () => {
+                                if (confirm(`${student.user?.fullName || 'N/A'} ni deaktivatsiya qilishni xohlaysizmi?`)) {
+                                  await deactivateStudent(student.id)
+                                }
+                              }}
+                            >
+                              <UserX className="h-4 w-4" />
+                              <span>Deaktivatsiya</span>
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                          onClick={async () => {
+                            if (confirm(`${student.user?.fullName || 'N/A'} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
+                              await deleteStudent(student.id)
+                            }
+                          }}
                         >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                      </Link>
-                      {student.status === 'ACTIVE' && (
-                        <DeactivateButton
-                          itemId={student.id}
-                          itemName={student.user?.fullName || 'N/A'}
-                          itemType="student"
-                          onDeactivate={deactivateStudent}
-                        />
-                      )}
-                      <DeleteButton
-                        itemId={student.id}
-                        itemName={student.user?.fullName || 'N/A'}
-                        itemType="student"
-                        onDelete={deleteStudent}
-                      />
-                    </div>
+                          <Trash2 className="h-4 w-4" />
+                          <span>O'chirish</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </td>
                 </tr>
               ))}
@@ -271,25 +307,69 @@ export function StudentsTable({ students }: { students: Student[] }) {
                     {student.studentCode}
                   </code>
                 </div>
-                <div className="flex gap-1 shrink-0">
-                  <Link href={`/admin/students/${student.id}`}>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-9 w-9 p-0 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-950"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link href={`/admin/students/${student.id}/edit`}>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-9 w-9 p-0 hover:bg-indigo-100 hover:text-indigo-700 dark:hover:bg-indigo-950"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </Link>
+                <div className="shrink-0">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="h-9 w-9 p-0 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-950/50 dark:hover:to-indigo-950/50"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                        <span className="sr-only">Harakatlar menusi</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuLabel className="font-semibold">Harakatlar</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link 
+                          href={`/admin/students/${student.id}`}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <Eye className="h-4 w-4 text-blue-600" />
+                          <span>Ko'rish</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link 
+                          href={`/admin/students/${student.id}/edit`}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <Pencil className="h-4 w-4 text-indigo-600" />
+                          <span>Tahrirlash</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      {student.status === 'ACTIVE' && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="flex items-center gap-2 cursor-pointer text-orange-600 focus:text-orange-600"
+                            onClick={async () => {
+                              if (confirm(`${student.user?.fullName || 'N/A'} ni deaktivatsiya qilishni xohlaysizmi?`)) {
+                                await deactivateStudent(student.id)
+                              }
+                            }}
+                          >
+                            <UserX className="h-4 w-4" />
+                            <span>Deaktivatsiya</span>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                        onClick={async () => {
+                          if (confirm(`${student.user?.fullName || 'N/A'} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
+                            await deleteStudent(student.id)
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span>O'chirish</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
 
@@ -325,59 +405,41 @@ export function StudentsTable({ students }: { students: Student[] }) {
                 </div>
               </div>
 
-              {/* Status and Actions */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex flex-wrap gap-2">
-                  <Badge 
-                    variant={
-                      student.status === 'ACTIVE' ? 'default' : 
-                      student.status === 'GRADUATED' ? 'secondary' : 
-                      'destructive'
-                    }
-                    className={
-                      student.status === 'ACTIVE' 
-                        ? 'bg-gradient-to-r from-green-500 to-emerald-600' 
-                        : student.status === 'GRADUATED'
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-600'
-                        : 'bg-gradient-to-r from-red-500 to-rose-600'
-                    }
-                  >
-                    {student.status === 'ACTIVE' ? 'Faol' :
-                     student.status === 'GRADUATED' ? 'Bitirgan' : 
-                     'Chiqarilgan'}
-                  </Badge>
-                  {student.trialEnabled && student.trialEndDate && (() => {
-                    const now = new Date()
-                    const endDate = new Date(student.trialEndDate)
-                    const isExpired = endDate < now
-                    const daysLeft = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-                    
-                    return (
-                      <Badge 
-                        variant={isExpired ? 'destructive' : 'outline'} 
-                        className="text-xs"
-                      >
-                        {isExpired ? '⏰ Sinov tugagan' : `⏱️ ${daysLeft} kun`}
-                      </Badge>
-                    )
-                  })()}
-                </div>
-                <div className="flex gap-1">
-                  {student.status === 'ACTIVE' && (
-                    <DeactivateButton
-                      itemId={student.id}
-                      itemName={student.user?.fullName || 'N/A'}
-                      itemType="student"
-                      onDeactivate={deactivateStudent}
-                    />
-                  )}
-                  <DeleteButton
-                    itemId={student.id}
-                    itemName={student.user?.fullName || 'N/A'}
-                    itemType="student"
-                    onDelete={deleteStudent}
-                  />
-                </div>
+              {/* Status Badges */}
+              <div className="flex flex-wrap gap-2">
+                <Badge 
+                  variant={
+                    student.status === 'ACTIVE' ? 'default' : 
+                    student.status === 'GRADUATED' ? 'secondary' : 
+                    'destructive'
+                  }
+                  className={
+                    student.status === 'ACTIVE' 
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-600' 
+                      : student.status === 'GRADUATED'
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-600'
+                      : 'bg-gradient-to-r from-red-500 to-rose-600'
+                  }
+                >
+                  {student.status === 'ACTIVE' ? 'Faol' :
+                   student.status === 'GRADUATED' ? 'Bitirgan' : 
+                   'Chiqarilgan'}
+                </Badge>
+                {student.trialEnabled && student.trialEndDate && (() => {
+                  const now = new Date()
+                  const endDate = new Date(student.trialEndDate)
+                  const isExpired = endDate < now
+                  const daysLeft = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+                  
+                  return (
+                    <Badge 
+                      variant={isExpired ? 'destructive' : 'outline'} 
+                      className="text-xs"
+                    >
+                      {isExpired ? '⏰ Sinov tugagan' : `⏱️ ${daysLeft} kun`}
+                    </Badge>
+                  )
+                })()}
               </div>
             </div>
           </div>
