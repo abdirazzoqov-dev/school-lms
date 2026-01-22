@@ -311,6 +311,8 @@ export async function createStudent(data: StudentFormData) {
     revalidateMultiplePaths([...REVALIDATION_PATHS.STUDENT_CHANGED], revalidatePath)
     revalidatePath('/admin/students')
     revalidatePath('/admin/dormitory')
+    revalidatePath('/admin/dormitory/buildings')
+    revalidatePath('/admin/dormitory/rooms')
     
     logger.info('Student created successfully', {
       userId: session.user.id,
@@ -696,6 +698,8 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
     revalidatePath('/admin/students')
     revalidatePath(`/admin/students/${studentId}`)
     revalidatePath('/admin/dormitory')
+    revalidatePath('/admin/dormitory/buildings')
+    revalidatePath('/admin/dormitory/rooms')
     
     logger.info('Student updated successfully', {
       userId: session.user.id,
