@@ -56,10 +56,10 @@ export async function POST(req: NextRequest) {
     const csvRows = [
       ['O\'quvchi', 'Sinf', 'Status', 'Vaqt'].join(','),
       ...attendanceRecords.map(att => [
-        att.student.user.fullName,
+        att.student.user?.fullName || 'N/A',
         att.student.class?.name || '',
         att.status === 'PRESENT' ? 'Kelgan' : att.status === 'ABSENT' ? 'Kelmagan' : 'Kech kelgan',
-        new Date(att.createdAt).toLocaleTimeString('uz-UZ')
+        new Date(att.createdAt).toLocaleTimeString('uz-UZ', { timeZone: 'Asia/Tashkent' })
       ].join(','))
     ]
 
