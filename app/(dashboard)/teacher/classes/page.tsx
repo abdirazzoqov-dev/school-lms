@@ -70,16 +70,10 @@ export default async function TeacherClassesPage() {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={`/teacher/attendance?classId=${cs.classId}&subjectId=${cs.subjectId}`}>
-                      <Calendar className="mr-2 h-4 w-4" />
-                      Davomat
-                    </Link>
-                  </Button>
                   <Button asChild size="sm">
-                    <Link href={`/teacher/grades?classId=${cs.classId}&subjectId=${cs.subjectId}`}>
-                      <BookOpen className="mr-2 h-4 w-4" />
-                      Baholar
+                    <Link href={`/teacher/classes/${cs.classId}`}>
+                      <Users className="mr-2 h-4 w-4" />
+                      Darsga kirish
                     </Link>
                   </Button>
                 </div>
