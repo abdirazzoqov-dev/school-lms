@@ -59,17 +59,39 @@ export default function TeacherClassDetailPage() {
       const data = await res.json()
       setClassData(data.class)
 
-      // Initialize attendance - all present by default
+      // Initialize attendance - check today's attendance first
       const initialAttendance: Record<string, 'PRESENT' | 'ABSENT' | 'LATE'> = {}
-      data.class.students.forEach((student: Student) => {
-        initialAttendance[student.id] = 'PRESENT'
-      })
+      if (data.todayAttendance && data.todayAttendance.length > 0) {
+        // Pre-fill with today's attendance
+        data.todayAttendance.forEach((att: any) => {
+          initialAttendance[att.studentId] = att.status
+        })
+        // Set remaining students as PRESENT
+        data.class.students.forEach((student: Student) => {
+          if (!initialAttendance[student.id]) {
+            initialAttendance[student.id] = 'PRESENT'
+          }
+        })
+      } else {
+        // All present by default
+        data.class.students.forEach((student: Student) => {
+          initialAttendance[student.id] = 'PRESENT'
+        })
+      }
       setAttendance(initialAttendance)
 
-      // Initialize grades
+      // Initialize grades - pre-fill with today's grades
       const initialGrades: Record<string, string> = {}
+      if (data.todayGrades && data.todayGrades.length > 0) {
+        data.todayGrades.forEach((grade: any) => {
+          initialGrades[grade.studentId] = grade.score.toString()
+        })
+      }
+      // Set remaining students to empty
       data.class.students.forEach((student: Student) => {
-        initialGrades[student.id] = ''
+        if (!initialGrades[student.id]) {
+          initialGrades[student.id] = ''
+        }
       })
       setGrades(initialGrades)
     } catch (error) {

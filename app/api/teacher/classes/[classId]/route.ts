@@ -59,7 +59,42 @@ export async function GET(
       return NextResponse.json({ error: 'Class not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ class: classData })
+    // Get today's attendance for this class
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const todayAttendance = await db.attendance.findMany({
+      where: {
+        classId,
+        teacherId: teacher.id,
+        date: today,
+      },
+      select: {
+        studentId: true,
+        status: true,
+      },
+    })
+
+    // Get today's grades for this class
+    const todayGrades = await db.grade.findMany({
+      where: {
+        teacherId: teacher.id,
+        date: today,
+        student: {
+          classId,
+        },
+      },
+      select: {
+        studentId: true,
+        score: true,
+      },
+    })
+
+    return NextResponse.json({
+      class: classData,
+      todayAttendance,
+      todayGrades,
+    })
   } catch (error) {
     console.error('Error fetching class data:', error)
     return NextResponse.json(
