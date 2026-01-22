@@ -200,7 +200,6 @@ export async function addClassSubject(data: {
     // Create class subject
     await db.classSubject.create({
       data: {
-        tenantId,
         classId: data.classId,
         subjectId: data.subjectId,
         teacherId: data.teacherId,
