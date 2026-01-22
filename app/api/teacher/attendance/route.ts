@@ -34,6 +34,26 @@ export async function POST(req: NextRequest) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
+    // Get the first classSubject for this teacher and class to find subjectId
+    const classId = attendanceRecords[0]?.classId
+    if (!classId) {
+      return NextResponse.json({ error: 'Class ID required' }, { status: 400 })
+    }
+
+    const classSubject = await db.classSubject.findFirst({
+      where: {
+        classId,
+        teacherId: teacher.id,
+      },
+    })
+
+    if (!classSubject) {
+      return NextResponse.json(
+        { error: 'You do not teach this class' },
+        { status: 403 }
+      )
+    }
+
     // Delete existing attendance for today (if any)
     const studentIds = attendanceRecords.map((r) => r.studentId)
     await db.attendance.deleteMany({
@@ -51,6 +71,7 @@ export async function POST(req: NextRequest) {
         studentId: record.studentId,
         teacherId: teacher.id,
         classId: record.classId,
+        subjectId: classSubject.subjectId,
         date: today,
         status: record.status,
       })),
