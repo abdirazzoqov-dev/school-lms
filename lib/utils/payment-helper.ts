@@ -54,7 +54,11 @@ export async function calculateMonthlyPaymentProgress(
 
   // Jami to'langan summa (haqiqatda to'langan)
   const totalPaid = payments.reduce((sum, payment) => {
-    return sum + Number(payment.paidAmount || 0)
+    // Agar status COMPLETED bo'lsa va paidAmount null bo'lsa, amount ishlatamiz
+    const paid = payment.status === 'COMPLETED' && !payment.paidAmount 
+      ? Number(payment.amount) 
+      : Number(payment.paidAmount || 0)
+    return sum + paid
   }, 0)
 
   const requiredAmount = Number(student.monthlyTuitionFee)

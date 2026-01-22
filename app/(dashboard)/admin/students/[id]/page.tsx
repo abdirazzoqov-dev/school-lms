@@ -116,7 +116,11 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
   }
 
   const totalPayments = student.payments.reduce((sum, p) => sum + Number(p.amount), 0)
-  const paidPayments = student.payments.reduce((sum, p) => sum + Number(p.paidAmount || 0), 0)
+  const paidPayments = student.payments.reduce((sum, p) => {
+    // Agar COMPLETED bo'lsa va paidAmount null bo'lsa, amount ishlatamiz
+    const paid = p.status === 'COMPLETED' && !p.paidAmount ? Number(p.amount) : Number(p.paidAmount || 0)
+    return sum + paid
+  }, 0)
   const pendingPayments = student.payments.reduce((sum, p) => sum + Number(p.remainingAmount || 0), 0)
 
   // Get upcoming payment schedule (next 3 months)
