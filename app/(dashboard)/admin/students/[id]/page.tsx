@@ -116,8 +116,8 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
   }
 
   const totalPayments = student.payments.reduce((sum, p) => sum + Number(p.amount), 0)
-  const paidPayments = student.payments.filter(p => p.status === 'COMPLETED').reduce((sum, p) => sum + Number(p.amount), 0)
-  const pendingPayments = totalPayments - paidPayments
+  const paidPayments = student.payments.reduce((sum, p) => sum + Number(p.paidAmount || 0), 0)
+  const pendingPayments = student.payments.reduce((sum, p) => sum + Number(p.remainingAmount || 0), 0)
 
   // Get upcoming payment schedule (next 3 months)
   const paymentSchedule = await getUpcomingPaymentSchedule(student.id, tenantId)
@@ -551,23 +551,52 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
                   <div className="space-y-3">
                     {student.payments.map((payment) => (
                       <div key={payment.id} className="flex items-center justify-between p-3 rounded-lg border">
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium">{payment.paymentType}</p>
                           <p className="text-sm text-muted-foreground">
                             Invoice: {payment.invoiceNumber}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             Muddat: {new Date(payment.dueDate).toLocaleDateString('uz-UZ')}
+                            {payment.paidDate && ` • To'langan: ${new Date(payment.paidDate).toLocaleDateString('uz-UZ')}`}
                           </p>
+                          {Number(payment.paidAmount || 0) > 0 && Number(payment.paidAmount) < Number(payment.amount) && (
+                            <div className="mt-2 text-xs">
+                              <div className="flex items-center gap-2">
+                                <div className="w-full bg-gray-200 rounded-full h-2 max-w-[200px]">
+                                  <div 
+                                    className="bg-green-500 h-2 rounded-full" 
+                                    style={{ width: `${(Number(payment.paidAmount) / Number(payment.amount)) * 100}%` }}
+                                  />
+                                </div>
+                                <span className="text-muted-foreground whitespace-nowrap">
+                                  {Math.round((Number(payment.paidAmount) / Number(payment.amount)) * 100)}%
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold text-lg">{formatNumber(Number(payment.amount))} so'm</p>
-                          <span className={`text-xs px-2 py-1 rounded-full ${
+                        <div className="text-right ml-4">
+                          <div className="space-y-1">
+                            {Number(payment.paidAmount || 0) > 0 && (
+                              <p className="text-sm text-green-600 font-semibold">
+                                To'langan: {formatNumber(Number(payment.paidAmount))} so'm
+                              </p>
+                            )}
+                            <p className="font-bold text-lg">{formatNumber(Number(payment.amount))} so'm</p>
+                            {Number(payment.remainingAmount || 0) > 0 && (
+                              <p className="text-xs text-orange-600">
+                                Qarz: {formatNumber(Number(payment.remainingAmount))} so'm
+                              </p>
+                            )}
+                          </div>
+                          <span className={`inline-block mt-2 text-xs px-2 py-1 rounded-full ${
                             payment.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
                             payment.status === 'PENDING' ? 'bg-orange-100 text-orange-800' :
+                            payment.status === 'PARTIALLY_PAID' ? 'bg-blue-100 text-blue-800' :
                             'bg-red-100 text-red-800'
                           }`}>
-                            {payment.status}
+                            {payment.status === 'PARTIALLY_PAID' ? 'QISMAN TO\'LANGAN' : payment.status}
                           </span>
                         </div>
                       </div>

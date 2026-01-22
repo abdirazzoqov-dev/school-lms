@@ -33,7 +33,7 @@ export async function calculateMonthlyPaymentProgress(
     return null
   }
 
-  // Shu oy uchun barcha TUITION to'lovlarini olish
+  // Shu oy uchun barcha TUITION to'lovlarini olish (qisman to'lovlar ham)
   const payments = await db.payment.findMany({
     where: {
       studentId,
@@ -41,19 +41,20 @@ export async function calculateMonthlyPaymentProgress(
       paymentType: 'TUITION',
       paymentMonth: month,
       paymentYear: year,
-      status: 'COMPLETED',
     },
     select: {
       id: true,
       amount: true,
+      paidAmount: true,
+      remainingAmount: true,
       paidDate: true,
       status: true
     }
   })
 
-  // Jami to'langan summa
+  // Jami to'langan summa (haqiqatda to'langan)
   const totalPaid = payments.reduce((sum, payment) => {
-    return sum + Number(payment.amount)
+    return sum + Number(payment.paidAmount || 0)
   }, 0)
 
   const requiredAmount = Number(student.monthlyTuitionFee)
