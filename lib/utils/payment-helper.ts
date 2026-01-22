@@ -34,13 +34,25 @@ export async function calculateMonthlyPaymentProgress(
   }
 
   // Shu oy uchun barcha TUITION to'lovlarini olish (qisman to'lovlar ham)
-  const payments = await db.payment.findMany({
+  // paymentMonth/Year bo'lmasa, paidDate dan filtrlash
+  const allPayments = await db.payment.findMany({
     where: {
       studentId,
       tenantId,
       paymentType: 'TUITION',
-      paymentMonth: month,
-      paymentYear: year,
+      OR: [
+        {
+          paymentMonth: month,
+          paymentYear: year,
+        },
+        {
+          paymentMonth: null,
+          paidDate: {
+            gte: new Date(year, month - 1, 1),
+            lt: new Date(year, month, 1),
+          }
+        }
+      ]
     },
     select: {
       id: true,
@@ -48,8 +60,22 @@ export async function calculateMonthlyPaymentProgress(
       paidAmount: true,
       remainingAmount: true,
       paidDate: true,
-      status: true
+      status: true,
+      paymentMonth: true,
+      paymentYear: true
     }
+  })
+
+  // Filter by month/year from paidDate if paymentMonth is null
+  const payments = allPayments.filter(payment => {
+    if (payment.paymentMonth !== null && payment.paymentYear !== null) {
+      return true // Already matched by query
+    }
+    if (payment.paidDate) {
+      const paidDate = new Date(payment.paidDate)
+      return paidDate.getMonth() + 1 === month && paidDate.getFullYear() === year
+    }
+    return false
   })
 
   // Jami to'langan summa (haqiqatda to'langan)
