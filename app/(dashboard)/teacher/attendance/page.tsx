@@ -4,8 +4,10 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { CalendarCheck, Users } from 'lucide-react'
+import { CalendarCheck, Users, Download, FileSpreadsheet } from 'lucide-react'
 import Link from 'next/link'
+import { Badge } from '@/components/ui/badge'
+import { formatDateTime } from '@/lib/utils'
 
 export default async function TeacherAttendancePage() {
   const session = await getServerSession(authOptions)
@@ -68,6 +70,9 @@ export default async function TeacherAttendancePage() {
           }
         }
       }
+    },
+    orderBy: {
+      createdAt: 'asc'
     }
   })
 
@@ -77,13 +82,27 @@ export default async function TeacherAttendancePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Davomat</h1>
           <p className="text-muted-foreground">
             O'quvchilar davomatini boshqaring
           </p>
         </div>
+        
+        {/* Export Buttons */}
+        {todayAttendance.length > 0 && (
+          <div className="flex gap-2">
+            <form action="/api/teacher/attendance/export" method="POST">
+              <input type="hidden" name="format" value="excel" />
+              <input type="hidden" name="date" value={today.toISOString()} />
+              <Button variant="outline" type="submit">
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Excel
+              </Button>
+            </form>
+          </div>
+        )}
       </div>
 
       {/* Stats */}
@@ -101,6 +120,7 @@ export default async function TeacherAttendancePage() {
             </div>
           </CardContent>
         </Card>
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
@@ -108,12 +128,13 @@ export default async function TeacherAttendancePage() {
                 <CalendarCheck className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-green-600">{presentCount}</div>
+                <div className="text-2xl font-bold">{presentCount}</div>
                 <p className="text-sm text-muted-foreground">Kelgan</p>
               </div>
             </div>
           </CardContent>
         </Card>
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
@@ -121,12 +142,13 @@ export default async function TeacherAttendancePage() {
                 <CalendarCheck className="h-6 w-6 text-red-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-red-600">{absentCount}</div>
+                <div className="text-2xl font-bold">{absentCount}</div>
                 <p className="text-sm text-muted-foreground">Kelmagan</p>
               </div>
             </div>
           </CardContent>
         </Card>
+
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
@@ -134,7 +156,7 @@ export default async function TeacherAttendancePage() {
                 <CalendarCheck className="h-6 w-6 text-orange-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold text-orange-600">{lateCount}</div>
+                <div className="text-2xl font-bold">{lateCount}</div>
                 <p className="text-sm text-muted-foreground">Kech kelgan</p>
               </div>
             </div>
@@ -143,48 +165,30 @@ export default async function TeacherAttendancePage() {
       </div>
 
       {/* Classes */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Mening sinflarim</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {classes.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Sizga hech qanday sinf biriktirilmagan
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {classes.map((cls) => (
-                <Card key={cls.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="pt-6">
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-lg">{cls.name}</h3>
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                          {cls._count.students} o'quvchi
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {cls.gradeLevel}-sinf, {cls.section} bo'lim
-                      </p>
-                      <div className="flex gap-2 mt-4">
-                        <Link href={`/teacher/attendance/${cls.id}`} className="flex-1">
-                          <Button className="w-full" size="sm">
-                            <CalendarCheck className="mr-2 h-4 w-4" />
-                            Davomat belgilash
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div>
+        <h2 className="text-xl font-bold mb-4">Mening sinflarim</h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {classes.map((classItem) => (
+            <Card key={classItem.id}>
+              <CardHeader>
+                <CardTitle>{classItem.name}</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {classItem._count.students} ta o'quvchi
+                </p>
+              </CardHeader>
+              <CardContent>
+                <Button asChild className="w-full">
+                  <Link href={`/teacher/classes/${classItem.id}`}>
+                    Davomat belgilash
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
 
-      {/* Today's Attendance */}
+      {/* Today's Attendance Table */}
       {todayAttendance.length > 0 && (
         <Card>
           <CardHeader>
@@ -203,26 +207,34 @@ export default async function TeacherAttendancePage() {
                 </thead>
                 <tbody className="divide-y">
                   {todayAttendance.map((attendance) => (
-                    <tr key={attendance.id} className="hover:bg-muted/50">
+                    <tr key={attendance.id} className="hover:bg-muted/30">
                       <td className="p-4">
-                        <div className="font-medium">{attendance.student.user?.fullName || 'N/A'}</div>
+                        <p className="font-medium">{attendance.student.user.fullName}</p>
                       </td>
-                      <td className="p-4">{attendance.student.class?.name || '-'}</td>
+                      <td className="p-4">{attendance.student.class?.name}</td>
                       <td className="p-4">
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          attendance.status === 'PRESENT' ? 'bg-green-100 text-green-800' :
-                          attendance.status === 'ABSENT' ? 'bg-red-100 text-red-800' :
-                          attendance.status === 'LATE' ? 'bg-orange-100 text-orange-800' :
-                          'bg-blue-100 text-blue-800'
-                        }`}>
-                          {attendance.status === 'PRESENT' ? 'Kelgan' :
-                           attendance.status === 'ABSENT' ? 'Kelmagan' :
-                           attendance.status === 'LATE' ? 'Kech kelgan' :
-                           'Sababli'}
-                        </span>
+                        {attendance.status === 'PRESENT' && (
+                          <Badge variant="default" className="bg-green-600">
+                            Kelgan
+                          </Badge>
+                        )}
+                        {attendance.status === 'ABSENT' && (
+                          <Badge variant="destructive">
+                            Kelmagan
+                          </Badge>
+                        )}
+                        {attendance.status === 'LATE' && (
+                          <Badge variant="secondary" className="bg-orange-600 text-white">
+                            Kech kelgan
+                          </Badge>
+                        )}
                       </td>
                       <td className="p-4 text-sm text-muted-foreground">
-                        {new Date(attendance.createdAt).toLocaleTimeString('uz-UZ')}
+                        {new Date(attendance.createdAt).toLocaleTimeString('uz-UZ', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit'
+                        })}
                       </td>
                     </tr>
                   ))}
@@ -235,4 +247,3 @@ export default async function TeacherAttendancePage() {
     </div>
   )
 }
-
