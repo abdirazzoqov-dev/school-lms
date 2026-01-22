@@ -20,34 +20,12 @@ export default async function TeacherAttendancePage() {
 
   // Get teacher
   const teacher = await db.teacher.findFirst({
-    where: { userId: session.user.id },
-    include: {
-      classSubjects: {
-        include: {
-          class: {
-            include: {
-              _count: {
-                select: { students: true }
-              }
-            }
-          }
-        }
-      }
-    }
+    where: { userId: session.user.id }
   })
 
   if (!teacher) {
     redirect('/unauthorized')
   }
-
-  // Get unique classes from classSubjects
-  const classesMap = new Map()
-  teacher.classSubjects.forEach(cs => {
-    if (!classesMap.has(cs.class.id)) {
-      classesMap.set(cs.class.id, cs.class)
-    }
-  })
-  const classes = Array.from(classesMap.values())
 
   // Get today's date
   const today = new Date()
@@ -162,30 +140,6 @@ export default async function TeacherAttendancePage() {
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Classes */}
-      <div>
-        <h2 className="text-xl font-bold mb-4">Mening sinflarim</h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {classes.map((classItem) => (
-            <Card key={classItem.id}>
-              <CardHeader>
-                <CardTitle>{classItem.name}</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {classItem._count.students} ta o'quvchi
-                </p>
-              </CardHeader>
-              <CardContent>
-                <Button asChild className="w-full">
-                  <Link href={`/teacher/classes/${classItem.id}`}>
-                    Davomat belgilash
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
       </div>
 
       {/* Today's Attendance Table */}
