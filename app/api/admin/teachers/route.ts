@@ -90,6 +90,16 @@ export async function GET() {
             email: true,
             phone: true,
           }
+        },
+        classSubjects: {
+          include: {
+            class: {
+              select: {
+                id: true,
+                name: true,
+              }
+            }
+          }
         }
       },
       orderBy: {
