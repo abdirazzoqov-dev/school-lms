@@ -8,6 +8,30 @@ import { revalidatePath } from 'next/cache'
 import { hashPassword } from '@/lib/auth'
 import { canAddStudent } from '@/lib/tenant'
 import { handleError } from '@/lib/error-handler'
+
+// Helper function to update building cache
+async function updateBuildingCache(buildingId: string) {
+  const rooms = await db.dormitoryRoom.findMany({
+    where: { buildingId },
+    select: {
+      capacity: true,
+      occupiedBeds: true,
+    },
+  })
+
+  const totalRooms = rooms.length
+  const totalCapacity = rooms.reduce((sum, r) => sum + r.capacity, 0)
+  const occupiedBeds = rooms.reduce((sum, r) => sum + r.occupiedBeds, 0)
+
+  await db.dormitoryBuilding.update({
+    where: { id: buildingId },
+    data: {
+      totalRooms,
+      totalCapacity,
+      occupiedBeds,
+    },
+  })
+}
 import { generateRandomString } from '@/lib/utils'
 import { REVALIDATION_PATHS, revalidateMultiplePaths } from '@/lib/cache-config'
 import { logger } from '@/lib/logger'
@@ -588,11 +612,21 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
       }
     }
 
+    // Track buildings that need cache update
+    const buildingsToUpdate = new Set<string>()
+
     // Handle dormitory updates
     if (data.dormitoryBedId !== undefined) {
       // Check existing dormitory assignment
       const existingAssignment = await db.dormitoryAssignment.findUnique({
-        where: { studentId }
+        where: { studentId },
+        include: {
+          room: {
+            select: {
+              buildingId: true,
+            }
+          }
+        }
       })
 
       if (data.dormitoryBedId) {
@@ -604,7 +638,12 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
             isActive: true,
           },
           include: {
-            room: true,
+            room: {
+              select: {
+                id: true,
+                buildingId: true,
+              }
+            },
           },
         })
 
@@ -618,6 +657,11 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
         }
 
         if (existingAssignment) {
+          // Track old building for cache update
+          if (existingAssignment.room?.buildingId) {
+            buildingsToUpdate.add(existingAssignment.room.buildingId)
+          }
+
           // Free old bed if different
           if (existingAssignment.bedId !== data.dormitoryBedId) {
             await db.dormitoryBed.update({
@@ -628,6 +672,11 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
               where: { id: existingAssignment.roomId },
               data: { occupiedBeds: { decrement: 1 } }
             })
+          }
+
+          // Track new building for cache update
+          if (bed.room.buildingId) {
+            buildingsToUpdate.add(bed.room.buildingId)
           }
 
           // Update assignment
@@ -652,12 +701,17 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
             })
           }
         } else {
+          // Track new building for cache update
+          if (bed.room.buildingId) {
+            buildingsToUpdate.add(bed.room.buildingId)
+          }
+
           // Create new assignment
           await db.dormitoryAssignment.create({
             data: {
               tenantId,
               studentId,
-              roomId: bed.roomId,
+              roomId: bed.room.id,
               bedId: bed.id,
               monthlyFee: data.dormitoryMonthlyFee || 0,
               status: 'ACTIVE',
@@ -671,11 +725,16 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
           })
 
           await db.dormitoryRoom.update({
-            where: { id: bed.roomId },
+            where: { id: bed.room.id },
             data: { occupiedBeds: { increment: 1 } }
           })
         }
       } else if (existingAssignment) {
+        // Track old building for cache update
+        if (existingAssignment.room?.buildingId) {
+          buildingsToUpdate.add(existingAssignment.room.buildingId)
+        }
+
         // Remove dormitory assignment
         await db.dormitoryBed.update({
           where: { id: existingAssignment.bedId },
@@ -691,6 +750,11 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
           where: { studentId }
         })
       }
+    }
+
+    // Update building cache for all affected buildings
+    for (const buildingId of buildingsToUpdate) {
+      await updateBuildingCache(buildingId)
     }
 
     // ✅ Revalidate multiple related paths
