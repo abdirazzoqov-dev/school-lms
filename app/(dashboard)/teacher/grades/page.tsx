@@ -3,9 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Plus, BookOpen, Award } from 'lucide-react'
-import Link from 'next/link'
+import { BookOpen, Award, Plus } from 'lucide-react'
 
 export default async function TeacherGradesPage() {
   const session = await getServerSession(authOptions)
@@ -119,46 +117,6 @@ export default async function TeacherGradesPage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Classes and Subjects */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Mening sinf-fanlarim</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {teacher.classSubjects.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Sizga hech qanday sinf-fan biriktirilmagan
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {teacher.classSubjects.map((cs) => (
-                <Card key={cs.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="pt-6">
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-lg">{cs.class.name}</h3>
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                          {cs.class._count.students} o'quvchi
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{cs.subject.name}</p>
-                      <div className="flex gap-2 mt-4">
-                        <Link href={`/teacher/grades/${cs.id}`} className="flex-1">
-                          <Button className="w-full" size="sm">
-                            <Award className="mr-2 h-4 w-4" />
-                            Baho kiriting
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Recent Grades */}
       {recentGrades.length > 0 && (
