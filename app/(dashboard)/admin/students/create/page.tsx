@@ -161,23 +161,46 @@ export default function CreateStudentPage() {
   useEffect(() => {
     // Load available rooms when dormitory is needed and gender is selected
     if (needsDormitory && formData.gender) {
+      console.log('🛏️  Loading available dormitory rooms for gender:', formData.gender)
       setLoadingRooms(true)
-      fetch(`/api/dormitory/available-rooms?gender=${formData.gender}`)
+      fetch(`/api/admin/dormitory/available-rooms?gender=${formData.gender}`, {
+        cache: 'no-store',
+        credentials: 'include',
+      })
         .then(res => res.json())
         .then(data => {
+          console.log('📡 Available rooms response:', data)
           setAvailableRooms(data.rooms || [])
           setLoadingRooms(false)
+          if (data.rooms && data.rooms.length > 0) {
+            toast({
+              title: 'Yotoqxona xonalari yuklandi',
+              description: `${data.rooms.length} ta bo'sh joy topildi`,
+            })
+          } else {
+            toast({
+              title: 'Bo\'sh joylar yo\'q',
+              description: 'Hozircha bu jins uchun bo\'sh yotoqxona joylari yo\'q',
+              variant: 'destructive',
+            })
+          }
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error('❌ Failed to load rooms:', error)
           setLoadingRooms(false)
           setAvailableRooms([])
+          toast({
+            title: 'Xato',
+            description: 'Yotoqxona xonalarini yuklashda xato',
+            variant: 'destructive',
+          })
         })
     } else {
       setAvailableRooms([])
       setSelectedRoom(null)
       setFormData(prev => ({ ...prev, dormitoryBedId: '', dormitoryMonthlyFee: 0 }))
     }
-  }, [needsDormitory, formData.gender])
+  }, [needsDormitory, formData.gender, toast])
 
   // Guardian functions
   const addGuardian = () => {

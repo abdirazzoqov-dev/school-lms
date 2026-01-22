@@ -3,6 +3,9 @@ import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
+// Force dynamic rendering to prevent static generation issues
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -26,6 +29,9 @@ export async function GET(req: NextRequest) {
     const tenantId = session.user.tenantId!
     const { searchParams } = new URL(req.url)
     const gender = searchParams.get('gender')
+    const buildingId = searchParams.get('buildingId')
+
+    console.log('🛏️  Fetching available rooms for tenant:', tenantId, 'gender:', gender, 'buildingId:', buildingId)
 
     // Get rooms with available beds
     const rooms = await db.dormitoryRoom.findMany({
@@ -36,6 +42,8 @@ export async function GET(req: NextRequest) {
         occupiedBeds: {
           lt: db.dormitoryRoom.fields.capacity,
         },
+        // Building filter
+        ...(buildingId && { buildingId }),
         // Gender filter
         ...(gender && {
           OR: [
@@ -47,6 +55,7 @@ export async function GET(req: NextRequest) {
       include: {
         building: {
           select: {
+            id: true,
             name: true,
             code: true,
           },
@@ -75,10 +84,19 @@ export async function GET(req: NextRequest) {
     // Filter out rooms without any available beds
     const roomsWithBeds = rooms.filter((room) => room.beds.length > 0)
 
-    return NextResponse.json({ rooms: roomsWithBeds })
+    console.log('✅ Available rooms found:', roomsWithBeds.length)
+
+    return NextResponse.json({ 
+      rooms: roomsWithBeds,
+      count: roomsWithBeds.length,
+    })
   } catch (error: any) {
-    console.error('Get available rooms error:', error)
-    return NextResponse.json({ rooms: [] })
+    console.error('❌ Get available rooms error:', error)
+    return NextResponse.json({ 
+      rooms: [],
+      count: 0,
+      error: error.message,
+    })
   }
 }
 
