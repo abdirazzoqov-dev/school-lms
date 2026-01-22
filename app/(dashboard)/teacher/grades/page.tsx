@@ -39,7 +39,7 @@ export default async function TeacherGradesPage() {
   }
 
   // Get all grades
-  const allGrades = await db.grade.findMany({
+  const gradesFromDb = await db.grade.findMany({
     where: { 
       teacherId: teacher.id,
       tenantId 
@@ -61,6 +61,14 @@ export default async function TeacherGradesPage() {
       }
     }
   })
+
+  // Convert Decimal to number for client component
+  const allGrades = gradesFromDb.map(grade => ({
+    ...grade,
+    score: Number(grade.score),
+    maxScore: Number(grade.maxScore),
+    percentage: Number(grade.percentage)
+  }))
 
   return (
     <div className="space-y-6">
