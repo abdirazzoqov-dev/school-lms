@@ -501,13 +501,23 @@ export default async function ClassDetailPage({ params }: PageProps) {
       {/* Subjects */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5" />
-            O'qitiladigan Fanlar
-          </CardTitle>
-          <CardDescription>
-            {classItem._count.classSubjects} ta fan
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                O'qitiladigan Fanlar
+              </CardTitle>
+              <CardDescription>
+                {classItem._count.classSubjects} ta fan
+              </CardDescription>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/admin/classes/${classItem.id}/subjects`}>
+                <Plus className="h-4 w-4 mr-2" />
+                Fan biriktirish
+              </Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {classItem.classSubjects.length > 0 ? (
@@ -533,9 +543,15 @@ export default async function ClassDetailPage({ params }: PageProps) {
           ) : (
             <div className="text-center py-8">
               <BookOpen className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground mb-3">
                 Hozircha fanlar biriktirilmagan
               </p>
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/admin/classes/${classItem.id}/subjects`}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Birinchi fanni biriktirish
+                </Link>
+              </Button>
             </div>
           )}
         </CardContent>

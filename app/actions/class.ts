@@ -166,3 +166,87 @@ export async function deleteClass(classId: string) {
   }
 }
 
+// ============================================
+// CLASS SUBJECT ACTIONS
+// ============================================
+
+export async function addClassSubject(data: {
+  classId: string
+  subjectId: string
+  teacherId: string
+  hoursPerWeek?: number
+}) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || session.user.role !== 'ADMIN') {
+      return { success: false, error: 'Ruxsat berilmagan' }
+    }
+
+    const tenantId = session.user.tenantId!
+
+    // Check if already exists
+    const existing = await db.classSubject.findFirst({
+      where: {
+        classId: data.classId,
+        subjectId: data.subjectId,
+      }
+    })
+
+    if (existing) {
+      return { success: false, error: 'Bu fan allaqachon sinfga biriktirilgan' }
+    }
+
+    // Create class subject
+    await db.classSubject.create({
+      data: {
+        tenantId,
+        classId: data.classId,
+        subjectId: data.subjectId,
+        teacherId: data.teacherId,
+        hoursPerWeek: data.hoursPerWeek || 2,
+      }
+    })
+
+    revalidatePath('/admin/classes')
+    revalidatePath(`/admin/classes/${data.classId}`)
+    revalidatePath('/teacher/classes') // Teacher panel
+    
+    return { success: true }
+  } catch (error: any) {
+    console.error('Add class subject error:', error)
+    return { success: false, error: error.message || 'Xatolik yuz berdi' }
+  }
+}
+
+export async function removeClassSubject(classSubjectId: string) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || session.user.role !== 'ADMIN') {
+      return { success: false, error: 'Ruxsat berilmagan' }
+    }
+
+    const classSubject = await db.classSubject.findUnique({
+      where: { id: classSubjectId }
+    })
+
+    if (!classSubject) {
+      return { success: false, error: 'ClassSubject topilmadi' }
+    }
+
+    await db.classSubject.delete({
+      where: { id: classSubjectId }
+    })
+
+    revalidatePath('/admin/classes')
+    revalidatePath(`/admin/classes/${classSubject.classId}`)
+    revalidatePath('/teacher/classes') // Teacher panel
+    
+    return { success: true }
+  } catch (error: any) {
+    console.error('Remove class subject error:', error)
+    return { success: false, error: error.message || 'Xatolik yuz berdi' }
+  }
+}
+
