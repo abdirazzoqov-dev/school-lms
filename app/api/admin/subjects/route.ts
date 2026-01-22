@@ -16,7 +16,7 @@ export async function GET() {
     const tenantId = session.user.tenantId!
 
     const subjects = await db.subject.findMany({
-      where: { tenantId, isActive: true },
+      where: { tenantId },
       orderBy: { name: 'asc' },
       select: {
         id: true,
