@@ -580,7 +580,7 @@ async function getDashboardStats(
         status: 'COMPLETED',
         paidDate: { gte: thisMonthStart }
       },
-      _sum: { amount: true }
+      _sum: { paidAmount: true }
     }),
     db.expense.aggregate({
       where: {
@@ -664,7 +664,7 @@ async function getDashboardStats(
     completedPayments,
     pendingPayments,
     overduePayments,
-    income: Number(income._sum.amount || 0),
+    income: Number(income._sum.paidAmount || 0),
     generalExpenses: Number(generalExpenses._sum.amount || 0),
     kitchenExpenses: Number(kitchenExpenses._sum.amount || 0),
     totalExpenses: Number(generalExpenses._sum.amount || 0) + Number(kitchenExpenses._sum.amount || 0),
@@ -738,7 +738,7 @@ async function getPaymentChartData(tenantId: string) {
   const stats = await db.payment.groupBy({
     by: ['status'],
     where: { tenantId },
-    _sum: { amount: true },
+    _sum: { paidAmount: true },
     _count: true
   })
 
@@ -746,7 +746,7 @@ async function getPaymentChartData(tenantId: string) {
     name: stat.status === 'COMPLETED' ? 'To\'langan' :
           stat.status === 'PENDING' ? 'Kutilmoqda' :
           stat.status === 'FAILED' ? 'Muvaffaqiyatsiz' : 'Qaytarilgan',
-    value: Number(stat._sum.amount || 0),
+    value: Number(stat._sum.paidAmount || 0),
     percentage: 0
   }))
 
