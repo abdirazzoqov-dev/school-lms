@@ -49,7 +49,7 @@ interface Room {
   floor: number
   capacity: number
   occupiedBeds: number
-  roomType: string
+  roomType: 'STANDARD' | 'LUXURY' | 'SUITE'
   pricePerMonth: number
   gender: 'MALE' | 'FEMALE' | null
   building: {

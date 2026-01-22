@@ -107,6 +107,7 @@ export default async function RoomsPage({
   const serializedRooms = rooms.map((room) => ({
     ...room,
     pricePerMonth: Number(room.pricePerMonth),
+    roomType: room.roomType as 'STANDARD' | 'LUXURY' | 'SUITE',
   }))
 
   return (

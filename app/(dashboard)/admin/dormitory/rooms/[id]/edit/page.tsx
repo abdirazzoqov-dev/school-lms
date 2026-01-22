@@ -56,10 +56,11 @@ export default async function EditRoomPage({ params }: PageProps) {
     orderBy: { name: 'asc' },
   })
 
-  // Convert Decimal to number for form compatibility
+  // Convert Decimal to number and ensure roomType is correct type
   const roomData = {
     ...room,
     pricePerMonth: Number(room.pricePerMonth),
+    roomType: room.roomType as 'STANDARD' | 'LUXURY' | 'SUITE',
   }
 
   return (

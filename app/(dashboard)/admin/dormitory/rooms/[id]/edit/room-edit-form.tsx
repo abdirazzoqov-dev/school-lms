@@ -42,7 +42,7 @@ interface Room {
   roomNumber: string
   floor: number
   capacity: number
-  roomType: string
+  roomType: 'STANDARD' | 'LUXURY' | 'SUITE'
   pricePerMonth: number
   gender: 'MALE' | 'FEMALE' | null
   description: string | null
