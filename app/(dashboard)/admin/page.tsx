@@ -78,14 +78,19 @@ export default async function AdminDashboard() {
         }
       }),
 
-      // Recent payments (top 5)
+      // Recent payments (top 5) - includes partial payments
       db.payment.findMany({
-        where: { tenantId, status: 'COMPLETED' },
+        where: { 
+          tenantId, 
+          paidAmount: { gt: 0 },
+          paidDate: { not: null }
+        },
         take: 5,
         orderBy: { paidDate: 'desc' },
         select: {
           id: true,
           amount: true,
+          paidAmount: true,
           paidDate: true,
           paymentMethod: true,
           student: {
@@ -462,7 +467,7 @@ export default async function AdminDashboard() {
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-sm text-green-600">
-                        +{formatNumber(Number(payment.amount))}
+                        +{formatNumber(Number(payment.paidAmount))}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {payment.paymentMethod as string}
