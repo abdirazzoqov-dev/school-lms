@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useToast } from '@/components/ui/use-toast'
+import { deleteRoom } from '@/app/actions/dormitory'
 import {
   Table,
   TableBody,
@@ -84,7 +86,9 @@ export function RoomsTable({ rooms, buildings, searchParams }: RoomsTableProps) 
   const router = useRouter()
   const pathname = usePathname()
   const urlSearchParams = useSearchParams()
+  const { toast } = useToast()
   const [showFilters, setShowFilters] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const updateSearchParams = (key: string, value: string) => {
     const params = new URLSearchParams(urlSearchParams.toString())
@@ -98,6 +102,30 @@ export function RoomsTable({ rooms, buildings, searchParams }: RoomsTableProps) 
 
   const clearFilters = () => {
     router.push(pathname)
+  }
+
+  const handleDelete = async (roomId: string) => {
+    if (!confirm('Xonani o\'chirmoqchimisiz? Bu amalni bekor qilib bo\'lmaydi.')) return
+
+    setDeletingId(roomId)
+
+    const result = await deleteRoom(roomId)
+
+    if (result.success) {
+      toast({
+        title: 'Muvaffaqiyatli!',
+        description: 'Xona o\'chirildi',
+      })
+      router.refresh()
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Xato!',
+        description: result.error,
+      })
+    }
+
+    setDeletingId(null)
   }
 
   const hasActiveFilters = searchParams.building || searchParams.availability
@@ -329,9 +357,13 @@ export function RoomsTable({ rooms, buildings, searchParams }: RoomsTableProps) 
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600">
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => handleDelete(room.id)}
+                            disabled={deletingId === room.id}
+                          >
                             <Trash2 className="h-4 w-4 mr-2" />
-                            O'chirish
+                            {deletingId === room.id ? 'O\'chirilmoqda...' : 'O\'chirish'}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
