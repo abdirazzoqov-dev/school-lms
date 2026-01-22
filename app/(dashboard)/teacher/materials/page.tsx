@@ -4,7 +4,8 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, Download, FileText, Trash2 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Plus, Download, FileText, Trash2, HardDrive, Layers, Upload as UploadIcon } from 'lucide-react'
 import Link from 'next/link'
 import { formatFileSize, getFileIcon, MATERIAL_TYPES } from '@/lib/validations/material'
 import { DeleteButton } from '@/components/delete-button'
@@ -88,61 +89,67 @@ export default async function TeacherMaterialsPage({
   const totalSize = materials.reduce((sum, m) => sum + (m.fileSize || 0), 0)
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Materiallar</h1>
-          <p className="text-muted-foreground">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Materiallar
+          </h1>
+          <p className="text-lg text-muted-foreground">
             Darslik, topshiriq va boshqa fayllarni boshqaring
           </p>
         </div>
         <Link href="/teacher/materials/upload">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
+          <Button 
+            size="lg" 
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all"
+          >
+            <UploadIcon className="mr-2 h-5 w-5" />
             Material Yuklash
           </Button>
         </Link>
       </div>
 
       {/* Statistics */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="border-none shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 hover:shadow-xl transition-shadow">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <FileText className="h-6 w-6 text-blue-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
+                <FileText className="h-6 w-6" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{totalMaterials}</div>
-                <p className="text-sm text-muted-foreground">Jami materiallar</p>
+                <div className="text-3xl font-bold text-blue-600">{totalMaterials}</div>
+                <p className="text-sm text-muted-foreground font-medium">Jami materiallar</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-none shadow-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 hover:shadow-xl transition-shadow">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <FileText className="h-6 w-6 text-green-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
+                <Layers className="h-6 w-6" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{materialsByType.length}</div>
-                <p className="text-sm text-muted-foreground">Turlar</p>
+                <div className="text-3xl font-bold text-green-600">{materialsByType.length}</div>
+                <p className="text-sm text-muted-foreground font-medium">Material turlari</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-none shadow-lg bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 hover:shadow-xl transition-shadow">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <FileText className="h-6 w-6 text-purple-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-lg">
+                <HardDrive className="h-6 w-6" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{formatFileSize(totalSize)}</div>
-                <p className="text-sm text-muted-foreground">Jami hajm</p>
+                <div className="text-3xl font-bold text-purple-600">{formatFileSize(totalSize)}</div>
+                <p className="text-sm text-muted-foreground font-medium">Jami hajm</p>
               </div>
             </div>
           </CardContent>
@@ -219,87 +226,103 @@ export default async function TeacherMaterialsPage({
 
       {/* Materials Grid */}
       {materials.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {materials.map(material => (
-            <Card key={material.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div className="text-4xl">
-                      {getFileIcon(material.type)}
-                    </div>
-                    <div className="flex gap-2">
-                      <a 
-                        href={material.fileUrl} 
-                        download={material.title}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Button variant="ghost" size="sm">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </a>
-                      <DeleteButton
-                        itemId={material.id}
-                        itemName={material.title}
-                        itemType="material"
-                        onDelete={deleteMaterial}
+            <Card key={material.id} className="group relative overflow-hidden border-none shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardContent className="pt-6 space-y-4">
+                {/* File Icon & Actions */}
+                <div className="flex items-start justify-between">
+                  <div className="text-5xl">
+                    {getFileIcon(material.type)}
+                  </div>
+                  <div className="flex gap-1">
+                    <a 
+                      href={material.fileUrl} 
+                      download={material.title}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button 
+                        variant="ghost" 
                         size="sm"
-                      />
-                    </div>
+                        className="hover:bg-blue-100 hover:text-blue-600 dark:hover:bg-blue-950/50"
+                        title="Yuklab olish"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </a>
+                    <DeleteButton
+                      itemId={material.id}
+                      itemName={material.title}
+                      itemType="material"
+                      onDelete={deleteMaterial}
+                      size="sm"
+                    />
                   </div>
+                </div>
 
-                  <div>
-                    <h3 className="font-semibold line-clamp-2">{material.title}</h3>
-                    {material.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                        {material.description}
-                      </p>
-                    )}
+                {/* Title & Description */}
+                <div>
+                  <h3 className="font-bold text-lg line-clamp-2 mb-1">{material.title}</h3>
+                  {material.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {material.description}
+                    </p>
+                  )}
+                </div>
+
+                {/* Badges */}
+                <div className="flex flex-wrap gap-2">
+                  <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400">
+                    {MATERIAL_TYPES.find(t => t.value === material.type)?.label}
+                  </Badge>
+                  <Badge variant="outline">
+                    {material.subject.name}
+                  </Badge>
+                  {material.class && (
+                    <Badge variant="secondary">
+                      {material.class.name}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Details */}
+                <div className="pt-3 border-t space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Hajm:</span>
+                    <span className="font-semibold">{material.fileSize ? formatFileSize(material.fileSize) : 'N/A'}</span>
                   </div>
-
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Turi:</span>
-                      <span className="font-medium">
-                        {MATERIAL_TYPES.find(t => t.value === material.type)?.label}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Fan:</span>
-                      <span className="font-medium">{material.subject.name}</span>
-                    </div>
-                    {material.class && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Sinf:</span>
-                        <span className="font-medium">{material.class.name}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Hajm:</span>
-                      <span className="font-medium">{material.fileSize ? formatFileSize(material.fileSize) : 'Noma\'lum'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Sana:</span>
-                      <span className="font-medium">
-                        {new Date(material.createdAt).toLocaleDateString('uz-UZ')}
-                      </span>
-                    </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Yuklangan:</span>
+                    <span className="font-semibold">
+                      {new Date(material.createdAt).toLocaleDateString('uz-UZ', { 
+                        day: '2-digit', 
+                        month: 'short',
+                        year: 'numeric'
+                      })}
+                    </span>
                   </div>
-
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       ) : (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Hozircha materiallar yo'q</p>
+        <Card className="border-dashed border-2">
+          <CardContent className="py-16 text-center">
+            <div className="p-4 rounded-full bg-blue-50 dark:bg-blue-950/20 w-fit mx-auto mb-4">
+              <FileText className="h-12 w-12 text-blue-600" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Materiallar yo'q</h3>
+            <p className="text-muted-foreground max-w-md mx-auto mb-4">
+              Hozircha materiallar yuklanmagan. Darslik, topshiriq va boshqa fayllarni yuklash uchun quyidagi tugmani bosing.
+            </p>
             <Link href="/teacher/materials/upload">
-              <Button className="mt-4">
-                <Plus className="mr-2 h-4 w-4" />
+              <Button 
+                size="lg"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+              >
+                <UploadIcon className="mr-2 h-5 w-5" />
                 Birinchi materialni yuklash
               </Button>
             </Link>

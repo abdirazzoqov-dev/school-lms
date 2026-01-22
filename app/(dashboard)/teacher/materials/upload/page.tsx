@@ -54,27 +54,30 @@ export default async function MaterialUploadPage() {
   const classes = Array.from(classesMap.values())
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header */}
       <div className="flex items-center gap-4">
         <Link href="/teacher/materials">
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" className="hover:bg-gray-100 dark:hover:bg-gray-800">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Orqaga
           </Button>
         </Link>
-        <div>
-          <h1 className="text-3xl font-bold">Material Yuklash</h1>
-          <p className="text-muted-foreground">
+        <div className="space-y-1">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Material Yuklash
+          </h1>
+          <p className="text-lg text-muted-foreground">
             Yangi darslik, topshiriq yoki hujjat yuklang
           </p>
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Material Ma'lumotlari</CardTitle>
+      <Card className="border-none shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
+          <CardTitle className="text-blue-600">Material Ma'lumotlari</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <MaterialUploadForm 
             subjects={subjects}
             classes={classes}
