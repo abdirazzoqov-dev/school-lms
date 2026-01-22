@@ -100,6 +100,28 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
         // Set dormitory status
         if (student.dormitoryBedId) {
           setNeedsDormitory(true)
+          // Load current dormitory info to pre-select room
+          if (student.dormitoryBed) {
+            fetch(`/api/admin/dormitory/available-rooms?gender=${student.gender}`, {
+              cache: 'no-store',
+              credentials: 'include',
+            })
+              .then(res => res.json())
+              .then(data => {
+                const rooms = data.rooms || []
+                // Find the room that contains the current bed
+                const currentRoom = rooms.find((r: any) => 
+                  r.beds.some((b: any) => b.id === student.dormitoryBedId)
+                )
+                if (currentRoom) {
+                  setSelectedRoom(currentRoom)
+                }
+                setAvailableRooms(rooms)
+              })
+              .catch(() => {
+                setAvailableRooms([])
+              })
+          }
         }
 
         // Load guardians if exists
@@ -812,46 +834,81 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
                 ) : (
                   <>
                     <div className="space-y-2">
-                      <Label>Bo'sh joylar</Label>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <Label>Bo'sh joylar ({availableRooms.length} ta xona)</Label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto p-2">
                         {availableRooms.map((room) => (
                           <div
                             key={room.id}
+                            className={`border rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${
+                              selectedRoom?.id === room.id
+                                ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-500'
+                                : 'border-gray-200 hover:border-indigo-300'
+                            }`}
                             onClick={() => {
                               setSelectedRoom(room)
                               setFormData(prev => ({
                                 ...prev,
-                                dormitoryBedId: room.id,
-                                dormitoryMonthlyFee: Number(room.dormitory.monthlyFee)
+                                dormitoryMonthlyFee: Number(room.pricePerMonth),
                               }))
                             }}
-                            className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                              formData.dormitoryBedId === room.id
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'hover:border-gray-400'
-                            }`}
                           >
-                            <div className="flex justify-between items-start">
+                            <div className="flex items-start justify-between mb-3">
                               <div>
-                                <p className="font-medium">{room.roomNumber}-xona</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {room.bedNumber}-joy • {room.dormitory.name}
+                                <p className="font-semibold text-lg">Xona {room.roomNumber}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {room.building.name} - {room.floor}-qavat
                                 </p>
                               </div>
-                              <Badge variant="outline">
-                                {new Intl.NumberFormat('uz-UZ').format(room.dormitory.monthlyFee)} so'm/oy
+                              <Badge variant="outline" className="bg-green-50 text-green-700">
+                                {room.beds.length} bo'sh
                               </Badge>
                             </div>
+
+                            <div className="flex items-center justify-between text-sm mb-3">
+                              <span className="text-muted-foreground">Narx:</span>
+                              <span className="font-semibold">
+                                {Number(room.pricePerMonth).toLocaleString()} so'm/oy
+                              </span>
+                            </div>
+
+                            {/* Bed selection */}
+                            {selectedRoom?.id === room.id && (
+                              <div className="space-y-2 pt-3 border-t">
+                                <Label className="text-xs">Joyni tanlang:</Label>
+                                <div className="grid grid-cols-4 gap-2">
+                                  {room.beds.map((bed: any) => (
+                                    <button
+                                      key={bed.id}
+                                      type="button"
+                                      className={`p-2 text-xs rounded border-2 transition-colors ${
+                                        formData.dormitoryBedId === bed.id
+                                          ? 'bg-indigo-500 text-white border-indigo-600'
+                                          : 'bg-white border-gray-300 hover:border-indigo-400'
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        setFormData(prev => ({
+                                          ...prev,
+                                          dormitoryBedId: bed.id,
+                                        }))
+                                      }}
+                                    >
+                                      #{bed.bedNumber}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    {selectedRoom && (
+                    {formData.dormitoryBedId && selectedRoom && (
                       <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                         <p className="text-sm text-green-800">
-                          <strong>Tanlangan:</strong> {selectedRoom.roomNumber}-xona, {selectedRoom.bedNumber}-joy
-                          • Oylik to'lov: {new Intl.NumberFormat('uz-UZ').format(selectedRoom.dormitory.monthlyFee)} so'm
+                          <strong>Tanlangan:</strong> Xona {selectedRoom.roomNumber} - Joy #{selectedRoom.beds.find((b: any) => b.id === formData.dormitoryBedId)?.bedNumber}
+                          • Oylik to'lov: {Number(selectedRoom.pricePerMonth).toLocaleString()} so'm
                         </p>
                       </div>
                     )}
