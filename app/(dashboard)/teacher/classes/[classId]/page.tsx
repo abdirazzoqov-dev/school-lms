@@ -126,8 +126,11 @@ export default function TeacherClassDetailPage() {
     try {
       setSaving(true)
 
+      // Filter out absent students and empty grades
       const gradesData = Object.entries(grades)
-        .filter(([_, grade]) => grade !== '')
+        .filter(([studentId, grade]) => {
+          return grade !== '' && attendance[studentId] !== 'ABSENT'
+        })
         .map(([studentId, grade]) => ({
           studentId,
           grade: parseInt(grade),
@@ -300,43 +303,68 @@ export default function TeacherClassDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle>Baholash</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Yo'q bo'lgan o'quvchilarga baho qo'yib bo'lmaydi
+              </p>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {classData.students.map((student, index) => (
-                  <div
-                    key={student.id}
-                    className="flex items-center justify-between p-3 rounded-lg border"
-                  >
-                    <div className="flex items-center gap-3 flex-1">
-                      <span className="text-sm text-muted-foreground w-8">
-                        {index + 1}
-                      </span>
-                      <div className="flex-1">
-                        <p className="font-medium">{student.user.fullName}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {student.studentCode}
-                        </p>
+                {classData.students.map((student, index) => {
+                  const isAbsent = attendance[student.id] === 'ABSENT'
+                  
+                  return (
+                    <div
+                      key={student.id}
+                      className={`flex items-center justify-between p-3 rounded-lg border ${
+                        isAbsent ? 'bg-red-50 opacity-60' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <span className="text-sm text-muted-foreground w-8">
+                          {index + 1}
+                        </span>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{student.user.fullName}</p>
+                            {isAbsent && (
+                              <Badge variant="destructive" className="text-xs">
+                                Yo'q
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {student.studentCode}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="w-24">
+                        {isAbsent ? (
+                          <Input
+                            type="text"
+                            value="-"
+                            disabled
+                            className="text-center bg-gray-100"
+                          />
+                        ) : (
+                          <Input
+                            type="number"
+                            min="2"
+                            max="5"
+                            placeholder="Baho"
+                            value={grades[student.id]}
+                            onChange={(e) =>
+                              setGrades((prev) => ({
+                                ...prev,
+                                [student.id]: e.target.value,
+                              }))
+                            }
+                            className="text-center"
+                          />
+                        )}
                       </div>
                     </div>
-                    <div className="w-24">
-                      <Input
-                        type="number"
-                        min="2"
-                        max="5"
-                        placeholder="Baho"
-                        value={grades[student.id]}
-                        onChange={(e) =>
-                          setGrades((prev) => ({
-                            ...prev,
-                            [student.id]: e.target.value,
-                          }))
-                        }
-                        className="text-center"
-                      />
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
 
               <div className="mt-6">
