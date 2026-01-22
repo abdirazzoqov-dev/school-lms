@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { sendMessage, replyToMessage } from '@/app/actions/message'
+import { sendMessage, replyToMessage as replyToMessageAction } from '@/app/actions/message'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -67,7 +67,7 @@ export function ComposeMessageForm({
 
       if (replyToMessage) {
         // Send as reply
-        result = await replyToMessage(replyToMessage.id, {
+        result = await replyToMessageAction(replyToMessage.id, {
           content: formData.content
         })
       } else {
