@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { 
   ArrowLeft, Users, BookOpen, GraduationCap, MapPin, 
   Calendar, Phone, Mail, TrendingUp, Award, Clock,
-  Edit, UserPlus, FileText
+  Edit, UserPlus, FileText, Plus
 } from 'lucide-react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
