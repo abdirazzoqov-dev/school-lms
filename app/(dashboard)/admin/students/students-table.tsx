@@ -86,22 +86,22 @@ export function StudentsTable({ students }: { students: Student[] }) {
       {/* Desktop Table View with Modern Design */}
       <div className="hidden md:block rounded-xl border-2 overflow-hidden shadow-lg">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-max table-fixed">
             <thead className="border-b-2 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-purple-950/30">
               <tr>
-                <th className="p-4 text-left w-12">
+                <th className="p-3 text-left w-12">
                   <Checkbox
                     checked={selectedIds.length === students.length && students.length > 0}
                     onCheckedChange={handleSelectAll}
                     className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                   />
                 </th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-900 dark:text-white">O'quvchi</th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Kodi</th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Sinf</th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Ota-ona</th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Status</th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-900 dark:text-white">Harakatlar</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[250px]">O'quvchi</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[150px]">Kodi</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[100px]">Sinf</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[180px]">Ota-ona</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[120px]">Status</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[160px]">Harakatlar</th>
               </tr>
             </thead>
             <tbody className="divide-y bg-white dark:bg-gray-950">
@@ -111,36 +111,36 @@ export function StudentsTable({ students }: { students: Student[] }) {
                   className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-950/20 dark:hover:to-indigo-950/20 transition-all duration-200"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <td className="p-4">
+                  <td className="p-3">
                     <Checkbox
                       checked={selectedIds.includes(student.id)}
                       onCheckedChange={(checked) => handleSelectOne(student.id, checked as boolean)}
                       className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                     />
                   </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold shadow-lg">
+                  <td className="p-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm shadow-lg shrink-0">
                         {student.user?.fullName?.charAt(0) || '?'}
                       </div>
-                      <div>
-                        <div className="font-semibold text-gray-900 dark:text-white">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold text-sm text-gray-900 dark:text-white truncate">
                           {student.user?.fullName || 'N/A'}
                         </div>
-                        <div className="text-xs text-muted-foreground">{student.user?.email}</div>
+                        <div className="text-xs text-muted-foreground truncate">{student.user?.email}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <code className="text-xs font-mono px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400">
+                  <td className="p-3">
+                    <code className="text-xs font-mono px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400 block truncate" title={student.studentCode}>
                       {student.studentCode}
                     </code>
                   </td>
-                  <td className="p-4">
+                  <td className="p-3">
                     {student.class ? (
                       <Link 
                         href={`/admin/classes/${student.class.id}`}
-                        className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium hover:underline transition-colors"
+                        className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-semibold text-sm hover:underline transition-colors"
                       >
                         {student.class.name}
                       </Link>
@@ -148,13 +148,13 @@ export function StudentsTable({ students }: { students: Student[] }) {
                       <span className="text-muted-foreground text-sm">-</span>
                     )}
                   </td>
-                  <td className="p-4">
+                  <td className="p-3">
                     {student.parents[0] ? (
-                      <div className="text-sm">
-                        <div className="font-medium text-gray-900 dark:text-white">
+                      <div className="text-xs min-w-0">
+                        <div className="font-medium text-gray-900 dark:text-white truncate" title={student.parents[0].parent.user.fullName}>
                           {student.parents[0].parent.user.fullName}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-[10px] text-muted-foreground truncate">
                           {student.parents[0].parent.user.phone}
                         </div>
                       </div>
@@ -162,7 +162,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
                       <span className="text-muted-foreground text-sm">-</span>
                     )}
                   </td>
-                  <td className="p-4">
+                  <td className="p-3">
                     <div className="flex flex-col gap-1">
                       <Badge 
                         variant={
@@ -172,10 +172,10 @@ export function StudentsTable({ students }: { students: Student[] }) {
                         }
                         className={
                           student.status === 'ACTIVE' 
-                            ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700' 
+                            ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-xs whitespace-nowrap' 
                             : student.status === 'GRADUATED'
-                            ? 'bg-gradient-to-r from-purple-500 to-pink-600'
-                            : 'bg-gradient-to-r from-red-500 to-rose-600'
+                            ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-xs whitespace-nowrap'
+                            : 'bg-gradient-to-r from-red-500 to-rose-600 text-xs whitespace-nowrap'
                         }
                       >
                         {student.status === 'ACTIVE' ? 'Faol' :
@@ -191,32 +191,32 @@ export function StudentsTable({ students }: { students: Student[] }) {
                         return (
                           <Badge 
                             variant={isExpired ? 'destructive' : 'outline'} 
-                            className="text-xs"
+                            className="text-[10px] whitespace-nowrap"
                           >
-                            {isExpired ? '⏰ Sinov tugagan' : `⏱️ ${daysLeft} kun`}
+                            {isExpired ? '⏰ Tugagan' : `⏱️ ${daysLeft} kun`}
                           </Badge>
                         )
                       })()}
                     </div>
                   </td>
-                  <td className="p-4">
+                  <td className="p-3">
                     <div className="flex items-center gap-1">
                       <Link href={`/admin/students/${student.id}`}>
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          className="hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-950 transition-colors"
+                          className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-700 dark:hover:bg-blue-950 transition-colors"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3.5 w-3.5" />
                         </Button>
                       </Link>
                       <Link href={`/admin/students/${student.id}/edit`}>
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          className="hover:bg-indigo-100 hover:text-indigo-700 dark:hover:bg-indigo-950 transition-colors"
+                          className="h-8 w-8 p-0 hover:bg-indigo-100 hover:text-indigo-700 dark:hover:bg-indigo-950 transition-colors"
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Pencil className="h-3.5 w-3.5" />
                         </Button>
                       </Link>
                       {student.status === 'ACTIVE' && (
