@@ -233,7 +233,8 @@ export default async function TeacherAttendancePage() {
                         {new Date(attendance.createdAt).toLocaleTimeString('uz-UZ', {
                           hour: '2-digit',
                           minute: '2-digit',
-                          second: '2-digit'
+                          second: '2-digit',
+                          timeZone: 'Asia/Tashkent'
                         })}
                       </td>
                     </tr>
