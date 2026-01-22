@@ -15,7 +15,7 @@ import { ChevronLeft, ChevronRight, Search } from 'lucide-react'
 
 type AttendanceRecord = {
   id: string
-  status: 'PRESENT' | 'ABSENT' | 'LATE'
+  status: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED'
   createdAt: Date
   student: {
     user: { fullName: string } | null
@@ -84,7 +84,8 @@ export function AttendanceTable({ attendances }: Props) {
   const statusMap = {
     PRESENT: { label: 'Kelgan', variant: 'default' as const, className: 'bg-green-600' },
     ABSENT: { label: 'Kelmagan', variant: 'destructive' as const, className: '' },
-    LATE: { label: 'Kech kelgan', variant: 'secondary' as const, className: 'bg-orange-600 text-white' }
+    LATE: { label: 'Kech kelgan', variant: 'secondary' as const, className: 'bg-orange-600 text-white' },
+    EXCUSED: { label: 'Sababli', variant: 'secondary' as const, className: 'bg-blue-600 text-white' }
   }
 
   return (
@@ -127,6 +128,7 @@ export function AttendanceTable({ attendances }: Props) {
             <SelectItem value="PRESENT">Kelgan</SelectItem>
             <SelectItem value="ABSENT">Kelmagan</SelectItem>
             <SelectItem value="LATE">Kech kelgan</SelectItem>
+            <SelectItem value="EXCUSED">Sababli</SelectItem>
           </SelectContent>
         </Select>
 
