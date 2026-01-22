@@ -210,27 +210,59 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                         </p>
                       )}
 
-                      {/* Progress Bar */}
+                      {/* Progress Bar - Enhanced with Avans/Qolgan highlight */}
                       {progress.total > 0 && (
-                        <div className="mt-3 space-y-1 max-w-md">
+                        <div className="mt-4 space-y-2 max-w-md">
+                          {/* Progress bar */}
                           <div className="flex items-center gap-2">
-                            <Progress value={progress.percentage} className="h-2 flex-1" />
-                            <span className={`text-sm font-semibold ${getProgressColor(progress.percentage)}`}>
+                            <Progress 
+                              value={progress.percentage} 
+                              className="h-3 flex-1 bg-gray-200" 
+                            />
+                            <span className={`text-base font-bold ${getProgressColor(progress.percentage)}`}>
                               {progress.percentage}%
                             </span>
                           </div>
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-green-600 font-medium">
-                              {formatNumber(progress.paid)} so'm
-                            </span>
-                            <span className="text-muted-foreground">/ {formatNumber(progress.total)} so'm</span>
-                          </div>
-                          {progress.percentage > 0 && progress.percentage < 100 && (
-                            <div className="flex items-center gap-1 text-xs text-orange-600">
-                              <span>Qoldi:</span>
-                              <span className="font-semibold">{formatNumber(progress.remaining)} so'm</span>
+                          
+                          {/* Payment details - highlighted */}
+                          <div className="grid grid-cols-2 gap-2 mt-2">
+                            {/* To'langan (Avans) */}
+                            <div className="bg-green-50 border border-green-200 rounded-lg p-2">
+                              <p className="text-xs text-green-600 font-medium mb-1">✓ To'langan (Avans)</p>
+                              <p className="text-lg font-bold text-green-700">
+                                {formatNumber(progress.paid)}
+                              </p>
+                              <p className="text-xs text-muted-foreground">so'm</p>
                             </div>
-                          )}
+                            
+                            {/* Qolgan */}
+                            {progress.percentage < 100 && (
+                              <div className="bg-orange-50 border border-orange-200 rounded-lg p-2">
+                                <p className="text-xs text-orange-600 font-medium mb-1">⏳ Qolgan</p>
+                                <p className="text-lg font-bold text-orange-700">
+                                  {formatNumber(progress.remaining)}
+                                </p>
+                                <p className="text-xs text-muted-foreground">so'm</p>
+                              </div>
+                            )}
+                            
+                            {/* To'liq to'langan */}
+                            {progress.percentage === 100 && (
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+                                <p className="text-xs text-blue-600 font-medium mb-1">✓ To'liq</p>
+                                <p className="text-lg font-bold text-blue-700">
+                                  {formatNumber(progress.total)}
+                                </p>
+                                <p className="text-xs text-muted-foreground">so'm</p>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Jami oylik */}
+                          <div className="flex items-center justify-between text-xs pt-1 border-t">
+                            <span className="text-muted-foreground">Jami oylik maoshi:</span>
+                            <span className="font-bold text-gray-700">{formatNumber(progress.total)} so'm</span>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -297,58 +329,93 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                   </div>
                 </div>
 
-                {/* Detailed Payments (Collapsible) */}
+                {/* Detailed Payments (Collapsible) - Enhanced */}
                 {(hasMultiplePayments || hasHistory) && (
                   <CollapsibleContent className="mt-4 pt-4 border-t">
                     <div className="space-y-3">
-                      {payments.map(p => (
-                        <div key={p.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-md">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              {p.type === 'FULL_SALARY' && (
-                                <Badge className="bg-blue-600 text-xs">Oylik</Badge>
-                              )}
-                              {p.type === 'ADVANCE' && (
-                                <Badge className="bg-purple-600 text-xs">Avans</Badge>
-                              )}
-                              {p.type === 'BONUS' && (
-                                <Badge className="bg-green-600 text-xs">Mukofot</Badge>
-                              )}
-                              {p.type === 'DEDUCTION' && (
-                                <Badge className="bg-red-600 text-xs">Ushlab qolish</Badge>
-                              )}
+                      <p className="text-sm font-medium text-muted-foreground mb-2">
+                        To'lovlar tafsiloti:
+                      </p>
+                      {payments.map(p => {
+                        const individualProgress = calculateProgress(p)
+                        return (
+                          <div key={p.id} className="p-4 bg-gradient-to-br from-muted/50 to-muted/30 rounded-lg border hover:shadow-md transition-shadow">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1">
+                                {/* Badges */}
+                                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                  {p.type === 'FULL_SALARY' && (
+                                    <Badge className="bg-blue-600 text-xs">💼 Oylik</Badge>
+                                  )}
+                                  {p.type === 'ADVANCE' && (
+                                    <Badge className="bg-purple-600 text-xs">💰 Avans</Badge>
+                                  )}
+                                  {p.type === 'BONUS' && (
+                                    <Badge className="bg-green-600 text-xs">🎁 Mukofot</Badge>
+                                  )}
+                                  {p.type === 'DEDUCTION' && (
+                                    <Badge className="bg-red-600 text-xs">⛔ Ushlab qolish</Badge>
+                                  )}
+                                  
+                                  {p.status === 'PAID' && (
+                                    <Badge className="bg-green-600 text-xs">✓ To'langan</Badge>
+                                  )}
+                                  {p.status === 'PENDING' && (
+                                    <Badge className="bg-amber-600 text-xs">⏳ Kutilmoqda</Badge>
+                                  )}
+                                  {p.status === 'PARTIALLY_PAID' && (
+                                    <Badge className="bg-orange-600 text-xs">⚡ Qisman</Badge>
+                                  )}
+                                </div>
+                                
+                                {/* Amount breakdown */}
+                                <div className="grid grid-cols-2 gap-2 max-w-sm">
+                                  <div className="bg-green-50 border border-green-200 rounded px-2 py-1.5">
+                                    <p className="text-xs text-green-600">To'landi</p>
+                                    <p className="text-sm font-bold text-green-700">
+                                      {formatNumber(Number(p.paidAmount || 0))}
+                                    </p>
+                                  </div>
+                                  <div className="bg-gray-50 border border-gray-200 rounded px-2 py-1.5">
+                                    <p className="text-xs text-muted-foreground">Jami</p>
+                                    <p className="text-sm font-bold text-gray-700">
+                                      {formatNumber(Number(p.amount))}
+                                    </p>
+                                  </div>
+                                </div>
+                                
+                                {p.description && (
+                                  <p className="text-xs text-muted-foreground mt-2">📝 {p.description}</p>
+                                )}
+                              </div>
                               
-                              {p.status === 'PAID' && (
-                                <Badge className="bg-green-600 text-xs">To'langan</Badge>
-                              )}
-                              {p.status === 'PENDING' && (
-                                <Badge className="bg-amber-600 text-xs">Kutilmoqda</Badge>
-                              )}
-                              {p.status === 'PARTIALLY_PAID' && (
-                                <Badge className="bg-orange-600 text-xs">Qisman</Badge>
-                              )}
+                              {/* Action button */}
+                              <div className="text-right">
+                                {Number(p.paidAmount || 0) < Number(p.amount) && (
+                                  <div className="space-y-2">
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleAddPartialPayment(p)}
+                                      className="bg-green-600 hover:bg-green-700"
+                                    >
+                                      <Plus className="h-3 w-3 mr-1" />
+                                      To'lov qo'shish
+                                    </Button>
+                                    <p className="text-xs text-orange-600 font-medium">
+                                      Qoldi: {formatNumber(Number(p.amount) - Number(p.paidAmount || 0))}
+                                    </p>
+                                  </div>
+                                )}
+                                {p.paymentDate && (
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    📅 {new Date(p.paymentDate).toLocaleDateString('uz-UZ')}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                            <p className="text-sm font-medium">
-                              {formatNumber(Number(p.paidAmount || 0))} / {formatNumber(Number(p.amount))} so'm
-                            </p>
-                            {p.description && (
-                              <p className="text-xs text-muted-foreground">{p.description}</p>
-                            )}
                           </div>
-                          <div className="text-right">
-                            {Number(p.paidAmount || 0) < Number(p.amount) && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleAddPartialPayment(p)}
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                <Plus className="h-3 w-3 mr-1" />
-                                To'lov
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </CollapsibleContent>
                 )}
