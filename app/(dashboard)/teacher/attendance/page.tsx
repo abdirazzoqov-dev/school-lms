@@ -209,9 +209,9 @@ export default async function TeacherAttendancePage() {
                   {todayAttendance.map((attendance) => (
                     <tr key={attendance.id} className="hover:bg-muted/30">
                       <td className="p-4">
-                        <p className="font-medium">{attendance.student.user.fullName}</p>
+                        <p className="font-medium">{attendance.student.user?.fullName || 'N/A'}</p>
                       </td>
-                      <td className="p-4">{attendance.student.class?.name}</td>
+                      <td className="p-4">{attendance.student.class?.name || '-'}</td>
                       <td className="p-4">
                         {attendance.status === 'PRESENT' && (
                           <Badge variant="default" className="bg-green-600">
