@@ -53,15 +53,22 @@ export async function POST(req: NextRequest) {
     }
 
     // Create grade records
+    const today = new Date()
+    const academicYear = `${today.getFullYear()}-${today.getFullYear() + 1}`
+    
     const created = await db.grade.createMany({
       data: grades.map((gradeData) => ({
         tenantId,
         studentId: gradeData.studentId,
         teacherId: teacher.id,
-        classId: gradeData.classId,
         subjectId: classSubject.subjectId,
-        grade: gradeData.grade,
-        quarter: 1, // Default to Q1 - can be made dynamic later
+        gradeType: 'ORAL', // Default type
+        score: gradeData.grade,
+        maxScore: 5,
+        percentage: (gradeData.grade / 5) * 100,
+        quarter: 1,
+        academicYear,
+        date: today,
       })),
     })
 
