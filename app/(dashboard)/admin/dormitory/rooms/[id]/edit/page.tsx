@@ -56,6 +56,12 @@ export default async function EditRoomPage({ params }: PageProps) {
     orderBy: { name: 'asc' },
   })
 
+  // Convert Decimal to number for form compatibility
+  const roomData = {
+    ...room,
+    pricePerMonth: Number(room.pricePerMonth),
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -74,7 +80,7 @@ export default async function EditRoomPage({ params }: PageProps) {
       </div>
 
       {/* Form */}
-      <RoomEditForm room={room} buildings={buildings} />
+      <RoomEditForm room={roomData} buildings={buildings} />
     </div>
   )
 }

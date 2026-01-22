@@ -43,7 +43,7 @@ interface Room {
   floor: number
   capacity: number
   roomType: string
-  pricePerMonth: number | string
+  pricePerMonth: number
   gender: 'MALE' | 'FEMALE' | null
   description: string | null
   amenities: any
@@ -68,7 +68,7 @@ export function RoomEditForm({ room, buildings }: RoomEditFormProps) {
       floor: room.floor,
       capacity: room.capacity,
       roomType: room.roomType,
-      pricePerMonth: Number(room.pricePerMonth),
+      pricePerMonth: room.pricePerMonth, // Already converted to number in page.tsx
       gender: room.gender ? room.gender : 'MIXED',
       description: room.description || '',
       amenities: room.amenities || [],
