@@ -6,8 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CalendarCheck, Users, Download, FileSpreadsheet } from 'lucide-react'
 import Link from 'next/link'
-import { Badge } from '@/components/ui/badge'
-import { formatDateTime } from '@/lib/utils'
+import { AttendanceTable } from '@/components/teacher/attendance-table'
 
 export default async function TeacherAttendancePage() {
   const session = await getServerSession(authOptions)
@@ -142,60 +141,20 @@ export default async function TeacherAttendancePage() {
         </Card>
       </div>
 
-      {/* Today's Attendance Table */}
-      {todayAttendance.length > 0 && (
+      {/* Attendance Table with Filters */}
+      {todayAttendance.length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle>Bugungi davomat</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b bg-muted/50">
-                  <tr>
-                    <th className="p-4 text-left text-sm font-medium">O'quvchi</th>
-                    <th className="p-4 text-left text-sm font-medium">Sinf</th>
-                    <th className="p-4 text-left text-sm font-medium">Status</th>
-                    <th className="p-4 text-left text-sm font-medium">Vaqt</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {todayAttendance.map((attendance) => (
-                    <tr key={attendance.id} className="hover:bg-muted/30">
-                      <td className="p-4">
-                        <p className="font-medium">{attendance.student.user?.fullName || 'N/A'}</p>
-                      </td>
-                      <td className="p-4">{attendance.student.class?.name || '-'}</td>
-                      <td className="p-4">
-                        {attendance.status === 'PRESENT' && (
-                          <Badge variant="default" className="bg-green-600">
-                            Kelgan
-                          </Badge>
-                        )}
-                        {attendance.status === 'ABSENT' && (
-                          <Badge variant="destructive">
-                            Kelmagan
-                          </Badge>
-                        )}
-                        {attendance.status === 'LATE' && (
-                          <Badge variant="secondary" className="bg-orange-600 text-white">
-                            Kech kelgan
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="p-4 text-sm text-muted-foreground">
-                        {new Date(attendance.createdAt).toLocaleTimeString('uz-UZ', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          second: '2-digit',
-                          timeZone: 'Asia/Tashkent'
-                        })}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <AttendanceTable attendances={todayAttendance} />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="py-8 text-center text-muted-foreground">
+            Bugun hali davomat belgilanmagan
           </CardContent>
         </Card>
       )}

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BookOpen, Award, Plus } from 'lucide-react'
+import { GradesTable } from '@/components/teacher/grades-table'
 
 export default async function TeacherGradesPage() {
   const session = await getServerSession(authOptions)
@@ -37,13 +38,12 @@ export default async function TeacherGradesPage() {
     redirect('/unauthorized')
   }
 
-  // Get recent grades
-  const recentGrades = await db.grade.findMany({
+  // Get all grades
+  const allGrades = await db.grade.findMany({
     where: { 
       teacherId: teacher.id,
       tenantId 
     },
-    take: 10,
     orderBy: { createdAt: 'desc' },
     include: {
       student: {
@@ -95,8 +95,8 @@ export default async function TeacherGradesPage() {
                 <Award className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{recentGrades.length}</div>
-                <p className="text-sm text-muted-foreground">Oxirgi baholar</p>
+                <div className="text-2xl font-bold">{allGrades.length}</div>
+                <p className="text-sm text-muted-foreground">Jami baholar</p>
               </div>
             </div>
           </CardContent>
@@ -118,55 +118,20 @@ export default async function TeacherGradesPage() {
         </Card>
       </div>
 
-      {/* Recent Grades */}
-      {recentGrades.length > 0 && (
+      {/* All Grades with Filters */}
+      {allGrades.length > 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>Oxirgi kiritilgan baholar</CardTitle>
+            <CardTitle>Kiritilgan baholar</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b bg-muted/50">
-                  <tr>
-                    <th className="p-4 text-left text-sm font-medium">O'quvchi</th>
-                    <th className="p-4 text-left text-sm font-medium">Sinf</th>
-                    <th className="p-4 text-left text-sm font-medium">Fan</th>
-                    <th className="p-4 text-left text-sm font-medium">Turi</th>
-                    <th className="p-4 text-left text-sm font-medium">Ball</th>
-                    <th className="p-4 text-left text-sm font-medium">Sana</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {recentGrades.map((grade) => (
-                    <tr key={grade.id} className="hover:bg-muted/50">
-                      <td className="p-4">
-                        <div className="font-medium">{grade.student.user?.fullName || 'N/A'}</div>
-                      </td>
-                      <td className="p-4">{grade.student.class?.name || '-'}</td>
-                      <td className="p-4">{grade.subject.name}</td>
-                      <td className="p-4">
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                          {grade.gradeType}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span className={`font-bold ${
-                          (Number(grade.score) / Number(grade.maxScore)) >= 0.7 ? 'text-green-600' :
-                          (Number(grade.score) / Number(grade.maxScore)) >= 0.4 ? 'text-orange-600' :
-                          'text-red-600'
-                        }`}>
-                          {Number(grade.score)}/{Number(grade.maxScore)}
-                        </span>
-                      </td>
-                      <td className="p-4 text-sm text-muted-foreground">
-                        {new Date(grade.date).toLocaleDateString('uz-UZ')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <GradesTable grades={allGrades} />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="py-8 text-center text-muted-foreground">
+            Hali hech qanday baho kiritilmagan
           </CardContent>
         </Card>
       )}
