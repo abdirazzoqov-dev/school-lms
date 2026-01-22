@@ -3,8 +3,9 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { BookOpen, Award, Plus } from 'lucide-react'
+import { BookOpen, Award, Plus, FileSpreadsheet } from 'lucide-react'
 import { GradesTable } from '@/components/teacher/grades-table'
+import { Button } from '@/components/ui/button'
 
 export default async function TeacherGradesPage() {
   const session = await getServerSession(authOptions)
@@ -72,13 +73,23 @@ export default async function TeacherGradesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Baholar</h1>
           <p className="text-muted-foreground">
             O'quvchilar baholarini kiriting va ko'ring
           </p>
         </div>
+        
+        {/* Export Button */}
+        {allGrades.length > 0 && (
+          <form action="/api/teacher/grades/export" method="POST">
+            <Button variant="outline" type="submit">
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              Excel
+            </Button>
+          </form>
+        )}
       </div>
 
       {/* Stats */}
