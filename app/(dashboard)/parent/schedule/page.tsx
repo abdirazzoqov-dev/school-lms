@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar, Clock, BookOpen, Users, AlertCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -35,7 +35,8 @@ export default async function ParentSchedulePage({
             include: {
               user: { select: { fullName: true, avatar: true } },
               class: { 
-                include: { 
+                select: { 
+                  name: true,
                   schedules: {
                     include: {
                       subject: true,
@@ -49,7 +50,8 @@ export default async function ParentSchedulePage({
                 } 
               },
               group: { 
-                include: { 
+                select: {
+                  name: true,
                   schedules: {
                     include: {
                       subject: true,
@@ -60,7 +62,7 @@ export default async function ParentSchedulePage({
                       { startTime: 'asc' }
                     ]
                   }
-                } 
+                }
               },
             }
           }
@@ -128,6 +130,7 @@ export default async function ParentSchedulePage({
   })
 
   const weekDays = [1, 2, 3, 4, 5, 6]
+  const currentDay = new Date().getDay()
 
   return (
     <div className="space-y-6 p-6">
@@ -143,7 +146,7 @@ export default async function ParentSchedulePage({
                 <h1 className="text-4xl font-bold">Dars Jadvali</h1>
               </div>
               <p className="text-blue-50 text-lg">
-                {selectedChild.user?.fullName || 'Farzand'} ning dars jadvali
+                {selectedChild.user?.fullName || 'Farzand'} ning haftalik dars jadvali
               </p>
             </div>
             {children.length > 1 && (
@@ -194,86 +197,75 @@ export default async function ParentSchedulePage({
         </Card>
       </div>
 
-      <div className="grid gap-6">
+      {/* Calendar View */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         {weekDays.map((dayIndex) => {
           const daySchedules = schedulesByDay[dayIndex] || []
-          const isToday = new Date().getDay() === dayIndex
+          const isToday = currentDay === dayIndex
 
           return (
-            <Card key={dayIndex} className={`border-2 ${isToday ? 'border-blue-500 shadow-lg' : ''}`}>
-              <CardHeader className={`${isToday ? 'bg-gradient-to-r from-blue-50 to-indigo-50' : 'bg-gradient-to-r from-gray-50 to-slate-50'}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Calendar className={`h-6 w-6 ${isToday ? 'text-blue-600' : 'text-gray-600'}`} />
-                    <CardTitle className="text-xl">{dayNames[dayIndex]}</CardTitle>
-                    {isToday && (
-                      <Badge className="bg-blue-600">Bugun</Badge>
-                    )}
-                  </div>
-                  {daySchedules.length > 0 && (
-                    <Badge variant="outline">{daySchedules.length} ta dars</Badge>
+            <Card 
+              key={dayIndex} 
+              className={`${isToday ? 'ring-2 ring-blue-500 shadow-xl scale-105' : 'hover:shadow-lg'} transition-all duration-200`}
+            >
+              <CardHeader className={`pb-3 ${isToday ? 'bg-gradient-to-br from-blue-50 to-indigo-50' : 'bg-gradient-to-br from-gray-50 to-slate-50'}`}>
+                <CardTitle className="text-base font-bold flex items-center justify-between">
+                  <span className={isToday ? 'text-blue-700' : ''}>{dayNames[dayIndex]}</span>
+                  {isToday && (
+                    <Badge className="bg-blue-600 text-xs">Bugun</Badge>
                   )}
-                </div>
+                </CardTitle>
               </CardHeader>
-              <CardContent className="pt-6">
+              <CardContent className="space-y-2 pt-4">
                 {daySchedules.length > 0 ? (
-                  <div className="space-y-3">
+                  <>
                     {daySchedules.map((schedule, idx) => (
                       <div
                         key={`${schedule.type}-${schedule.id}`}
-                        className="p-4 rounded-lg border bg-gradient-to-br from-muted/50 to-muted/30 hover:shadow-md transition-shadow"
+                        className={`p-3 rounded-lg border ${
+                          schedule.type === 'CLASS' 
+                            ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200' 
+                            : 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'
+                        }`}
                       >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2 flex-wrap">
-                              <Badge className={schedule.type === 'CLASS' ? 'bg-blue-600' : 'bg-purple-600'}>
-                                {schedule.type === 'CLASS' ? '📚 Sinf' : '👥 Guruh'}
-                              </Badge>
-                              {schedule.subject && (
-                                <Badge className="bg-green-600 text-sm">
-                                  {schedule.subject.name}
-                                </Badge>
-                              )}
-                            </div>
-
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm font-semibold">
-                                  {schedule.startTime.slice(0, 5)} - {schedule.endTime.slice(0, 5)}
-                                </span>
-                              </div>
-
-                              {schedule.teacher?.user && (
-                                <div className="text-sm text-muted-foreground">
-                                  👨‍🏫 O'qituvchi: <span className="font-medium">{schedule.teacher.user.fullName}</span>
-                                </div>
-                              )}
-
-                              {schedule.roomNumber && (
-                                <div className="text-sm text-muted-foreground">
-                                  🚪 Xona: <span className="font-medium">{schedule.roomNumber}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="text-2xl font-bold text-muted-foreground">
-                            {idx + 1}
-                          </div>
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <Badge 
+                            className={`text-xs ${schedule.type === 'CLASS' ? 'bg-blue-600' : 'bg-purple-600'}`}
+                          >
+                            {schedule.type === 'CLASS' ? '📚' : '👥'}
+                          </Badge>
+                          <span className="text-xs font-bold text-gray-500">#{idx + 1}</span>
                         </div>
+
+                        {schedule.subject && (
+                          <p className="text-sm font-bold text-gray-800 mb-1">
+                            {schedule.subject.name}
+                          </p>
+                        )}
+
+                        <div className="flex items-center gap-1 text-xs text-gray-600 mb-1">
+                          <Clock className="h-3 w-3" />
+                          <span>{schedule.startTime.slice(0, 5)} - {schedule.endTime.slice(0, 5)}</span>
+                        </div>
+
+                        {schedule.teacher?.user && (
+                          <p className="text-xs text-gray-600 truncate">
+                            👨‍🏫 {schedule.teacher.user.fullName}
+                          </p>
+                        )}
+
+                        {schedule.roomNumber && (
+                          <p className="text-xs text-gray-600">
+                            🚪 {schedule.roomNumber}
+                          </p>
+                        )}
                       </div>
                     ))}
-                  </div>
+                  </>
                 ) : (
                   <div className="text-center py-8">
-                    <Calendar className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
-                    <p className="text-lg font-semibold text-muted-foreground mb-2">
-                      Darslar yo'q
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Bu kun uchun dars jadvali mavjud emas
-                    </p>
+                    <Calendar className="mx-auto h-8 w-8 text-muted-foreground opacity-30 mb-2" />
+                    <p className="text-xs text-muted-foreground">Darslar yo'q</p>
                   </div>
                 )}
               </CardContent>
@@ -281,6 +273,22 @@ export default async function ParentSchedulePage({
           )
         })}
       </div>
+
+      {/* Legend */}
+      <Card className="border-2 border-blue-200">
+        <CardContent className="pt-6">
+          <div className="flex flex-wrap gap-4 justify-center items-center">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200"></div>
+              <span className="text-sm">📚 Sinf darslari</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200"></div>
+              <span className="text-sm">👥 Guruh darslari</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

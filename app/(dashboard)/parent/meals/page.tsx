@@ -2,8 +2,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { UtensilsCrossed, Calendar } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { UtensilsCrossed } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 export const revalidate = 0
@@ -43,17 +43,18 @@ export default async function ParentMealsPage() {
     ],
   })
 
-  // Group meals by day
-  const mealsByDay: Record<number, typeof meals> = {}
+  // Group meals by day and type
+  const mealsByDay: Record<number, Record<string, typeof meals[0]>> = {}
   meals.forEach(meal => {
     if (!mealsByDay[meal.dayOfWeek]) {
-      mealsByDay[meal.dayOfWeek] = []
+      mealsByDay[meal.dayOfWeek] = {}
     }
-    mealsByDay[meal.dayOfWeek].push(meal)
+    mealsByDay[meal.dayOfWeek][meal.mealType] = meal
   })
 
   // Get week days (Monday to Sunday)
   const weekDays = [1, 2, 3, 4, 5, 6, 0]
+  const currentDay = new Date().getDay()
 
   return (
     <div className="space-y-6 p-6">
@@ -67,100 +68,87 @@ export default async function ParentMealsPage() {
             <h1 className="text-4xl font-bold">Ovqatlar Menyusi</h1>
           </div>
           <p className="text-green-50 text-lg">
-            Haftalik ovqatlar jadvali
+            Haftalik ovqatlar kalendari
           </p>
         </div>
         <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
         <div className="absolute -left-8 -bottom-8 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
       </div>
 
-      <div className="grid gap-6">
+      {/* Calendar View */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
         {weekDays.map((dayIndex) => {
-          const dayMeals = mealsByDay[dayIndex] || []
-          const isToday = new Date().getDay() === dayIndex
+          const dayMeals = mealsByDay[dayIndex] || {}
+          const isToday = currentDay === dayIndex
 
           return (
-            <Card key={dayIndex} className={`border-2 ${isToday ? 'border-green-500 shadow-lg' : ''}`}>
-              <CardHeader className={`${isToday ? 'bg-gradient-to-r from-green-50 to-emerald-50' : 'bg-gradient-to-r from-blue-50 to-indigo-50'}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Calendar className={`h-6 w-6 ${isToday ? 'text-green-600' : 'text-blue-600'}`} />
-                    <CardTitle className="text-xl">{dayNames[dayIndex]}</CardTitle>
-                    {isToday && (
-                      <Badge className="bg-green-600">Bugun</Badge>
+            <Card 
+              key={dayIndex} 
+              className={`${isToday ? 'ring-2 ring-green-500 shadow-xl scale-105' : 'hover:shadow-lg'} transition-all duration-200`}
+            >
+              <CardHeader className={`pb-3 ${isToday ? 'bg-gradient-to-br from-green-50 to-emerald-50' : 'bg-gradient-to-br from-gray-50 to-slate-50'}`}>
+                <CardTitle className="text-base font-bold flex items-center justify-between">
+                  <span className={isToday ? 'text-green-700' : ''}>{dayNames[dayIndex]}</span>
+                  {isToday && (
+                    <Badge className="bg-green-600 text-xs">Bugun</Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 pt-4">
+                {/* Breakfast */}
+                {dayMeals.BREAKFAST ? (
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200">
+                    <div className="flex items-center gap-1 mb-2">
+                      <span className="text-lg">🌅</span>
+                      <p className="text-xs font-semibold text-orange-700">Nonushta</p>
+                    </div>
+                    <p className="text-sm font-bold text-gray-800 mb-1">{dayMeals.BREAKFAST.mainDish}</p>
+                    {dayMeals.BREAKFAST.drink && (
+                      <p className="text-xs text-gray-600">+ {dayMeals.BREAKFAST.drink}</p>
                     )}
                   </div>
-                  {dayMeals.length > 0 && (
-                    <Badge variant="outline">{dayMeals.length} ta ovqat</Badge>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6">
-                {dayMeals.length > 0 ? (
-                  <div className="space-y-4">
-                    {dayMeals.map((meal) => (
-                      <div
-                        key={meal.id}
-                        className="p-4 rounded-lg border bg-gradient-to-br from-muted/50 to-muted/30"
-                      >
-                        <div className="flex items-center gap-2 mb-3">
-                          <Badge className="bg-purple-600 text-sm">
-                            {mealTypeNames[meal.mealType as keyof typeof mealTypeNames] || meal.mealType}
-                          </Badge>
-                        </div>
+                ) : (
+                  <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
+                    <p className="text-xs text-gray-400 text-center">🌅 -</p>
+                  </div>
+                )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div className="bg-white p-3 rounded-md border">
-                            <p className="text-xs text-muted-foreground mb-1">🍛 Asosiy taom</p>
-                            <p className="font-semibold text-lg">{meal.mainDish}</p>
-                          </div>
-
-                          {meal.sideDish && (
-                            <div className="bg-white p-3 rounded-md border">
-                              <p className="text-xs text-muted-foreground mb-1">🍚 Garnitir</p>
-                              <p className="font-semibold text-lg">{meal.sideDish}</p>
-                            </div>
-                          )}
-
-                          {meal.salad && (
-                            <div className="bg-white p-3 rounded-md border">
-                              <p className="text-xs text-muted-foreground mb-1">🥗 Salat</p>
-                              <p className="font-semibold text-lg">{meal.salad}</p>
-                            </div>
-                          )}
-
-                          {meal.dessert && (
-                            <div className="bg-white p-3 rounded-md border">
-                              <p className="text-xs text-muted-foreground mb-1">🍰 Shirinlik</p>
-                              <p className="font-semibold text-lg">{meal.dessert}</p>
-                            </div>
-                          )}
-
-                          {meal.drink && (
-                            <div className="bg-white p-3 rounded-md border">
-                              <p className="text-xs text-muted-foreground mb-1">🥤 Ichimlik</p>
-                              <p className="font-semibold text-lg">{meal.drink}</p>
-                            </div>
-                          )}
-                        </div>
-
-                        {meal.description && (
-                          <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
-                            <p className="text-blue-700">ℹ️ {meal.description}</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                {/* Lunch */}
+                {dayMeals.LUNCH ? (
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200">
+                    <div className="flex items-center gap-1 mb-2">
+                      <span className="text-lg">🍽️</span>
+                      <p className="text-xs font-semibold text-blue-700">Tushlik</p>
+                    </div>
+                    <p className="text-sm font-bold text-gray-800 mb-1">{dayMeals.LUNCH.mainDish}</p>
+                    {dayMeals.LUNCH.sideDish && (
+                      <p className="text-xs text-gray-600">+ {dayMeals.LUNCH.sideDish}</p>
+                    )}
+                    {dayMeals.LUNCH.salad && (
+                      <p className="text-xs text-gray-600">+ {dayMeals.LUNCH.salad}</p>
+                    )}
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <UtensilsCrossed className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
-                    <p className="text-lg font-semibold text-muted-foreground mb-2">
-                      Ovqat menyusi mavjud emas
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Bu kun uchun ovqat menyusi hali belgilanmagan
-                    </p>
+                  <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
+                    <p className="text-xs text-gray-400 text-center">🍽️ -</p>
+                  </div>
+                )}
+
+                {/* Dinner */}
+                {dayMeals.DINNER ? (
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200">
+                    <div className="flex items-center gap-1 mb-2">
+                      <span className="text-lg">🌙</span>
+                      <p className="text-xs font-semibold text-purple-700">Kechki ovqat</p>
+                    </div>
+                    <p className="text-sm font-bold text-gray-800 mb-1">{dayMeals.DINNER.mainDish}</p>
+                    {dayMeals.DINNER.drink && (
+                      <p className="text-xs text-gray-600">+ {dayMeals.DINNER.drink}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
+                    <p className="text-xs text-gray-400 text-center">🌙 -</p>
                   </div>
                 )}
               </CardContent>
@@ -168,7 +156,26 @@ export default async function ParentMealsPage() {
           )
         })}
       </div>
+
+      {/* Legend */}
+      <Card className="border-2 border-green-200">
+        <CardContent className="pt-6">
+          <div className="flex flex-wrap gap-4 justify-center items-center">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200"></div>
+              <span className="text-sm">🌅 Nonushta</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200"></div>
+              <span className="text-sm">🍽️ Tushlik</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200"></div>
+              <span className="text-sm">🌙 Kechki ovqat</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
-
