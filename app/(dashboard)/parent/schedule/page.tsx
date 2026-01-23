@@ -143,7 +143,7 @@ export default async function ParentSchedulePage({
                 <h1 className="text-4xl font-bold">Dars Jadvali</h1>
               </div>
               <p className="text-blue-50 text-lg">
-                {selectedChild.user.fullName} ning dars jadvali
+                {selectedChild.user?.fullName || 'Farzand'} ning dars jadvali
               </p>
             </div>
             {children.length > 1 && (
@@ -155,7 +155,7 @@ export default async function ParentSchedulePage({
                   <SelectContent>
                     {children.map(child => (
                       <SelectItem key={child.id} value={child.id}>
-                        {child.user.fullName}
+                        {child.user?.fullName || 'N/A'}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -229,9 +229,11 @@ export default async function ParentSchedulePage({
                               <Badge className={schedule.type === 'CLASS' ? 'bg-blue-600' : 'bg-purple-600'}>
                                 {schedule.type === 'CLASS' ? '📚 Sinf' : '👥 Guruh'}
                               </Badge>
-                              <Badge className="bg-green-600 text-sm">
-                                {schedule.subject.name}
-                              </Badge>
+                              {schedule.subject && (
+                                <Badge className="bg-green-600 text-sm">
+                                  {schedule.subject.name}
+                                </Badge>
+                              )}
                             </div>
 
                             <div className="space-y-2">
@@ -242,7 +244,7 @@ export default async function ParentSchedulePage({
                                 </span>
                               </div>
 
-                              {schedule.teacher && (
+                              {schedule.teacher?.user && (
                                 <div className="text-sm text-muted-foreground">
                                   👨‍🏫 O'qituvchi: <span className="font-medium">{schedule.teacher.user.fullName}</span>
                                 </div>
