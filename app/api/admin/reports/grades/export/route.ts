@@ -78,13 +78,13 @@ export async function GET(request: NextRequest) {
       csvRows.push([
         index + 1,
         new Date(grade.date).toLocaleDateString('uz-UZ'),
-        grade.student.user.fullName,
+        grade.student.user?.fullName || 'N/A',
         grade.student.class?.name || 'N/A',
         grade.subject.name,
         Number(grade.score).toString(),
         gradeTypeText,
         Number(grade.percentage).toFixed(0) + '%',
-        grade.teacher.user.fullName
+        grade.teacher.user?.fullName || 'N/A'
       ].join(','))
     })
 

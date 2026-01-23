@@ -86,11 +86,11 @@ export async function GET(request: NextRequest) {
       csvRows.push([
         index + 1,
         new Date(att.date).toLocaleDateString('uz-UZ'),
-        att.student.user.fullName,
+        att.student.user?.fullName || 'N/A',
         att.student.class?.name || 'N/A',
         att.subject.name || 'N/A',
         statusText,
-        att.teacher.user.fullName
+        att.teacher.user?.fullName || 'N/A'
       ].join(','))
     })
 
