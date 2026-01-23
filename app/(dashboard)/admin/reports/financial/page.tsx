@@ -275,7 +275,7 @@ export default async function FinancialReportPage({
             {payments.slice(0, 10).map(payment => (
               <div key={payment.id} className="flex items-center justify-between p-3 border rounded-lg">
                 <div>
-                  <p className="font-medium">{payment.student.user.fullName}</p>
+                  <p className="font-medium">{payment.student.user?.fullName || 'N/A'}</p>
                   <p className="text-sm text-muted-foreground">
                     {payment.paymentType === 'TUITION' ? 'O\'qish haqi' :
                      payment.paymentType === 'BOOKS' ? 'Darsliklar' :

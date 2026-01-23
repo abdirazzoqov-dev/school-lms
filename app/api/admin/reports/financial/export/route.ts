@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
       csvRows.push([
         index + 1,
         payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('uz-UZ') : 'N/A',
-        payment.student.user.fullName,
+        payment.student.user?.fullName || 'N/A',
         typeText,
         Number(payment.paidAmount || 0).toString(),
         payment.status === 'COMPLETED' ? 'To\'langan' : 'Kutilmoqda'
