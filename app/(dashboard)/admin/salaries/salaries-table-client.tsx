@@ -90,8 +90,10 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
     )
   }
 
-  const calculateProgress = (payment: SalaryPayment) => {
-    const totalAmount = Number(payment.amount) || 0
+  const calculateProgress = (payment: SalaryPayment, useTeacherSalary = false) => {
+    // Use teacher.monthlySalary as reference if available and requested
+    const monthlySalary = payment.teacher?.monthlySalary ? Number(payment.teacher.monthlySalary) : 0
+    const totalAmount = useTeacherSalary && monthlySalary > 0 ? monthlySalary : Number(payment.amount) || 0
     const paidAmount = Number(payment.paidAmount) || 0
     
     if (totalAmount === 0) return { percentage: 0, paid: 0, total: 0, remaining: 0 }
@@ -107,16 +109,19 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
   }
   
   // Calculate cumulative progress for grouped payments (relative to monthly salary)
-  const calculateGroupProgress = (payments: SalaryPayment[]) => {
-    // Find monthly salary amount (the reference point)
-    const monthlyPayment = payments.find(p => p.type === 'FULL_SALARY')
-    const monthlySalary = monthlyPayment ? Number(monthlyPayment.amount) : 0
+  const calculateGroupProgress = (payments: SalaryPayment[], teacher?: { monthlySalary: any }) => {
+    // Use teacher.monthlySalary as 100% reference (if available)
+    const monthlySalary = teacher?.monthlySalary ? Number(teacher.monthlySalary) : 0
     
-    // Calculate total paid from all payments
+    // Calculate total paid from all payments (avans, oylik, mukofot)
     const totalPaid = payments.reduce((sum, p) => sum + Number(p.paidAmount || 0), 0)
     
-    // If no monthly salary, just sum all payments
-    const referenceAmount = monthlySalary > 0 ? monthlySalary : payments.reduce((sum, p) => sum + Number(p.amount), 0)
+    // Fallback: if no teacher.monthlySalary, find FULL_SALARY payment or sum all
+    let referenceAmount = monthlySalary
+    if (referenceAmount === 0) {
+      const monthlyPayment = payments.find(p => p.type === 'FULL_SALARY')
+      referenceAmount = monthlyPayment ? Number(monthlyPayment.amount) : payments.reduce((sum, p) => sum + Number(p.amount), 0)
+    }
     
     if (referenceAmount === 0) return { percentage: 0, paid: 0, total: 0, remaining: 0 }
     
@@ -146,7 +151,8 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
           const employeeType = payment.teacher ? 'O\'qituvchi' : 'Xodim'
           
           // Calculate progress based on all payments in group
-          const groupProgress = groupedByEmployee ? calculateGroupProgress(payments) : calculateProgress(payment)
+          // Pass teacher to use teacher.monthlySalary as 100% reference
+          const groupProgress = groupedByEmployee ? calculateGroupProgress(payments, payment.teacher || undefined) : calculateProgress(payment, true)
           const progress = groupProgress
           
           const isExpanded = expandedPayments.includes(`group-${groupIndex}`)
@@ -260,15 +266,13 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                             )}
                           </div>
                           
-                          {/* Jami oylik maosh (teacher.monthlySalary yoki progress.total) */}
-                          {payment.teacher?.monthlySalary && (
-                            <div className="flex items-center justify-between text-xs pt-1 border-t">
-                              <span className="text-muted-foreground">Jami oylik maoshi:</span>
-                              <span className="font-bold text-blue-700">
-                                {formatNumber(Number(payment.teacher.monthlySalary))} so'm
-                              </span>
-                            </div>
-                          )}
+                          {/* Jami oylik maosh (100% reference) */}
+                          <div className="flex items-center justify-between text-xs pt-1 border-t">
+                            <span className="text-muted-foreground">Jami oylik maoshi (100%):</span>
+                            <span className="font-bold text-blue-700">
+                              {formatNumber(progress.total)} so'm
+                            </span>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -321,11 +325,9 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                     <p className="text-2xl font-bold mb-2">
                       {formatNumber(progress.total)} so'm
                     </p>
-                    {hasMultiplePayments && (
-                      <p className="text-xs text-muted-foreground">
-                        Oylik maosh (100%)
-                      </p>
-                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Oylik maosh (100%)
+                    </p>
 
                     {payment.paymentDate && !hasMultiplePayments && (
                       <p className="text-xs text-muted-foreground mt-1">
@@ -343,7 +345,8 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                         To'lovlar tafsiloti:
                       </p>
                       {payments.map(p => {
-                        const individualProgress = calculateProgress(p)
+                        // For individual payment breakdown, use payment amount (not teacher salary)
+                        const individualProgress = calculateProgress(p, false)
                         return (
                           <div key={p.id} className="p-4 bg-gradient-to-br from-muted/50 to-muted/30 rounded-lg border hover:shadow-md transition-shadow">
                             <div className="flex items-start justify-between gap-4">
