@@ -452,6 +452,7 @@ model Teacher {
   education       String? // Ma'lumoti
   experienceYears Int?
   hireDate        DateTime @default(now())
+  monthlySalary   Decimal? @db.Decimal(10, 2) // Oylik maosh (fixed monthly salary)
   salaryInfo      Json? // Encrypted in application layer
 
   createdAt DateTime @default(now())

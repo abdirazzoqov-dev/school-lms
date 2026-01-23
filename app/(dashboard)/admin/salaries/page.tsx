@@ -76,7 +76,9 @@ export default async function SalariesPage({
     where,
     include: {
       teacher: {
-        include: {
+        select: {
+          id: true,
+          monthlySalary: true,  // ✅ O'qituvchining asosiy oylik maoshi
           user: {
             select: {
               fullName: true,

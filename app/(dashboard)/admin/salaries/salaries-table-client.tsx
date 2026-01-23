@@ -24,6 +24,8 @@ interface SalaryPayment {
   notes: string | null
   paymentDate: Date | null
   teacher: {
+    id: string
+    monthlySalary: any  // O'qituvchining asosiy oylik maoshi
     user: {
       fullName: string
       email: string | null
@@ -258,11 +260,15 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                             )}
                           </div>
                           
-                          {/* Jami oylik */}
-                          <div className="flex items-center justify-between text-xs pt-1 border-t">
-                            <span className="text-muted-foreground">Jami oylik maoshi:</span>
-                            <span className="font-bold text-gray-700">{formatNumber(progress.total)} so'm</span>
-                          </div>
+                          {/* Jami oylik maosh (teacher.monthlySalary yoki progress.total) */}
+                          {payment.teacher?.monthlySalary && (
+                            <div className="flex items-center justify-between text-xs pt-1 border-t">
+                              <span className="text-muted-foreground">Jami oylik maoshi:</span>
+                              <span className="font-bold text-blue-700">
+                                {formatNumber(Number(payment.teacher.monthlySalary))} so'm
+                              </span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

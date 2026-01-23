@@ -75,6 +75,7 @@ export async function createTeacher(data: TeacherFormData) {
         specialization: validatedData.specialization,
         education: validatedData.education || null,
         experienceYears: validatedData.experienceYears || null,
+        monthlySalary: validatedData.monthlySalary || null,  // ✅ Asosiy oylik maosh (Decimal field)
         salaryInfo: {
           monthlySalary: validatedData.monthlySalary,
           currency: 'UZS',
