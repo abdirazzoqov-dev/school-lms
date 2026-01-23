@@ -23,12 +23,11 @@ export default async function ParentSchedulePage({
     redirect('/unauthorized')
   }
 
-  const parentId = session.user.parentId!
   const tenantId = session.user.tenantId!
 
   // Get parent with students
   const parent = await db.parent.findUnique({
-    where: { id: parentId, tenantId },
+    where: { userId: session.user.id, tenantId },
     include: {
       students: {
         include: {
