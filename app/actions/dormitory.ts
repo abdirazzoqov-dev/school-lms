@@ -62,9 +62,7 @@ export async function createBuilding(data: BuildingFormData) {
       },
     })
 
-    revalidatePath('/admin/dormitory')
-    revalidatePath('/admin') // Dashboard: student dormitory info
-    revalidatePath('/admin/dormitory/buildings')
+    revalidateDormitoryPaths()
 
     return { success: true, building }
   } catch (error: any) {
@@ -105,9 +103,7 @@ export async function updateBuilding(buildingId: string, data: Partial<BuildingF
       },
     })
 
-    revalidatePath('/admin/dormitory')
-    revalidatePath('/admin') // Dashboard: student dormitory info
-    revalidatePath('/admin/dormitory/buildings')
+    revalidateDormitoryPaths()
 
     return { success: true, building }
   } catch (error: any) {
@@ -145,9 +141,7 @@ export async function deleteBuilding(buildingId: string) {
       },
     })
 
-    revalidatePath('/admin/dormitory')
-    revalidatePath('/admin') // Dashboard: student dormitory info
-    revalidatePath('/admin/dormitory/buildings')
+    revalidateDormitoryPaths()
 
     return { success: true }
   } catch (error: any) {
@@ -217,9 +211,7 @@ export async function createRoom(data: RoomFormData) {
     // Update building cache
     await updateBuildingCache(validatedData.buildingId)
 
-    revalidatePath('/admin/dormitory')
-    revalidatePath('/admin') // Dashboard: student dormitory info
-    revalidatePath('/admin/dormitory/rooms')
+    revalidateDormitoryPaths()
 
     return { success: true, room }
   } catch (error: any) {
@@ -262,9 +254,7 @@ export async function updateRoom(roomId: string, data: Partial<RoomFormData>) {
       },
     })
 
-    revalidatePath('/admin/dormitory')
-    revalidatePath('/admin') // Dashboard: student dormitory info
-    revalidatePath('/admin/dormitory/rooms')
+    revalidateDormitoryPaths()
 
     return { success: true, room: updatedRoom }
   } catch (error: any) {
@@ -320,9 +310,7 @@ export async function deleteRoom(roomId: string) {
     // Update building cache
     await updateBuildingCache(room.buildingId)
 
-    revalidatePath('/admin/dormitory')
-    revalidatePath('/admin') // Dashboard: student dormitory info
-    revalidatePath('/admin/dormitory/rooms')
+    revalidateDormitoryPaths()
 
     return { success: true }
   } catch (error: any) {
@@ -424,9 +412,7 @@ export async function createAssignment(data: AssignmentFormData) {
     // Update building cache
     await updateBuildingCache(bed.room.buildingId)
 
-    revalidatePath('/admin/dormitory')
-    revalidatePath('/admin') // Dashboard: student dormitory info
-    revalidatePath('/admin/students')
+    revalidateDormitoryPaths()
 
     return { success: true, assignment }
   } catch (error: any) {
@@ -485,8 +471,7 @@ export async function updateAssignment(
       await updateBuildingCache(assignment.room.buildingId)
     }
 
-    revalidatePath('/admin/dormitory')
-    revalidatePath('/admin') // Dashboard: student dormitory info
+    revalidateDormitoryPaths()
 
     return { success: true, assignment: updated }
   } catch (error: any) {
@@ -505,6 +490,16 @@ export async function checkOutStudent(assignmentId: string) {
 // ============================================
 // HELPER FUNCTIONS
 // ============================================
+
+function revalidateDormitoryPaths() {
+  revalidatePath('/admin/dormitory', 'layout')
+  revalidatePath('/admin/dormitory/buildings', 'page')
+  revalidatePath('/admin/dormitory/rooms', 'page')
+  revalidatePath('/admin/dormitory/assignments', 'page')
+  revalidatePath('/admin/dormitory/assign', 'page')
+  revalidatePath('/admin/students', 'page')
+  revalidatePath('/admin', 'page')
+}
 
 async function updateBuildingCache(buildingId: string) {
   const rooms = await db.dormitoryRoom.findMany({
