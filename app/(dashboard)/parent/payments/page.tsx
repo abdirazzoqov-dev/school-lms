@@ -289,9 +289,9 @@ export default async function ParentPaymentsPage({
                               )}
                             </div>
 
-                            {payment.description && (
+                            {payment.notes && (
                               <p className="text-sm text-muted-foreground mb-2">
-                                📝 {payment.description}
+                                📝 {payment.notes}
                               </p>
                             )}
                           </div>
