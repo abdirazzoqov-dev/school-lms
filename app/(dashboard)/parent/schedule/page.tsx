@@ -2,17 +2,20 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
-import { Timetable } from '@/components/timetable'
-import { Card, CardContent } from '@/components/ui/card'
-import { Calendar } from 'lucide-react'
-import { getCurrentAcademicYear } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Calendar, Clock, BookOpen, Users, AlertCircle } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
+export const revalidate = 0
+export const dynamic = 'force-dynamic'
+
+const dayNames = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
 
 export default async function ParentSchedulePage({
-  searchParams,
+  searchParams
 }: {
-  searchParams: { studentId?: string }
+  searchParams: { childId?: string }
 }) {
   const session = await getServerSession(authOptions)
 
@@ -20,159 +23,263 @@ export default async function ParentSchedulePage({
     redirect('/unauthorized')
   }
 
+  const parentId = session.user.parentId!
   const tenantId = session.user.tenantId!
 
-  // Get parent
-  const parent = await db.parent.findFirst({
-    where: { userId: session.user.id }
-  })
-
-  if (!parent) {
-    redirect('/unauthorized')
-  }
-
-  // Get parent's children
-  const children = await db.studentParent.findMany({
-    where: { parentId: parent.id },
+  // Get parent with students
+  const parent = await db.parent.findUnique({
+    where: { id: parentId, tenantId },
     include: {
-      student: {
+      students: {
         include: {
-          user: {
-            select: { fullName: true }
-          },
-          class: true,
-          group: true
+          student: {
+            include: {
+              user: { select: { fullName: true, avatar: true } },
+              class: { 
+                include: { 
+                  schedules: {
+                    include: {
+                      subject: true,
+                      teacher: { include: { user: { select: { fullName: true } } } }
+                    },
+                    orderBy: [
+                      { dayOfWeek: 'asc' },
+                      { startTime: 'asc' }
+                    ]
+                  }
+                } 
+              },
+              group: { 
+                include: { 
+                  groupSchedules: {
+                    include: {
+                      subject: true,
+                      teacher: { include: { user: { select: { fullName: true } } } }
+                    },
+                    orderBy: [
+                      { dayOfWeek: 'asc' },
+                      { startTime: 'asc' }
+                    ]
+                  }
+                } 
+              },
+            }
+          }
         }
       }
     }
   })
 
-  if (children.length === 0) {
+  if (!parent || parent.students.length === 0) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 p-6">
         <h1 className="text-3xl font-bold">Dars Jadvali</h1>
         <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Sizga farzandlar biriktirilmagan</p>
+          <CardContent className="py-8 text-center">
+            <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-lg font-semibold text-muted-foreground">Farzandlar topilmadi</p>
           </CardContent>
         </Card>
       </div>
     )
   }
 
-  const selectedStudentId = searchParams.studentId || children[0].student.id
-  const selectedStudent = children.find(c => c.student.id === selectedStudentId)?.student
+  const children = parent.students.map(sp => sp.student)
 
-  if (!selectedStudent || (!selectedStudent.classId && !selectedStudent.groupId)) {
+  // If childId is specified, filter to that child; otherwise show first child
+  const selectedChildId = searchParams.childId || children[0].id
+  const selectedChild = children.find(c => c.id === selectedChildId)
+
+  if (!selectedChild) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 p-6">
         <h1 className="text-3xl font-bold">Dars Jadvali</h1>
         <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Farzandingiz hali sinfga yoki guruhga biriktirilmagan</p>
+          <CardContent className="py-8 text-center">
+            <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-lg font-semibold text-muted-foreground">Farzand topilmadi</p>
           </CardContent>
         </Card>
       </div>
     )
   }
 
-  const academicYear = getCurrentAcademicYear()
+  // Get class and group schedules
+  const classSchedules = selectedChild.class?.schedules || []
+  const groupSchedules = selectedChild.group?.groupSchedules || []
 
-  // Get schedule (class or group)
-  let schedules: any[] = []
+  // Combine schedules
+  const allSchedules = [
+    ...classSchedules.map(s => ({ ...s, type: 'CLASS' as const })),
+    ...groupSchedules.map(s => ({ ...s, type: 'GROUP' as const }))
+  ]
 
-  if (selectedStudent.classId) {
-    // Get class schedule
-    schedules = await db.schedule.findMany({
-      where: {
-        tenantId,
-        classId: selectedStudent.classId,
-        academicYear
-      },
-      include: {
-        subject: true,
-        teacher: {
-          include: {
-            user: {
-              select: { fullName: true }
-            }
-          }
-        }
-      },
-      orderBy: [
-        { dayOfWeek: 'asc' },
-        { startTime: 'asc' }
-      ]
-    })
-  } else if (selectedStudent.groupId) {
-    // Get group schedule
-    schedules = await db.groupSchedule.findMany({
-      where: {
-        tenantId,
-        groupId: selectedStudent.groupId
-      },
-      include: {
-        subject: true,
-        teacher: {
-          include: {
-            user: {
-              select: { fullName: true }
-            }
-          }
-        }
-      },
-      orderBy: [
-        { dayOfWeek: 'asc' },
-        { startTime: 'asc' }
-      ]
-    })
-  }
+  // Group by day
+  const schedulesByDay: Record<number, typeof allSchedules> = {}
+  allSchedules.forEach(schedule => {
+    if (!schedulesByDay[schedule.dayOfWeek]) {
+      schedulesByDay[schedule.dayOfWeek] = []
+    }
+    schedulesByDay[schedule.dayOfWeek].push(schedule)
+  })
+
+  // Sort each day's schedules by start time
+  Object.keys(schedulesByDay).forEach(day => {
+    schedulesByDay[parseInt(day)].sort((a, b) => a.startTime.localeCompare(b.startTime))
+  })
+
+  const weekDays = [1, 2, 3, 4, 5, 6]
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Dars Jadvali</h1>
-        <p className="text-muted-foreground">
-          Farzandingizning dars jadvali
-        </p>
+    <div className="space-y-6 p-6">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-8 text-white shadow-2xl">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative z-10">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <Calendar className="h-8 w-8" />
+                </div>
+                <h1 className="text-4xl font-bold">Dars Jadvali</h1>
+              </div>
+              <p className="text-blue-50 text-lg">
+                {selectedChild.user.fullName} ning dars jadvali
+              </p>
+            </div>
+            {children.length > 1 && (
+              <form action="/parent/schedule" method="get" className="w-full lg:w-auto">
+                <Select name="childId" defaultValue={selectedChildId}>
+                  <SelectTrigger className="bg-white/20 text-white border-white/30 w-full lg:w-[250px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {children.map(child => (
+                      <SelectItem key={child.id} value={child.id}>
+                        {child.user.fullName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </form>
+            )}
+          </div>
+        </div>
+        <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
+        <div className="absolute -left-8 -bottom-8 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
       </div>
 
-      {/* Child Selector */}
-      {children.length > 1 && (
-        <Card>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="border-2 border-blue-200">
           <CardContent className="pt-6">
-            <div className="flex flex-wrap gap-2">
-              {children.map(({ student }) => {
-                const assignmentName = student.class?.name || student.group?.name || 'Biriktirilmagan'
-                return (
-                  <Link 
-                    key={student.id} 
-                    href={`/parent/schedule?studentId=${student.id}`}
-                  >
-                    <Button 
-                      variant={selectedStudentId === student.id ? 'default' : 'outline'}
-                      size="sm"
-                    >
-                      {student.user?.fullName} ({assignmentName})
-                    </Button>
-                  </Link>
-                )
-              })}
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-blue-600" />
+              <div>
+                <p className="text-sm text-muted-foreground">Sinf</p>
+                <p className="font-semibold text-lg">{selectedChild.class?.name || 'Belgilanmagan'}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
-      )}
 
-      {/* Timetable */}
-      <Timetable 
-        schedules={schedules}
-        title={`${selectedStudent.user?.fullName} - ${selectedStudent.class?.name || selectedStudent.group?.name}`}
-        showTeacher={true}
-        showClass={false}
-      />
+        <Card className="border-2 border-purple-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-purple-600" />
+              <div>
+                <p className="text-sm text-muted-foreground">Guruh</p>
+                <p className="font-semibold text-lg">{selectedChild.group?.name || 'Guruhga biriktirilmagan'}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6">
+        {weekDays.map((dayIndex) => {
+          const daySchedules = schedulesByDay[dayIndex] || []
+          const isToday = new Date().getDay() === dayIndex
+
+          return (
+            <Card key={dayIndex} className={`border-2 ${isToday ? 'border-blue-500 shadow-lg' : ''}`}>
+              <CardHeader className={`${isToday ? 'bg-gradient-to-r from-blue-50 to-indigo-50' : 'bg-gradient-to-r from-gray-50 to-slate-50'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Calendar className={`h-6 w-6 ${isToday ? 'text-blue-600' : 'text-gray-600'}`} />
+                    <CardTitle className="text-xl">{dayNames[dayIndex]}</CardTitle>
+                    {isToday && (
+                      <Badge className="bg-blue-600">Bugun</Badge>
+                    )}
+                  </div>
+                  {daySchedules.length > 0 && (
+                    <Badge variant="outline">{daySchedules.length} ta dars</Badge>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent className="pt-6">
+                {daySchedules.length > 0 ? (
+                  <div className="space-y-3">
+                    {daySchedules.map((schedule, idx) => (
+                      <div
+                        key={`${schedule.type}-${schedule.id}`}
+                        className="p-4 rounded-lg border bg-gradient-to-br from-muted/50 to-muted/30 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                              <Badge className={schedule.type === 'CLASS' ? 'bg-blue-600' : 'bg-purple-600'}>
+                                {schedule.type === 'CLASS' ? '📚 Sinf' : '👥 Guruh'}
+                              </Badge>
+                              <Badge className="bg-green-600 text-sm">
+                                {schedule.subject.name}
+                              </Badge>
+                            </div>
+
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm font-semibold">
+                                  {schedule.startTime.slice(0, 5)} - {schedule.endTime.slice(0, 5)}
+                                </span>
+                              </div>
+
+                              {schedule.teacher && (
+                                <div className="text-sm text-muted-foreground">
+                                  👨‍🏫 O'qituvchi: <span className="font-medium">{schedule.teacher.user.fullName}</span>
+                                </div>
+                              )}
+
+                              {schedule.room && (
+                                <div className="text-sm text-muted-foreground">
+                                  🚪 Xona: <span className="font-medium">{schedule.room}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="text-2xl font-bold text-muted-foreground">
+                            {idx + 1}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Calendar className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
+                    <p className="text-lg font-semibold text-muted-foreground mb-2">
+                      Darslar yo'q
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Bu kun uchun dars jadvali mavjud emas
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
     </div>
   )
 }
-

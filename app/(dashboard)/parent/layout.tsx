@@ -52,6 +52,11 @@ export default async function ParentLayout({
       icon: 'Calendar',
     },
     {
+      title: 'Dars Jadvali',
+      href: '/parent/schedule',
+      icon: 'CalendarDays',
+    },
+    {
       title: 'Uy Vazifalari',
       href: '/parent/assignments',
       icon: 'FileText',
@@ -60,6 +65,11 @@ export default async function ParentLayout({
       title: 'To\'lovlar',
       href: '/parent/payments',
       icon: 'DollarSign',
+    },
+    {
+      title: 'Ovqatlar Menyusi',
+      href: '/parent/meals',
+      icon: 'UtensilsCrossed',
     },
     {
       title: 'Xabarlar',

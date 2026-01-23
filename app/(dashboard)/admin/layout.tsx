@@ -109,8 +109,19 @@ export default async function AdminLayout({
     },
     {
       title: 'Oshxona',
-      href: '/admin/kitchen',
       icon: 'ChefHat',
+      children: [
+        {
+          title: 'Ovqatlar Menyusi',
+          href: '/admin/meals',
+          icon: 'UtensilsCrossed',
+        },
+        {
+          title: 'Xarajatlar',
+          href: '/admin/kitchen',
+          icon: 'TrendingDown',
+        },
+      ],
     },
     {
       title: 'Yotoqxona',
