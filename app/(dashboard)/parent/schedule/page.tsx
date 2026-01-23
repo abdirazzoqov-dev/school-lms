@@ -50,7 +50,7 @@ export default async function ParentSchedulePage({
               },
               group: { 
                 include: { 
-                  groupSchedules: {
+                  schedules: {
                     include: {
                       subject: true,
                       teacher: { include: { user: { select: { fullName: true } } } }
@@ -105,7 +105,7 @@ export default async function ParentSchedulePage({
 
   // Get class and group schedules
   const classSchedules = selectedChild.class?.schedules || []
-  const groupSchedules = selectedChild.group?.groupSchedules || []
+  const groupSchedules = selectedChild.group?.schedules || []
 
   // Combine schedules
   const allSchedules = [
@@ -248,9 +248,9 @@ export default async function ParentSchedulePage({
                                 </div>
                               )}
 
-                              {schedule.room && (
+                              {schedule.roomNumber && (
                                 <div className="text-sm text-muted-foreground">
-                                  🚪 Xona: <span className="font-medium">{schedule.room}</span>
+                                  🚪 Xona: <span className="font-medium">{schedule.roomNumber}</span>
                                 </div>
                               )}
                             </div>
