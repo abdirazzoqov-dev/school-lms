@@ -37,6 +37,11 @@ export default async function TeacherLayout({
       icon: 'LayoutDashboard',
     },
     {
+      title: 'Dars Jadvali',
+      href: '/teacher/schedule',
+      icon: 'Calendar',
+    },
+    {
       title: 'Mening Sinflarim',
       href: '/teacher/classes',
       icon: 'Users',

@@ -171,9 +171,13 @@ export async function saveSchedules(
       }
     }
 
+    // Revalidate all schedule-related paths
     revalidatePath('/admin/schedules')
     revalidatePath('/admin/schedules/builder')
     revalidatePath('/admin')
+    revalidatePath('/teacher/schedule')
+    revalidatePath('/teacher')
+    revalidatePath('/parent/schedule')
 
     return { 
       success: true,
@@ -385,9 +389,13 @@ export async function createSchedule(data: {
       })
     }
 
+    // Revalidate all schedule-related paths
     revalidatePath('/admin/schedules')
     revalidatePath('/admin/schedules/builder')
     revalidatePath('/admin')
+    revalidatePath('/teacher/schedule')
+    revalidatePath('/teacher')
+    revalidatePath('/parent/schedule')
 
     return { success: true }
   } catch (error) {
@@ -413,8 +421,13 @@ export async function deleteSchedule(scheduleId: string) {
       }
     })
 
+    // Revalidate all schedule-related paths
     revalidatePath('/admin/schedules')
     revalidatePath('/admin/schedules/builder')
+    revalidatePath('/admin')
+    revalidatePath('/teacher/schedule')
+    revalidatePath('/teacher')
+    revalidatePath('/parent/schedule')
 
     return { success: true, message: 'Dars o\'chirildi' }
   } catch (error) {
