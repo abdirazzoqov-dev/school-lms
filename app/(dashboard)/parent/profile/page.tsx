@@ -169,19 +169,19 @@ export default async function ParentProfilePage() {
                       key={child.id}
                       className="flex items-center gap-3 p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-200 hover:shadow-md transition-shadow"
                     >
-                      {child.user.avatar ? (
+                      {child.user?.avatar ? (
                         <img
                           src={child.user.avatar}
-                          alt={child.user.fullName}
+                          alt={child.user?.fullName || 'Student'}
                           className="h-12 w-12 rounded-full object-cover border-2 border-purple-200"
                         />
                       ) : (
                         <div className="h-12 w-12 rounded-full bg-purple-200 flex items-center justify-center text-purple-700 font-bold text-lg border-2 border-purple-300">
-                          {child.user.fullName.charAt(0)}
+                          {child.user?.fullName?.charAt(0) || '?'}
                         </div>
                       )}
                       <div className="flex-1">
-                        <p className="font-semibold text-lg">{child.user.fullName}</p>
+                        <p className="font-semibold text-lg">{child.user?.fullName || 'N/A'}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <Badge variant="outline" className="text-xs">
                             {child.class?.name || 'Sinf belgilanmagan'}
