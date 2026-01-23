@@ -70,6 +70,14 @@ export default async function DormitoryDashboardPage() {
       include: {
         rooms: {
           where: { isActive: true },
+          include: {
+            beds: {
+              where: { isActive: true },
+            },
+            assignments: {
+              where: { status: 'ACTIVE' },
+            },
+          },
         },
       },
       orderBy: { name: 'asc' },
@@ -103,8 +111,8 @@ export default async function DormitoryDashboardPage() {
     }),
   ])
 
-  const availableBeds = totalBeds - occupiedBeds
-  const occupancyRate = totalBeds > 0 ? (occupiedBeds / totalBeds) * 100 : 0
+  const availableBeds = totalBeds - activeAssignments // To'g'ri: activeAssignments = band joylar
+  const occupancyRate = totalBeds > 0 ? (activeAssignments / totalBeds) * 100 : 0 // activeAssignments ishlatamiz
 
   return (
     <div className="space-y-8">
@@ -325,8 +333,16 @@ export default async function DormitoryDashboardPage() {
           {buildings.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {buildings.map((building) => {
-                const buildingCapacity = building.totalCapacity
-                const buildingOccupied = building.occupiedBeds
+                // Real-time hisoblash - barcha xonalardagi barcha joylarni hisoblash
+                const buildingCapacity = building.rooms.reduce(
+                  (sum, room) => sum + room.beds.length, 
+                  0
+                )
+                // Real-time band joylar - barcha aktiv assignmentlarni hisoblash
+                const buildingOccupied = building.rooms.reduce(
+                  (sum, room) => sum + room.assignments.length, 
+                  0
+                )
                 const buildingAvailable = buildingCapacity - buildingOccupied
                 const buildingOccupancyRate = buildingCapacity > 0 
                   ? (buildingOccupied / buildingCapacity) * 100 
