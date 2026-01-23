@@ -75,6 +75,12 @@ enum PaymentStatus {
   REFUNDED // Qaytarilgan
 }
 
+enum MealType {
+  BREAKFAST // Nonushta
+  LUNCH // Tushlik
+  DINNER // Kechki ovqat
+}
+
 enum PaymentType {
   TUITION // O'qish haqi
   BOOKS // Darsliklar
@@ -852,7 +858,7 @@ model Meal {
   tenantId String
 
   dayOfWeek Int // 1-7 (Dushanba-Yakshanba)
-  mealType  String // BREAKFAST, LUNCH, DINNER
+  mealType  MealType // BREAKFAST, LUNCH, DINNER
   
   mainDish    String // Asosiy taom
   sideDish    String? // Garnitir
