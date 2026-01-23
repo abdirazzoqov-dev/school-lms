@@ -2,23 +2,48 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Calendar, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { AlertCircle, Calendar, Clock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export const revalidate = 0
 export const dynamic = 'force-dynamic'
 
-const dayNamesShort = ['Yak', 'Dush', 'Sesh', 'Chor', 'Pay', 'Juma', 'Shan']
-const dayNamesFull = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
-const monthNames = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr']
+const dayNames = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
+const dayNamesShort = ['Dush', 'Sesh', 'Chor', 'Pay', 'Juma', 'Shan']
+
+// Time slot configuration
+interface TimeSlot {
+  period: number
+  startTime: string
+  endTime: string
+}
+
+// Get unique time slots from schedules
+function getTimeSlots(schedules: any[]): TimeSlot[] {
+  const slotsMap = new Map<string, TimeSlot>()
+  
+  schedules.forEach(schedule => {
+    const key = `${schedule.startTime}-${schedule.endTime}`
+    if (!slotsMap.has(key)) {
+      slotsMap.set(key, {
+        period: slotsMap.size + 1,
+        startTime: schedule.startTime,
+        endTime: schedule.endTime
+      })
+    }
+  })
+  
+  return Array.from(slotsMap.values()).sort((a, b) => 
+    a.startTime.localeCompare(b.startTime)
+  )
+}
 
 export default async function ParentSchedulePage({
   searchParams
 }: {
-  searchParams: { childId?: string; month?: string; year?: string }
+  searchParams: { childId?: string }
 }) {
   const session = await getServerSession(authOptions)
 
@@ -106,40 +131,26 @@ export default async function ParentSchedulePage({
     ...groupSchedules.map(s => ({ ...s, type: 'GROUP' as const }))
   ]
 
-  // Group by day
-  const schedulesByDay: Record<number, typeof allSchedules> = {}
+  // Get time slots
+  const timeSlots = getTimeSlots(allSchedules)
+
+  // Group schedules by day and time
+  const scheduleGrid: Record<number, Record<string, typeof allSchedules>> = {}
+  
   allSchedules.forEach(schedule => {
-    if (!schedulesByDay[schedule.dayOfWeek]) {
-      schedulesByDay[schedule.dayOfWeek] = []
+    if (!scheduleGrid[schedule.dayOfWeek]) {
+      scheduleGrid[schedule.dayOfWeek] = {}
     }
-    schedulesByDay[schedule.dayOfWeek].push(schedule)
+    const timeKey = `${schedule.startTime}-${schedule.endTime}`
+    if (!scheduleGrid[schedule.dayOfWeek][timeKey]) {
+      scheduleGrid[schedule.dayOfWeek][timeKey] = []
+    }
+    scheduleGrid[schedule.dayOfWeek][timeKey].push(schedule)
   })
 
-  // Calendar calculations
-  const today = new Date()
-  const currentMonth = searchParams.month ? parseInt(searchParams.month) : today.getMonth()
-  const currentYear = searchParams.year ? parseInt(searchParams.year) : today.getFullYear()
-
-  const firstDayOfMonth = new Date(currentYear, currentMonth, 1)
-  const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0)
-  const startingDayOfWeek = firstDayOfMonth.getDay()
-  const daysInMonth = lastDayOfMonth.getDate()
-
-  const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate()
-  const prevMonthDays = Array.from({ length: startingDayOfWeek }, (_, i) => prevMonthLastDay - startingDayOfWeek + i + 1)
-  const currentMonthDays = Array.from({ length: daysInMonth }, (_, i) => i + 1)
-  const totalCells = 42
-  const remainingCells = totalCells - prevMonthDays.length - currentMonthDays.length
-  const nextMonthDays = Array.from({ length: remainingCells }, (_, i) => i + 1)
-
-  const todayDate = today.getDate()
-  const todayMonth = today.getMonth()
-  const todayYear = today.getFullYear()
-
-  const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1
-  const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear
-  const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1
-  const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear
+  // Calculate total slots
+  const totalSlots = dayNames.length * timeSlots.length
+  const filledSlots = allSchedules.length
 
   return (
     <div className="h-full bg-gradient-to-br from-gray-50 via-white to-gray-50 p-4 md:p-6">
@@ -151,147 +162,148 @@ export default async function ParentSchedulePage({
               <Calendar className="h-6 w-6 md:h-7 md:w-7 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Dars Jadvali
+              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
+                {selectedChild.class?.name || 'Sinf'}
               </h1>
               <p className="text-sm text-gray-500">
-                {selectedChild.user?.fullName || 'Farzand'} • {selectedChild.class?.name || 'Sinf belgilanmagan'}
+                {selectedChild.user?.fullName || 'Farzand'}
               </p>
             </div>
           </div>
 
-          {children.length > 1 && (
-            <form method="get" className="w-full md:w-auto">
-              <Select name="childId" defaultValue={selectedChildId}>
-                <SelectTrigger className="w-full md:w-[250px] bg-gray-50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {children.map(child => (
-                    <SelectItem key={child.id} value={child.id}>
-                      {child.user?.fullName || 'N/A'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </form>
-          )}
-        </div>
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
+            {children.length > 1 && (
+              <form method="get" className="w-full md:w-auto">
+                <Select name="childId" defaultValue={selectedChildId}>
+                  <SelectTrigger className="w-full md:w-[250px] bg-gray-50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {children.map(child => (
+                      <SelectItem key={child.id} value={child.id}>
+                        {child.user?.fullName || 'N/A'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </form>
+            )}
 
-        {/* Calendar Card */}
-        <Card className="shadow-lg border-0 overflow-hidden">
-          {/* Calendar Header */}
-          <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b p-4 md:p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-800">
-                {monthNames[currentMonth]} {currentYear}
-              </h2>
-              <div className="flex items-center gap-2">
-                <form method="get" className="contents">
-                  <input type="hidden" name="childId" value={selectedChildId} />
-                  <input type="hidden" name="month" value={prevMonth} />
-                  <input type="hidden" name="year" value={prevYear} />
-                  <Button type="submit" variant="ghost" size="sm" className="hover:bg-white/50">
-                    <ChevronLeft className="h-5 w-5" />
-                  </Button>
-                </form>
-                <form method="get" className="contents">
-                  <input type="hidden" name="childId" value={selectedChildId} />
-                  <Button type="submit" variant="ghost" size="sm" className="hover:bg-white/50">
-                    Bugun
-                  </Button>
-                </form>
-                <form method="get" className="contents">
-                  <input type="hidden" name="childId" value={selectedChildId} />
-                  <input type="hidden" name="month" value={nextMonth} />
-                  <input type="hidden" name="year" value={nextYear} />
-                  <Button type="submit" variant="ghost" size="sm" className="hover:bg-white/50">
-                    <ChevronRight className="h-5 w-5" />
-                  </Button>
-                </form>
-              </div>
+            <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-100">
+              <span className="text-sm font-medium text-blue-700">{filledSlots}/{totalSlots}</span>
+              <span className="text-xs text-blue-600">jami slot</span>
             </div>
           </div>
+        </div>
 
-          <CardContent className="p-0">
-            {/* Week Days Header */}
-            <div className="grid grid-cols-7 bg-gray-50 border-b">
-              {dayNamesShort.map((day, i) => (
-                <div key={day} className={`py-3 text-center text-sm font-semibold ${i === 0 || i === 6 ? 'text-red-600' : 'text-gray-600'}`}>
-                  <span className="hidden md:inline">{dayNamesFull[i]}</span>
-                  <span className="md:hidden">{day}</span>
+        {/* Timetable */}
+        <Card className="shadow-lg border-0 overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b">
+            <CardTitle className="flex items-center gap-2 text-gray-800">
+              <Clock className="h-5 w-5" />
+              7 dars × 6 kun = {totalSlots} jami slot
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 overflow-x-auto">
+            <div className="min-w-[800px]">
+              {/* Header with day names */}
+              <div className="grid grid-cols-[120px_repeat(6,1fr)] bg-gray-50 border-b sticky top-0 z-10">
+                <div className="p-3 border-r flex items-center justify-center">
+                  <Clock className="h-4 w-4 text-gray-500" />
+                  <span className="ml-2 text-sm font-semibold text-gray-600">Vaqt</span>
                 </div>
-              ))}
-            </div>
-
-            {/* Calendar Grid */}
-            <div className="grid grid-cols-7">
-              {/* Previous month days */}
-              {prevMonthDays.map((day) => (
-                <div key={`prev-${day}`} className="min-h-[100px] md:min-h-[140px] border-b border-r bg-gray-50/50 p-1 md:p-2">
-                  <span className="text-xs md:text-sm text-gray-400">{day}</span>
-                </div>
-              ))}
-
-              {/* Current month days */}
-              {currentMonthDays.map((day) => {
-                const date = new Date(currentYear, currentMonth, day)
-                const dayOfWeek = date.getDay()
-                const daySchedules = schedulesByDay[dayOfWeek] || []
-                const isToday = day === todayDate && currentMonth === todayMonth && currentYear === todayYear
-                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-
-                return (
-                  <div
-                    key={`current-${day}`}
-                    className={`min-h-[100px] md:min-h-[140px] border-b border-r p-1 md:p-2 transition-colors hover:bg-gray-50 ${
-                      isToday ? 'bg-blue-50 ring-2 ring-blue-500 ring-inset' : ''
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className={`text-xs md:text-sm font-semibold ${
-                        isToday ? 'bg-blue-500 text-white px-2 py-0.5 rounded-full' : isWeekend ? 'text-red-600' : 'text-gray-700'
-                      }`}>
-                        {day}
-                      </span>
-                      {daySchedules.length > 0 && (
-                        <Badge variant="secondary" className="text-[10px] md:text-xs px-1 py-0">
-                          {daySchedules.length}
-                        </Badge>
-                      )}
-                    </div>
-
-                    <div className="space-y-1 overflow-y-auto max-h-[70px] md:max-h-[110px]">
-                      {daySchedules.map((schedule) => (
-                        <div
-                          key={`${schedule.type}-${schedule.id}`}
-                          className={`text-[10px] md:text-xs p-1 md:p-1.5 rounded ${
-                            schedule.type === 'CLASS' 
-                              ? 'bg-blue-100 text-blue-700 border border-blue-200' 
-                              : 'bg-purple-100 text-purple-700 border border-purple-200'
-                          } hover:shadow-sm transition-shadow cursor-pointer`}
-                          title={`${schedule.subject?.name || 'Dars'} • ${schedule.startTime.slice(0, 5)}-${schedule.endTime.slice(0, 5)}${schedule.teacher?.user ? ' • ' + schedule.teacher.user.fullName : ''}`}
-                        >
-                          <div className="flex items-center gap-1">
-                            <span className="hidden md:inline">{schedule.type === 'CLASS' ? '📚' : '👥'}</span>
-                            <span className="font-medium truncate">{schedule.subject?.name || 'Dars'}</span>
-                          </div>
-                          <div className="text-[9px] md:text-[10px] text-gray-600 mt-0.5">
-                            ⏰ {schedule.startTime.slice(0, 5)}-{schedule.endTime.slice(0, 5)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                {dayNames.map((day, idx) => (
+                  <div key={day} className="p-3 border-r last:border-r-0 text-center">
+                    <div className="font-semibold text-gray-700 hidden md:block">{day}</div>
+                    <div className="font-semibold text-gray-700 md:hidden">{dayNamesShort[idx]}</div>
+                    <div className="text-xs text-gray-500 mt-1">{day.slice(0, 4)}</div>
                   </div>
-                )
-              })}
+                ))}
+              </div>
 
-              {/* Next month days */}
-              {nextMonthDays.map((day) => (
-                <div key={`next-${day}`} className="min-h-[100px] md:min-h-[140px] border-b border-r bg-gray-50/50 p-1 md:p-2">
-                  <span className="text-xs md:text-sm text-gray-400">{day}</span>
+              {/* Time slots rows */}
+              {timeSlots.length > 0 ? (
+                timeSlots.map((slot, slotIdx) => (
+                  <div key={slotIdx} className="grid grid-cols-[120px_repeat(6,1fr)] border-b hover:bg-gray-50/50 transition-colors">
+                    {/* Time column */}
+                    <div className="p-3 border-r bg-gray-50 flex flex-col justify-center">
+                      <div className="font-semibold text-sm text-indigo-700">{slotIdx + 1}-dars</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {slot.startTime.slice(0, 5)}-{slot.endTime.slice(0, 5)}
+                      </div>
+                    </div>
+
+                    {/* Day columns */}
+                    {[1, 2, 3, 4, 5, 6].map((dayOfWeek) => {
+                      const timeKey = `${slot.startTime}-${slot.endTime}`
+                      const lessons = scheduleGrid[dayOfWeek]?.[timeKey] || []
+                      
+                      return (
+                        <div key={dayOfWeek} className="p-2 border-r last:border-r-0 min-h-[80px]">
+                          {lessons.length > 0 ? (
+                            <div className="space-y-1">
+                              {lessons.map((lesson, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`p-2 rounded-lg border ${
+                                    lesson.type === 'CLASS'
+                                      ? 'bg-gradient-to-br from-green-50 to-green-100 border-green-200'
+                                      : 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200'
+                                  } hover:shadow-md transition-all cursor-pointer group`}
+                                >
+                                  <div className="flex items-start gap-2">
+                                    <span className="text-lg">
+                                      {lesson.type === 'CLASS' ? '📚' : '👥'}
+                                    </span>
+                                    <div className="flex-1 min-w-0">
+                                      <div className={`font-semibold text-sm ${
+                                        lesson.type === 'CLASS' ? 'text-green-700' : 'text-purple-700'
+                                      }`}>
+                                        {lesson.subject?.name || 'Dars'}
+                                      </div>
+                                      {lesson.teacher?.user?.fullName && (
+                                        <div className="text-xs text-gray-600 mt-1 flex items-center gap-1">
+                                          <span>👨‍🏫</span>
+                                          <span className="truncate">{lesson.teacher.user.fullName}</span>
+                                        </div>
+                                      )}
+                                      {lesson.roomNumber && (
+                                        <div className="text-xs text-gray-500 mt-1">
+                                          🚪 Xona {lesson.roomNumber}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <Badge 
+                                      variant="outline" 
+                                      className={`text-[10px] ${
+                                        lesson.type === 'CLASS' 
+                                          ? 'bg-green-100 text-green-700 border-green-300' 
+                                          : 'bg-purple-100 text-purple-700 border-purple-300'
+                                      }`}
+                                    >
+                                      {lesson.type === 'CLASS' ? 'Sinf' : 'Guruh'}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="h-full flex items-center justify-center">
+                              <span className="text-gray-300 text-sm">-</span>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                ))
+              ) : (
+                <div className="py-12 text-center">
+                  <AlertCircle className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+                  <p className="text-gray-500 font-medium">Dars jadvali mavjud emas</p>
+                  <p className="text-sm text-gray-400 mt-1">Admin tomonidan dars jadvali kiritilmagan</p>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
@@ -299,14 +311,14 @@ export default async function ParentSchedulePage({
         {/* Legend */}
         <Card className="shadow-sm border">
           <CardContent className="py-4">
-            <div className="flex flex-wrap gap-3 md:gap-4 justify-center items-center">
+            <div className="flex flex-wrap gap-4 justify-center items-center">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 md:w-4 md:h-4 rounded bg-blue-100 border border-blue-200"></div>
-                <span className="text-xs md:text-sm">📚 Sinf darslari</span>
+                <div className="w-4 h-4 rounded bg-gradient-to-br from-green-50 to-green-100 border border-green-200"></div>
+                <span className="text-sm">📚 Sinf darslari</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 md:w-4 md:h-4 rounded bg-purple-100 border border-purple-200"></div>
-                <span className="text-xs md:text-sm">👥 Guruh darslari</span>
+                <div className="w-4 h-4 rounded bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200"></div>
+                <span className="text-sm">👥 Guruh darslari</span>
               </div>
             </div>
           </CardContent>
