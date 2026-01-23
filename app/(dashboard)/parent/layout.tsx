@@ -81,6 +81,16 @@ export default async function ParentLayout({
       href: '/parent/notifications',
       icon: 'Bell',
     },
+    {
+      title: 'Profil',
+      href: '/parent/profile',
+      icon: 'User',
+    },
+    {
+      title: 'Sozlamalar',
+      href: '/parent/settings',
+      icon: 'Settings',
+    },
   ]
 
   return (
