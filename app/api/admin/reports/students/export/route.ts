@@ -90,12 +90,12 @@ export async function GET(request: NextRequest) {
       csvRows.push([
         index + 1,
         student.studentCode,
-        student.user.fullName,
+        student.user?.fullName || 'N/A',
         student.class?.name || 'N/A',
         student.status === 'ACTIVE' ? 'Faol' : student.status === 'GRADUATED' ? 'Bitirgan' : 'Haydal gan',
         student.gender === 'MALE' ? 'O\'g\'il' : 'Qiz',
-        student.user.email || 'N/A',
-        student.user.phone || 'N/A',
+        student.user?.email || 'N/A',
+        student.user?.phone || 'N/A',
         attendanceRate + '%',
         avgGrade,
         totalPaid.toString()

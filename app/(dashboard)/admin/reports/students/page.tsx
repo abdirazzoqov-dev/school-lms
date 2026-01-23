@@ -262,7 +262,7 @@ export default async function StudentsReportPage({
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold">{student.user.fullName}</h3>
+                        <h3 className="font-semibold">{student.user?.fullName || 'N/A'}</h3>
                         {student.status === 'ACTIVE' && (
                           <Badge className="bg-green-600">Faol</Badge>
                         )}
