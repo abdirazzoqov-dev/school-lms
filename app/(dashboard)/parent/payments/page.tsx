@@ -34,7 +34,7 @@ export default async function ParentPaymentsPage({
       userId: session.user.id
     },
     include: {
-      children: {
+      students: {
         include: {
           student: {
             include: {
@@ -65,7 +65,7 @@ export default async function ParentPaymentsPage({
   }
 
   // Get all children's students
-  const children = parent.children.map(c => c.student)
+  const children = parent.students.map(c => c.student)
 
   // Filter by child if specified
   const filteredChildren = searchParams.childId
