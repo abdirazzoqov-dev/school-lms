@@ -98,9 +98,7 @@ export default async function ParentSettingsPage() {
               <div>
                 <p className="font-semibold">Oxirgi kirish</p>
                 <p className="text-sm text-gray-500">
-                  {session.user.lastLogin 
-                    ? new Date(session.user.lastLogin).toLocaleString('uz-UZ')
-                    : 'Ma\'lumot yo\'q'}
+                  Ma'lumot yo'q
                 </p>
               </div>
             </div>
