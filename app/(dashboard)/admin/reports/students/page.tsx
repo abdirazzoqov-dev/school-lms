@@ -2,17 +2,23 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Users, Download, FileText, TrendingUp } from 'lucide-react'
-import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
-import { ExportButtons } from './export-buttons'
+import {
+  Users, Download, ArrowLeft, TrendingUp, UserCheck, UserX, GraduationCap
+} from 'lucide-react'
+import Link from 'next/link'
+import { formatNumber } from '@/lib/utils'
 
-// Cache for 5 minutes (reports change slowly) ⚡
-export const revalidate = 300
+export const revalidate = 0
+export const dynamic = 'force-dynamic'
 
-export default async function StudentsReportPage() {
+export default async function StudentsReportPage({
+  searchParams
+}: {
+  searchParams: { classId?: string; status?: string }
+}) {
   const session = await getServerSession(authOptions)
 
   if (!session || session.user.role !== 'ADMIN') {
@@ -20,202 +26,326 @@ export default async function StudentsReportPage() {
   }
 
   const tenantId = session.user.tenantId!
+  
+  // Build where clause
+  const where: any = { tenantId }
+  if (searchParams.classId) where.classId = searchParams.classId
+  if (searchParams.status) where.status = searchParams.status
 
-  // Get all students
+  // Get students with full details
   const students = await db.student.findMany({
-    where: { tenantId },
+    where,
     include: {
       user: {
-        select: { fullName: true, email: true, phone: true, isActive: true }
+        select: {
+          fullName: true,
+          email: true,
+          phone: true,
+          isActive: true
+        }
       },
       class: {
-        select: { name: true, gradeLevel: true }
+        select: {
+          name: true,
+          gradeLevel: true
+        }
       },
-      parents: {
-        include: {
-          parent: {
-            include: {
-              user: {
-                select: { fullName: true, phone: true }
-              }
-            }
+      payments: {
+        select: {
+          amount: true,
+          paidAmount: true,
+          status: true
+        }
+      },
+      attendances: {
+        where: {
+          createdAt: {
+            gte: new Date(new Date().setMonth(new Date().getMonth() - 1))
           }
+        },
+        select: {
+          status: true
+        }
+      },
+      grades: {
+        where: {
+          date: {
+            gte: new Date(new Date().setMonth(new Date().getMonth() - 1))
+          }
+        },
+        select: {
+          score: true
         }
       }
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: {
+      user: {
+        fullName: 'asc'
+      }
+    }
   })
 
-  // Statistics
+  // Get all classes for filter
+  const classes = await db.class.findMany({
+    where: { tenantId },
+    select: {
+      id: true,
+      name: true,
+      gradeLevel: true
+    },
+    orderBy: {
+      gradeLevel: 'asc'
+    }
+  })
+
+  // Calculate statistics
   const totalStudents = students.length
-  const activeStudents = students.filter(s => s.user?.isActive).length
-  const inactiveStudents = totalStudents - activeStudents
-  const withParents = students.filter(s => s.parents.length > 0).length
-  const withoutParents = totalStudents - withParents
+  const activeStudents = students.filter(s => s.status === 'ACTIVE').length
+  const graduatedStudents = students.filter(s => s.status === 'GRADUATED').length
+  const expelledStudents = students.filter(s => s.status === 'EXPELLED').length
 
-  // Group by class
-  const byClass = students.reduce((acc, student) => {
-    const className = student.class?.name || 'Sinfga biriktirilmagan'
-    if (!acc[className]) {
-      acc[className] = 0
-    }
-    acc[className]++
-    return acc
-  }, {} as Record<string, number>)
+  // Gender breakdown
+  const maleStudents = students.filter(s => s.gender === 'MALE').length
+  const femaleStudents = students.filter(s => s.gender === 'FEMALE').length
 
-  // Group by grade level
-  const byGrade = students.reduce((acc, student) => {
-    const grade = student.class?.gradeLevel || 0
-    if (!acc[grade]) {
-      acc[grade] = 0
-    }
-    acc[grade]++
-    return acc
-  }, {} as Record<number, number>)
+  // Payment statistics
+  const totalRevenue = students.reduce((sum, s) => 
+    sum + s.payments.reduce((pSum, p) => pSum + Number(p.paidAmount || 0), 0), 0
+  )
+  const avgRevenue = totalStudents > 0 ? totalRevenue / totalStudents : 0
+
+  // Attendance statistics
+  const totalAttendance = students.reduce((sum, s) => sum + s.attendances.length, 0)
+  const presentCount = students.reduce((sum, s) => 
+    sum + s.attendances.filter(a => a.status === 'PRESENT').length, 0
+  )
+  const avgAttendance = totalAttendance > 0 ? (presentCount / totalAttendance) * 100 : 0
+
+  // Grade statistics
+  const allGrades = students.flatMap(s => s.grades.map(g => Number(g.score)))
+  const avgGrade = allGrades.length > 0 ? allGrades.reduce((a, b) => a + b, 0) / allGrades.length : 0
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">O'quvchilar Hisoboti</h1>
-          <p className="text-muted-foreground">
-            To'liq statistika va tahlil
-          </p>
-        </div>
+    <div className="space-y-6 p-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
         <Link href="/admin/reports">
-          <Button variant="outline">
-            <FileText className="h-4 w-4 mr-2" />
-            Orqaga
+          <Button variant="ghost" size="icon">
+            <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold">O'quvchilar Hisoboti</h1>
+          <p className="text-muted-foreground">
+            Barcha o'quvchilar bo'yicha batafsil statistika va ma'lumotlar
+          </p>
+        </div>
+        <Button asChild className="bg-blue-600 hover:bg-blue-700">
+          <Link href={`/api/admin/reports/students/export?classId=${searchParams.classId || ''}&status=${searchParams.status || ''}`}>
+            <Download className="mr-2 h-4 w-4" />
+            Excel
+          </Link>
+        </Button>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-blue-100 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Jami O'quvchilar</p>
+                <p className="text-3xl font-bold text-blue-600">{totalStudents}</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-full">
                 <Users className="h-6 w-6 text-blue-600" />
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-green-100">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl font-bold">{totalStudents}</div>
-                <p className="text-sm text-muted-foreground">Jami</p>
+                <p className="text-sm font-medium text-muted-foreground">Faol</p>
+                <p className="text-3xl font-bold text-green-600">{activeStudents}</p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-full">
+                <UserCheck className="h-6 w-6 text-green-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <TrendingUp className="h-6 w-6 text-green-600" />
-              </div>
+            <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl font-bold">{activeStudents}</div>
-                <p className="text-sm text-muted-foreground">Faol</p>
+                <p className="text-sm font-medium text-muted-foreground">O'rtacha Baho</p>
+                <p className="text-3xl font-bold text-purple-600">{avgGrade.toFixed(1)}</p>
+              </div>
+              <div className="p-3 bg-purple-100 rounded-full">
+                <GraduationCap className="h-6 w-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <Users className="h-6 w-6 text-red-600" />
-              </div>
+            <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl font-bold">{inactiveStudents}</div>
-                <p className="text-sm text-muted-foreground">Nofaol</p>
+                <p className="text-sm font-medium text-muted-foreground">Davomat %</p>
+                <p className="text-3xl font-bold text-orange-600">{avgAttendance.toFixed(1)}%</p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Users className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{withParents}</div>
-                <p className="text-sm text-muted-foreground">Ota-onasi bor</p>
+              <div className="p-3 bg-orange-100 rounded-full">
+                <TrendingUp className="h-6 w-6 text-orange-600" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* By Class */}
+      {/* Filter Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Sinflar bo'yicha</CardTitle>
+          <CardTitle>Filtrlar</CardTitle>
+          <CardDescription>O'quvchilarni sinf va status bo'yicha filtrlang</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2 flex-wrap">
+            <Link href="/admin/reports/students">
+              <Button variant={!searchParams.classId && !searchParams.status ? "default" : "outline"} size="sm">
+                Barchasi
+              </Button>
+            </Link>
+            {classes.map(cls => (
+              <Link key={cls.id} href={`/admin/reports/students?classId=${cls.id}`}>
+                <Button variant={searchParams.classId === cls.id ? "default" : "outline"} size="sm">
+                  {cls.name}
+                </Button>
+              </Link>
+            ))}
+            <Link href="/admin/reports/students?status=ACTIVE">
+              <Button variant={searchParams.status === 'ACTIVE' ? "default" : "outline"} size="sm" className="bg-green-600 text-white hover:bg-green-700">
+                Faol
+              </Button>
+            </Link>
+            <Link href="/admin/reports/students?status=GRADUATED">
+              <Button variant={searchParams.status === 'GRADUATED' ? "default" : "outline"} size="sm" className="bg-blue-600 text-white hover:bg-blue-700">
+                Bitirgan
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Students Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>O'quvchilar Ro'yxati ({students.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {Object.entries(byClass).map(([className, count]) => (
-              <div key={className} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Users className="h-5 w-5 text-muted-foreground" />
-                  <span className="font-medium">{className}</span>
-                </div>
-                <Badge variant="secondary">{count} o'quvchi</Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            {students.map(student => {
+              const totalPaid = student.payments.reduce((sum, p) => sum + Number(p.paidAmount || 0), 0)
+              const studentAttendanceRate = student.attendances.length > 0
+                ? (student.attendances.filter(a => a.status === 'PRESENT').length / student.attendances.length) * 100
+                : 0
+              const studentAvgGrade = student.grades.length > 0
+                ? student.grades.reduce((sum, g) => sum + Number(g.score), 0) / student.grades.length
+                : 0
 
-      {/* By Grade Level */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Daraja bo'yicha</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 md:grid-cols-4">
-            {Object.entries(byGrade)
-              .sort(([a], [b]) => Number(a) - Number(b))
-              .map(([grade, count]) => (
-                <div key={grade} className="p-4 border rounded-lg text-center">
-                  <div className="text-3xl font-bold text-blue-600 mb-1">
-                    {grade === '0' ? '-' : grade}
+              return (
+                <div key={student.id} className="p-4 border-2 rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-semibold">{student.user.fullName}</h3>
+                        {student.status === 'ACTIVE' && (
+                          <Badge className="bg-green-600">Faol</Badge>
+                        )}
+                        {student.status === 'GRADUATED' && (
+                          <Badge className="bg-blue-600">Bitirgan</Badge>
+                        )}
+                        {student.status === 'EXPELLED' && (
+                          <Badge className="bg-red-600">Haydal gan</Badge>
+                        )}
+                        {student.class && (
+                          <Badge variant="outline">{student.class.name}</Badge>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-2 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Kod:</p>
+                          <p className="font-medium">{student.studentCode}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">O'rtacha baho:</p>
+                          <p className="font-medium">{studentAvgGrade > 0 ? studentAvgGrade.toFixed(1) : 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Davomat:</p>
+                          <p className="font-medium">{studentAttendanceRate.toFixed(0)}%</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">To'langan:</p>
+                          <p className="font-medium">{formatNumber(totalPaid)} so'm</p>
+                        </div>
+                      </div>
+                    </div>
+                    <Link href={`/admin/students/${student.id}`}>
+                      <Button variant="outline" size="sm">
+                        Batafsil
+                      </Button>
+                    </Link>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {grade === '0' ? 'Biriktirilmagan' : `${grade}-sinf`}
-                  </p>
-                  <Badge variant="secondary">{count} ta</Badge>
                 </div>
-              ))}
+              )
+            })}
           </div>
         </CardContent>
       </Card>
 
-      {/* Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Eksport qilish</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ExportButtons
-            students={students}
-            byClass={byClass}
-            byGrade={byGrade}
-            stats={{
-              total: totalStudents,
-              active: activeStudents,
-              inactive: inactiveStudents,
-              withParents: withParents
-            }}
-          />
-          <p className="text-sm text-muted-foreground mt-3">
-            Hisobotni PDF yoki CSV formatida yuklab oling
-          </p>
-        </CardContent>
-      </Card>
+      {/* Summary Statistics */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Jins bo'yicha taqsimot</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span>O'g'il bolalar</span>
+                <Badge>{maleStudents} ({totalStudents > 0 ? ((maleStudents / totalStudents) * 100).toFixed(0) : 0}%)</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Qiz bolalar</span>
+                <Badge>{femaleStudents} ({totalStudents > 0 ? ((femaleStudents / totalStudents) * 100).toFixed(0) : 0}%)</Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Moliyaviy Ko'rsatkichlar</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span>Jami to'lovlar</span>
+                <Badge>{formatNumber(totalRevenue)} so'm</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>O'rtacha (o'quvchi)</span>
+                <Badge>{formatNumber(Math.round(avgRevenue))} so'm</Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
-
