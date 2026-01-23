@@ -3,7 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Calendar, Clock, AlertCircle, Users, BookOpen, CheckCircle2 } from 'lucide-react'
+import { Calendar, Clock, AlertCircle, Users, BookOpen, CheckCircle2, Coffee, Utensils } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { getCurrentAcademicYear } from '@/lib/utils'
 import { cn } from '@/lib/utils'
@@ -292,42 +292,72 @@ export default async function TeacherSchedulePage() {
                               <div className="space-y-1">
                                 {lessons.map((lesson, idx) => {
                                   const colorScheme = subjectColors.get(lesson.subject?.id || '') || SUBJECT_COLORS[0]
+                                  const isBreak = lesson.type === 'BREAK'
+                                  const isLunch = lesson.type === 'LUNCH'
+                                  
                                   return (
                                     <div
                                       key={idx}
                                       className={cn(
                                         "p-2 rounded-md text-xs space-y-1 min-h-[65px] lg:min-h-[75px] relative",
                                         "border-2 shadow-sm hover:shadow-lg transition-all",
-                                        `${colorScheme.bg} ${colorScheme.border}`
+                                        isBreak && "bg-gradient-to-br from-amber-100 to-amber-200 border-amber-400",
+                                        isLunch && "bg-gradient-to-br from-green-100 to-green-200 border-green-400",
+                                        !isBreak && !isLunch && `${colorScheme.bg} ${colorScheme.border}`
                                       )}
                                     >
-                                      {/* Complete indicator */}
-                                      <div className="absolute -top-1 -right-1">
-                                        <div className="bg-green-500 rounded-full p-0.5">
-                                          <CheckCircle2 className="h-3 w-3 text-white" />
-                                        </div>
-                                      </div>
-
-                                      {/* Subject name */}
-                                      <div className={cn(
-                                        "font-bold text-[11px] lg:text-xs line-clamp-2 leading-tight",
-                                        colorScheme.text
-                                      )}>
-                                        {lesson.subject?.name || 'Dars'}
-                                      </div>
-                                      
-                                      {/* Class/Group name */}
-                                      {lesson.className && (
-                                        <div className="text-[10px] lg:text-xs text-muted-foreground line-clamp-1 font-medium">
-                                          🏫 {lesson.className}
+                                      {/* Complete indicator - only for lessons */}
+                                      {!isBreak && !isLunch && (
+                                        <div className="absolute -top-1 -right-1">
+                                          <div className="bg-green-500 rounded-full p-0.5">
+                                            <CheckCircle2 className="h-3 w-3 text-white" />
+                                          </div>
                                         </div>
                                       )}
-                                      
-                                      {/* Room number */}
-                                      {lesson.roomNumber && (
-                                        <div className="text-[10px] lg:text-xs text-muted-foreground font-medium">
-                                          🚪 Xona {lesson.roomNumber}
+
+                                      {/* Break display */}
+                                      {isBreak && (
+                                        <div className="flex flex-col items-center justify-center h-full text-center">
+                                          <Coffee className="h-6 w-6 lg:h-7 lg:w-7 text-amber-700 mb-1" />
+                                          <div className="font-bold text-sm text-amber-900">{lesson.title || 'Tanafus'}</div>
+                                          <div className="text-[10px] text-amber-700">Dam olish</div>
                                         </div>
+                                      )}
+
+                                      {/* Lunch display */}
+                                      {isLunch && (
+                                        <div className="flex flex-col items-center justify-center h-full text-center">
+                                          <Utensils className="h-6 w-6 lg:h-7 lg:w-7 text-green-700 mb-1" />
+                                          <div className="font-bold text-sm text-green-900">{lesson.title || 'Tushlik'}</div>
+                                          <div className="text-[10px] text-green-700">Ovqatlanish</div>
+                                        </div>
+                                      )}
+
+                                      {/* Lesson display */}
+                                      {!isBreak && !isLunch && (
+                                        <>
+                                          {/* Subject name */}
+                                          <div className={cn(
+                                            "font-bold text-[11px] lg:text-xs line-clamp-2 leading-tight",
+                                            colorScheme.text
+                                          )}>
+                                            {lesson.subject?.name || 'Dars'}
+                                          </div>
+                                          
+                                          {/* Class/Group name */}
+                                          {lesson.className && (
+                                            <div className="text-[10px] lg:text-xs text-muted-foreground line-clamp-1 font-medium">
+                                              🏫 {lesson.className}
+                                            </div>
+                                          )}
+                                          
+                                          {/* Room number */}
+                                          {lesson.roomNumber && (
+                                            <div className="text-[10px] lg:text-xs text-muted-foreground font-medium">
+                                              🚪 Xona {lesson.roomNumber}
+                                            </div>
+                                          )}
+                                        </>
                                       )}
                                     </div>
                                   )
