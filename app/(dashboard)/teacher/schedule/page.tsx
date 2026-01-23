@@ -105,8 +105,7 @@ export default async function TeacherSchedulePage() {
   const groupSchedules = await db.groupSchedule.findMany({
     where: {
       tenantId,
-      teacherId: teacher.id,
-      academicYear
+      teacherId: teacher.id
     },
     include: {
       subject: true,
