@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation'
 import { createMeal } from '@/app/actions/meal'
 import { toast } from 'sonner'
 import { Checkbox } from '@/components/ui/checkbox'
+import { MealType } from '@prisma/client'
 
 const dayNames = [
   { value: 1, label: 'Dushanba' },
@@ -33,9 +34,21 @@ const mealTypes = [
 export default function CreateMealPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    dayOfWeek: number
+    mealType: MealType
+    mainDish: string
+    sideDish: string
+    salad: string
+    dessert: string
+    drink: string
+    description: string
+    effectiveFrom: string
+    effectiveTo: string
+    isActive: boolean
+  }>({
     dayOfWeek: 1,
-    mealType: 'LUNCH',
+    mealType: 'LUNCH' as MealType,
     mainDish: '',
     sideDish: '',
     salad: '',
@@ -118,7 +131,7 @@ export default function CreateMealPage() {
                 <Label htmlFor="mealType">Ovqat turi *</Label>
                 <Select
                   value={formData.mealType}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, mealType: value }))}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, mealType: value as MealType }))}
                   required
                 >
                   <SelectTrigger>

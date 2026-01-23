@@ -8,12 +8,13 @@ import { MoreVertical, Edit, Trash2, Eye, ToggleLeft, ToggleRight } from 'lucide
 import { useRouter } from 'next/navigation'
 import { deleteMeal, toggleMealStatus } from '@/app/actions/meal'
 import { toast } from 'sonner'
+import { MealType } from '@prisma/client'
 
 type Meal = {
   id: string
   dayOfWeek: number
   dayName: string
-  mealType: string
+  mealType: MealType
   mealTypeName: string
   mainDish: string
   sideDish: string | null
