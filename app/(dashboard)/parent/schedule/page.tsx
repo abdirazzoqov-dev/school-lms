@@ -146,8 +146,8 @@ export default async function ParentSchedulePage({
   const classSchedules = selectedChild.class?.schedules || []
   const groupSchedules = selectedChild.group?.schedules || []
   const allSchedules = [
-    ...classSchedules.map(s => ({ ...s, type: 'CLASS' as const })),
-    ...groupSchedules.map(s => ({ ...s, type: 'GROUP' as const }))
+    ...classSchedules.map(s => ({ ...s, scheduleSource: 'CLASS' as const })),
+    ...groupSchedules.map(s => ({ ...s, scheduleSource: 'GROUP' as const }))
   ]
 
   // Get time slots

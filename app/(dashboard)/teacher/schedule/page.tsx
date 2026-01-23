@@ -119,8 +119,8 @@ export default async function TeacherSchedulePage() {
 
   // Combine all schedules
   const allSchedules = [
-    ...classSchedules.map(s => ({ ...s, type: 'CLASS' as const, className: s.class?.name })),
-    ...groupSchedules.map(s => ({ ...s, type: 'GROUP' as const, className: s.group?.name }))
+    ...classSchedules.map(s => ({ ...s, scheduleSource: 'CLASS' as const, className: s.class?.name })),
+    ...groupSchedules.map(s => ({ ...s, scheduleSource: 'GROUP' as const, className: s.group?.name }))
   ]
 
   // Get time slots
