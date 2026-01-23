@@ -2,13 +2,24 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { DollarSign, CreditCard, Clock, CheckCircle2, XCircle } from 'lucide-react'
-import { formatCurrency, formatDateTime } from '@/lib/utils'
+import { Progress } from '@/components/ui/progress'
+import { Button } from '@/components/ui/button'
+import {
+  DollarSign, TrendingUp, Clock, CheckCircle2, Calendar, User
+} from 'lucide-react'
+import { formatNumber } from '@/lib/utils'
 import Link from 'next/link'
 
-export default async function ParentPaymentsPage() {
+export const revalidate = 0
+export const dynamic = 'force-dynamic'
+
+export default async function ParentPaymentsPage({
+  searchParams
+}: {
+  searchParams: { childId?: string }
+}) {
   const session = await getServerSession(authOptions)
 
   if (!session || session.user.role !== 'PARENT') {
@@ -18,10 +29,12 @@ export default async function ParentPaymentsPage() {
   const tenantId = session.user.tenantId!
 
   // Get parent
-  const parent = await db.parent.findFirst({
-    where: { userId: session.user.id },
+  const parent = await db.parent.findUnique({
+    where: {
+      userId: session.user.id
+    },
     include: {
-      students: {
+      children: {
         include: {
           student: {
             include: {
@@ -34,6 +47,11 @@ export default async function ParentPaymentsPage() {
                 select: {
                   name: true
                 }
+              },
+              payments: {
+                orderBy: {
+                  createdAt: 'desc'
+                }
               }
             }
           }
@@ -42,253 +60,316 @@ export default async function ParentPaymentsPage() {
     }
   })
 
-  if (!parent || parent.students.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">To'lovlar</h1>
-          <p className="text-muted-foreground">
-            To'lovlar tarixi va holati
-          </p>
-        </div>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-8">
-              <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Farzandlar topilmadi</h3>
-              <p className="text-muted-foreground">
-                Sizning profilingizga farzandlar biriktirilmagan
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
+  if (!parent) {
+    redirect('/unauthorized')
   }
 
-  const children = parent.students.map(sp => sp.student)
-  const childrenIds = children.map(c => c.id)
+  // Get all children's students
+  const children = parent.children.map(c => c.student)
 
-  // Get all payments for children
-  const payments = await db.payment.findMany({
-    where: {
-      tenantId,
-      studentId: { in: childrenIds }
-    },
-    include: {
-      student: {
-        include: {
-          user: {
-            select: {
-              fullName: true
-            }
-          },
-          class: {
-            select: {
-              name: true
-            }
-          }
-        }
-      }
-    },
-    orderBy: {
-      createdAt: 'desc'  // Fixed: paymentDate doesn't exist in Payment model
-    }
-  })
+  // Filter by child if specified
+  const filteredChildren = searchParams.childId
+    ? children.filter(c => c.id === searchParams.childId)
+    : children
 
-  // Calculate statistics
-  const totalPaid = payments
-    .filter(p => p.status === 'COMPLETED')
-    .reduce((sum, p) => sum + Number(p.amount), 0)
+  // Calculate overall statistics
+  const allPayments = filteredChildren.flatMap(child => child.payments)
+  
+  const totalAmount = allPayments.reduce((sum, p) => sum + Number(p.amount), 0)
+  const totalPaid = allPayments.reduce((sum, p) => sum + Number(p.paidAmount || 0), 0)
+  const totalRemaining = allPayments.reduce((sum, p) => sum + Number(p.remainingAmount || 0), 0)
 
-  const totalPending = payments
-    .filter(p => p.status === 'PENDING')
-    .reduce((sum, p) => sum + Number(p.amount), 0)
+  const completedPayments = allPayments.filter(p => p.status === 'COMPLETED' && Number(p.remainingAmount) === 0).length
+  const pendingPayments = allPayments.filter(p => p.status === 'PENDING' || Number(p.remainingAmount) > 0).length
 
-  const totalOverdue = payments
-    .filter(p => p.status === 'PENDING' && p.dueDate < new Date())
-    .reduce((sum, p) => sum + Number(p.amount), 0)
-
-  const totalAmount = payments.reduce((sum, p) => sum + Number(p.amount), 0)
+  const monthNames = [
+    'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
+    'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'
+  ]
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">To'lovlar</h1>
-        <p className="text-muted-foreground">
-          Farzandlarim uchun to'lovlar tarixi va holati
-        </p>
+    <div className="space-y-6 p-6">
+      {/* Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 p-8 text-white shadow-2xl">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative z-10">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <DollarSign className="h-8 w-8" />
+                </div>
+                <h1 className="text-4xl font-bold">Farzandlarim To'lovlari</h1>
+              </div>
+              <p className="text-green-50 text-lg">
+                Barcha to'lovlar va to'lov tarixi
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Decorative elements */}
+        <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
+        <div className="absolute -left-8 -bottom-8 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle2 className="h-6 w-6 text-green-600" />
-              </div>
+            <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl font-bold">{formatCurrency(totalPaid)}</div>
-                <p className="text-sm text-muted-foreground">To'langan</p>
+                <p className="text-sm font-medium text-muted-foreground">Jami Summa</p>
+                <p className="text-2xl font-bold text-blue-600">{formatNumber(totalAmount)}</p>
+                <p className="text-xs text-muted-foreground mt-1">so'm</p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Clock className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{formatCurrency(totalPending)}</div>
-                <p className="text-sm text-muted-foreground">Kutilmoqda</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <XCircle className="h-6 w-6 text-red-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold">{formatCurrency(totalOverdue)}</div>
-                <p className="text-sm text-muted-foreground">Muddati o'tgan</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-blue-100 rounded-lg">
+              <div className="p-3 bg-blue-100 rounded-full">
                 <DollarSign className="h-6 w-6 text-blue-600" />
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-green-100">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl font-bold">{formatCurrency(totalAmount)}</div>
-                <p className="text-sm text-muted-foreground">Jami</p>
+                <p className="text-sm font-medium text-muted-foreground">To'langan</p>
+                <p className="text-2xl font-bold text-green-600">{formatNumber(totalPaid)}</p>
+                <p className="text-xs text-muted-foreground mt-1">so'm</p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-full">
+                <CheckCircle2 className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Qolgan</p>
+                <p className="text-2xl font-bold text-orange-600">{formatNumber(totalRemaining)}</p>
+                <p className="text-xs text-muted-foreground mt-1">so'm</p>
+              </div>
+              <div className="p-3 bg-orange-100 rounded-full">
+                <Clock className="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">To'lovlar</p>
+                <p className="text-2xl font-bold text-purple-600">{allPayments.length}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {completedPayments} ✓ • {pendingPayments} ⏳
+                </p>
+              </div>
+              <div className="p-3 bg-purple-100 rounded-full">
+                <TrendingUp className="h-6 w-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Children Cards */}
-      <div className="grid gap-6 md:grid-cols-1">
-        {children.map((child) => {
-          const childPayments = payments.filter(p => p.studentId === child.id)
-          
+      {/* Filter by Child */}
+      {children.length > 1 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Farzand tanlash</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2 flex-wrap">
+              <Link href="/parent/payments">
+                <Button variant={!searchParams.childId ? "default" : "outline"} size="sm">
+                  Barchasi
+                </Button>
+              </Link>
+              {children.map(child => (
+                <Link key={child.id} href={`/parent/payments?childId=${child.id}`}>
+                  <Button variant={searchParams.childId === child.id ? "default" : "outline"} size="sm">
+                    <User className="h-4 w-4 mr-2" />
+                    {child.user?.fullName || 'N/A'}
+                  </Button>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Payments by Child */}
+      <div className="space-y-4">
+        {filteredChildren.map(child => {
+          const childPayments = child.payments
+          const childTotalAmount = childPayments.reduce((sum, p) => sum + Number(p.amount), 0)
+          const childTotalPaid = childPayments.reduce((sum, p) => sum + Number(p.paidAmount || 0), 0)
+          const childTotalRemaining = childPayments.reduce((sum, p) => sum + Number(p.remainingAmount || 0), 0)
+          const childProgress = childTotalAmount > 0 ? Math.round((childTotalPaid / childTotalAmount) * 100) : 0
+
           return (
-            <Card key={child.id}>
-              <CardHeader>
+            <Card key={child.id} className="border-2">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>{child.user?.fullName || 'O\'quvchi'}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {child.class?.name || 'Sinfga biriktirilmagan'}
-                    </p>
+                    <CardTitle className="flex items-center gap-2">
+                      <User className="h-5 w-5" />
+                      {child.user?.fullName || 'N/A'}
+                    </CardTitle>
+                    <CardDescription>
+                      {child.class?.name || 'N/A'} • {childPayments.length} ta to'lov
+                    </CardDescription>
                   </div>
-                  <Badge variant="outline">
-                    {childPayments.length} ta to'lov
-                  </Badge>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-blue-600">{formatNumber(childTotalPaid)}</p>
+                    <p className="text-sm text-muted-foreground">/ {formatNumber(childTotalAmount)} so'm</p>
+                  </div>
+                </div>
+                
+                {/* Overall Progress for Child */}
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">Umumiy to'lov</span>
+                    <span className="text-sm font-bold text-blue-600">{childProgress}%</span>
+                  </div>
+                  <Progress value={childProgress} className="h-3" />
                 </div>
               </CardHeader>
-              <CardContent>
-                {childPayments.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    To'lovlar tarixi yo'q
-                  </div>
-                ) : (
-                  <div className="rounded-md border overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="border-b bg-muted/50">
-                        <tr>
-                          <th className="p-3 text-left text-sm font-medium">Hisob raqami</th>
-                          <th className="p-3 text-left text-sm font-medium">Turi</th>
-                          <th className="p-3 text-left text-sm font-medium">Summa</th>
-                          <th className="p-3 text-left text-sm font-medium">Sana</th>
-                          <th className="p-3 text-left text-sm font-medium">Holat</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {childPayments.map((payment) => (
-                          <tr key={payment.id} className="hover:bg-muted/50">
-                            <td className="p-3">
-                              <span className="font-mono text-sm">{payment.invoiceNumber}</span>
-                            </td>
-                            <td className="p-3">
-                              <Badge variant="outline">
-                                {payment.paymentType === 'TUITION' && 'O\'quv to\'lovi'}
-                                {payment.paymentType === 'BOOKS' && 'Kitoblar'}
-                                {payment.paymentType === 'UNIFORM' && 'Forma'}
-                                {payment.paymentType === 'OTHER' && 'Boshqa'}
-                              </Badge>
-                            </td>
-                            <td className="p-3 font-semibold">
-                              {formatCurrency(Number(payment.amount))}
-                            </td>
-                            <td className="p-3 text-sm text-muted-foreground">
-                              {payment.paidDate ? formatDateTime(payment.paidDate) : 'To\'lanmagan'}
-                            </td>
-                            <td className="p-3">
-                              {payment.status === 'COMPLETED' && (
-                                <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                                  To'langan
+              
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  {childPayments.map(payment => {
+                    const paidAmount = Number(payment.paidAmount || 0)
+                    const totalAmount = Number(payment.amount)
+                    const remainingAmount = Number(payment.remainingAmount || 0)
+                    const percentage = totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 0
+
+                    return (
+                      <div key={payment.id} className="p-4 border-2 rounded-lg hover:bg-muted/50 transition-colors">
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 flex-wrap mb-2">
+                              {/* Type Badge */}
+                              {payment.paymentType === 'TUITION' && (
+                                <Badge className="bg-blue-600">📚 O'qish haqi</Badge>
+                              )}
+                              {payment.paymentType === 'BOOKS' && (
+                                <Badge className="bg-purple-600">📖 Darsliklar</Badge>
+                              )}
+                              {payment.paymentType === 'UNIFORM' && (
+                                <Badge className="bg-green-600">👔 Forma</Badge>
+                              )}
+                              {payment.paymentType === 'OTHER' && (
+                                <Badge className="bg-gray-600">📦 Boshqa</Badge>
+                              )}
+
+                              {/* Status Badge */}
+                              {percentage === 100 && remainingAmount === 0 && (
+                                <Badge className="bg-green-600">✓ To'langan</Badge>
+                              )}
+                              {percentage > 0 && percentage < 100 && (
+                                <Badge className="bg-orange-600">⚡ Qisman</Badge>
+                              )}
+                              {percentage === 0 && (
+                                <Badge className="bg-amber-600">⏳ Kutilmoqda</Badge>
+                              )}
+
+                              {/* Month Badge */}
+                              {payment.paymentMonth && payment.paymentYear && (
+                                <Badge variant="outline" className="text-xs">
+                                  <Calendar className="h-3 w-3 mr-1" />
+                                  {monthNames[payment.paymentMonth - 1]} {payment.paymentYear}
                                 </Badge>
                               )}
-                              {payment.status === 'PENDING' && (
-                                <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-                                  {payment.dueDate < new Date() ? 'Muddati o\'tgan' : 'Kutilmoqda'}
-                                </Badge>
-                              )}
-                              {payment.status === 'FAILED' && (
-                                <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
-                                  Muvaffaqiyatsiz
-                                </Badge>
-                              )}
-                              {payment.status === 'REFUNDED' && (
-                                <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">
-                                  Qaytarilgan
-                                </Badge>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                            </div>
+
+                            {payment.description && (
+                              <p className="text-sm text-muted-foreground mb-2">
+                                📝 {payment.description}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="text-right">
+                            <p className="text-xl font-bold text-green-600">
+                              {formatNumber(paidAmount)}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              / {formatNumber(totalAmount)} so'm
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="mb-3">
+                          <Progress value={percentage} className="h-2" />
+                        </div>
+
+                        {/* Amount Breakdown */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-green-50 border border-green-200 rounded px-3 py-2">
+                            <p className="text-xs text-green-600">To'landi</p>
+                            <p className="text-sm font-bold text-green-700">
+                              {formatNumber(paidAmount)} so'm
+                            </p>
+                          </div>
+                          {remainingAmount > 0 && (
+                            <div className="bg-orange-50 border border-orange-200 rounded px-3 py-2">
+                              <p className="text-xs text-orange-600">Qoldi</p>
+                              <p className="text-sm font-bold text-orange-700">
+                                {formatNumber(remainingAmount)} so'm
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Payment Date */}
+                        {payment.paidDate && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            📅 To'langan: {new Date(payment.paidDate).toLocaleDateString('uz-UZ', {
+                              day: '2-digit',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </p>
+                        )}
+                      </div>
+                    )
+                  })}
+
+                  {childPayments.length === 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">To'lovlar topilmadi</p>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           )
         })}
       </div>
 
-      {/* Info Card */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardContent className="pt-6">
-          <div className="flex gap-3">
-            <CreditCard className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-blue-900 mb-1">
-                To'lovlar haqida
-              </h3>
-              <p className="text-sm text-blue-800">
-                Bu yerda farzandlaringiz uchun qilingan barcha to'lovlarni ko'rishingiz mumkin.
-                To'lovlar tarixi, holati va summasi haqida to'liq ma'lumot berilgan.
-                Muddati o'tgan to'lovlar mavjud bo'lsa, ularni tez orada to'lashingiz tavsiya etiladi.
-              </p>
+      {filteredChildren.length === 0 && (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <div className="inline-block p-4 bg-gradient-to-br from-gray-100 to-slate-100 rounded-full mb-4">
+              <DollarSign className="h-16 w-16 text-muted-foreground opacity-50" />
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            <p className="text-lg font-semibold text-muted-foreground mb-2">
+              Farzandlar topilmadi
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Sizga biriktirilgan farzandlar yo'q
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
