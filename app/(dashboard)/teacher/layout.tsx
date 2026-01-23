@@ -52,6 +52,11 @@ export default async function TeacherLayout({
       icon: 'Award',
     },
     {
+      title: 'Maoshim',
+      href: '/teacher/salary',
+      icon: 'DollarSign',
+    },
+    {
       title: 'Dars Materiallari',
       href: '/teacher/materials',
       icon: 'BookOpen',
