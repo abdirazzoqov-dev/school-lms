@@ -291,6 +291,7 @@ export default async function PaymentsPage({
                   paramName="paymentType"
                   options={[
                     { label: 'O\'qish', value: 'TUITION' },
+                    { label: 'Yotoqxona', value: 'DORMITORY' },
                     { label: 'Kitob', value: 'BOOKS' },
                     { label: 'Forma', value: 'UNIFORM' },
                     { label: 'Boshqa', value: 'OTHER' },

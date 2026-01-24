@@ -51,6 +51,17 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
     payment: null
   })
 
+  const getPaymentTypeLabel = (type: string) => {
+    const types: Record<string, string> = {
+      'TUITION': 'O\'qish',
+      'DORMITORY': 'Yotoqxona',
+      'BOOKS': 'Kitob',
+      'UNIFORM': 'Forma',
+      'OTHER': 'Boshqa'
+    }
+    return types[type] || type
+  }
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedIds(payments.map(p => p.id))
@@ -291,7 +302,7 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                   </td>
                   <td className="p-4">
                     <div>
-                      <div className="text-sm">{payment.paymentType}</div>
+                      <div className="text-sm">{getPaymentTypeLabel(payment.paymentType)}</div>
                       <div className="text-xs text-muted-foreground">
                         {payment.paymentMethod}
                       </div>
@@ -434,7 +445,7 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                     <div className="space-y-1 text-sm text-muted-foreground">
                       <div className="flex items-start gap-2">
                         <span className="font-medium min-w-[70px]">Turi:</span>
-                        <span>{payment.paymentType} ({payment.paymentMethod})</span>
+                        <span>{getPaymentTypeLabel(payment.paymentType)} ({payment.paymentMethod})</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="font-medium min-w-[70px]">Muddat:</span>
