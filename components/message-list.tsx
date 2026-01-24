@@ -131,9 +131,9 @@ export function MessageList({ messages, currentUserId, onDelete, onReply }: Mess
                         <div className="flex items-center gap-4 text-sm bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-800">
                           <div className="flex items-center gap-2">
                             <GraduationCap className="h-4 w-4 text-amber-600" />
-                            <span className="text-muted-foreground">O'quvchi:</span>
+                            <span className="text-muted-foreground">O&apos;quvchi:</span>
                             <span className="font-semibold text-amber-700 dark:text-amber-400">
-                              {message.student.user?.fullName || 'Noma\'lum'}
+                              {message.student.user?.fullName || "Noma'lum"}
                             </span>
                             <span className="text-xs text-muted-foreground">
                               ({message.student.studentCode})
@@ -154,7 +154,7 @@ export function MessageList({ messages, currentUserId, onDelete, onReply }: Mess
                       
                       {/* Subject */}
                       <p className={`text-lg font-semibold ${isUnread ? 'text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300'}`}>
-                        {message.subject || 'Mavzu yo\'q'}
+                        {message.subject || "Mavzu yo'q"}
                       </p>
                       
                       {/* Preview */}
