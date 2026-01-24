@@ -83,6 +83,7 @@ enum MealType {
 
 enum PaymentType {
   TUITION // O'qish haqi
+  DORMITORY // Yotoqxona
   BOOKS // Darsliklar
   UNIFORM // Forma
   OTHER // Boshqa

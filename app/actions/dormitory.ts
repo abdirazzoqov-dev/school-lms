@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
+import { generateRandomString } from '@/lib/utils'
 import {
   buildingSchema,
   updateBuildingSchema,
@@ -358,7 +359,11 @@ export async function createAssignment(data: AssignmentFormData) {
         isActive: true,
       },
       include: {
-        room: true,
+        room: {
+          include: {
+            building: true
+          }
+        },
       },
     })
 
@@ -412,7 +417,35 @@ export async function createAssignment(data: AssignmentFormData) {
     // Update building cache
     await updateBuildingCache(bed.room.buildingId)
 
+    // Create initial dormitory payment for current month
+    if (validatedData.monthlyFee > 0) {
+      const currentDate = new Date()
+      const paymentMonth = currentDate.getMonth() + 1
+      const paymentYear = currentDate.getFullYear()
+      const invoiceNumber = `DORM-${paymentYear}-${generateRandomString(8)}`
+
+      await db.payment.create({
+        data: {
+          tenantId,
+          studentId: validatedData.studentId,
+          amount: validatedData.monthlyFee,
+          paidAmount: 0,
+          remainingAmount: validatedData.monthlyFee,
+          paymentType: 'DORMITORY',
+          paymentMethod: 'CASH',
+          status: 'PENDING',
+          dueDate: new Date(paymentYear, paymentMonth - 1, 5), // 5th of current month
+          paymentMonth,
+          paymentYear,
+          invoiceNumber,
+          notes: `Yotoqxona to'lovi - ${bed.room.building.name} binosi, ${bed.room.roomNumber}-xona`,
+        }
+      })
+    }
+
     revalidateDormitoryPaths()
+    revalidatePath('/admin/payments')
+    revalidatePath('/admin/dormitory/payments')
 
     return { success: true, assignment }
   } catch (error: any) {

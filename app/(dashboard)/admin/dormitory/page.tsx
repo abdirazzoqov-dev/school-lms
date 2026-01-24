@@ -13,7 +13,8 @@ import {
   UserPlus,
   Plus,
   ArrowRight,
-  Building2
+  Building2,
+  DollarSign
 } from 'lucide-react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
@@ -489,6 +490,25 @@ export default async function DormitoryDashboardPage() {
                   <div>
                     <p className="font-semibold text-lg">Joylashtirishlar</p>
                     <p className="text-sm text-muted-foreground">O'quvchilarni boshqarish</p>
+                  </div>
+                </div>
+                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/dormitory/payments">
+          <Card className="hover:shadow-lg transition-all cursor-pointer group">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-emerald-100 group-hover:bg-emerald-200 transition-colors">
+                    <DollarSign className="h-6 w-6 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-lg">To&apos;lovlar</p>
+                    <p className="text-sm text-muted-foreground">Yotoqxona to&apos;lovlari</p>
                   </div>
                 </div>
                 <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
