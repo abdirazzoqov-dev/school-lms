@@ -8,7 +8,7 @@ export const teacherSchema = z.object({
   specialization: z.string().min(3, 'Mutaxassislikni kiriting'),
   education: z.string().optional(),
   experienceYears: z.number().min(0).max(50).optional(),
-  monthlySalary: z.number().min(0, 'Oylik maosh 0 dan katta bo\'lishi kerak'),
+  monthlySalary: z.number().min(0, 'Oylik maosh 0 dan katta bo\'lishi kerak').optional(),
   password: z.string().min(6, 'Parol kamida 6 ta belgi bo\'lishi kerak'),
 })
 

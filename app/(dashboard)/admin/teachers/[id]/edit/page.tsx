@@ -24,6 +24,7 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
     specialization: '',
     education: '',
     experienceYears: 0,
+    monthlySalary: '',
   })
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
             specialization: data.teacher.specialization,
             education: data.teacher.education || '',
             experienceYears: data.teacher.experienceYears || 0,
+            monthlySalary: data.teacher.monthlySalary ? data.teacher.monthlySalary.toString() : '',
           })
         }
         setDataLoading(false)
@@ -58,7 +60,11 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
     setLoading(true)
 
     try {
-      const result = await updateTeacher(params.id, formData)
+      const submitData = {
+        ...formData,
+        monthlySalary: formData.monthlySalary ? parseFloat(formData.monthlySalary) : undefined,
+      }
+      const result = await updateTeacher(params.id, submitData)
 
       if (result.success) {
         toast({
@@ -183,6 +189,22 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
                 value={formData.experienceYears}
                 onChange={(e) => setFormData(prev => ({ ...prev, experienceYears: parseInt(e.target.value) || 0 }))}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="monthlySalary">💰 Oylik Maosh (so'm)</Label>
+              <Input
+                id="monthlySalary"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="Masalan: 5000000"
+                value={formData.monthlySalary}
+                onChange={(e) => setFormData(prev => ({ ...prev, monthlySalary: e.target.value }))}
+              />
+              <p className="text-xs text-muted-foreground">
+                O'qituvchining oylik maoshi (so'm)
+              </p>
             </div>
 
             <div className="flex justify-end gap-4">

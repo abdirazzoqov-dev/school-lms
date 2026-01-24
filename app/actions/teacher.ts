@@ -153,6 +153,14 @@ export async function updateTeacher(teacherId: string, data: Partial<Omit<Teache
         specialization: data.specialization,
         education: data.education || null,
         experienceYears: data.experienceYears || null,
+        monthlySalary: data.monthlySalary || null,
+        ...(data.monthlySalary && {
+          salaryInfo: {
+            monthlySalary: data.monthlySalary,
+            currency: 'UZS',
+            lastUpdated: new Date().toISOString(),
+          }
+        }),
       }
     })
 

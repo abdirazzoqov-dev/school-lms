@@ -295,6 +295,7 @@ model User {
   notifications               Notification[]
   activityLogs                ActivityLog[]
   paymentsReceived            Payment[]             @relation("PaymentReceiver")
+  transactionsReceived        PaymentTransaction[]  @relation("TransactionReceiver")
   expensesPaid                Expense[]
   dormitoryAssignmentsCreated DormitoryAssignment[]
   permissions                 Permission[] // Moderator permissions
@@ -920,6 +921,9 @@ model Payment {
 
   notes String? @db.Text
 
+  // Relations
+  transactions PaymentTransaction[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -938,6 +942,35 @@ model Payment {
   @@index([studentId, status])
   @@index([studentId, paymentMonth, paymentYear])
   @@index([createdAt])
+}
+
+// PAYMENT TRANSACTION - Bo'lib-bo'lib to'lovlar tarixi
+model PaymentTransaction {
+  id       String @id @default(cuid())
+  
+  payment   Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  paymentId String
+
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentMethod PaymentMethod @default(CASH)
+  
+  // Transaction details
+  transactionDate DateTime @default(now()) @db.Date
+  transactionId   String? // Online payments uchun
+  receiptNumber   String? // Chek raqami
+  
+  // Qabul qilgan xodim
+  receivedBy   User?   @relation("TransactionReceiver", fields: [receivedById], references: [id], onDelete: SetNull)
+  receivedById String?
+  
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([paymentId])
+  @@index([transactionDate])
+  @@index([receivedById])
 }
 
 // PAYMENT_PLAN - To'lov rejalari
