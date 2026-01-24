@@ -12,6 +12,7 @@ import { DormitoryPaymentsTable } from './dormitory-payments-table'
 import { DormitoryPaymentsFilters } from './filters'
 
 export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function DormitoryPaymentsPage({
@@ -29,8 +30,8 @@ export default async function DormitoryPaymentsPage({
 
   // Get current date for filtering
   const currentDate = new Date()
-  const selectedMonth = searchParams.month ? parseInt(searchParams.month) : currentDate.getMonth() + 1
-  const selectedYear = searchParams.year ? parseInt(searchParams.year) : currentDate.getFullYear()
+  const selectedMonth = searchParams.month ? parseInt(searchParams.month) : undefined
+  const selectedYear = searchParams.year ? parseInt(searchParams.year) : undefined
   const selectedBuilding = searchParams.building
   const selectedStatus = searchParams.status as 'PENDING' | 'PARTIALLY_PAID' | 'COMPLETED' | undefined
 
@@ -39,12 +40,8 @@ export default async function DormitoryPaymentsPage({
     where: {
       tenantId,
       paymentType: 'DORMITORY',
-      ...(selectedMonth && selectedYear
-        ? {
-            paymentMonth: selectedMonth,
-            paymentYear: selectedYear,
-          }
-        : {}),
+      ...(selectedMonth ? { paymentMonth: selectedMonth } : {}),
+      ...(selectedYear ? { paymentYear: selectedYear } : {}),
       ...(selectedStatus && ['PENDING', 'PARTIALLY_PAID', 'COMPLETED'].includes(selectedStatus) 
         ? { status: selectedStatus } 
         : {}),

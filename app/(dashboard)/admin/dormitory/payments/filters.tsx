@@ -5,8 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface FiltersProps {
-  selectedMonth: number
-  selectedYear: number
+  selectedMonth: number | undefined
+  selectedYear: number | undefined
   selectedBuilding: string | undefined
   selectedStatus: string | undefined
   buildings: Array<{ id: string; name: string }>
@@ -60,13 +60,14 @@ export function DormitoryPaymentsFilters({
           <div>
             <label className="text-sm font-medium mb-2 block">Oy</label>
             <Select
-              value={selectedMonth.toString()}
+              value={selectedMonth?.toString() || 'all'}
               onValueChange={(value) => updateFilter('month', value)}
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Barcha oylar" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">Barcha oylar</SelectItem>
                 {months.map((month) => (
                   <SelectItem key={month.value} value={month.value}>
                     {month.label}
@@ -79,13 +80,14 @@ export function DormitoryPaymentsFilters({
           <div>
             <label className="text-sm font-medium mb-2 block">Yil</label>
             <Select
-              value={selectedYear.toString()}
+              value={selectedYear?.toString() || 'all'}
               onValueChange={(value) => updateFilter('year', value)}
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Barcha yillar" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">Barcha yillar</SelectItem>
                 {years.map((year) => (
                   <SelectItem key={year} value={year.toString()}>
                     {year}
