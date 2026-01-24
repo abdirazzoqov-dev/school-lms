@@ -12,7 +12,6 @@ import { DormitoryPaymentsTable } from './dormitory-payments-table'
 import { DormitoryPaymentsFilters } from './filters'
 
 export const dynamic = 'force-dynamic'
-export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function DormitoryPaymentsPage({
