@@ -43,8 +43,18 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import Link from 'next/link'
-import { DeleteButton } from '@/components/delete-button'
 import { deleteParent } from '@/app/actions/parent'
+import { useToast } from '@/components/ui/use-toast'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface Parent {
   id: string
@@ -90,9 +100,15 @@ export function ParentsTable({ parents, classes, searchParams }: ParentsTablePro
   const router = useRouter()
   const pathname = usePathname()
   const urlSearchParams = useSearchParams()
+  const { toast } = useToast()
 
   const [search, setSearch] = useState(searchParams.search || '')
   const [showFilters, setShowFilters] = useState(false)
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; parent: Parent | null }>({
+    open: false,
+    parent: null
+  })
+  const [deleting, setDeleting] = useState(false)
 
   const updateSearchParams = (key: string, value: string) => {
     const params = new URLSearchParams(urlSearchParams.toString())
@@ -111,6 +127,38 @@ export function ParentsTable({ parents, classes, searchParams }: ParentsTablePro
   const clearFilters = () => {
     setSearch('')
     router.push(pathname)
+  }
+
+  const handleDelete = async () => {
+    if (!deleteDialog.parent) return
+
+    setDeleting(true)
+    try {
+      const result = await deleteParent(deleteDialog.parent.id)
+      
+      if (result.success) {
+        toast({
+          title: 'Muvaffaqiyatli!',
+          description: result.message || 'Ota-ona o\'chirildi',
+        })
+        setDeleteDialog({ open: false, parent: null })
+        router.refresh()
+      } else {
+        toast({
+          title: 'Xato!',
+          description: result.error || 'Ota-onani o\'chirishda xatolik',
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      toast({
+        title: 'Xato!',
+        description: 'Kutilmagan xatolik yuz berdi',
+        variant: 'destructive',
+      })
+    } finally {
+      setDeleting(false)
+    }
   }
 
   const hasActiveFilters = searchParams.search || searchParams.class || searchParams.status
@@ -371,17 +419,15 @@ export function ParentsTable({ parents, classes, searchParams }: ParentsTablePro
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                          <div className="w-full">
-                            <DeleteButton
-                              itemId={parent.id}
-                              itemName={parent.user?.fullName || 'N/A'}
-                              itemType="parent"
-                              onDelete={deleteParent}
-                              variant="ghost"
-                              size="sm"
-                            />
-                          </div>
+                        <DropdownMenuItem 
+                          className="text-red-600 cursor-pointer"
+                          onSelect={(e) => {
+                            e.preventDefault()
+                            setDeleteDialog({ open: true, parent })
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          O'chirish
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -392,6 +438,43 @@ export function ParentsTable({ parents, classes, searchParams }: ParentsTablePro
           </Table>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ open, parent: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ishonchingiz komilmi?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                <strong>{deleteDialog.parent?.user?.fullName}</strong> ota-onasini o'chirmoqdasiz.
+              </p>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 space-y-1">
+                <p className="text-sm text-yellow-800 font-medium">
+                  ⚠️ Diqqat:
+                </p>
+                <ul className="text-sm text-yellow-700 list-disc list-inside space-y-1">
+                  <li>Agar farzandlarga biriktirilgan bo'lsa, o'chirib bo'lmaydi</li>
+                  <li>User akkaunt ham o'chiriladi</li>
+                  <li>Bu amalni qaytarib bo'lmaydi!</li>
+                </ul>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Bekor qilish</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handleDelete()
+              }}
+              disabled={deleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleting ? 'O\'chirilmoqda...' : 'Ha, O\'chirish'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
