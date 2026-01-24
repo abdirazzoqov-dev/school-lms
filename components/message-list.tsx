@@ -53,7 +53,7 @@ export function MessageList({ messages, currentUserId, onDelete, onReply }: Mess
           <div className="p-4 rounded-full bg-blue-50 dark:bg-blue-950/20 w-fit mx-auto mb-4">
             <Mail className="h-12 w-12 text-blue-600" />
           </div>
-          <h3 className="text-xl font-semibold mb-2">Xabarlar yo'q</h3>
+          <h3 className="text-xl font-semibold mb-2">Xabarlar yo&apos;q</h3>
           <p className="text-muted-foreground max-w-md mx-auto">
             Hozircha xabarlar mavjud emas. Ota-onalar bilan muloqot qilish uchun yangi xabar yozing.
           </p>
@@ -150,7 +150,6 @@ export function MessageList({ messages, currentUserId, onDelete, onReply }: Mess
                           )}
                         </div>
                       )}
-                    </div>
                       
                       {/* Subject */}
                       <p className={`text-lg font-semibold ${isUnread ? 'text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300'}`}>
@@ -216,7 +215,7 @@ export function MessageList({ messages, currentUserId, onDelete, onReply }: Mess
                     {message.readAt && (
                       <div className="flex items-center gap-1 text-xs text-muted-foreground mt-3">
                         <MailOpen className="h-3 w-3" />
-                        O'qilgan: {formatDateTime(new Date(message.readAt))}
+                        O&apos;qilgan: {formatDateTime(new Date(message.readAt))}
                       </div>
                     )}
                   </div>
@@ -229,4 +228,3 @@ export function MessageList({ messages, currentUserId, onDelete, onReply }: Mess
     </div>
   )
 }
-
