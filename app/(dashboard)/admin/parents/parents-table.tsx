@@ -43,6 +43,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import Link from 'next/link'
+import { DeleteButton } from '@/components/delete-button'
+import { deleteParent } from '@/app/actions/parent'
 
 interface Parent {
   id: string
@@ -369,9 +371,17 @@ export function ParentsTable({ parents, classes, searchParams }: ParentsTablePro
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          O'chirish
+                        <DropdownMenuItem asChild>
+                          <div className="w-full">
+                            <DeleteButton
+                              itemId={parent.id}
+                              itemName={parent.user?.fullName || 'N/A'}
+                              itemType="parent"
+                              onDelete={deleteParent}
+                              variant="ghost"
+                              size="sm"
+                            />
+                          </div>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

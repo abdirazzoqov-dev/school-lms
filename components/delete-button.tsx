@@ -20,7 +20,7 @@ import { Trash2, Loader2, AlertTriangle } from 'lucide-react'
 interface DeleteButtonProps {
   itemId: string
   itemName: string
-  itemType: 'tenant' | 'student' | 'teacher' | 'class' | 'payment' | 'material' | 'announcement' | 'schedule' | 'message'
+  itemType: 'tenant' | 'student' | 'teacher' | 'class' | 'payment' | 'material' | 'announcement' | 'schedule' | 'message' | 'parent'
   onDelete: (id: string) => Promise<{ success: boolean; error?: string }>
   variant?: 'default' | 'ghost' | 'outline' | 'destructive'
   size?: 'default' | 'sm' | 'lg' | 'icon'
@@ -53,6 +53,7 @@ export function DeleteButton({
     announcement: 'E\'lon',
     schedule: 'Dars jadvali',
     message: 'Xabar',
+    parent: 'Ota-ona',
   }
 
   const handleDelete = async () => {
@@ -121,6 +122,18 @@ export function DeleteButton({
                   <li>Agar qarzi bo'lsa, o'chirib bo'lmaydi</li>
                   <li>Barcha to'lovlar to'langan bo'lishi kerak</li>
                   <li>Barcha ma'lumotlar butunlay o'chib ketadi</li>
+                </ul>
+              </div>
+            )}
+            {itemType === 'parent' && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 space-y-1">
+                <p className="text-sm text-yellow-800 font-medium">
+                  ⚠️ Diqqat: O'chirish shartlari
+                </p>
+                <ul className="text-sm text-yellow-700 list-disc list-inside space-y-1">
+                  <li>Agar farzandlarga biriktirilgan bo'lsa, o'chirib bo'lmaydi</li>
+                  <li>Avval barcha bog'lanishlarni olib tashlang</li>
+                  <li>User akkaunt ham o'chiriladi</li>
                 </ul>
               </div>
             )}
