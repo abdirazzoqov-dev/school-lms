@@ -80,7 +80,7 @@ export default async function DormitoryPaymentsPage({
   // Filter by building if selected
   const filteredPayments = selectedBuilding
     ? payments.filter(
-        (p) => p.student.dormitoryAssignment?.room.buildingId === selectedBuilding
+        (p) => p.student?.dormitoryAssignment?.room?.buildingId === selectedBuilding
       )
     : payments
 

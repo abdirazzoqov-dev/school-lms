@@ -100,21 +100,30 @@ export function DormitoryPaymentsTable({ payments }: DormitoryPaymentsTableProps
             </TableRow>
           </TableHeader>
           <TableBody>
-            {payments.map((payment) => {
-              const student = payment.student
-              const assignment = student.dormitoryAssignment
-              const progress = payment.amount > 0 
-                ? (Number(payment.paidAmount || 0) / Number(payment.amount)) * 100 
-                : 0
+            {payments.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  Yotoqxona to&apos;lovlari topilmadi
+                </TableCell>
+              </TableRow>
+            ) : (
+              payments.map((payment) => {
+                if (!payment.student) return null
+                
+                const student = payment.student
+                const assignment = student?.dormitoryAssignment
+                const progress = payment.amount > 0 
+                  ? (Number(payment.paidAmount || 0) / Number(payment.amount)) * 100 
+                  : 0
 
-              return (
-                <TableRow key={payment.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{student.user?.fullName || 'N/A'}</div>
-                      <div className="text-sm text-muted-foreground">{student.studentCode}</div>
-                    </div>
-                  </TableCell>
+                return (
+                  <TableRow key={payment.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{student?.user?.fullName || 'N/A'}</div>
+                        <div className="text-sm text-muted-foreground">{student?.studentCode || '-'}</div>
+                      </div>
+                    </TableCell>
                   <TableCell>
                     {assignment ? (
                       <div className="text-sm">
@@ -244,7 +253,8 @@ export function DormitoryPaymentsTable({ payments }: DormitoryPaymentsTableProps
                   </TableCell>
                 </TableRow>
               )
-            })}
+            })
+            )}
           </TableBody>
         </Table>
       </div>
