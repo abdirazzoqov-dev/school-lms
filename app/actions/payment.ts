@@ -124,6 +124,7 @@ export async function createPayment(data: PaymentFormData) {
     revalidatePath('/admin/payments', 'page')
     revalidatePath('/admin', 'page')
     revalidatePath('/admin/students', 'page')
+    revalidatePath('/parent/payments', 'page')
     
     return { success: true, payment }
   } catch (error: any) {
@@ -221,6 +222,7 @@ export async function updatePayment(paymentId: string, data: Partial<PaymentForm
     revalidatePath('/admin/payments', 'page')
     revalidatePath('/admin', 'page')
     revalidatePath('/admin/students', 'page')
+    revalidatePath('/parent/payments', 'page')
     
     return { success: true, payment }
   } catch (error: any) {
@@ -265,6 +267,7 @@ export async function deletePayment(paymentId: string) {
 
     revalidatePath('/admin/payments')
     revalidatePath('/admin') // Dashboard yangilansin
+    revalidatePath('/parent/payments')
     
     return { success: true }
   } catch (error: any) {
@@ -308,6 +311,7 @@ export async function bulkDeletePayments(paymentIds: string[]) {
 
     revalidatePath('/admin/payments')
     revalidatePath('/admin') // Dashboard yangilansin
+    revalidatePath('/parent/payments')
     
     return { 
       success: true, 
@@ -395,6 +399,7 @@ export async function bulkChangePaymentStatus(
 
     revalidatePath('/admin/payments', 'page')
     revalidatePath('/admin', 'page')
+    revalidatePath('/parent/payments', 'page')
     
     return { success: true, updated: updatedCount }
   } catch (error: any) {
@@ -501,6 +506,7 @@ export async function addPartialPayment(paymentId: string, amount: number, payme
     revalidatePath('/admin/payments', 'page')
     revalidatePath('/admin', 'page')
     revalidatePath('/admin/students', 'page')
+    revalidatePath('/parent/payments', 'page')
     
     return { 
       success: true, 

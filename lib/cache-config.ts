@@ -81,6 +81,9 @@ export const REVALIDATION_PATHS = {
     '/admin/payments',
     '/admin/attendance',
     '/admin/grades',
+    '/parent',
+    '/parent/payments',
+    '/parent/profile',
   ],
   
   // Teacher changes affect these paths
