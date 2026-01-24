@@ -231,8 +231,18 @@ export function AssignStudentForm({ students }: AssignStudentFormProps) {
                     }`}
                     onClick={() => {
                       setSelectedRoom(room)
-                      setMonthlyFee(Number(room.pricePerMonth))
+                      const fee = Number(room.pricePerMonth) || 0
+                      console.log('🏠 Room selected:', room.roomNumber, 'pricePerMonth:', room.pricePerMonth, 'parsed:', fee)
+                      setMonthlyFee(fee)
                       setSelectedBedId('') // Reset bed selection
+                      
+                      if (fee === 0) {
+                        toast({
+                          variant: 'destructive',
+                          title: 'Ogohlantirish!',
+                          description: `${room.roomNumber}-xonaning oylik to'lovi 0 ga teng. To'lov yaratilmaydi!`,
+                        })
+                      }
                     }}
                   >
                     <div className="flex items-start justify-between mb-3">
@@ -249,8 +259,11 @@ export function AssignStudentForm({ students }: AssignStudentFormProps) {
 
                     <div className="flex items-center justify-between text-sm mb-3">
                       <span className="text-muted-foreground">Narx:</span>
-                      <span className="font-semibold">
+                      <span className={`font-semibold ${Number(room.pricePerMonth) === 0 ? 'text-red-600' : ''}`}>
                         {Number(room.pricePerMonth).toLocaleString()} so'm/oy
+                        {Number(room.pricePerMonth) === 0 && (
+                          <span className="text-xs text-red-600 ml-1">⚠️ To'lov yaratilmaydi</span>
+                        )}
                       </span>
                     </div>
 
