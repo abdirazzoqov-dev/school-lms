@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { formatNumber } from '@/lib/utils'
 import Link from 'next/link'
+import { PaymentCard } from './payment-card'
 
 export const revalidate = 0
 export const dynamic = 'force-dynamic'
@@ -244,104 +245,24 @@ export default async function ParentPaymentsPage({
               
               <CardContent className="pt-6">
                 <div className="space-y-3">
-                  {childPayments.map(payment => {
-                    const paidAmount = Number(payment.paidAmount || 0)
-                    const totalAmount = Number(payment.amount)
-                    const remainingAmount = Number(payment.remainingAmount || 0)
-                    const percentage = totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 0
-
-                    return (
-                      <div key={payment.id} className="p-4 border-2 rounded-lg hover:bg-muted/50 transition-colors">
-                        <div className="flex items-start justify-between gap-4 mb-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 flex-wrap mb-2">
-                              {/* Type Badge */}
-                              {payment.paymentType === 'TUITION' && (
-                                <Badge className="bg-blue-600">📚 O'qish haqi</Badge>
-                              )}
-                              {payment.paymentType === 'BOOKS' && (
-                                <Badge className="bg-purple-600">📖 Darsliklar</Badge>
-                              )}
-                              {payment.paymentType === 'UNIFORM' && (
-                                <Badge className="bg-green-600">👔 Forma</Badge>
-                              )}
-                              {payment.paymentType === 'OTHER' && (
-                                <Badge className="bg-gray-600">📦 Boshqa</Badge>
-                              )}
-
-                              {/* Status Badge */}
-                              {percentage === 100 && remainingAmount === 0 && (
-                                <Badge className="bg-green-600">✓ To'langan</Badge>
-                              )}
-                              {percentage > 0 && percentage < 100 && (
-                                <Badge className="bg-orange-600">⚡ Qisman</Badge>
-                              )}
-                              {percentage === 0 && (
-                                <Badge className="bg-amber-600">⏳ Kutilmoqda</Badge>
-                              )}
-
-                              {/* Month Badge */}
-                              {payment.paymentMonth && payment.paymentYear && (
-                                <Badge variant="outline" className="text-xs">
-                                  <Calendar className="h-3 w-3 mr-1" />
-                                  {monthNames[payment.paymentMonth - 1]} {payment.paymentYear}
-                                </Badge>
-                              )}
-                            </div>
-
-                            {payment.notes && (
-                              <p className="text-sm text-muted-foreground mb-2">
-                                📝 {payment.notes}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="text-right">
-                            <p className="text-xl font-bold text-green-600">
-                              {formatNumber(paidAmount)}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              / {formatNumber(totalAmount)} so'm
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Progress Bar */}
-                        <div className="mb-3">
-                          <Progress value={percentage} className="h-2" />
-                        </div>
-
-                        {/* Amount Breakdown */}
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-green-50 border border-green-200 rounded px-3 py-2">
-                            <p className="text-xs text-green-600">To'landi</p>
-                            <p className="text-sm font-bold text-green-700">
-                              {formatNumber(paidAmount)} so'm
-                            </p>
-                          </div>
-                          {remainingAmount > 0 && (
-                            <div className="bg-orange-50 border border-orange-200 rounded px-3 py-2">
-                              <p className="text-xs text-orange-600">Qoldi</p>
-                              <p className="text-sm font-bold text-orange-700">
-                                {formatNumber(remainingAmount)} so'm
-                              </p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Payment Date */}
-                        {payment.paidDate && (
-                          <p className="text-xs text-muted-foreground mt-2">
-                            📅 To'langan: {new Date(payment.paidDate).toLocaleDateString('uz-UZ', {
-                              day: '2-digit',
-                              month: 'long',
-                              year: 'numeric'
-                            })}
-                          </p>
-                        )}
-                      </div>
-                    )
-                  })}
+                  {childPayments.map(payment => (
+                    <PaymentCard
+                      key={payment.id}
+                      payment={{
+                        id: payment.id,
+                        amount: Number(payment.amount),
+                        paidAmount: payment.paidAmount ? Number(payment.paidAmount) : null,
+                        remainingAmount: payment.remainingAmount ? Number(payment.remainingAmount) : null,
+                        paymentType: payment.paymentType,
+                        paymentMonth: payment.paymentMonth,
+                        paymentYear: payment.paymentYear,
+                        paidDate: payment.paidDate,
+                        notes: payment.notes,
+                        status: payment.status
+                      }}
+                      monthNames={monthNames}
+                    />
+                  ))}
 
                   {childPayments.length === 0 && (
                     <div className="text-center py-8">
