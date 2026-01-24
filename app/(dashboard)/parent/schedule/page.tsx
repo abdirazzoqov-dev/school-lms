@@ -5,8 +5,8 @@ import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { AlertCircle, Calendar, Clock, CheckCircle2, Coffee, Utensils } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { ChildSelector } from './child-selector'
 
 export const revalidate = 0
 export const dynamic = 'force-dynamic'
@@ -198,22 +198,7 @@ export default async function ParentSchedulePage({
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-          {children.length > 1 && (
-            <form method="get" className="w-full sm:w-auto">
-              <Select name="childId" defaultValue={selectedChildId}>
-                <SelectTrigger className="w-full sm:w-[250px] bg-gray-50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {children.map(child => (
-                    <SelectItem key={child.id} value={child.id}>
-                      {child.user?.fullName || 'N/A'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </form>
-          )}
+          <ChildSelector children={children} selectedChildId={selectedChildId} />
 
           <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-100">
             <span className="text-sm font-medium text-blue-700">{filledSlots}/{totalSlots}</span>
