@@ -152,11 +152,17 @@ export function PaymentCard({ payment, monthNames }: PaymentCardProps) {
               <div className="text-xs text-muted-foreground flex items-center gap-2 p-2 bg-blue-50 rounded">
                 <Calendar className="h-3 w-3" />
                 <span>
-                  To'langan: {new Date(payment.paidDate).toLocaleDateString('uz-UZ', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric'
-                  })}
+                  To'langan: {(() => {
+                    const date = new Date(payment.paidDate)
+                    const day = date.getDate()
+                    const year = date.getFullYear()
+                    const monthNames = [
+                      'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
+                      'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'
+                    ]
+                    const month = monthNames[date.getMonth()]
+                    return `${day} ${month} ${year}`
+                  })()}
                 </span>
               </div>
             )}
