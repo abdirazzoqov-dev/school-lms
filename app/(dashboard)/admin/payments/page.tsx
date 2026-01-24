@@ -17,7 +17,7 @@ import { formatNumber } from '@/lib/utils'
 import { PAGE_CACHE_CONFIG } from '@/lib/cache-config'
 
 // ✅ Advanced caching: Optimized for payment list
-export const revalidate = PAGE_CACHE_CONFIG.payments.revalidate
+export const revalidate = 0 // Always fetch fresh data
 export const dynamic = 'force-dynamic' // Always show latest payments
 
 export default async function PaymentsPage({
@@ -116,13 +116,22 @@ export default async function PaymentsPage({
     take: pageSize,
     include: {
       student: {
-        include: {
+        select: {
+          id: true,
+          studentCode: true,
+          monthlyTuitionFee: true,
+          enrollmentDate: true,
           user: {
             select: {
               fullName: true
             }
           },
-          class: true
+          class: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
         }
       },
       parent: {
@@ -164,9 +173,25 @@ export default async function PaymentsPage({
 
     const student = await db.student.findFirst({
       where: { id: searchParams.studentId },
-      include: {
-        user: true,
-        class: true
+      select: {
+        id: true,
+        studentCode: true,
+        monthlyTuitionFee: true,
+        enrollmentDate: true,
+        user: {
+          select: {
+            fullName: true,
+            email: true,
+            phone: true,
+            avatar: true
+          }
+        },
+        class: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
       }
     })
 
@@ -204,9 +229,21 @@ export default async function PaymentsPage({
       tenantId,
       ...(searchParams.classId ? { classId: searchParams.classId } : {})
     },
-    include: {
-      user: true,
-      class: true
+    select: {
+      id: true,
+      studentCode: true,
+      monthlyTuitionFee: true,
+      user: {
+        select: {
+          fullName: true
+        }
+      },
+      class: {
+        select: {
+          id: true,
+          name: true
+        }
+      }
     },
     orderBy: { user: { fullName: 'asc' } }
   })
