@@ -26,7 +26,11 @@ export async function deleteParent(parentId: string) {
         user: true,
         students: {
           include: {
-            student: true
+            student: {
+              include: {
+                user: true
+              }
+            }
           }
         }
       }
