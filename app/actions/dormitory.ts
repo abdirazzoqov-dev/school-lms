@@ -454,8 +454,9 @@ export async function createAssignment(data: AssignmentFormData) {
     }
 
     revalidateDormitoryPaths()
-    revalidatePath('/admin/payments')
-    revalidatePath('/admin/dormitory/payments')
+    revalidatePath('/admin/payments', 'page')
+    revalidatePath('/admin/payments', 'layout')
+    revalidatePath('/admin/dormitory/payments', 'page')
 
     return { 
       success: true, 

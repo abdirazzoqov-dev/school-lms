@@ -105,9 +105,14 @@ export default async function PaymentsPage({
     }
   }
 
+  // Debug: Log where clause
+  console.log('[Payments Page] Where clause:', JSON.stringify(whereClause, null, 2))
+
   // Get total count for pagination
   const totalPayments = await db.payment.count({ where: whereClause })
   const totalPages = Math.ceil(totalPayments / pageSize)
+
+  console.log(`[Payments Page] Total payments found: ${totalPayments}`)
 
   const payments = await db.payment.findMany({
     where: whereClause,
@@ -159,6 +164,13 @@ export default async function PaymentsPage({
   const pendingAmount = payments
     .filter(p => p.status === 'PENDING')
     .reduce((sum, p) => sum + Number(p.remainingAmount), 0)
+
+  // Debug: Count payment types
+  const paymentTypeStats = payments.reduce((acc: any, p) => {
+    acc[p.paymentType] = (acc[p.paymentType] || 0) + 1
+    return acc
+  }, {})
+  console.log('[Payments Page] Payment types:', paymentTypeStats)
 
   // Student statistics (if student filter is active)
   let studentStats = null
@@ -319,8 +331,15 @@ export default async function PaymentsPage({
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <PageSizeSelector currentPageSize={pageSize} />
-              <div className="text-sm text-muted-foreground">
-                Jami: <span className="font-medium">{totalPayments}</span> ta
+              <div className="text-sm text-muted-foreground flex items-center gap-4">
+                <span>Jami: <span className="font-medium">{totalPayments}</span> ta</span>
+                {Object.keys(paymentTypeStats).length > 0 && (
+                  <span className="text-xs">
+                    ({Object.entries(paymentTypeStats).map(([type, count]) => 
+                      `${type === 'TUITION' ? 'O\'qish' : type === 'DORMITORY' ? 'Yotoqxona' : type}: ${count}`
+                    ).join(', ')})
+                  </span>
+                )}
               </div>
             </div>
           </div>
