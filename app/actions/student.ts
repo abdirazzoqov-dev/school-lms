@@ -761,6 +761,8 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
     revalidateMultiplePaths([...REVALIDATION_PATHS.STUDENT_CHANGED], revalidatePath)
     revalidatePath('/admin/students')
     revalidatePath(`/admin/students/${studentId}`)
+    revalidatePath('/admin/payments')
+    revalidatePath('/parent/payments')
     revalidatePath('/admin/dormitory')
     revalidatePath('/admin/dormitory/buildings')
     revalidatePath('/admin/dormitory/rooms')
