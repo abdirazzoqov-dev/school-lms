@@ -11,11 +11,11 @@ interface Child {
 }
 
 interface ChildSelectorProps {
-  children: Child[]
+  childrenList: Child[]
   selectedChildId: string
 }
 
-export function ChildSelector({ children, selectedChildId }: ChildSelectorProps) {
+export function ChildSelector({ childrenList, selectedChildId }: ChildSelectorProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -25,7 +25,7 @@ export function ChildSelector({ children, selectedChildId }: ChildSelectorProps)
     router.push(`/parent/schedule?${params.toString()}`)
   }
 
-  if (children.length <= 1) {
+  if (childrenList.length <= 1) {
     return null
   }
 
@@ -35,7 +35,7 @@ export function ChildSelector({ children, selectedChildId }: ChildSelectorProps)
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {children.map(child => (
+        {childrenList.map(child => (
           <SelectItem key={child.id} value={child.id}>
             {child.user?.fullName || 'N/A'}
           </SelectItem>

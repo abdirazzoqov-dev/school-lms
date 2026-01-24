@@ -198,7 +198,7 @@ export default async function ParentSchedulePage({
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-          <ChildSelector children={children} selectedChildId={selectedChildId} />
+          <ChildSelector childrenList={children} selectedChildId={selectedChildId} />
 
           <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-100">
             <span className="text-sm font-medium text-blue-700">{filledSlots}/{totalSlots}</span>
