@@ -35,10 +35,26 @@ export default async function ParentMessagesPage() {
     },
     include: {
       sender: {
-        select: { id: true, fullName: true }
+        select: { id: true, fullName: true, role: true }
       },
       receiver: {
         select: { id: true, fullName: true }
+      },
+      student: {
+        select: {
+          id: true,
+          studentCode: true,
+          user: {
+            select: {
+              fullName: true
+            }
+          },
+          class: {
+            select: {
+              name: true
+            }
+          }
+        }
       }
     },
     orderBy: { createdAt: 'desc' }
@@ -55,7 +71,23 @@ export default async function ParentMessagesPage() {
         select: { id: true, fullName: true }
       },
       receiver: {
-        select: { id: true, fullName: true }
+        select: { id: true, fullName: true, role: true }
+      },
+      student: {
+        select: {
+          id: true,
+          studentCode: true,
+          user: {
+            select: {
+              fullName: true
+            }
+          },
+          class: {
+            select: {
+              name: true
+            }
+          }
+        }
       }
     },
     orderBy: { createdAt: 'desc' }

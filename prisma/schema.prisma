@@ -381,6 +381,7 @@ model Student {
   assignmentSubmissions AssignmentSubmission[]
   payments              Payment[]
   dormitoryAssignment   DormitoryAssignment?
+  messages              Message[]         @relation("MessageStudent")
 
   @@unique([tenantId, studentCode])
   @@index([tenantId])
@@ -1003,6 +1004,10 @@ model Message {
   receiver   User   @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
   receiverId String
 
+  // Related student (optional - for parent-teacher communication context)
+  student   Student? @relation("MessageStudent", fields: [studentId], references: [id], onDelete: SetNull)
+  studentId String?
+
   subject     String?
   content     String  @db.Text
   attachments Json?
@@ -1020,6 +1025,7 @@ model Message {
   @@index([tenantId])
   @@index([senderId])
   @@index([receiverId])
+  @@index([studentId])
   @@index([status])
   @@index([receiverId, status])
   @@index([createdAt])

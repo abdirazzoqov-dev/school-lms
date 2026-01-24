@@ -3,7 +3,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Mail, MailOpen, Trash2, Reply, Clock, User } from 'lucide-react'
+import { Mail, MailOpen, Trash2, Reply, Clock, User, GraduationCap, School } from 'lucide-react'
 import Link from 'next/link'
 import { formatDateTime } from '@/lib/utils'
 import { useState } from 'react'
@@ -17,11 +17,23 @@ interface Message {
   sender: {
     id: string
     fullName: string
+    role?: string
   }
   receiver: {
     id: string
     fullName: string
+    role?: string
   }
+  student?: {
+    id: string
+    studentCode: string
+    user: {
+      fullName: string
+    } | null
+    class: {
+      name: string
+    } | null
+  } | null
 }
 
 interface MessageListProps {
@@ -101,6 +113,11 @@ export function MessageList({ messages, currentUserId, onDelete, onReply }: Mess
                           <span className={`font-bold ${isUnread ? 'text-blue-600' : 'text-gray-900 dark:text-gray-100'}`}>
                             {otherPerson.fullName}
                           </span>
+                          {otherPerson.role === 'PARENT' && (
+                            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                              Ota-ona
+                            </Badge>
+                          )}
                         </div>
                         {isUnread && (
                           <Badge className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-none">
@@ -108,6 +125,32 @@ export function MessageList({ messages, currentUserId, onDelete, onReply }: Mess
                           </Badge>
                         )}
                       </div>
+                      
+                      {/* Student Info - if available */}
+                      {message.student && (
+                        <div className="flex items-center gap-4 text-sm bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-800">
+                          <div className="flex items-center gap-2">
+                            <GraduationCap className="h-4 w-4 text-amber-600" />
+                            <span className="text-muted-foreground">O'quvchi:</span>
+                            <span className="font-semibold text-amber-700 dark:text-amber-400">
+                              {message.student.user?.fullName || 'Noma\'lum'}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              ({message.student.studentCode})
+                            </span>
+                          </div>
+                          {message.student.class && (
+                            <div className="flex items-center gap-2">
+                              <School className="h-4 w-4 text-amber-600" />
+                              <span className="text-muted-foreground">Sinf:</span>
+                              <span className="font-semibold text-amber-700 dark:text-amber-400">
+                                {message.student.class.name}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                       
                       {/* Subject */}
                       <p className={`text-lg font-semibold ${isUnread ? 'text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300'}`}>

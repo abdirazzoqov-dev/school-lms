@@ -34,7 +34,7 @@ export function ComposeMessageForm({
     recipientId: preselectedParentId || (replyToMessage?.sender.id || ''),
     subject: replyToMessage ? `Re: ${replyToMessage.subject}` : '',
     content: '',
-    relatedStudentId: preselectedStudentId || '',
+    studentId: preselectedStudentId || (replyToMessage?.student?.id || ''),
   })
 
   // Filter students based on selected parent
@@ -46,8 +46,8 @@ export function ComposeMessageForm({
       if (parent && parent.students.length > 0) {
         setAvailableStudents(parent.students)
         // Auto-select student if only one
-        if (parent.students.length === 1 && !formData.relatedStudentId) {
-          setFormData(prev => ({ ...prev, relatedStudentId: parent.students[0].id }))
+        if (parent.students.length === 1 && !formData.studentId) {
+          setFormData(prev => ({ ...prev, studentId: parent.students[0].id }))
         }
       } else {
         setAvailableStudents(students)
@@ -71,8 +71,13 @@ export function ComposeMessageForm({
           content: formData.content
         })
       } else {
-        // Send new message
-        result = await sendMessage(formData)
+        // Send new message with studentId for context
+        result = await sendMessage({
+          recipientId: formData.recipientId,
+          studentId: formData.studentId || undefined,
+          subject: formData.subject,
+          content: formData.content,
+        })
       }
 
       if (result.success) {
@@ -126,12 +131,12 @@ export function ComposeMessageForm({
           </div>
 
           <div>
-            <Label htmlFor="relatedStudentId">O'quvchi (ixtiyoriy)</Label>
+            <Label htmlFor="studentId">O'quvchi (ixtiyoriy)</Label>
             <Select
-              value={formData.relatedStudentId || "none"}
-              onValueChange={(value) => setFormData({ ...formData, relatedStudentId: value === "none" ? "" : value })}
+              value={formData.studentId || "none"}
+              onValueChange={(value) => setFormData({ ...formData, studentId: value === "none" ? "" : value })}
             >
-              <SelectTrigger id="relatedStudentId">
+              <SelectTrigger id="studentId">
                 <SelectValue placeholder="O'quvchini tanlang" />
               </SelectTrigger>
               <SelectContent>

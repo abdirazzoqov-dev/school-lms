@@ -37,6 +37,7 @@ export async function sendMessage(data: MessageFormData) {
         tenantId,
         senderId: session.user.id,
         receiverId: validatedData.recipientId,
+        studentId: validatedData.studentId || null, // Optional: for context about which student
         subject: validatedData.subject,
         content: validatedData.content,
         status: 'SENT',

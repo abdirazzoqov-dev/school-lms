@@ -30,7 +30,7 @@ export function ComposeMessageForm({
     recipientId: replyToMessage?.sender.id || '',
     subject: replyToMessage ? `Re: ${replyToMessage.subject}` : '',
     content: '',
-    relatedStudentId: '',
+    studentId: replyToMessage?.student?.id || '', // Which student this message is about
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,8 +46,13 @@ export function ComposeMessageForm({
           content: formData.content
         })
       } else {
-        // Send new message
-        result = await sendMessage(formData)
+        // Send new message with studentId for context
+        result = await sendMessage({
+          recipientId: formData.recipientId,
+          studentId: formData.studentId || undefined,
+          subject: formData.subject,
+          content: formData.content,
+        })
       }
 
       if (result.success) {
@@ -109,12 +114,12 @@ export function ComposeMessageForm({
           </div>
 
           <div>
-            <Label htmlFor="relatedStudentId">Farzandingiz (ixtiyoriy)</Label>
+            <Label htmlFor="studentId">Farzandingiz (ixtiyoriy)</Label>
             <Select
-              value={formData.relatedStudentId || "none"}
-              onValueChange={(value) => setFormData({ ...formData, relatedStudentId: value === "none" ? "" : value })}
+              value={formData.studentId || "none"}
+              onValueChange={(value) => setFormData({ ...formData, studentId: value === "none" ? "" : value })}
             >
-              <SelectTrigger id="relatedStudentId">
+              <SelectTrigger id="studentId">
                 <SelectValue placeholder="Farzandingizni tanlang" />
               </SelectTrigger>
               <SelectContent>
