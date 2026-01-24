@@ -32,7 +32,7 @@ export default async function DormitoryPaymentsPage({
   const selectedMonth = searchParams.month ? parseInt(searchParams.month) : currentDate.getMonth() + 1
   const selectedYear = searchParams.year ? parseInt(searchParams.year) : currentDate.getFullYear()
   const selectedBuilding = searchParams.building
-  const selectedStatus = searchParams.status
+  const selectedStatus = searchParams.status as 'PENDING' | 'PARTIALLY_PAID' | 'COMPLETED' | undefined
 
   // Get all dormitory payments
   const payments = await db.payment.findMany({
@@ -45,7 +45,9 @@ export default async function DormitoryPaymentsPage({
             paymentYear: selectedYear,
           }
         : {}),
-      ...(selectedStatus ? { status: selectedStatus } : {}),
+      ...(selectedStatus && ['PENDING', 'PARTIALLY_PAID', 'COMPLETED'].includes(selectedStatus) 
+        ? { status: selectedStatus } 
+        : {}),
     },
     include: {
       student: {
@@ -286,8 +288,8 @@ export default async function DormitoryPaymentsPage({
                 <SelectContent>
                   <SelectItem value="all">Barcha statuslar</SelectItem>
                   <SelectItem value="PENDING">Kutilmoqda</SelectItem>
+                  <SelectItem value="PARTIALLY_PAID">Qisman to&apos;langan</SelectItem>
                   <SelectItem value="COMPLETED">To&apos;langan</SelectItem>
-                  <SelectItem value="OVERDUE">Muddati o&apos;tgan</SelectItem>
                 </SelectContent>
               </Select>
             </div>
