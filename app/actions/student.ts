@@ -69,16 +69,29 @@ export async function createStudent(data: StudentFormData) {
       return { success: false, error: 'Bu o\'quvchi kodi allaqachon ishlatilgan' }
     }
 
-    // Process guardians (multiple parents/guardians)
-    const guardianResults = []
-    const defaultPassword = await hashPassword('Parent123!') // Default password
+    // Generate and check student email BEFORE creating anything
+    const studentEmail = validatedData.email || `${validatedData.studentCode.toLowerCase()}@student.local`
+    
+    const existingUser = await db.user.findUnique({
+      where: { email: studentEmail }
+    })
+
+    if (existingUser) {
+      return { success: false, error: 'Bu email allaqachon ishlatilgan' }
+    }
+
+    // ✅ USE TRANSACTION - If anything fails, everything rolls back
+    const result = await db.$transaction(async (tx) => {
+      // Process guardians (multiple parents/guardians)
+      const guardianResults = []
+      const defaultPassword = await hashPassword('Parent123!') // Default password
     
     for (const guardianData of validatedData.guardians) {
       // Normalize phone number (remove all non-digit characters)
       const normalizedPhone = guardianData.phone.replace(/[^0-9]/g, '')
       
       // Check if guardian phone already exists for this tenant
-      let guardian = await db.parent.findFirst({
+      let guardian = await tx.parent.findFirst({
         where: {
           tenantId,
           user: {
@@ -100,7 +113,7 @@ export async function createStudent(data: StudentFormData) {
         const guardianEmail = `parent_${phoneDigits}_${timestamp}@temp.local`
 
         // Create guardian user account
-        const guardianUser = await db.user.create({
+        const guardianUser = await tx.user.create({
           data: {
             email: guardianEmail, // Generated email
             fullName: guardianData.fullName,
@@ -113,7 +126,7 @@ export async function createStudent(data: StudentFormData) {
         })
 
         // Create parent/guardian record
-        guardian = await db.parent.create({
+        guardian = await tx.parent.create({
           data: {
             tenantId,
             userId: guardianUser.id,
@@ -134,197 +147,189 @@ export async function createStudent(data: StudentFormData) {
       })
     }
 
-    // Create student user account (always create to save fullName)
-    let studentUser = null
-    
-    // Generate email if not provided
-    const studentEmail = validatedData.email || `${validatedData.studentCode.toLowerCase()}@student.local`
-    
-    // Check if email already exists
-    const existingUser = await db.user.findUnique({
-      where: { email: studentEmail }
-    })
-
-    if (existingUser) {
-      return { success: false, error: 'Bu email allaqachon ishlatilgan' }
-    }
-
-    // Create student user account (always create to save fullName)
-    const studentPassword = await hashPassword('Student123!')
-    
-    studentUser = await db.user.create({
-      data: {
-        email: studentEmail,
-        fullName: validatedData.fullName,
-        phone: guardianResults[0]?.guardian.user.phone || null, // Use first guardian's phone
-        passwordHash: studentPassword,
-        role: 'STUDENT',
-        tenantId,
-        isActive: true,
-      }
-    })
-
-    // Calculate trial period dates if enabled
-    let trialStartDate = null
-    let trialEndDate = null
-    
-    if (validatedData.trialEnabled && validatedData.trialDays) {
-      trialStartDate = new Date()
-      trialEndDate = new Date()
-      trialEndDate.setDate(trialEndDate.getDate() + validatedData.trialDays)
-    }
-
-    // Create student
-    const student = await db.student.create({
-      data: {
-        tenantId,
-        userId: studentUser?.id || null,
-        studentCode: validatedData.studentCode,
-        dateOfBirth: new Date(validatedData.dateOfBirth),
-        gender: validatedData.gender,
-        classId: validatedData.classId || null,
-        groupId: validatedData.groupId || null,
-        address: validatedData.address || null,
-        status: 'ACTIVE',
-        // Trial period
-        trialEnabled: validatedData.trialEnabled || false,
-        trialStartDate,
-        trialEndDate,
-        trialDays: validatedData.trialDays || null,
-        // Payment info
-        monthlyTuitionFee: validatedData.monthlyTuitionFee || 0,
-        paymentDueDay: validatedData.paymentDueDay || 5,
-      }
-    })
-
-    // Link all guardians to student
-    for (const result of guardianResults) {
-      await db.studentParent.create({
+      // Create student user account (always create to save fullName)
+      const studentPassword = await hashPassword('Student123!')
+      
+      const studentUser = await tx.user.create({
         data: {
-          studentId: student.id,
-          parentId: result.guardian.id,
-          hasAccess: result.hasAccess
-        }
-      })
-    }
-
-    // Create payment based on trial status and monthly fee
-    // Faqat oylik to'lov summasi 0 dan katta bo'lsa to'lov yaratiladi
-    const primaryGuardian = guardianResults.find(g => g.hasAccess)
-    
-    if (validatedData.monthlyTuitionFee > 0 && validatedData.trialEnabled && trialEndDate) {
-      // Trial enabled: Create payment after trial ends
-      // Calculate first payment due date (trial end date + 1 day)
-      const firstPaymentDueDate = new Date(trialEndDate)
-      firstPaymentDueDate.setDate(firstPaymentDueDate.getDate() + 1)
-      
-      // Create first monthly payment (will be due after trial ends)
-      const invoiceNumber = `INV-${new Date().getFullYear()}-${generateRandomString(8)}`
-      
-      await db.payment.create({
-        data: {
+          email: studentEmail,
+          fullName: validatedData.fullName,
+          phone: guardianResults[0]?.guardian.user.phone || null, // Use first guardian's phone
+          passwordHash: studentPassword,
+          role: 'STUDENT',
           tenantId,
-          studentId: student.id,
-          parentId: primaryGuardian?.guardian.id || null,
-          amount: validatedData.monthlyTuitionFee,
-          paymentType: 'TUITION',
-          paymentMethod: 'CASH',
-          status: 'PENDING',
-          dueDate: firstPaymentDueDate,
-          invoiceNumber,
-          notes: `Oylik o'qish to'lovi (Sinov muddati tugagach: ${trialEndDate.toLocaleDateString('uz-UZ', { year: 'numeric', month: '2-digit', day: '2-digit' }) || trialEndDate.toISOString().split('T')[0]})`,
-        }
-      })
-    } else if (validatedData.monthlyTuitionFee > 0) {
-      // No trial: Create payment immediately (only if fee > 0)
-      const invoiceNumber = `INV-${new Date().getFullYear()}-${generateRandomString(8)}`
-      
-      // First payment due date is today (enrollment date)
-      const firstPaymentDueDate = new Date()
-      
-      await db.payment.create({
-        data: {
-          tenantId,
-          studentId: student.id,
-          parentId: primaryGuardian?.guardian.id || null,
-          amount: validatedData.monthlyTuitionFee,
-          paymentType: 'TUITION',
-          paymentMethod: 'CASH',
-          status: 'PENDING',
-          dueDate: firstPaymentDueDate,
-          invoiceNumber,
-          notes: `Oylik o'qish to'lovi`,
-        }
-      })
-    }
-
-    // Create dormitory assignment if needed
-    if (validatedData.dormitoryBedId) {
-      // Check if bed is available
-      const bed = await db.dormitoryBed.findFirst({
-        where: {
-          id: validatedData.dormitoryBedId,
-          tenantId,
-          isOccupied: false,
           isActive: true,
-        },
-        include: {
-          room: true,
-        },
+        }
       })
 
-      if (!bed) {
-        return { success: false, error: 'Tanlangan joy band yoki mavjud emas' }
+      // Calculate trial period dates if enabled
+      let trialStartDate = null
+      let trialEndDate = null
+      
+      if (validatedData.trialEnabled && validatedData.trialDays) {
+        trialStartDate = new Date()
+        trialEndDate = new Date()
+        trialEndDate.setDate(trialEndDate.getDate() + validatedData.trialDays)
       }
 
-      // Create dormitory assignment
-      await db.dormitoryAssignment.create({
+      // Create student
+      const student = await tx.student.create({
         data: {
           tenantId,
-          studentId: student.id,
-          roomId: bed.roomId,
-          bedId: bed.id,
-          monthlyFee: validatedData.dormitoryMonthlyFee || 0,
+          userId: studentUser?.id || null,
+          studentCode: validatedData.studentCode,
+          dateOfBirth: new Date(validatedData.dateOfBirth),
+          gender: validatedData.gender,
+          classId: validatedData.classId || null,
+          groupId: validatedData.groupId || null,
+          address: validatedData.address || null,
           status: 'ACTIVE',
-          assignedById: session.user.id,
-        },
+          // Trial period
+          trialEnabled: validatedData.trialEnabled || false,
+          trialStartDate,
+          trialEndDate,
+          trialDays: validatedData.trialDays || null,
+          // Payment info
+          monthlyTuitionFee: validatedData.monthlyTuitionFee || 0,
+          paymentDueDay: validatedData.paymentDueDay || 5,
+        }
       })
 
-      // Mark bed as occupied
-      await db.dormitoryBed.update({
-        where: { id: bed.id },
-        data: { isOccupied: true },
-      })
+      // Link all guardians to student
+      for (const result of guardianResults) {
+        await tx.studentParent.create({
+          data: {
+            studentId: student.id,
+            parentId: result.guardian.id,
+            hasAccess: result.hasAccess
+          }
+        })
+      }
 
-      // Update room occupied count
-      await db.dormitoryRoom.update({
-        where: { id: bed.roomId },
-        data: { occupiedBeds: { increment: 1 } },
-      })
-
-      // Update building cache
-      const room = bed.room
-      const buildingId = room.buildingId
+      // Create payment based on trial status and monthly fee
+      // Faqat oylik to'lov summasi 0 dan katta bo'lsa to'lov yaratiladi
+      const primaryGuardian = guardianResults.find(g => g.hasAccess)
       
-      const rooms = await db.dormitoryRoom.findMany({
-        where: { buildingId },
-        select: {
-          capacity: true,
-          occupiedBeds: true,
-        },
-      })
+      if (validatedData.monthlyTuitionFee > 0 && validatedData.trialEnabled && trialEndDate) {
+        // Trial enabled: Create payment after trial ends
+        // Calculate first payment due date (trial end date + 1 day)
+        const firstPaymentDueDate = new Date(trialEndDate)
+        firstPaymentDueDate.setDate(firstPaymentDueDate.getDate() + 1)
+        
+        // Create first monthly payment (will be due after trial ends)
+        const invoiceNumber = `INV-${new Date().getFullYear()}-${generateRandomString(8)}`
+        
+        await tx.payment.create({
+          data: {
+            tenantId,
+            studentId: student.id,
+            parentId: primaryGuardian?.guardian.id || null,
+            amount: validatedData.monthlyTuitionFee,
+            paymentType: 'TUITION',
+            paymentMethod: 'CASH',
+            status: 'PENDING',
+            dueDate: firstPaymentDueDate,
+            invoiceNumber,
+            notes: `Oylik o'qish to'lovi (Sinov muddati tugagach: ${trialEndDate.toLocaleDateString('uz-UZ', { year: 'numeric', month: '2-digit', day: '2-digit' }) || trialEndDate.toISOString().split('T')[0]})`,
+          }
+        })
+      } else if (validatedData.monthlyTuitionFee > 0) {
+        // No trial: Create payment immediately (only if fee > 0)
+        const invoiceNumber = `INV-${new Date().getFullYear()}-${generateRandomString(8)}`
+        
+        // First payment due date is today (enrollment date)
+        const firstPaymentDueDate = new Date()
+        
+        await tx.payment.create({
+          data: {
+            tenantId,
+            studentId: student.id,
+            parentId: primaryGuardian?.guardian.id || null,
+            amount: validatedData.monthlyTuitionFee,
+            paymentType: 'TUITION',
+            paymentMethod: 'CASH',
+            status: 'PENDING',
+            dueDate: firstPaymentDueDate,
+            invoiceNumber,
+            notes: `Oylik o'qish to'lovi`,
+          }
+        })
+      }
 
-      const totalCapacity = rooms.reduce((sum, r) => sum + r.capacity, 0)
-      const occupiedBeds = rooms.reduce((sum, r) => sum + r.occupiedBeds, 0)
+      // Create dormitory assignment if needed
+      if (validatedData.dormitoryBedId) {
+        // Check if bed is available
+        const bed = await tx.dormitoryBed.findFirst({
+          where: {
+            id: validatedData.dormitoryBedId,
+            tenantId,
+            isOccupied: false,
+            isActive: true,
+          },
+          include: {
+            room: true,
+          },
+        })
 
-      await db.dormitoryBuilding.update({
-        where: { id: buildingId },
-        data: {
-          totalCapacity,
-          occupiedBeds,
-        },
-      })
-    }
+        if (!bed) {
+          throw new Error('Tanlangan joy band yoki mavjud emas')
+        }
+
+        // Create dormitory assignment
+        await tx.dormitoryAssignment.create({
+          data: {
+            tenantId,
+            studentId: student.id,
+            roomId: bed.roomId,
+            bedId: bed.id,
+            monthlyFee: validatedData.dormitoryMonthlyFee || 0,
+            status: 'ACTIVE',
+            assignedById: session.user.id,
+          },
+        })
+
+        // Mark bed as occupied
+        await tx.dormitoryBed.update({
+          where: { id: bed.id },
+          data: { isOccupied: true },
+        })
+
+        // Update room occupied count
+        await tx.dormitoryRoom.update({
+          where: { id: bed.roomId },
+          data: { occupiedBeds: { increment: 1 } },
+        })
+
+        // Update building cache
+        const room = bed.room
+        const buildingId = room.buildingId
+        
+        const rooms = await tx.dormitoryRoom.findMany({
+          where: { buildingId },
+          select: {
+            capacity: true,
+            occupiedBeds: true,
+          },
+        })
+
+        const totalCapacity = rooms.reduce((sum, r) => sum + r.capacity, 0)
+        const occupiedBeds = rooms.reduce((sum, r) => sum + r.occupiedBeds, 0)
+
+        await tx.dormitoryBuilding.update({
+          where: { id: buildingId },
+          data: {
+            totalCapacity,
+            occupiedBeds,
+          },
+        })
+      }
+
+      // ✅ Return student and primary guardian info from transaction
+      return {
+        student,
+        primaryGuardian
+      }
+    }) // End of transaction
 
     // ✅ Revalidate multiple related paths
     revalidateMultiplePaths([...REVALIDATION_PATHS.STUDENT_CHANGED], revalidatePath)
@@ -337,16 +342,16 @@ export async function createStudent(data: StudentFormData) {
       userId: session.user.id,
       tenantId,
       action: 'CREATE_STUDENT',
-      resourceId: student.id,
+      resourceId: result.student.id,
     })
     
     return { 
       success: true, 
-      student,
-      guardianCredentials: primaryGuardian ? {
-        phone: primaryGuardian.guardian.user.phone,
+      student: result.student,
+      guardianCredentials: result.primaryGuardian ? {
+        phone: result.primaryGuardian.guardian.user.phone,
         password: 'Parent123!',
-        fullName: primaryGuardian.guardian.user.fullName
+        fullName: result.primaryGuardian.guardian.user.fullName
       } : null
     }
   } catch (error: any) {
