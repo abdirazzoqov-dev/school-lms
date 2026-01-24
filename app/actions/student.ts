@@ -89,18 +89,30 @@ export async function createStudent(data: StudentFormData) {
 
       // If guardian doesn't exist, create new one
       if (!guardian) {
-        // Generate unique email using phone (for authentication fallback)
-        const guardianEmail = `parent_${guardianData.phone.replace(/[^0-9]/g, '')}@temp.local`
+        // Generate unique email using phone and random suffix (for authentication fallback)
+        const phoneDigits = guardianData.phone.replace(/[^0-9]/g, '')
+        let guardianEmail = `parent_${phoneDigits}@temp.local`
         
         // Check if this generated email already exists
-        const existingEmail = await db.user.findUnique({
+        let existingEmail = await db.user.findUnique({
           where: { email: guardianEmail }
         })
 
+        // If email exists, add random suffix to make it unique
         if (existingEmail) {
-          return { 
-            success: false, 
-            error: `Qarindosh telefon raqami ${guardianData.phone} allaqachon ishlatilgan` 
+          const randomSuffix = generateRandomString(6)
+          guardianEmail = `parent_${phoneDigits}_${randomSuffix}@temp.local`
+          
+          // Double check the new email
+          existingEmail = await db.user.findUnique({
+            where: { email: guardianEmail }
+          })
+          
+          if (existingEmail) {
+            return { 
+              success: false, 
+              error: `Qarindosh email yaratishda xatolik. Iltimos, qayta urinib ko'ring` 
+            }
           }
         }
 
@@ -538,16 +550,28 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
 
           // If not, create new guardian
           if (!guardian) {
-            const guardianEmail = `parent_${guardianData.phone.replace(/[^0-9]/g, '')}@temp.local`
+            const phoneDigits = guardianData.phone.replace(/[^0-9]/g, '')
+            let guardianEmail = `parent_${phoneDigits}@temp.local`
             
-            const existingEmail = await db.user.findUnique({
+            let existingEmail = await db.user.findUnique({
               where: { email: guardianEmail }
             })
 
+            // If email exists, add random suffix to make it unique
             if (existingEmail) {
-              return { 
-                success: false, 
-                error: `Qarindosh telefon raqami ${guardianData.phone} allaqachon ishlatilgan` 
+              const randomSuffix = generateRandomString(6)
+              guardianEmail = `parent_${phoneDigits}_${randomSuffix}@temp.local`
+              
+              // Double check the new email
+              existingEmail = await db.user.findUnique({
+                where: { email: guardianEmail }
+              })
+              
+              if (existingEmail) {
+                return { 
+                  success: false, 
+                  error: `Qarindosh email yaratishda xatolik. Iltimos, qayta urinib ko'ring` 
+                }
               }
             }
 
