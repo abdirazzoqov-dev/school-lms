@@ -22,6 +22,7 @@ interface DormitoryPaymentsTableProps {
 export function DormitoryPaymentsTable({ payments }: DormitoryPaymentsTableProps) {
   const router = useRouter()
   const [selectedPayment, setSelectedPayment] = useState<any>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentData, setPaymentData] = useState({
     amount: '',
@@ -46,6 +47,7 @@ export function DormitoryPaymentsTable({ payments }: DormitoryPaymentsTableProps
       if (result.success) {
         toast.success("To'lov qabul qilindi")
         setSelectedPayment(null)
+        setIsDialogOpen(false)
         setPaymentData({ amount: '', paymentMethod: 'CASH', notes: '' })
         router.refresh()
       } else {
@@ -56,6 +58,22 @@ export function DormitoryPaymentsTable({ payments }: DormitoryPaymentsTableProps
     } finally {
       setIsProcessing(false)
     }
+  }
+
+  const openDialog = (payment: any) => {
+    setSelectedPayment(payment)
+    setPaymentData({
+      amount: payment.remainingAmount?.toString() || payment.amount.toString(),
+      paymentMethod: 'CASH',
+      notes: '',
+    })
+    setIsDialogOpen(true)
+  }
+
+  const closeDialog = () => {
+    setSelectedPayment(null)
+    setIsDialogOpen(false)
+    setPaymentData({ amount: '', paymentMethod: 'CASH', notes: '' })
   }
 
   const getStatusBadge = (status: string, dueDate: Date) => {
@@ -164,91 +182,13 @@ export function DormitoryPaymentsTable({ payments }: DormitoryPaymentsTableProps
                   </TableCell>
                   <TableCell className="text-right">
                     {payment.status !== 'COMPLETED' && (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setSelectedPayment(payment)
-                              setPaymentData({
-                                amount: payment.remainingAmount?.toString() || payment.amount.toString(),
-                                paymentMethod: 'CASH',
-                                notes: '',
-                              })
-                            }}
-                          >
-                            <CheckCircle2 className="h-4 w-4 mr-1" />
-                            To&apos;lov qabul qilish
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>To&apos;lov qabul qilish</DialogTitle>
-                          </DialogHeader>
-                          <form onSubmit={handlePayment} className="space-y-4">
-                            <div>
-                              <Label>O&apos;quvchi</Label>
-                              <div className="text-sm text-muted-foreground">
-                                {selectedPayment?.student.user?.fullName} ({selectedPayment?.student.studentCode})
-                              </div>
-                            </div>
-
-                            <div>
-                              <Label htmlFor="amount">Summa *</Label>
-                              <Input
-                                id="amount"
-                                type="number"
-                                step="0.01"
-                                value={paymentData.amount}
-                                onChange={(e) => setPaymentData({ ...paymentData, amount: e.target.value })}
-                                required
-                              />
-                            </div>
-
-                            <div>
-                              <Label htmlFor="paymentMethod">To&apos;lov usuli *</Label>
-                              <Select
-                                value={paymentData.paymentMethod}
-                                onValueChange={(value) => setPaymentData({ ...paymentData, paymentMethod: value })}
-                              >
-                                <SelectTrigger id="paymentMethod">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="CASH">Naqd</SelectItem>
-                                  <SelectItem value="CARD">Karta</SelectItem>
-                                  <SelectItem value="TRANSFER">O&apos;tkazma</SelectItem>
-                                  <SelectItem value="ONLINE">Online</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div>
-                              <Label htmlFor="notes">Izoh</Label>
-                              <Textarea
-                                id="notes"
-                                value={paymentData.notes}
-                                onChange={(e) => setPaymentData({ ...paymentData, notes: e.target.value })}
-                                rows={3}
-                              />
-                            </div>
-
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setSelectedPayment(null)}
-                                disabled={isProcessing}
-                              >
-                                Bekor qilish
-                              </Button>
-                              <Button type="submit" disabled={isProcessing}>
-                                {isProcessing ? "Saqlanmoqda..." : "Saqlash"}
-                              </Button>
-                            </div>
-                          </form>
-                        </DialogContent>
-                      </Dialog>
+                      <Button
+                        size="sm"
+                        onClick={() => openDialog(payment)}
+                      >
+                        <CheckCircle2 className="h-4 w-4 mr-1" />
+                        To&apos;lov qabul qilish
+                      </Button>
                     )}
                   </TableCell>
                 </TableRow>
@@ -258,6 +198,77 @@ export function DormitoryPaymentsTable({ payments }: DormitoryPaymentsTableProps
           </TableBody>
         </Table>
       </div>
+
+      {/* Payment Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent aria-describedby="payment-dialog-description">
+          <DialogHeader>
+            <DialogTitle>To&apos;lov qabul qilish</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handlePayment} className="space-y-4">
+            <div id="payment-dialog-description">
+              <Label>O&apos;quvchi</Label>
+              <div className="text-sm text-muted-foreground">
+                {selectedPayment?.student?.user?.fullName} ({selectedPayment?.student?.studentCode})
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="amount">Summa *</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                value={paymentData.amount}
+                onChange={(e) => setPaymentData({ ...paymentData, amount: e.target.value })}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="paymentMethod">To&apos;lov usuli *</Label>
+              <Select
+                value={paymentData.paymentMethod}
+                onValueChange={(value) => setPaymentData({ ...paymentData, paymentMethod: value })}
+              >
+                <SelectTrigger id="paymentMethod">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CASH">Naqd</SelectItem>
+                  <SelectItem value="CARD">Karta</SelectItem>
+                  <SelectItem value="TRANSFER">O&apos;tkazma</SelectItem>
+                  <SelectItem value="ONLINE">Online</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="notes">Izoh</Label>
+              <Textarea
+                id="notes"
+                value={paymentData.notes}
+                onChange={(e) => setPaymentData({ ...paymentData, notes: e.target.value })}
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={closeDialog}
+                disabled={isProcessing}
+              >
+                Bekor qilish
+              </Button>
+              <Button type="submit" disabled={isProcessing}>
+                {isProcessing ? "Saqlanmoqda..." : "Saqlash"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
