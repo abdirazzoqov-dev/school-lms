@@ -74,12 +74,17 @@ export async function createStudent(data: StudentFormData) {
     const defaultPassword = await hashPassword('Parent123!') // Default password
     
     for (const guardianData of validatedData.guardians) {
+      // Normalize phone number (remove all non-digit characters)
+      const normalizedPhone = guardianData.phone.replace(/[^0-9]/g, '')
+      
       // Check if guardian phone already exists for this tenant
       let guardian = await db.parent.findFirst({
         where: {
           tenantId,
           user: {
-            phone: guardianData.phone
+            phone: {
+              contains: normalizedPhone
+            }
           }
         },
         include: {
@@ -89,32 +94,10 @@ export async function createStudent(data: StudentFormData) {
 
       // If guardian doesn't exist, create new one
       if (!guardian) {
-        // Generate unique email using phone and random suffix (for authentication fallback)
-        const phoneDigits = guardianData.phone.replace(/[^0-9]/g, '')
-        let guardianEmail = `parent_${phoneDigits}@temp.local`
-        
-        // Check if this generated email already exists
-        let existingEmail = await db.user.findUnique({
-          where: { email: guardianEmail }
-        })
-
-        // If email exists, add random suffix to make it unique
-        if (existingEmail) {
-          const randomSuffix = generateRandomString(6)
-          guardianEmail = `parent_${phoneDigits}_${randomSuffix}@temp.local`
-          
-          // Double check the new email
-          existingEmail = await db.user.findUnique({
-            where: { email: guardianEmail }
-          })
-          
-          if (existingEmail) {
-            return { 
-              success: false, 
-              error: `Qarindosh email yaratishda xatolik. Iltimos, qayta urinib ko'ring` 
-            }
-          }
-        }
+        // Generate unique email using phone and timestamp (for authentication fallback)
+        const phoneDigits = normalizedPhone
+        const timestamp = Date.now().toString().slice(-6)
+        const guardianEmail = `parent_${phoneDigits}_${timestamp}@temp.local`
 
         // Create guardian user account
         const guardianUser = await db.user.create({
@@ -535,12 +518,17 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
             }
           })
         } else {
+          // Normalize phone number
+          const normalizedPhone = guardianData.phone.replace(/[^0-9]/g, '')
+          
           // Check if guardian exists in system by phone
           guardian = await db.parent.findFirst({
             where: {
               tenantId,
               user: {
-                phone: guardianData.phone
+                phone: {
+                  contains: normalizedPhone
+                }
               }
             },
             include: {
@@ -550,30 +538,9 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
 
           // If not, create new guardian
           if (!guardian) {
-            const phoneDigits = guardianData.phone.replace(/[^0-9]/g, '')
-            let guardianEmail = `parent_${phoneDigits}@temp.local`
-            
-            let existingEmail = await db.user.findUnique({
-              where: { email: guardianEmail }
-            })
-
-            // If email exists, add random suffix to make it unique
-            if (existingEmail) {
-              const randomSuffix = generateRandomString(6)
-              guardianEmail = `parent_${phoneDigits}_${randomSuffix}@temp.local`
-              
-              // Double check the new email
-              existingEmail = await db.user.findUnique({
-                where: { email: guardianEmail }
-              })
-              
-              if (existingEmail) {
-                return { 
-                  success: false, 
-                  error: `Qarindosh email yaratishda xatolik. Iltimos, qayta urinib ko'ring` 
-                }
-              }
-            }
+            const phoneDigits = normalizedPhone
+            const timestamp = Date.now().toString().slice(-6)
+            const guardianEmail = `parent_${phoneDigits}_${timestamp}@temp.local`
 
             const guardianUser = await db.user.create({
               data: {
