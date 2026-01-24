@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { DollarSign, Building2, Bed, User, Calendar, CheckCircle2 } from 'lucide-react'
-import { recordPaymentTransaction } from '@/app/actions/payment'
+import { addPartialPayment } from '@/app/actions/payment'
 import { toast } from 'sonner'
 
 interface DormitoryPaymentsTableProps {
@@ -36,12 +36,12 @@ export function DormitoryPaymentsTable({ payments }: DormitoryPaymentsTableProps
     setIsProcessing(true)
 
     try {
-      const result = await recordPaymentTransaction({
-        paymentId: selectedPayment.id,
-        amount: parseFloat(paymentData.amount),
-        paymentMethod: paymentData.paymentMethod as any,
-        notes: paymentData.notes,
-      })
+      const result = await addPartialPayment(
+        selectedPayment.id,
+        parseFloat(paymentData.amount),
+        paymentData.paymentMethod,
+        paymentData.notes
+      )
 
       if (result.success) {
         toast.success("To'lov qabul qilindi")
