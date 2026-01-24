@@ -6,10 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Building2, Bed, DollarSign, TrendingUp, Users, Calendar, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { DormitoryPaymentsTable } from './dormitory-payments-table'
+import { DormitoryPaymentsFilters } from './filters'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -104,25 +104,6 @@ export default async function DormitoryPaymentsPage({
 
   const paymentRate = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0
 
-  // Generate month and year options
-  const months = [
-    { value: '1', label: 'Yanvar' },
-    { value: '2', label: 'Fevral' },
-    { value: '3', label: 'Mart' },
-    { value: '4', label: 'Aprel' },
-    { value: '5', label: 'May' },
-    { value: '6', label: 'Iyun' },
-    { value: '7', label: 'Iyul' },
-    { value: '8', label: 'Avgust' },
-    { value: '9', label: 'Sentyabr' },
-    { value: '10', label: 'Oktyabr' },
-    { value: '11', label: 'Noyabr' },
-    { value: '12', label: 'Dekabr' },
-  ]
-
-  const currentYear = new Date().getFullYear()
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i)
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -200,102 +181,13 @@ export default async function DormitoryPaymentsPage({
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Filtrlash</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Oy</label>
-              <Select value={selectedMonth.toString()} onValueChange={(value) => {
-                const params = new URLSearchParams(searchParams)
-                params.set('month', value)
-                window.location.href = `?${params.toString()}`
-              }}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {months.map((month) => (
-                    <SelectItem key={month.value} value={month.value}>
-                      {month.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Yil</label>
-              <Select value={selectedYear.toString()} onValueChange={(value) => {
-                const params = new URLSearchParams(searchParams)
-                params.set('year', value)
-                window.location.href = `?${params.toString()}`
-              }}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {years.map((year) => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Bino</label>
-              <Select value={selectedBuilding || 'all'} onValueChange={(value) => {
-                const params = new URLSearchParams(searchParams)
-                if (value === 'all') {
-                  params.delete('building')
-                } else {
-                  params.set('building', value)
-                }
-                window.location.href = `?${params.toString()}`
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Barcha binolar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Barcha binolar</SelectItem>
-                  {buildings.map((building) => (
-                    <SelectItem key={building.id} value={building.id}>
-                      {building.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Status</label>
-              <Select value={selectedStatus || 'all'} onValueChange={(value) => {
-                const params = new URLSearchParams(searchParams)
-                if (value === 'all') {
-                  params.delete('status')
-                } else {
-                  params.set('status', value)
-                }
-                window.location.href = `?${params.toString()}`
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Barcha statuslar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Barcha statuslar</SelectItem>
-                  <SelectItem value="PENDING">Kutilmoqda</SelectItem>
-                  <SelectItem value="PARTIALLY_PAID">Qisman to&apos;langan</SelectItem>
-                  <SelectItem value="COMPLETED">To&apos;langan</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <DormitoryPaymentsFilters
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+        selectedBuilding={selectedBuilding}
+        selectedStatus={selectedStatus}
+        buildings={buildings}
+      />
 
       {/* Payments Table */}
       <Card>
