@@ -101,8 +101,19 @@ export function AssignStudentForm({ students }: AssignStudentFormProps) {
     if (result.success) {
       toast({
         title: 'Muvaffaqiyatli!',
-        description: 'O\'quvchi yotoqxonaga joylashtirildi',
+        description: result.message || 'O\'quvchi yotoqxonaga joylashtirildi',
       })
+      
+      // Show additional info about payment creation
+      if (result.paymentCreated) {
+        setTimeout(() => {
+          toast({
+            title: '💰 To\'lov yaratildi',
+            description: `Yotoqxona to'lovi avtomatik yaratildi. Moliya → To'lovlar sahifasida ko'rishingiz mumkin.`,
+          })
+        }, 1500)
+      }
+      
       router.push('/admin/dormitory')
       router.refresh()
     } else {

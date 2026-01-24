@@ -418,36 +418,55 @@ export async function createAssignment(data: AssignmentFormData) {
     await updateBuildingCache(bed.room.buildingId)
 
     // Create initial dormitory payment for current month
+    let paymentCreated = false
     if (validatedData.monthlyFee > 0) {
-      const currentDate = new Date()
-      const paymentMonth = currentDate.getMonth() + 1
-      const paymentYear = currentDate.getFullYear()
-      const invoiceNumber = `DORM-${paymentYear}-${generateRandomString(8)}`
+      try {
+        const currentDate = new Date()
+        const paymentMonth = currentDate.getMonth() + 1
+        const paymentYear = currentDate.getFullYear()
+        const invoiceNumber = `DORM-${paymentYear}-${generateRandomString(8)}`
 
-      await db.payment.create({
-        data: {
-          tenantId,
-          studentId: validatedData.studentId,
-          amount: validatedData.monthlyFee,
-          paidAmount: 0,
-          remainingAmount: validatedData.monthlyFee,
-          paymentType: 'DORMITORY',
-          paymentMethod: 'CASH',
-          status: 'PENDING',
-          dueDate: new Date(paymentYear, paymentMonth - 1, 5), // 5th of current month
-          paymentMonth,
-          paymentYear,
-          invoiceNumber,
-          notes: `Yotoqxona to'lovi - ${bed.room.building.name} binosi, ${bed.room.roomNumber}-xona`,
-        }
-      })
+        await db.payment.create({
+          data: {
+            tenantId,
+            studentId: validatedData.studentId,
+            amount: validatedData.monthlyFee,
+            paidAmount: 0,
+            remainingAmount: validatedData.monthlyFee,
+            paymentType: 'DORMITORY',
+            paymentMethod: 'CASH',
+            status: 'PENDING',
+            dueDate: new Date(paymentYear, paymentMonth - 1, 5), // 5th of current month
+            paymentMonth,
+            paymentYear,
+            invoiceNumber,
+            notes: `Yotoqxona to'lovi - ${bed.room.building.name} binosi, ${bed.room.roomNumber}-xona`,
+          }
+        })
+        paymentCreated = true
+        console.log(`✅ Dormitory payment created for student ${validatedData.studentId}: ${invoiceNumber}`)
+      } catch (paymentError) {
+        console.error('❌ Failed to create dormitory payment:', paymentError)
+        // Don't fail the whole assignment if payment creation fails
+      }
+    } else {
+      console.log(`ℹ️ No payment created: monthlyFee is ${validatedData.monthlyFee}`)
     }
 
     revalidateDormitoryPaths()
     revalidatePath('/admin/payments')
     revalidatePath('/admin/dormitory/payments')
 
-    return { success: true, assignment }
+    return { 
+      success: true, 
+      assignment,
+      paymentCreated,
+      message: paymentCreated 
+        ? 'O\'quvchi yotoqxonaga joylashtirildi va to\'lov yaratildi' 
+        : validatedData.monthlyFee > 0
+          ? 'O\'quvchi yotoqxonaga joylashtirildi, lekin to\'lov yaratishda xatolik'
+          : 'O\'quvchi yotoqxonaga joylashtirildi (oylik to\'lov 0)'
+    }
   } catch (error: any) {
     console.error('Create assignment error:', error)
     return { success: false, error: error.message || 'Xatolik yuz berdi' }
