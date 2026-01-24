@@ -53,7 +53,7 @@ export function RoomForm({ buildings }: RoomFormProps) {
       floor: 1,
       capacity: 4,
       roomType: 'STANDARD',
-      pricePerMonth: 0,
+      pricePerMonth: 250000, // Default oylik narx
       gender: undefined,
       description: '',
       amenities: [],

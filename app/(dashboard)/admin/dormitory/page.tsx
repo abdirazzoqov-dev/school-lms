@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
+import { FixRoomsButton } from './fix-rooms-button'
 
 export const revalidate = 60
 export const dynamic = 'auto' // Optimized for better caching
@@ -127,6 +128,9 @@ export default async function DormitoryDashboardPage() {
           <p className="text-muted-foreground mt-1">
             Binolar, xonalar va o'quvchilar joylashuvi
           </p>
+        </div>
+        <div>
+          <FixRoomsButton />
         </div>
       </div>
 

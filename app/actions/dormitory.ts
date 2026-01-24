@@ -541,6 +541,61 @@ export async function checkOutStudent(assignmentId: string) {
 }
 
 // ============================================
+// UTILITY ACTIONS
+// ============================================
+
+/**
+ * Fix rooms with 0 price by setting them to default (250000)
+ * This is a one-time utility function to fix existing data
+ */
+export async function fixRoomsWithZeroPrice() {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session || session.user.role !== 'ADMIN') {
+      return { success: false, error: 'Unauthorized' }
+    }
+
+    const tenantId = session.user.tenantId!
+
+    // Find rooms with 0 price
+    const roomsWithZeroPrice = await db.dormitoryRoom.findMany({
+      where: {
+        tenantId,
+        pricePerMonth: 0,
+      },
+    })
+
+    console.log(`Found ${roomsWithZeroPrice.length} rooms with 0 price`)
+
+    // Update them to default price (250000)
+    const DEFAULT_PRICE = 250000
+
+    const updatePromises = roomsWithZeroPrice.map((room) =>
+      db.dormitoryRoom.update({
+        where: { id: room.id },
+        data: { pricePerMonth: DEFAULT_PRICE },
+      })
+    )
+
+    await Promise.all(updatePromises)
+
+    console.log(`✅ Updated ${roomsWithZeroPrice.length} rooms to ${DEFAULT_PRICE} so'm`)
+
+    revalidateDormitoryPaths()
+
+    return {
+      success: true,
+      updatedCount: roomsWithZeroPrice.length,
+      message: `${roomsWithZeroPrice.length} ta xonaning narxi ${DEFAULT_PRICE} so'mga o'zgartirildi`,
+    }
+  } catch (error: any) {
+    console.error('Fix rooms error:', error)
+    return { success: false, error: error.message || 'Xatolik yuz berdi' }
+  }
+}
+
+// ============================================
 // HELPER FUNCTIONS
 // ============================================
 
