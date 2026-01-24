@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Eye, Pencil, Plus } from 'lucide-react'
@@ -15,6 +16,7 @@ import { Progress } from '@/components/ui/progress'
 import { AddPartialPaymentModal } from '@/components/add-partial-payment-modal'
 import { ResponsiveTableWrapper } from '@/components/responsive-table-wrapper'
 import { Card, CardContent } from '@/components/ui/card'
+import { useToast } from '@/components/ui/use-toast'
 
 interface Payment {
   id: string
@@ -38,6 +40,8 @@ interface Payment {
 }
 
 export function PaymentsTable({ payments }: { payments: Payment[] }) {
+  const router = useRouter()
+  const { toast } = useToast()
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [partialPaymentModal, setPartialPaymentModal] = useState<{
     open: boolean
@@ -71,19 +75,76 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
   }
 
   const handleExport = () => {
-    const selectedPayments = payments.filter(p => selectedIds.includes(p.id))
-    const formatted = formatPaymentsForExport(selectedPayments)
-    exportToCSV(formatted, 'payments')
+    try {
+      const selectedPayments = payments.filter(p => selectedIds.includes(p.id))
+      const formatted = formatPaymentsForExport(selectedPayments)
+      exportToCSV(formatted, 'payments')
+      
+      toast({
+        title: 'Muvaffaqiyatli!',
+        description: `${selectedPayments.length} ta to'lov eksport qilindi`,
+      })
+    } catch (error) {
+      toast({
+        title: 'Xato!',
+        description: 'Eksport qilishda xatolik yuz berdi',
+        variant: 'destructive',
+      })
+    }
   }
 
   const handleBulkDelete = async () => {
-    await bulkDeletePayments(selectedIds)
-    setSelectedIds([])
+    try {
+      const result = await bulkDeletePayments(selectedIds)
+      
+      if (result.success) {
+        toast({
+          title: 'Muvaffaqiyatli!',
+          description: `${result.deleted} ta to'lov o'chirildi${result.skipped ? `, ${result.skipped} ta to'lovni o'chirib bo'lmadi` : ''}`,
+        })
+        setSelectedIds([])
+        router.refresh()
+      } else {
+        toast({
+          title: 'Xato!',
+          description: result.error || 'To\'lovlarni o\'chirishda xatolik',
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      toast({
+        title: 'Xato!',
+        description: 'Kutilmagan xatolik yuz berdi',
+        variant: 'destructive',
+      })
+    }
   }
 
   const handleBulkStatusChange = async (status: string) => {
-    await bulkChangePaymentStatus(selectedIds, status as any)
-    setSelectedIds([])
+    try {
+      const result = await bulkChangePaymentStatus(selectedIds, status as any)
+      
+      if (result.success) {
+        toast({
+          title: 'Muvaffaqiyatli!',
+          description: `${result.updated} ta to'lov statusi yangilandi`,
+        })
+        setSelectedIds([])
+        router.refresh()
+      } else {
+        toast({
+          title: 'Xato!',
+          description: result.error || 'To\'lovlar statusini o\'zgartirishda xatolik',
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      toast({
+        title: 'Xato!',
+        description: 'Kutilmagan xatolik yuz berdi',
+        variant: 'destructive',
+      })
+    }
   }
 
   const statusOptions = [
