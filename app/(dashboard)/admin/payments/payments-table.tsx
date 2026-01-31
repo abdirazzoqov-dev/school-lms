@@ -1,30 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Eye, Pencil, Plus, MoreVertical, Trash2 } from 'lucide-react'
-import { DeleteButton } from '@/components/delete-button'
-import { deletePayment, bulkDeletePayments, bulkChangePaymentStatus } from '@/app/actions/payment'
+import { bulkDeletePayments, bulkChangePaymentStatus } from '@/app/actions/payment'
 import { Checkbox } from '@/components/ui/checkbox'
 import { BulkActionsToolbar } from '@/components/bulk-actions-toolbar'
 import { exportToCSV, formatPaymentsForExport } from '@/lib/export'
 import { formatNumber } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
-import { AddPartialPaymentModal } from '@/components/add-partial-payment-modal'
 import { ResponsiveTableWrapper } from '@/components/responsive-table-wrapper'
 import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 
 interface Payment {
   id: string
@@ -51,13 +38,6 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
   const router = useRouter()
   const { toast } = useToast()
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [partialPaymentModal, setPartialPaymentModal] = useState<{
-    open: boolean
-    payment: Payment | null
-  }>({
-    open: false,
-    payment: null
-  })
 
   const getPaymentTypeLabel = (type: string) => {
     const types: Record<string, string> = {
@@ -86,40 +66,6 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
     }
   }
 
-  const handleAddPartialPayment = (payment: Payment) => {
-    setPartialPaymentModal({
-      open: true,
-      payment
-    })
-  }
-
-  const handleDelete = async (paymentId: string, invoiceNumber: string) => {
-    if (confirm(`${invoiceNumber} raqamli to'lovni o'chirishni xohlaysizmi?`)) {
-      try {
-        const result = await deletePayment(paymentId)
-        
-        if (result.success) {
-          toast({
-            title: 'Muvaffaqiyatli!',
-            description: 'To\'lov o\'chirildi',
-          })
-          router.refresh()
-        } else {
-          toast({
-            title: 'Xato!',
-            description: result.error || 'To\'lovni o\'chirishda xatolik',
-            variant: 'destructive',
-          })
-        }
-      } catch (error) {
-        toast({
-          title: 'Xato!',
-          description: 'Kutilmagan xatolik yuz berdi',
-          variant: 'destructive',
-        })
-      }
-    }
-  }
 
   const handleExport = () => {
     try {
@@ -251,7 +197,6 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
               <th className="p-4 text-left text-sm font-medium">Usuli</th>
               <th className="p-4 text-left text-sm font-medium">Muddat</th>
               <th className="p-4 text-left text-sm font-medium">Status</th>
-              <th className="p-4 text-left text-sm font-medium">Harakatlar</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -368,66 +313,6 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                      'Muvaffaqiyatsiz'}
                   </Badge>
                 </td>
-                <td className="p-4">
-                  <div className="flex items-center gap-2">
-                    {/* Add Partial Payment Button (if not fully paid) */}
-                    {progress.percentage < 100 && (
-                      <Button 
-                        variant="default" 
-                        size="sm"
-                        onClick={() => handleAddPartialPayment(payment)}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        To'lov
-                      </Button>
-                    )}
-                    
-                    {/* Dropdown Menu for Actions */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <MoreVertical className="h-4 w-4" />
-                          <span className="sr-only">Harakatlar menusi</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuLabel className="font-semibold">Harakatlar</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                          <Link 
-                            href={`/admin/payments/${payment.id}`}
-                            className="flex items-center cursor-pointer"
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            <span>Ko'rish</span>
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link 
-                            href={`/admin/payments/${payment.id}/edit`}
-                            className="flex items-center cursor-pointer"
-                          >
-                            <Pencil className="h-4 w-4 mr-2" />
-                            <span>Tahrirlash</span>
-                          </Link>
-                        </DropdownMenuItem>
-                        {payment.status !== 'COMPLETED' && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              className="flex items-center cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                              onClick={() => handleDelete(payment.id, payment.invoiceNumber)}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              <span>O'chirish</span>
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </td>
               </tr>
             )
             })}
@@ -522,68 +407,6 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                   </div>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-2 pt-3 border-t">
-                {progress.percentage < 100 && (
-                  <Button 
-                    variant="default" 
-                    size="sm"
-                    onClick={() => handleAddPartialPayment(payment)}
-                    className="bg-green-600 hover:bg-green-700 flex-1"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    To'lov
-                  </Button>
-                )}
-                
-                {/* Dropdown Menu for Mobile Actions */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className={`${progress.percentage < 100 ? '' : 'flex-1'}`}
-                    >
-                      <MoreVertical className="h-4 w-4 mr-2" />
-                      <span>Harakatlar</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuLabel className="font-semibold">Harakatlar</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link 
-                        href={`/admin/payments/${payment.id}`}
-                        className="flex items-center cursor-pointer"
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        <span>Ko'rish</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link 
-                        href={`/admin/payments/${payment.id}/edit`}
-                        className="flex items-center cursor-pointer"
-                      >
-                        <Pencil className="h-4 w-4 mr-2" />
-                        <span>Tahrirlash</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    {payment.status !== 'COMPLETED' && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="flex items-center cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                          onClick={() => handleDelete(payment.id, payment.invoiceNumber)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          <span>O'chirish</span>
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
             </CardContent>
           </Card>
         )
@@ -607,22 +430,6 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
         statusOptions={statusOptions}
         entityName="to'lov"
       />
-
-      {/* Partial Payment Modal */}
-      {partialPaymentModal.payment && (
-        <AddPartialPaymentModal
-          open={partialPaymentModal.open}
-          onOpenChange={(open) => setPartialPaymentModal({ open, payment: null })}
-          payment={{
-            id: partialPaymentModal.payment.id,
-            invoiceNumber: partialPaymentModal.payment.invoiceNumber,
-            amount: Number(partialPaymentModal.payment.amount),
-            paidAmount: Number(partialPaymentModal.payment.paidAmount || 0),
-            remainingAmount: Number(partialPaymentModal.payment.remainingAmount || partialPaymentModal.payment.amount),
-            student: partialPaymentModal.payment.student
-          }}
-        />
-      )}
     </>
   )
 }
