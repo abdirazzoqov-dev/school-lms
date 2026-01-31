@@ -920,46 +920,62 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
 
     // ✅ UPDATE PENDING/PARTIALLY_PAID PAYMENTS when fees change
     
+    logger.info('=== CHECKING PAYMENT UPDATES ===', { studentId })
+    logger.info(`data.monthlyTuitionFee: ${data.monthlyTuitionFee}, existing: ${Number(existingStudent.monthlyTuitionFee)}`, { studentId })
+    logger.info(`data.dormitoryMonthlyFee: ${data.dormitoryMonthlyFee}, oldDormitoryFee: ${oldDormitoryFee}`, { studentId })
+    
     // 1. Update TUITION payments if monthlyTuitionFee changed
-    if (data.monthlyTuitionFee !== undefined && data.monthlyTuitionFee !== Number(existingStudent.monthlyTuitionFee)) {
-      logger.info(`Updating tuition payments: ${Number(existingStudent.monthlyTuitionFee)} -> ${data.monthlyTuitionFee}`, {
-        studentId
-      })
+    if (data.monthlyTuitionFee !== undefined) {
+      const oldTuitionFee = Number(existingStudent.monthlyTuitionFee)
+      const newTuitionFee = data.monthlyTuitionFee
       
-      const pendingTuitionPayments = await db.payment.findMany({
-        where: {
-          tenantId,
-          studentId,
-          paymentType: 'TUITION',
-          status: { in: ['PENDING', 'PARTIALLY_PAID'] },
-          remainingAmount: { gt: 0 }
-        }
-      })
-
-      logger.info(`Found ${pendingTuitionPayments.length} pending tuition payments to update`)
-
-      for (const payment of pendingTuitionPayments) {
-        const newRemainingAmount = data.monthlyTuitionFee - Number(payment.paidAmount)
-        
-        await db.payment.update({
-          where: { id: payment.id },
-          data: {
-            amount: data.monthlyTuitionFee,
-            remainingAmount: Math.max(0, newRemainingAmount),
-            status: newRemainingAmount <= 0 ? 'COMPLETED' : (Number(payment.paidAmount) > 0 ? 'PARTIALLY_PAID' : 'PENDING')
-          }
-        })
-        
-        logger.info(`Updated tuition payment ${payment.id}: ${Number(payment.amount)} -> ${data.monthlyTuitionFee}, remaining: ${newRemainingAmount}`, {
+      logger.info(`Tuition comparison: ${newTuitionFee} !== ${oldTuitionFee} = ${newTuitionFee !== oldTuitionFee}`, { studentId })
+      
+      if (newTuitionFee !== oldTuitionFee) {
+        logger.info(`Updating tuition payments: ${oldTuitionFee} -> ${newTuitionFee}`, {
           studentId
         })
+        
+        const pendingTuitionPayments = await db.payment.findMany({
+          where: {
+            tenantId,
+            studentId,
+            paymentType: 'TUITION',
+            status: { in: ['PENDING', 'PARTIALLY_PAID'] },
+            remainingAmount: { gt: 0 }
+          }
+        })
+
+        logger.info(`Found ${pendingTuitionPayments.length} pending tuition payments to update`)
+
+        for (const payment of pendingTuitionPayments) {
+          const newRemainingAmount = newTuitionFee - Number(payment.paidAmount)
+          
+          await db.payment.update({
+            where: { id: payment.id },
+            data: {
+              amount: newTuitionFee,
+              remainingAmount: Math.max(0, newRemainingAmount),
+              status: newRemainingAmount <= 0 ? 'COMPLETED' : (Number(payment.paidAmount) > 0 ? 'PARTIALLY_PAID' : 'PENDING')
+            }
+          })
+          
+          logger.info(`Updated tuition payment ${payment.id}: ${Number(payment.amount)} -> ${newTuitionFee}, remaining: ${newRemainingAmount}`, {
+            studentId
+          })
+        }
+      } else {
+        logger.info('Tuition fee unchanged, skipping update', { studentId })
       }
+    } else {
+      logger.info('data.monthlyTuitionFee is undefined, skipping tuition update', { studentId })
     }
 
     // 2. Update DORMITORY payments if dormitoryMonthlyFee changed
-    if (data.dormitoryMonthlyFee !== undefined && oldDormitoryFee !== null) {
-      // Only update if fee changed from ORIGINAL assignment (before update)
-      if (data.dormitoryMonthlyFee !== oldDormitoryFee) {
+    if (data.dormitoryMonthlyFee !== undefined) {
+      logger.info(`Dormitory comparison: ${data.dormitoryMonthlyFee} !== ${oldDormitoryFee} = ${data.dormitoryMonthlyFee !== oldDormitoryFee}`, { studentId })
+      
+      if (oldDormitoryFee !== null && data.dormitoryMonthlyFee !== oldDormitoryFee) {
         logger.info(`Updating dormitory payments: ${oldDormitoryFee} -> ${data.dormitoryMonthlyFee}`, {
           studentId
         })
@@ -992,7 +1008,13 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
             studentId
           })
         }
+      } else if (oldDormitoryFee === null) {
+        logger.info('No existing dormitory assignment, skipping dormitory payment update', { studentId })
+      } else {
+        logger.info('Dormitory fee unchanged, skipping update', { studentId })
       }
+    } else {
+      logger.info('data.dormitoryMonthlyFee is undefined, skipping dormitory update', { studentId })
     }
 
     // ✅ Revalidate multiple related paths
