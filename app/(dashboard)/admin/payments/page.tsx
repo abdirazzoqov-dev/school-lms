@@ -261,80 +261,88 @@ export default async function PaymentsPage({
   })
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">To'lovlar</h1>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Barcha to'lovlarni boshqaring
-          </p>
+    <div className="space-y-4 md:space-y-6 p-4 md:p-6">
+      {/* Modern Gradient Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 p-6 md:p-8 text-white shadow-2xl">
+        <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,black)]" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
+              <DollarSign className="h-6 w-6 md:h-8 md:w-8" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-4xl font-bold tracking-tight">To'lovlar</h1>
+              <p className="text-green-100 text-sm md:text-base mt-1">
+                Barcha to'lovlarni boshqaring va kuzating
+              </p>
+            </div>
+          </div>
         </div>
-        <Button asChild className="w-full md:w-auto">
-          <Link href="/admin/payments/create">
-            <Plus className="mr-2 h-4 w-4" />
-            To'lov qabul qilish
-          </Link>
-        </Button>
       </div>
 
-      {/* Search and Filter */}
-      <Card>
-        <CardContent className="pt-4 md:pt-6">
-          <div className="flex flex-col gap-3 md:gap-4">
-            <div className="flex flex-col gap-2 md:gap-4 md:flex-row md:flex-wrap">
+      {/* Modern Search and Filter */}
+      <Card className="border-2 shadow-lg">
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            {/* Search Bar */}
+            <div className="flex flex-col sm:flex-row gap-3">
               <SearchBar 
-                placeholder="To'lov qidirish..." 
-                className="flex-1 min-w-full md:min-w-0"
+                placeholder="Invoice, O'quvchi, Kod bo'yicha qidirish..." 
+                className="flex-1"
               />
-              <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap">
-                <FilterSelect
-                  paramName="status"
-                  options={[
-                    { label: 'To\'langan', value: 'COMPLETED' },
-                    { label: 'Qisman', value: 'PARTIALLY_PAID' },
-                    { label: 'Kutilmoqda', value: 'PENDING' },
-                    { label: 'Xato', value: 'FAILED' },
-                    { label: 'Qaytarilgan', value: 'REFUNDED' },
-                  ]}
-                  placeholder="Status"
-                  className="w-full md:w-[140px]"
-                />
-                <FilterSelect
-                  paramName="paymentType"
-                  options={[
-                    { label: 'O\'qish', value: 'TUITION' },
-                    { label: 'Yotoqxona', value: 'DORMITORY' },
-                    { label: 'Kitob', value: 'BOOKS' },
-                    { label: 'Forma', value: 'UNIFORM' },
-                    { label: 'Boshqa', value: 'OTHER' },
-                  ]}
-                  placeholder="Turi"
-                  className="w-full md:w-[130px]"
-                />
-                <FilterSelect
-                  paramName="classId"
-                  options={classes.map(c => ({ label: c.name, value: c.id }))}
-                  placeholder="Sinf"
-                  className="w-full md:w-[140px]"
-                />
-                <FilterSelect
-                  paramName="studentId"
-                  options={students.map(s => ({ 
-                    label: `${s.user?.fullName || s.studentCode}`, 
-                    value: s.id 
-                  }))}
-                  placeholder="O'quvchi"
-                  className="w-full md:w-[180px]"
-                />
-              </div>
-              <ClearFilters className="w-full md:w-auto" />
+              <ClearFilters className="w-full sm:w-auto" />
             </div>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+
+            {/* Filters */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <FilterSelect
+                paramName="status"
+                options={[
+                  { label: 'To\'langan', value: 'COMPLETED' },
+                  { label: 'Qisman', value: 'PARTIALLY_PAID' },
+                  { label: 'Kutilmoqda', value: 'PENDING' },
+                  { label: 'Xato', value: 'FAILED' },
+                  { label: 'Qaytarilgan', value: 'REFUNDED' },
+                ]}
+                placeholder="Status"
+                className="w-full"
+              />
+              <FilterSelect
+                paramName="paymentType"
+                options={[
+                  { label: 'O\'qish', value: 'TUITION' },
+                  { label: 'Yotoqxona', value: 'DORMITORY' },
+                  { label: 'Kitob', value: 'BOOKS' },
+                  { label: 'Forma', value: 'UNIFORM' },
+                  { label: 'Boshqa', value: 'OTHER' },
+                ]}
+                placeholder="Turi"
+                className="w-full"
+              />
+              <FilterSelect
+                paramName="classId"
+                options={classes.map(c => ({ label: c.name, value: c.id }))}
+                placeholder="Sinf"
+                className="w-full"
+              />
+              <FilterSelect
+                paramName="studentId"
+                options={students.map(s => ({ 
+                  label: `${s.user?.fullName || s.studentCode}`, 
+                  value: s.id 
+                }))}
+                placeholder="O'quvchi"
+                className="w-full"
+              />
+            </div>
+
+            {/* Info Row */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-4 border-t">
               <PageSizeSelector currentPageSize={pageSize} />
-              <div className="text-sm text-muted-foreground flex items-center gap-4">
-                <span>Jami: <span className="font-medium">{totalPayments}</span> ta</span>
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                <span className="font-medium text-gray-900">{totalPayments}</span> ta to'lov topildi
                 {Object.keys(paymentTypeStats).length > 0 && (
-                  <span className="text-xs">
+                  <span className="hidden lg:inline ml-2">
                     ({Object.entries(paymentTypeStats).map(([type, count]) => 
                       `${type === 'TUITION' ? 'O\'qish' : type === 'DORMITORY' ? 'Yotoqxona' : type}: ${count}`
                     ).join(', ')})
@@ -348,52 +356,86 @@ export default async function PaymentsPage({
 
       {/* Student Statistics (if filtered) */}
       {studentStats && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-bold text-blue-900">
-                  {studentStats.student?.user?.fullName || studentStats.student?.studentCode}
-                </h3>
-                <p className="text-sm text-blue-700">
-                  {studentStats.student?.class?.name || 'Sinfsiz'} • {studentStats.student?.studentCode}
-                </p>
+        <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg md:text-xl shadow-lg shrink-0">
+                  {studentStats.student?.user?.fullName?.charAt(0) || '?'}
+                </div>
+                <div>
+                  <h3 className="text-lg md:text-xl font-bold text-blue-900">
+                    {studentStats.student?.user?.fullName || studentStats.student?.studentCode}
+                  </h3>
+                  <p className="text-sm text-blue-700">
+                    {studentStats.student?.class?.name || 'Sinfsiz'} • {studentStats.student?.studentCode}
+                  </p>
+                </div>
               </div>
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant="outline" size="sm" asChild className="w-full sm:w-auto bg-white hover:bg-blue-50">
                 <Link href="/admin/payments">
-                  <span className="text-blue-600">Filterni tozalash ✕</span>
+                  <XCircle className="h-4 w-4 mr-2" />
+                  <span>Filterni tozalash</span>
                 </Link>
               </Button>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4">
-              <div className="bg-white rounded-lg p-3 md:p-4">
-                <p className="text-xs md:text-sm text-muted-foreground">Oylik to'lov</p>
-                <p className="text-lg md:text-2xl font-bold text-blue-600">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+              <div className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs md:text-sm text-muted-foreground font-medium">Oylik to'lov</p>
+                  <div className="p-1.5 bg-blue-100 rounded-lg">
+                    <DollarSign className="h-4 w-4 text-blue-600" />
+                  </div>
+                </div>
+                <p className="text-xl md:text-2xl font-bold text-blue-600 mb-1">
                   {formatNumber(studentStats.monthlyTuitionFee)}
                 </p>
-                <p className="text-xs text-blue-600">{studentStats.monthsEnrolled} oy</p>
+                <p className="text-xs text-blue-500">{studentStats.monthsEnrolled} oy</p>
               </div>
 
-              <div className="bg-white rounded-lg p-3 md:p-4">
-                <p className="text-xs md:text-sm text-muted-foreground">To'lashi kerak</p>
-                <p className="text-lg md:text-2xl font-bold text-purple-600">
+              <div className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-l-purple-500 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs md:text-sm text-muted-foreground font-medium">To'lashi kerak</p>
+                  <div className="p-1.5 bg-purple-100 rounded-lg">
+                    <Clock className="h-4 w-4 text-purple-600" />
+                  </div>
+                </div>
+                <p className="text-xl md:text-2xl font-bold text-purple-600 mb-1">
                   {formatNumber(studentStats.expectedTotal)}
                 </p>
-                <p className="text-xs text-purple-600">Jami ({studentStats.monthsEnrolled} oy)</p>
+                <p className="text-xs text-purple-500">Jami ({studentStats.monthsEnrolled} oy)</p>
               </div>
               
-              <div className="bg-white rounded-lg p-3 md:p-4">
-                <p className="text-xs md:text-sm text-muted-foreground">To'langan</p>
-                <p className="text-lg md:text-2xl font-bold text-green-600">
+              <div className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs md:text-sm text-muted-foreground font-medium">To'langan</p>
+                  <div className="p-1.5 bg-green-100 rounded-lg">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  </div>
+                </div>
+                <p className="text-xl md:text-2xl font-bold text-green-600 mb-1">
                   {formatNumber(studentStats.totalPaid)}
                 </p>
-                <p className="text-xs text-green-600">{studentStats.completedCount} ta</p>
+                <p className="text-xs text-green-500">{studentStats.completedCount} ta to'lov</p>
               </div>
               
-              <div className="bg-white rounded-lg p-3 md:p-4">
-                <p className="text-xs md:text-sm text-muted-foreground">Qarzi</p>
-                <p className={`text-lg md:text-2xl font-bold ${
+              <div className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs md:text-sm text-muted-foreground font-medium">Qarzi</p>
+                  <div className={`p-1.5 rounded-lg ${
+                    (studentStats.expectedTotal - studentStats.totalPaid) > 0 
+                      ? 'bg-red-100' 
+                      : 'bg-green-100'
+                  }`}>
+                    <XCircle className={`h-4 w-4 ${
+                      (studentStats.expectedTotal - studentStats.totalPaid) > 0 
+                        ? 'text-red-600' 
+                        : 'text-green-600'
+                    }`} />
+                  </div>
+                </div>
+                <p className={`text-xl md:text-2xl font-bold mb-1 ${
                   (studentStats.expectedTotal - studentStats.totalPaid) > 0 
                     ? 'text-red-600' 
                     : 'text-green-600'
@@ -402,20 +444,23 @@ export default async function PaymentsPage({
                 </p>
                 <p className={`text-xs ${
                   (studentStats.expectedTotal - studentStats.totalPaid) > 0 
-                    ? 'text-red-600' 
-                    : 'text-green-600'
+                    ? 'text-red-500' 
+                    : 'text-green-500'
                 }`}>
                   {(studentStats.expectedTotal - studentStats.totalPaid) > 0 
-                    ? 'To\'lash' 
-                    : 'To\'liq'}
+                    ? 'To\'lash kerak' 
+                    : 'To\'liq to\'langan'}
                 </p>
               </div>
             </div>
 
             {/* Monthly payments breakdown */}
-            <div className="bg-white rounded-lg p-4">
-              <h4 className="font-semibold text-sm text-blue-900 mb-3">Oylik To'lovlar</h4>
-              <div className="space-y-2">
+            <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm">
+              <h4 className="font-bold text-base md:text-lg text-blue-900 mb-4 flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Oylik To'lovlar Taqsimoti
+              </h4>
+              <div className="space-y-3">
                 {(() => {
                   // Group payments by month
                   const paymentsByMonth = studentStats.allPayments.reduce((acc: any, payment: any) => {
@@ -442,34 +487,41 @@ export default async function PaymentsPage({
                   return Object.entries(paymentsByMonth).map(([month, data]: [string, any]) => {
                     const completedSum = data.completed.reduce((sum: number, p: any) => sum + Number(p.amount), 0)
                     const pendingSum = data.pending.reduce((sum: number, p: any) => sum + Number(p.amount), 0)
+                    const isCompleted = pendingSum === 0
                     
                     return (
-                      <div key={month} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                        <div>
-                          <p className="font-medium text-sm">{month}</p>
-                          <p className="text-xs text-muted-foreground">
+                      <div key={month} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-2 rounded-xl transition-all ${
+                        isCompleted 
+                          ? 'border-green-200 bg-green-50 hover:bg-green-100' 
+                          : 'border-orange-200 bg-orange-50 hover:bg-orange-100'
+                      }`}>
+                        <div className="mb-3 sm:mb-0">
+                          <p className="font-semibold text-sm md:text-base text-gray-900">{month}</p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                            <DollarSign className="h-3 w-3" />
                             {data.completed.length + data.pending.length} ta to'lov
                           </p>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <p className="text-sm font-semibold text-green-600">
+                        <div className="flex items-center gap-4 w-full sm:w-auto">
+                          <div className="text-left sm:text-right flex-1 sm:flex-none">
+                            <p className="text-base md:text-lg font-bold text-green-600">
                               {formatNumber(completedSum)}
                             </p>
                             <p className="text-xs text-green-600">To'langan</p>
                           </div>
-                          {pendingSum > 0 && (
-                            <div className="text-right">
-                              <p className="text-sm font-semibold text-red-600">
+                          {pendingSum > 0 ? (
+                            <div className="text-left sm:text-right flex-1 sm:flex-none">
+                              <p className="text-base md:text-lg font-bold text-red-600">
                                 {formatNumber(pendingSum)}
                               </p>
                               <p className="text-xs text-red-600">Qarzi</p>
                             </div>
-                          )}
-                          {pendingSum === 0 && (
-                            <div className="text-right">
-                              <p className="text-sm font-semibold text-gray-400">✓</p>
-                              <p className="text-xs text-gray-400">To'liq</p>
+                          ) : (
+                            <div className="text-left sm:text-right flex-1 sm:flex-none">
+                              <div className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 rounded-full">
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                <span className="text-xs font-medium text-green-700">To'liq</span>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -483,35 +535,58 @@ export default async function PaymentsPage({
         </Card>
       )}
 
-      {/* Summary Stats */}
-      <div className="grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-4">
-        <Card>
-          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
-            <div className="text-xl md:text-2xl font-bold text-green-600">
+      {/* Modern Summary Stats */}
+      <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
+        <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-start justify-between mb-2">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
+              </div>
+            </div>
+            <div className="text-2xl md:text-3xl font-bold text-green-600 mb-1">
               {formatNumber(totalRevenue)}
             </div>
-            <p className="text-xs md:text-sm text-muted-foreground">To'langan</p>
+            <p className="text-xs md:text-sm text-muted-foreground">To'langan summa</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
-            <div className="text-xl md:text-2xl font-bold text-orange-600">
+
+        <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-shadow">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-start justify-between mb-2">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Clock className="h-5 w-5 text-orange-600" />
+              </div>
+            </div>
+            <div className="text-2xl md:text-3xl font-bold text-orange-600 mb-1">
               {formatNumber(pendingAmount)}
             </div>
-            <p className="text-xs md:text-sm text-muted-foreground">Kutilmoqda</p>
+            <p className="text-xs md:text-sm text-muted-foreground">Kutilayotgan</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
-            <div className="text-xl md:text-2xl font-bold">
+
+        <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-start justify-between mb-2">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <DollarSign className="h-5 w-5 text-blue-600" />
+              </div>
+            </div>
+            <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-1">
               {payments.filter(p => p.status === 'COMPLETED').length}
             </div>
-            <p className="text-xs md:text-sm text-muted-foreground">To'langan</p>
+            <p className="text-xs md:text-sm text-muted-foreground">To'langan to'lovlar</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4 md:pt-6 p-3 md:p-6">
-            <div className="text-xl md:text-2xl font-bold text-orange-600">
+
+        <Card className="border-l-4 border-l-red-500 hover:shadow-lg transition-shadow">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-start justify-between mb-2">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <XCircle className="h-5 w-5 text-red-600" />
+              </div>
+            </div>
+            <div className="text-2xl md:text-3xl font-bold text-red-600 mb-1">
               {payments.filter(p => p.status === 'PENDING' && p.dueDate < new Date()).length}
             </div>
             <p className="text-xs md:text-sm text-muted-foreground">Muddati o'tgan</p>
@@ -535,24 +610,23 @@ export default async function PaymentsPage({
       )}
 
       {payments.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium text-muted-foreground mb-2">
+        <Card className="border-2 border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16 md:py-20">
+            <div className="p-4 md:p-6 bg-green-50 rounded-full mb-4 md:mb-6">
+              <DollarSign className="h-12 w-12 md:h-16 md:w-16 text-green-600" />
+            </div>
+            <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">
               {searchParams.search || searchParams.status || searchParams.paymentType
                 ? 'Hech narsa topilmadi'
                 : 'Hozircha to\'lovlar yo\'q'}
+            </h3>
+            <p className="text-sm md:text-base text-muted-foreground text-center mb-6 max-w-md">
+              {searchParams.search || searchParams.status || searchParams.paymentType
+                ? 'Qidiruv natijalariga mos to\'lov topilmadi. Filterni o\'zgartiring yoki tozalang.'
+                : 'To\'lovlar ro\'yxati bo\'sh. To\'lovlar avtomatik yaratiladi yoki qo\'lda qo\'shiladi.'}
             </p>
             {(searchParams.search || searchParams.status || searchParams.paymentType) && (
               <ClearFilters />
-            )}
-            {!searchParams.search && !searchParams.status && !searchParams.paymentType && (
-              <Button asChild>
-                <Link href="/admin/payments/create">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Birinchi to'lovni qabul qiling
-                </Link>
-              </Button>
             )}
           </CardContent>
         </Card>
