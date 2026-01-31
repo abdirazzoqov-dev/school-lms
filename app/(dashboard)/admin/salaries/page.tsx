@@ -91,11 +91,16 @@ export default async function SalariesPage({
       },
       staff: {
         select: {
-          fullName: true,
-          avatar: true,
-          email: true,
-          phone: true,
-          role: true
+          staffCode: true,
+          position: true,
+          user: {
+            select: {
+              fullName: true,
+              avatar: true,
+              email: true,
+              phone: true
+            }
+          }
         }
       },
       paidBy: {

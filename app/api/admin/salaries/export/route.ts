@@ -73,9 +73,15 @@ export async function GET(req: NextRequest) {
         },
         staff: {
           select: {
-            fullName: true,
-            email: true,
-            phone: true
+            staffCode: true,
+            position: true,
+            user: {
+              select: {
+                fullName: true,
+                email: true,
+                phone: true
+              }
+            }
           }
         }
       },
@@ -93,7 +99,7 @@ export async function GET(req: NextRequest) {
     const csvRows = [
       ['Xodim', 'Lavozim', 'Oy', 'Tur', 'Jami Maosh', 'To\'langan (Avans)', 'Qolgan', 'Foiz', 'Status', 'To\'lov Sanasi'].join(','),
       ...salaryPayments.map(payment => {
-        const employee = payment.teacher ? payment.teacher.user : payment.staff
+        const employee = payment.teacher ? payment.teacher.user : payment.staff?.user
         const employeeType = payment.teacher ? 'O\'qituvchi' : 'Xodim'
         const monthYear = payment.month && payment.year ? `${monthNames[payment.month - 1]} ${payment.year}` : 'N/A'
         const paymentType = 

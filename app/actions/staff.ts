@@ -68,12 +68,14 @@ export async function createStaff(data: StaffFormData) {
         position: validatedData.position,
         department: validatedData.department,
         education: validatedData.education,
-        monthlySalary: validatedData.monthlySalary,
-        salaryInfo: validatedData.monthlySalary ? {
-          monthlySalary: validatedData.monthlySalary,
-          currency: 'UZS',
-          lastUpdated: new Date().toISOString(),
-        } : null,
+        monthlySalary: validatedData.monthlySalary || null,
+        ...(validatedData.monthlySalary && {
+          salaryInfo: {
+            monthlySalary: validatedData.monthlySalary,
+            currency: 'UZS',
+            lastUpdated: new Date().toISOString(),
+          }
+        }),
       }
     })
 

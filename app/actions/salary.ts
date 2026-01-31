@@ -281,7 +281,13 @@ export async function addPartialSalaryPayment(
         },
         staff: {
           select: {
-            fullName: true
+            staffCode: true,
+            position: true,
+            user: {
+              select: {
+                fullName: true
+              }
+            }
           }
         }
       }
@@ -320,7 +326,7 @@ export async function addPartialSalaryPayment(
     }
 
     // Get employee name
-    const employeeName = currentPayment.teacher?.user.fullName || currentPayment.staff?.fullName || 'N/A'
+    const employeeName = currentPayment.teacher?.user.fullName || currentPayment.staff?.user.fullName || 'N/A'
 
     // Update payment
     const updatedPayment = await db.salaryPayment.update({

@@ -33,10 +33,13 @@ interface SalaryPayment {
     }
   } | null
   staff: {
-    fullName: string
-    email: string | null
-    phone: string | null
-    role: string
+    staffCode: string
+    position: string
+    user: {
+      fullName: string
+      email: string | null
+      phone: string | null
+    }
   } | null
 }
 
@@ -51,7 +54,7 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
     const grouped = new Map<string, SalaryPayment[]>()
     
     salaryPayments.forEach(payment => {
-      const employeeId = payment.teacher?.user.fullName || payment.staff?.fullName || 'Unknown'
+      const employeeId = payment.teacher?.user.fullName || payment.staff?.user.fullName || 'Unknown'
       const monthYear = `${payment.month}-${payment.year}`
       const key = `${employeeId}-${monthYear}`
       
@@ -147,7 +150,7 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
         {employeeGroups.map((payments, groupIndex) => {
           // For grouped view, use first payment as representative
           const payment = payments[0]
-          const employee = payment.teacher ? payment.teacher.user : payment.staff
+          const employee = payment.teacher ? payment.teacher.user : payment.staff?.user
           const employeeType = payment.teacher ? 'O\'qituvchi' : 'Xodim'
           
           // Calculate progress based on all payments in group
@@ -447,7 +450,7 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
             type: partialPaymentModal.payment.type,
             employeeName: partialPaymentModal.payment.teacher 
               ? partialPaymentModal.payment.teacher.user.fullName 
-              : partialPaymentModal.payment.staff?.fullName || 'N/A',
+              : partialPaymentModal.payment.staff?.user.fullName || 'N/A',
             employeeType: partialPaymentModal.payment.teacher ? 'teacher' : 'staff'
           }}
         />

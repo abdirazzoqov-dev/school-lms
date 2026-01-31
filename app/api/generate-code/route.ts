@@ -26,11 +26,11 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url)
-    const type = searchParams.get('type') // 'student' or 'teacher'
+    const type = searchParams.get('type') // 'student', 'teacher', or 'staff'
 
-    if (!type || !['student', 'teacher'].includes(type)) {
+    if (!type || !['student', 'teacher', 'staff'].includes(type)) {
       return NextResponse.json({ 
-        error: 'Invalid type. Use "student" or "teacher"', 
+        error: 'Invalid type. Use "student", "teacher", or "staff"', 
         success: false 
       }, { status: 400 })
     }
@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
         nextNumber++
         code = `${shortName}${currentYear}-O-${nextNumber.toString().padStart(3, '0')}`
       }
-    } else {
+    } else if (type === 'teacher') {
       // Get all teacher codes for this tenant
       const teachers = await db.teacher.findMany({
         where: { tenantId },
@@ -169,6 +169,59 @@ export async function GET(req: NextRequest) {
         nextNumber++
         code = `${shortName}${currentYear}-T-${nextNumber.toString().padStart(3, '0')}`
       }
+    } else if (type === 'staff') {
+      // Get all staff codes for this tenant
+      const staff = await db.staff.findMany({
+        where: { tenantId },
+        select: { staffCode: true },
+        orderBy: { staffCode: 'desc' }
+      })
+
+      if (staff.length > 0) {
+        // Try to extract numbers from existing codes
+        const numbers = staff
+          .map(s => {
+            // Try multiple patterns: S-001, S001, 001, etc.
+            const patterns = [
+              /S[-_]?(\d+)$/i,           // DEMO-S-001 or DEMO-S001
+              /STF[-_]?(\d+)$/i,         // DEMO-STF-001 (alternative)
+              /[-_](\d+)$/,              // DEMO-001
+              /(\d+)$/                   // Any ending number
+            ]
+            
+            for (const pattern of patterns) {
+              const match = s.staffCode.match(pattern)
+              if (match) {
+                return parseInt(match[1], 10)
+              }
+            }
+            return 0
+          })
+          .filter(n => n > 0)
+        
+        if (numbers.length > 0) {
+          nextNumber = Math.max(...numbers) + 1
+        }
+      }
+
+      // Format: DEMO24-S-001 (with year for uniqueness)
+      code = `${shortName}${currentYear}-S-${nextNumber.toString().padStart(3, '0')}`
+      
+      // Verify uniqueness
+      const exists = await db.staff.findUnique({
+        where: {
+          tenantId_staffCode: {
+            tenantId,
+            staffCode: code
+          }
+        }
+      })
+
+      // If exists (rare case), increment and retry
+      if (exists) {
+        nextNumber++
+        code = `${shortName}${currentYear}-S-${nextNumber.toString().padStart(3, '0')}`
+      }
     }
 
     return NextResponse.json({ 
@@ -178,7 +231,7 @@ export async function GET(req: NextRequest) {
         prefix: shortName,
         year: currentYear,
         number: nextNumber,
-        type: type === 'student' ? 'O\'quvchi' : 'O\'qituvchi'
+        type: type === 'student' ? 'O\'quvchi' : type === 'teacher' ? 'O\'qituvchi' : 'Xodim'
       }
     })
   } catch (error: any) {

@@ -52,6 +52,11 @@ export default async function AdminLayout({
       icon: 'GraduationCap',
     },
     {
+      title: 'Xodimlar',
+      href: '/admin/staff',
+      icon: 'Briefcase',
+    },
+    {
       title: 'Ota-onalar',
       href: '/admin/parents',
       icon: 'UserCheck',
