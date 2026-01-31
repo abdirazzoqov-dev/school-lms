@@ -171,19 +171,57 @@ export function ScheduleBuilder({
     colorScheme: SUBJECT_COLORS[index % SUBJECT_COLORS.length]
   }))
 
+  // Initialize time slots from existing schedules
   useEffect(() => {
     if (existingSchedules.length > 0) {
-      const mapped = existingSchedules.map((s, index) => ({
-        id: s.id || `existing-${index}`,
-        dayOfWeek: s.dayOfWeek,
-        timeSlotId: timeSlots.find(t => t.startTime === s.startTime)?.id || '1',
-        type: (s.type as ScheduleItemType) || 'LESSON',
-        subjectId: s.subjectId,
-        teacherId: s.teacherId,
-        roomNumber: s.roomNumber,
-        title: s.title,
-        duration: s.duration
-      }))
+      // Extract unique time slots from existing schedules
+      const uniqueTimeMap = new Map<string, { startTime: string; endTime: string }>()
+      
+      existingSchedules.forEach(s => {
+        const key = `${s.startTime}-${s.endTime}`
+        if (!uniqueTimeMap.has(key)) {
+          uniqueTimeMap.set(key, { startTime: s.startTime, endTime: s.endTime })
+        }
+      })
+      
+      // Create time slots from unique times
+      const extractedSlots = Array.from(uniqueTimeMap.values())
+        .sort((a, b) => a.startTime.localeCompare(b.startTime))
+        .map((slot, index) => ({
+          id: String(index + 1),
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          label: `${index + 1}-dars`
+        }))
+      
+      // Only update timeSlots if we have extracted slots
+      if (extractedSlots.length > 0) {
+        setTimeSlots(extractedSlots)
+      }
+    }
+  }, [existingSchedules])
+  
+  // Load existing schedules into state
+  useEffect(() => {
+    if (existingSchedules.length > 0 && timeSlots.length > 0) {
+      const mapped = existingSchedules.map((s, index) => {
+        // Find matching time slot
+        const matchingSlot = timeSlots.find(t => 
+          t.startTime === s.startTime && t.endTime === s.endTime
+        )
+        
+        return {
+          id: s.id || `existing-${index}`,
+          dayOfWeek: s.dayOfWeek,
+          timeSlotId: matchingSlot?.id || '1',
+          type: (s.type as ScheduleItemType) || 'LESSON',
+          subjectId: s.subjectId,
+          teacherId: s.teacherId,
+          roomNumber: s.roomNumber,
+          title: s.title,
+          duration: s.duration
+        }
+      })
       setSchedules(mapped)
     }
   }, [existingSchedules, timeSlots])
