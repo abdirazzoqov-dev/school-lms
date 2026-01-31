@@ -466,6 +466,16 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
 
     const tenantId = session.user.tenantId!
 
+    // ✅ Debug logging
+    logger.info('=== UPDATE STUDENT START ===', {
+      userId: session.user.id,
+      studentId,
+      tenantId
+    })
+    logger.info(`Received data: monthlyTuitionFee=${data.monthlyTuitionFee}, dormitoryMonthlyFee=${data.dormitoryMonthlyFee}`, {
+      studentId
+    })
+
     // Get existing student data
     const existingStudent = await db.student.findFirst({
       where: { id: studentId, tenantId },
@@ -484,6 +494,10 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
     if (!existingStudent) {
       return { success: false, error: 'O\'quvchi topilmadi' }
     }
+
+    logger.info(`Existing student fees: monthlyTuitionFee=${Number(existingStudent.monthlyTuitionFee)}`, {
+      studentId
+    })
 
     // Check if student code is being changed and is unique
     if (data.studentCode && data.studentCode !== existingStudent.studentCode) {

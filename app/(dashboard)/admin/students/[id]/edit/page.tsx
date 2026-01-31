@@ -289,11 +289,20 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
 
     setLoading(true)
 
+    // ✅ Debug: Log data being sent
+    console.log('=== UPDATING STUDENT ===')
+    console.log('Student ID:', params.id)
+    console.log('Monthly Tuition Fee:', formData.monthlyTuitionFee)
+    console.log('Dormitory Monthly Fee:', formData.dormitoryMonthlyFee)
+    console.log('Dormitory Bed ID:', formData.dormitoryBedId)
+
     try {
       const result = await updateStudent(params.id, {
         ...formData,
         guardians
       })
+      
+      console.log('Update result:', result)
 
       if (result.success) {
         toast({
