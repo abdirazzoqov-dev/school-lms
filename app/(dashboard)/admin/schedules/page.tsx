@@ -399,21 +399,22 @@ export default async function SchedulesPage({
               </Badge>
             </div>
           </CardHeader>
-          <CardContent className="p-2 lg:p-4">
+          <CardContent className="p-0">
             {timeSlots.length > 0 ? (
-              <div className="w-full overflow-x-auto rounded-lg border-2 shadow-sm">
-                <table className="w-full border-collapse min-w-[900px] bg-white">
+              <div className="w-full overflow-x-auto rounded-lg">
+                <div className="min-w-[1200px]">
+                  <table className="w-full border-collapse bg-white">
                   <thead>
                     <tr className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50">
-                      <th className="p-2 lg:p-3 text-left font-semibold border-r w-28 lg:w-36 sticky left-0 bg-white z-20 shadow-sm">
+                      <th className="p-3 text-left font-semibold border-r w-[140px] sticky left-0 bg-white z-20 shadow-sm">
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-blue-600" />
-                          <span className="text-xs lg:text-sm">Vaqt</span>
+                          <span className="text-sm">Vaqt</span>
                         </div>
                       </th>
                       {DAYS.map(day => (
-                        <th key={day.id} className="p-2 lg:p-3 text-center font-semibold border-r min-w-[140px]">
-                          <div className="text-sm lg:text-base font-bold">{day.name}</div>
+                        <th key={day.id} className="p-3 text-center font-semibold border-r w-[170px]">
+                          <div className="text-base font-bold">{day.name}</div>
                           <div className="text-xs text-muted-foreground font-normal">{day.short}</div>
                         </th>
                       ))}
@@ -425,9 +426,9 @@ export default async function SchedulesPage({
                         "border-t transition-colors",
                         slotIndex % 2 === 0 ? "bg-white" : "bg-gray-50/50"
                       )}>
-                        <td className="p-2 lg:p-3 border-r bg-gradient-to-r from-gray-50 to-gray-100 sticky left-0 z-10 shadow-sm">
-                          <div className="text-xs lg:text-sm font-bold text-blue-900">{slot.period}-dars</div>
-                          <div className="text-[10px] lg:text-xs text-muted-foreground font-mono mt-0.5">
+                        <td className="p-3 border-r bg-gradient-to-r from-gray-50 to-gray-100 sticky left-0 z-10 shadow-sm">
+                          <div className="text-sm font-bold text-blue-900">{slot.period}-dars</div>
+                          <div className="text-xs text-muted-foreground font-mono mt-0.5">
                             {slot.startTime.slice(0, 5)}-{slot.endTime.slice(0, 5)}
                           </div>
                         </td>
@@ -436,7 +437,7 @@ export default async function SchedulesPage({
                           const lessons = scheduleGrid[day.id]?.[timeKey] || []
                           
                           return (
-                            <td key={day.id} className="p-1 lg:p-1.5 border-r relative">
+                            <td key={day.id} className="p-2 border-r relative">
                               {lessons.length > 0 ? (
                                 <div className="space-y-1">
                                   {lessons.map((lesson, idx) => {
@@ -448,7 +449,7 @@ export default async function SchedulesPage({
                                       <div
                                         key={idx}
                                         className={cn(
-                                          "p-2 rounded-md text-xs space-y-1 min-h-[65px] lg:min-h-[75px] relative",
+                                          "p-2.5 rounded-lg text-xs space-y-1.5 min-h-[80px] relative",
                                           "border-2 shadow-sm hover:shadow-lg transition-all",
                                           isBreak && "bg-gradient-to-br from-amber-100 to-amber-200 border-amber-400",
                                           isLunch && "bg-gradient-to-br from-green-100 to-green-200 border-green-400",
@@ -467,18 +468,18 @@ export default async function SchedulesPage({
                                         {/* Break display */}
                                         {isBreak && (
                                           <div className="flex flex-col items-center justify-center h-full text-center">
-                                            <Coffee className="h-6 w-6 lg:h-7 lg:w-7 text-amber-700 mb-1" />
+                                            <Coffee className="h-7 w-7 text-amber-700 mb-1.5" />
                                             <div className="font-bold text-sm text-amber-900">{lesson.title || 'Tanafus'}</div>
-                                            <div className="text-[10px] text-amber-700">Dam olish</div>
+                                            <div className="text-xs text-amber-700">Dam olish</div>
                                           </div>
                                         )}
 
                                         {/* Lunch display */}
                                         {isLunch && (
                                           <div className="flex flex-col items-center justify-center h-full text-center">
-                                            <Utensils className="h-6 w-6 lg:h-7 lg:w-7 text-green-700 mb-1" />
+                                            <Utensils className="h-7 w-7 text-green-700 mb-1.5" />
                                             <div className="font-bold text-sm text-green-900">{lesson.title || 'Tushlik'}</div>
-                                            <div className="text-[10px] text-green-700">Ovqatlanish</div>
+                                            <div className="text-xs text-green-700">Ovqatlanish</div>
                                           </div>
                                         )}
 
@@ -487,7 +488,7 @@ export default async function SchedulesPage({
                                           <>
                                             {/* Subject name */}
                                             <div className={cn(
-                                              "font-bold text-[11px] lg:text-xs line-clamp-2 leading-tight",
+                                              "font-bold text-xs line-clamp-2 leading-tight",
                                               colorScheme.text
                                             )}>
                                               {lesson.subject?.name || 'Dars'}
@@ -495,14 +496,14 @@ export default async function SchedulesPage({
                                             
                                             {/* Teacher */}
                                             {lesson.teacher?.user?.fullName && (
-                                              <div className="text-[10px] lg:text-xs text-muted-foreground line-clamp-1">
+                                              <div className="text-xs text-muted-foreground line-clamp-1">
                                                 {lesson.teacher.user.fullName.split(' ').slice(0, 2).join(' ')}
                                               </div>
                                             )}
                                             
                                             {/* Room number */}
                                             {lesson.roomNumber && (
-                                              <div className="text-[10px] lg:text-xs text-muted-foreground font-medium">
+                                              <div className="text-xs text-muted-foreground font-medium">
                                                 🏢 {lesson.roomNumber}
                                               </div>
                                             )}
@@ -513,7 +514,7 @@ export default async function SchedulesPage({
                                   })}
                                 </div>
                               ) : (
-                                <div className="h-[65px] lg:h-[75px] flex items-center justify-center rounded-md border-2 border-dashed border-gray-300">
+                                <div className="h-[80px] flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50/50">
                                   <span className="text-gray-300 text-sm">-</span>
                                 </div>
                               )}
@@ -524,6 +525,7 @@ export default async function SchedulesPage({
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             ) : (
               <div className="py-12 text-center">
