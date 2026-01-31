@@ -894,6 +894,67 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
       await updateBuildingCache(buildingId)
     }
 
+    // ✅ UPDATE PENDING/PARTIAL PAYMENTS when fees change
+    
+    // 1. Update TUITION payments if monthlyTuitionFee changed
+    if (data.monthlyTuitionFee !== undefined && data.monthlyTuitionFee !== existingStudent.monthlyTuitionFee) {
+      const pendingTuitionPayments = await db.payment.findMany({
+        where: {
+          tenantId,
+          studentId,
+          paymentType: 'TUITION',
+          status: { in: ['PENDING', 'PARTIAL'] },
+          remainingAmount: { gt: 0 }
+        }
+      })
+
+      for (const payment of pendingTuitionPayments) {
+        const newRemainingAmount = data.monthlyTuitionFee - Number(payment.paidAmount)
+        
+        await db.payment.update({
+          where: { id: payment.id },
+          data: {
+            amount: data.monthlyTuitionFee,
+            remainingAmount: Math.max(0, newRemainingAmount),
+            status: newRemainingAmount <= 0 ? 'COMPLETED' : (Number(payment.paidAmount) > 0 ? 'PARTIAL' : 'PENDING')
+          }
+        })
+      }
+    }
+
+    // 2. Update DORMITORY payments if dormitoryMonthlyFee changed
+    if (data.dormitoryMonthlyFee !== undefined) {
+      const existingAssignment = await db.dormitoryAssignment.findUnique({
+        where: { studentId }
+      })
+
+      // Only update if fee changed from existing assignment
+      if (existingAssignment && data.dormitoryMonthlyFee !== Number(existingAssignment.monthlyFee)) {
+        const pendingDormPayments = await db.payment.findMany({
+          where: {
+            tenantId,
+            studentId,
+            paymentType: 'DORMITORY',
+            status: { in: ['PENDING', 'PARTIAL'] },
+            remainingAmount: { gt: 0 }
+          }
+        })
+
+        for (const payment of pendingDormPayments) {
+          const newRemainingAmount = data.dormitoryMonthlyFee - Number(payment.paidAmount)
+          
+          await db.payment.update({
+            where: { id: payment.id },
+            data: {
+              amount: data.dormitoryMonthlyFee,
+              remainingAmount: Math.max(0, newRemainingAmount),
+              status: newRemainingAmount <= 0 ? 'COMPLETED' : (Number(payment.paidAmount) > 0 ? 'PARTIAL' : 'PENDING')
+            }
+          })
+        }
+      }
+    }
+
     // ✅ Revalidate multiple related paths
     revalidateMultiplePaths([...REVALIDATION_PATHS.STUDENT_CHANGED], revalidatePath)
     revalidatePath('/admin/students')
