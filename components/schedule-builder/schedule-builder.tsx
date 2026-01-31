@@ -507,7 +507,136 @@ export function ScheduleBuilder({
 
   return (
     <>
-      <div className="grid gap-4 lg:gap-6 xl:grid-cols-[1fr_400px]">
+      <div className="space-y-4">
+        {/* Top Section - Drag Items */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Subjects Panel */}
+          <Card className="border-2 border-blue-300 shadow-md">
+            <CardHeader className="bg-gradient-to-br from-blue-50 to-blue-100 pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base lg:text-lg flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-blue-600" />
+                  Fanlar
+                </CardTitle>
+                <Badge className="bg-blue-600">{subjectsWithColors.length}</Badge>
+              </div>
+              <CardDescription className="text-xs">
+                Fanni sudrab jadvalga qo&apos;ying
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {subjectsWithColors.length > 0 ? (
+                  subjectsWithColors.map(subject => (
+                    <div
+                      key={subject.id}
+                      draggable
+                      onDragStart={() => {
+                        setDraggedSubject(subject)
+                        toast.info(`${subject.name} tanlandi`, { duration: 1500 })
+                      }}
+                      onDragEnd={() => setDraggedSubject(null)}
+                      className={cn(
+                        "p-3 rounded-lg border-2 cursor-grab active:cursor-grabbing transition-all hover:shadow-lg hover:scale-105 shrink-0 min-w-[140px]",
+                        draggedSubject?.id === subject.id && "opacity-50 scale-95 ring-2 ring-blue-400",
+                        `${subject.colorScheme.bg} ${subject.colorScheme.border} ${subject.colorScheme.hover}`
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <div className={cn("font-bold text-sm mb-1", subject.colorScheme.text)}>
+                            {subject.name}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            📝 {subject.code}
+                          </div>
+                        </div>
+                        <div className={cn("w-2 h-2 rounded-full shrink-0 mt-1", subject.colorScheme.bg, "ring-2", subject.colorScheme.border)} />
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 w-full">
+                    <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-30" />
+                    <p className="text-sm font-semibold text-muted-foreground">
+                      Fanlar yo&apos;q
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Special Items Panel (Break & Lunch) */}
+          <Card className="border-2 border-amber-300 shadow-md">
+            <CardHeader className="bg-gradient-to-br from-amber-50 to-orange-100 pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base lg:text-lg flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-amber-600" />
+                  Tanaffus & Ovqatlanish
+                </CardTitle>
+                <Badge className="bg-amber-600">2</Badge>
+              </div>
+              <CardDescription className="text-xs">
+                Tanaffus yoki ovqatlanish vaqtini qo&apos;shing
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="flex gap-2">
+                {/* Break Card */}
+                <div
+                  draggable
+                  onDragStart={() => {
+                    setDraggedSpecialItem({ type: 'BREAK', title: 'Tanafus' })
+                    toast.info('☕ Tanafus tanlandi', { duration: 1500 })
+                  }}
+                  onDragEnd={() => setDraggedSpecialItem(null)}
+                  className={cn(
+                    "flex-1 p-3 rounded-lg border-2 cursor-grab active:cursor-grabbing transition-all hover:shadow-lg hover:scale-105",
+                    "bg-amber-100 border-amber-300 hover:bg-amber-200",
+                    draggedSpecialItem?.type === 'BREAK' && "opacity-50 scale-95 ring-2 ring-amber-400"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-amber-200 rounded-lg">
+                      <Coffee className="h-5 w-5 text-amber-700" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-bold text-sm text-amber-900">☕ Tanafus</div>
+                      <div className="text-xs text-amber-700">Dam olish</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lunch Card */}
+                <div
+                  draggable
+                  onDragStart={() => {
+                    setDraggedSpecialItem({ type: 'LUNCH', title: 'Tushlik' })
+                    toast.info('🍽️ Ovqatlanish tanlandi', { duration: 1500 })
+                  }}
+                  onDragEnd={() => setDraggedSpecialItem(null)}
+                  className={cn(
+                    "flex-1 p-3 rounded-lg border-2 cursor-grab active:cursor-grabbing transition-all hover:shadow-lg hover:scale-105",
+                    "bg-green-100 border-green-300 hover:bg-green-200",
+                    draggedSpecialItem?.type === 'LUNCH' && "opacity-50 scale-95 ring-2 ring-green-400"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-200 rounded-lg">
+                      <Utensils className="h-5 w-5 text-green-700" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-bold text-sm text-green-900">🍽️ Tushlik</div>
+                      <div className="text-xs text-green-700">Ovqatlanish</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Main Schedule Grid */}
         <div className="space-y-4">
           {/* Action Bar */}
@@ -820,137 +949,8 @@ export function ScheduleBuilder({
           </Card>
         </div>
 
-        {/* Right Sidebar */}
-        <div className="space-y-4 lg:sticky lg:top-6 lg:h-fit">
-          {/* Special Items Panel (Break & Lunch) */}
-          <Card className="border-2 border-amber-300 shadow-md">
-            <CardHeader className="bg-gradient-to-br from-amber-50 to-orange-100 pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base lg:text-lg flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-amber-600" />
-                  Tanaffus & Ovqatlanish
-                </CardTitle>
-                <Badge className="bg-amber-600">2</Badge>
-              </div>
-              <CardDescription className="text-xs">
-                Tanaffus yoki ovqatlanish vaqtini qo'shing
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="space-y-2">
-                {/* Break Card */}
-                <div
-                  draggable
-                  onDragStart={() => {
-                    setDraggedSpecialItem({ type: 'BREAK', title: 'Tanafus' })
-                    toast.info('☕ Tanafus tanlandi', { duration: 1500 })
-                  }}
-                  onDragEnd={() => setDraggedSpecialItem(null)}
-                  className={cn(
-                    "p-3 rounded-lg border-2 cursor-grab active:cursor-grabbing transition-all hover:shadow-lg hover:scale-[1.02]",
-                    "bg-amber-100 border-amber-300 hover:bg-amber-200",
-                    draggedSpecialItem?.type === 'BREAK' && "opacity-50 scale-95 ring-2 ring-amber-400"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-amber-200 rounded-lg">
-                      <Coffee className="h-5 w-5 text-amber-700" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-bold text-sm text-amber-900">☕ Tanafus</div>
-                      <div className="text-xs text-amber-700">Dam olish vaqti</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Lunch Card */}
-                <div
-                  draggable
-                  onDragStart={() => {
-                    setDraggedSpecialItem({ type: 'LUNCH', title: 'Tushlik' })
-                    toast.info('🍽️ Ovqatlanish tanlandi', { duration: 1500 })
-                  }}
-                  onDragEnd={() => setDraggedSpecialItem(null)}
-                  className={cn(
-                    "p-3 rounded-lg border-2 cursor-grab active:cursor-grabbing transition-all hover:shadow-lg hover:scale-[1.02]",
-                    "bg-green-100 border-green-300 hover:bg-green-200",
-                    draggedSpecialItem?.type === 'LUNCH' && "opacity-50 scale-95 ring-2 ring-green-400"
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-200 rounded-lg">
-                      <Utensils className="h-5 w-5 text-green-700" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-bold text-sm text-green-900">🍽️ Tushlik</div>
-                      <div className="text-xs text-green-700">Ovqatlanish vaqti</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Subjects Panel */}
-          <Card className="border-2 border-blue-300 shadow-md">
-            <CardHeader className="bg-gradient-to-br from-blue-50 to-blue-100 pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base lg:text-lg flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-blue-600" />
-                  Fanlar
-                </CardTitle>
-                <Badge className="bg-blue-600">{subjectsWithColors.length}</Badge>
-              </div>
-              <CardDescription className="text-xs">
-                Fanni sudrab jadvalga qo'ying
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
-                {subjectsWithColors.length > 0 ? (
-                  subjectsWithColors.map(subject => (
-                    <div
-                      key={subject.id}
-                      draggable
-                      onDragStart={() => {
-                        setDraggedSubject(subject)
-                        toast.info(`${subject.name} tanlandida`, { duration: 1500 })
-                      }}
-                      onDragEnd={() => setDraggedSubject(null)}
-                      className={cn(
-                        "p-3 rounded-lg border-2 cursor-grab active:cursor-grabbing transition-all hover:shadow-lg hover:scale-[1.02]",
-                        draggedSubject?.id === subject.id && "opacity-50 scale-95 ring-2 ring-blue-400",
-                        `${subject.colorScheme.bg} ${subject.colorScheme.border} ${subject.colorScheme.hover}`
-                      )}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <div className={cn("font-bold text-sm mb-1", subject.colorScheme.text)}>
-                            {subject.name}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            📝 {subject.code}
-                          </div>
-                        </div>
-                        <div className={cn("w-2 h-2 rounded-full shrink-0 mt-1", subject.colorScheme.bg, "ring-2", subject.colorScheme.border)} />
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-30" />
-                    <p className="text-sm font-semibold text-muted-foreground mb-1">
-                      Fanlar yo'q
-                    </p>
-                    <p className="text-xs text-muted-foreground px-4">
-                      Dars jadval yaratish uchun avval fanlar qo'shing
-                    </p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
+        {/* Bottom Section - Selected Cell Editor & Statistics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Selected Cell Editor */}
           {selectedSchedule && (
             <Card className="border-2 border-green-400 shadow-lg animate-in slide-in-from-right">
