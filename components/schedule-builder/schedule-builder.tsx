@@ -682,7 +682,8 @@ export function ScheduleBuilder({
                             </TooltipProvider>
                           </div>
                         </th>
-                      )}))}
+                        )
+                      })}
                     </tr>
                   </thead>
                   <tbody>
