@@ -894,7 +894,7 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
       await updateBuildingCache(buildingId)
     }
 
-    // ✅ UPDATE PENDING/PARTIAL PAYMENTS when fees change
+    // ✅ UPDATE PENDING/PARTIALLY_PAID PAYMENTS when fees change
     
     // 1. Update TUITION payments if monthlyTuitionFee changed
     if (data.monthlyTuitionFee !== undefined && data.monthlyTuitionFee !== Number(existingStudent.monthlyTuitionFee)) {
@@ -903,7 +903,7 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
           tenantId,
           studentId,
           paymentType: 'TUITION',
-          status: { in: ['PENDING', 'PARTIAL'] },
+          status: { in: ['PENDING', 'PARTIALLY_PAID'] },
           remainingAmount: { gt: 0 }
         }
       })
@@ -916,7 +916,7 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
           data: {
             amount: data.monthlyTuitionFee,
             remainingAmount: Math.max(0, newRemainingAmount),
-            status: newRemainingAmount <= 0 ? 'COMPLETED' : (Number(payment.paidAmount) > 0 ? 'PARTIAL' : 'PENDING')
+            status: newRemainingAmount <= 0 ? 'COMPLETED' : (Number(payment.paidAmount) > 0 ? 'PARTIALLY_PAID' : 'PENDING')
           }
         })
       }
@@ -935,7 +935,7 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
             tenantId,
             studentId,
             paymentType: 'DORMITORY',
-            status: { in: ['PENDING', 'PARTIAL'] },
+            status: { in: ['PENDING', 'PARTIALLY_PAID'] },
             remainingAmount: { gt: 0 }
           }
         })
@@ -948,7 +948,7 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
             data: {
               amount: data.dormitoryMonthlyFee,
               remainingAmount: Math.max(0, newRemainingAmount),
-              status: newRemainingAmount <= 0 ? 'COMPLETED' : (Number(payment.paidAmount) > 0 ? 'PARTIAL' : 'PENDING')
+              status: newRemainingAmount <= 0 ? 'COMPLETED' : (Number(payment.paidAmount) > 0 ? 'PARTIALLY_PAID' : 'PENDING')
             }
           })
         }
