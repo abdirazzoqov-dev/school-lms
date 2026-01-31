@@ -4,10 +4,11 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Eye, Pencil, MoreVertical, Trash2, UserX } from 'lucide-react'
+import { Eye, Pencil, MoreVertical, Trash2, UserX, TrendingUp, DollarSign } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ResponsiveTableWrapper } from '@/components/responsive-table-wrapper'
 import { deleteStaff } from '@/app/actions/staff'
+import { Progress } from '@/components/ui/progress'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,12 +23,21 @@ interface Staff {
   staffCode: string
   position: string
   department: string | null
+  monthlySalary: any
   user: {
     fullName: string
     email: string
     phone: string | null
     isActive: boolean
   }
+  salaryPayments?: Array<{
+    id: string
+    amount: any
+    paidAmount: any
+    remainingAmount: any
+    status: string
+    type: string
+  }>
 }
 
 export function StaffTable({ staff }: { staff: Staff[] }) {
@@ -63,10 +73,10 @@ export function StaffTable({ staff }: { staff: Staff[] }) {
                 />
               </th>
               <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[250px]">Xodim</th>
-              <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[150px]">Kodi</th>
-              <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[180px]">Lavozim</th>
-              <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[150px]">Bo'lim</th>
-              <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[150px]">Telefon</th>
+              <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[120px]">Kodi</th>
+              <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[150px]">Lavozim</th>
+              <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[120px]">Oylik Maosh</th>
+              <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[200px]">To'lov Holati</th>
               <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[100px]">Harakatlar</th>
             </tr>
           </thead>
@@ -111,14 +121,50 @@ export function StaffTable({ staff }: { staff: Staff[] }) {
                   </span>
                 </td>
                 <td className="p-3">
-                  <span className="text-sm text-muted-foreground truncate block">
-                    {member.department || '-'}
-                  </span>
+                  {member.monthlySalary ? (
+                    <div className="text-sm">
+                      <div className="font-semibold text-green-600">
+                        {Number(member.monthlySalary).toLocaleString('uz-UZ')}
+                      </div>
+                      <div className="text-xs text-muted-foreground">so'm/oy</div>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Kiritilmagan</span>
+                  )}
                 </td>
                 <td className="p-3">
-                  <span className="text-sm text-muted-foreground truncate block">
-                    {member.user.phone || '-'}
-                  </span>
+                  {(() => {
+                    if (!member.monthlySalary) {
+                      return <span className="text-xs text-muted-foreground">-</span>
+                    }
+
+                    const monthlySalary = Number(member.monthlySalary)
+                    const totalPaid = member.salaryPayments?.reduce(
+                      (sum, payment) => sum + Number(payment.paidAmount || 0),
+                      0
+                    ) || 0
+                    const percentage = monthlySalary > 0 ? Math.min((totalPaid / monthlySalary) * 100, 100) : 0
+
+                    return (
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between gap-2 text-xs">
+                          <span className="font-medium text-cyan-600">
+                            {totalPaid.toLocaleString('uz-UZ')} so'm
+                          </span>
+                          <span className="text-muted-foreground">
+                            {percentage.toFixed(0)}%
+                          </span>
+                        </div>
+                        <Progress 
+                          value={percentage} 
+                          className="h-2"
+                        />
+                        <div className="text-[10px] text-muted-foreground">
+                          Qolgan: {(monthlySalary - totalPaid).toLocaleString('uz-UZ')} so'm
+                        </div>
+                      </div>
+                    )
+                  })()}
                 </td>
                 <td className="p-3">
                   <DropdownMenu>
@@ -243,19 +289,65 @@ export function StaffTable({ staff }: { staff: Staff[] }) {
             </div>
 
             {/* Info Grid */}
-            <div className="grid grid-cols-2 gap-3 py-3 border-y text-sm">
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">Lavozim</p>
-                <p className="font-semibold text-gray-900 dark:text-white">{member.position}</p>
+            <div className="space-y-3 py-3 border-y text-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">Lavozim</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">{member.position}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">Bo'lim</p>
+                  <p className="text-gray-900 dark:text-white">{member.department || '-'}</p>
+                </div>
               </div>
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">Bo'lim</p>
-                <p className="text-gray-900 dark:text-white">{member.department || '-'}</p>
-              </div>
-              {member.user.phone && (
-                <div className="col-span-2 space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">Telefon</p>
-                  <p className="text-gray-900 dark:text-white">{member.user.phone}</p>
+
+              {/* Oylik Maosh va Progress */}
+              {member.monthlySalary ? (
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <DollarSign className="h-4 w-4 text-green-600" />
+                      <span className="text-xs font-medium text-muted-foreground">Oylik Maosh</span>
+                    </div>
+                    <span className="text-sm font-bold text-green-600">
+                      {Number(member.monthlySalary).toLocaleString('uz-UZ')} so'm
+                    </span>
+                  </div>
+
+                  {(() => {
+                    const monthlySalary = Number(member.monthlySalary)
+                    const totalPaid = member.salaryPayments?.reduce(
+                      (sum, payment) => sum + Number(payment.paidAmount || 0),
+                      0
+                    ) || 0
+                    const percentage = monthlySalary > 0 ? Math.min((totalPaid / monthlySalary) * 100, 100) : 0
+
+                    return (
+                      <div className="space-y-1.5 p-3 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-950/20 dark:to-blue-950/20 rounded-lg">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-1">
+                            <TrendingUp className="h-3.5 w-3.5 text-cyan-600" />
+                            <span className="font-medium text-cyan-600">To'langan</span>
+                          </div>
+                          <span className="font-bold text-cyan-600">
+                            {percentage.toFixed(0)}%
+                          </span>
+                        </div>
+                        <Progress 
+                          value={percentage} 
+                          className="h-2.5"
+                        />
+                        <div className="flex justify-between text-[11px] text-muted-foreground">
+                          <span>{totalPaid.toLocaleString('uz-UZ')} so'm</span>
+                          <span>Qolgan: {(monthlySalary - totalPaid).toLocaleString('uz-UZ')} so'm</span>
+                        </div>
+                      </div>
+                    )
+                  })()}
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground italic">
+                  Oylik maosh kiritilmagan
                 </div>
               )}
             </div>

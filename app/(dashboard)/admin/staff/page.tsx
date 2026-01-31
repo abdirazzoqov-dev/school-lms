@@ -57,6 +57,11 @@ export default async function StaffPage({
     const totalStaff = await db.staff.count({ where: whereClause }).catch(() => 0)
     const totalPages = Math.ceil(totalStaff / pageSize)
 
+    // Get current month and year
+    const now = new Date()
+    const currentMonth = now.getMonth() + 1
+    const currentYear = now.getFullYear()
+
     const staff = await db.staff.findMany({
       where: whereClause,
       orderBy: { createdAt: 'desc' },
@@ -69,6 +74,20 @@ export default async function StaffPage({
             email: true,
             phone: true,
             isActive: true,
+          }
+        },
+        salaryPayments: {
+          where: {
+            month: currentMonth,
+            year: currentYear
+          },
+          select: {
+            id: true,
+            amount: true,
+            paidAmount: true,
+            remainingAmount: true,
+            status: true,
+            type: true
           }
         }
       }
