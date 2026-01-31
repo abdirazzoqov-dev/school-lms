@@ -18,6 +18,7 @@ import { PAGE_CACHE_CONFIG } from '@/lib/cache-config'
 import { Progress } from '@/components/ui/progress'
 import { DashboardIncomeCard } from '@/components/dashboard-income-card'
 import { DashboardExpenseCard } from '@/components/dashboard-expense-card'
+import { DashboardBalanceCard } from '@/components/dashboard-balance-card'
 
 // ✅ Advanced caching: Optimized revalidation strategy
 export const revalidate = PAGE_CACHE_CONFIG.admin.revalidate
@@ -283,44 +284,14 @@ export default async function AdminDashboard() {
           expensePaymentMethods={stats.expensePaymentMethods || []}
         />
 
-        {/* Balance */}
-        <Card className={`border-l-4 ${balance >= 0 ? 'border-l-blue-500' : 'border-l-orange-500'} hover:shadow-md transition-shadow`}>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Balans (Bu oy)
-              </CardTitle>
-              {balance >= 0 ? (
-                <ArrowUpRight className="h-4 w-4 text-blue-600" />
-              ) : (
-                <ArrowDownRight className="h-4 w-4 text-orange-600" />
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-              {formatNumber(balance)}
-            </div>
-            <div className="mt-3 space-y-1.5 text-xs">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Kirim:</span>
-                <span className="font-medium text-green-600">+{formatNumber(stats.income)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Xarajat:</span>
-                <span className="font-medium text-red-600">-{formatNumber(stats.totalExpenses)}</span>
-              </div>
-              <div className="border-t pt-1.5 mt-1.5">
-                <div className="flex justify-between items-center font-medium">
-                  <span>{balance >= 0 ? 'Foyda' : 'Zarar'}:</span>
-                  <span className={balance >= 0 ? 'text-blue-600' : 'text-orange-600'}>
-                    {formatNumber(Math.abs(balance))}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Balance - Client Component with Modal */}
+        <DashboardBalanceCard
+          balance={balance}
+          cashIncome={stats.cashIncome || 0}
+          cashExpense={stats.expenseCash || 0}
+          cardIncome={stats.cardIncome || 0}
+          cardExpense={stats.expenseCard || 0}
+        />
       </div>
 
       {/* Charts - 2 Column Grid */}
