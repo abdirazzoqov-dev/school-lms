@@ -404,7 +404,7 @@ export async function createStudent(data: StudentFormData) {
             data: {
               tenantId,
               studentId: student.id,
-              parentId: primaryGuardian?.guardianId,
+              parentId: primaryGuardian?.guardian.id || null,
               amount: validatedData.dormitoryMonthlyFee,
               paidAmount: 0,
               remainingAmount: validatedData.dormitoryMonthlyFee,
@@ -841,15 +841,15 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
 
             if (!existingPayment) {
               const parentRelation = await db.studentParent.findFirst({
-                where: { studentId, isPrimary: true },
-                select: { guardianId: true }
+                where: { studentId, hasAccess: true },
+                select: { parentId: true }
               })
 
               await db.payment.create({
                 data: {
                   tenantId,
                   studentId,
-                  parentId: parentRelation?.guardianId,
+                  parentId: parentRelation?.parentId || null,
                   amount: data.dormitoryMonthlyFee,
                   paidAmount: 0,
                   remainingAmount: data.dormitoryMonthlyFee,
