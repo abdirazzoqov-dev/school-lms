@@ -9,7 +9,8 @@ import { Progress } from '@/components/ui/progress'
 import { 
   Clock, BookOpen, Save, Trash2, Plus,
   AlertCircle, CheckCircle2, Edit, X, Settings, TrendingUp,
-  Calendar, Users, Sparkles, Coffee, Utensils
+  Calendar, Users, Sparkles, Coffee, Utensils, Copy, Clipboard,
+  Eraser, Download, Upload, Zap, RotateCcw
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -28,6 +29,30 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface Teacher {
   id: string
@@ -133,6 +158,12 @@ export function ScheduleBuilder({
   const [isSaving, setIsSaving] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
   const [showTimeEditor, setShowTimeEditor] = useState(false)
+  const [copiedDay, setCopiedDay] = useState<number | null>(null)
+  const [showClearDialog, setShowClearDialog] = useState(false)
+  const [dayToClear, setDayToClear] = useState<number | null>(null)
+  const [showCopyDialog, setShowCopyDialog] = useState(false)
+  const [copyFromDay, setCopyFromDay] = useState<number | null>(null)
+  const [copyToDays, setCopyToDays] = useState<number[]>([])
 
   // Assign colors to subjects
   const subjectsWithColors = subjects.map((subject, index) => ({
@@ -250,6 +281,136 @@ export function ScheduleBuilder({
     toast.success('Dars o\'chirildi')
   }
 
+  // Copy day functionality
+  const copyDay = (day: number) => {
+    setCopiedDay(day)
+    const count = schedules.filter(s => s.dayOfWeek === day).length
+    toast.success(`${DAYS[day - 1].name} nusxalandi (${count} ta dars)`, {
+      description: 'Boshqa kunga bosib joylashtiring'
+    })
+  }
+
+  // Paste day functionality
+  const pasteDay = (targetDay: number) => {
+    if (copiedDay === null) {
+      toast.error('Avval kunni nusxalang')
+      return
+    }
+
+    const copiedSchedules = schedules.filter(s => s.dayOfWeek === copiedDay)
+    
+    if (copiedSchedules.length === 0) {
+      toast.error('Nusxalanadigan darslar yo\'q')
+      return
+    }
+
+    // Remove existing schedules for target day
+    const filtered = schedules.filter(s => s.dayOfWeek !== targetDay)
+    
+    // Create new schedules for target day
+    const newSchedules = copiedSchedules.map(s => ({
+      ...s,
+      id: `new-${Date.now()}-${Math.random()}`,
+      dayOfWeek: targetDay
+    }))
+
+    setSchedules([...filtered, ...newSchedules])
+    setHasChanges(true)
+    toast.success(`${DAYS[targetDay - 1].name}ga joylashtirildi (${newSchedules.length} ta dars)`)
+  }
+
+  // Clear day functionality
+  const clearDay = (day: number) => {
+    const count = schedules.filter(s => s.dayOfWeek === day).length
+    if (count === 0) {
+      toast.info('Bu kun bo\'sh')
+      return
+    }
+    setDayToClear(day)
+    setShowClearDialog(true)
+  }
+
+  const confirmClearDay = () => {
+    if (dayToClear === null) return
+    const count = schedules.filter(s => s.dayOfWeek === dayToClear).length
+    setSchedules(prev => prev.filter(s => s.dayOfWeek !== dayToClear))
+    setHasChanges(true)
+    setShowClearDialog(false)
+    setDayToClear(null)
+    toast.success(`${DAYS[dayToClear - 1].name} tozalandi (${count} ta dars o'chirildi)`)
+  }
+
+  // Auto-fill functionality - copy one day to multiple days
+  const openCopyToMultiple = (day: number) => {
+    const count = schedules.filter(s => s.dayOfWeek === day).length
+    if (count === 0) {
+      toast.error('Bu kun bo\'sh, nusxalash mumkin emas')
+      return
+    }
+    setCopyFromDay(day)
+    setCopyToDays([])
+    setShowCopyDialog(true)
+  }
+
+  const confirmCopyToMultiple = () => {
+    if (copyFromDay === null || copyToDays.length === 0) return
+
+    const sourcSchedules = schedules.filter(s => s.dayOfWeek === copyFromDay)
+    
+    // Remove existing schedules for target days
+    const filtered = schedules.filter(s => !copyToDays.includes(s.dayOfWeek))
+    
+    // Create new schedules for all target days
+    const newSchedules: ScheduleItem[] = []
+    copyToDays.forEach(targetDay => {
+      sourcSchedules.forEach(s => {
+        newSchedules.push({
+          ...s,
+          id: `new-${Date.now()}-${Math.random()}-${targetDay}`,
+          dayOfWeek: targetDay
+        })
+      })
+    })
+
+    setSchedules([...filtered, ...newSchedules])
+    setHasChanges(true)
+    setShowCopyDialog(false)
+    toast.success(`${DAYS[copyFromDay - 1].name}dan ${copyToDays.length} ta kunga nusxalandi`, {
+      description: `Jami ${newSchedules.length} ta dars qo'shildi`
+    })
+    setCopyFromDay(null)
+    setCopyToDays([])
+  }
+
+  // Clear all schedules
+  const clearAll = () => {
+    if (schedules.length === 0) {
+      toast.info('Jadval bo\'sh')
+      return
+    }
+    if (confirm(`Barcha ${schedules.length} ta darsni o'chirmoqchimisiz?`)) {
+      setSchedules([])
+      setHasChanges(true)
+      toast.success('Jadval tozalandi')
+    }
+  }
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+S or Cmd+S to save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        if (hasChanges && !isSaving) {
+          handleSave()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [hasChanges, isSaving])
+
   const handleSave = async () => {
     if (!targetId) {
       toast.error(type === 'class' ? 'Sinf tanlanmagan' : 'Guruh tanlanmagan')
@@ -361,25 +522,54 @@ export function ScheduleBuilder({
                     <p className="text-xs text-muted-foreground">Fanlarni sudrab jadvalga qo'shing</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowTimeEditor(true)}
-                    className="flex-1 sm:flex-none"
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    Vaqtlar
-                  </Button>
-                  <Button 
-                    onClick={handleSave}
-                    disabled={!hasChanges || isSaving}
-                    size="sm"
-                    className="flex-1 sm:flex-none shadow-md"
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-                    {isSaving ? 'Saqlanmoqda...' : 'Saqlash'}
-                  </Button>
+                <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowTimeEditor(true)}
+                        >
+                          <Settings className="mr-2 h-4 w-4" />
+                          Vaqtlar
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Dars vaqtlarini sozlash</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          onClick={clearAll}
+                          disabled={schedules.length === 0}
+                        >
+                          <Eraser className="mr-2 h-4 w-4" />
+                          Tozalash
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Barcha darslarni o&apos;chirish</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          onClick={handleSave}
+                          disabled={!hasChanges || isSaving}
+                          size="sm"
+                          className="shadow-md"
+                        >
+                          <Save className="mr-2 h-4 w-4" />
+                          {isSaving ? 'Saqlanmoqda...' : 'Saqlash'}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {hasChanges ? 'Ctrl+S / Cmd+S' : 'O\'zgarishlar yo\'q'}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               </div>
 
@@ -421,12 +611,77 @@ export function ScheduleBuilder({
                           <span className="text-xs lg:text-sm">Vaqt</span>
                         </div>
                       </th>
-                      {DAYS.map(day => (
+                      {DAYS.map(day => {
+                        const daySchedules = schedules.filter(s => s.dayOfWeek === day.id)
+                        const dayCount = daySchedules.length
+                        return (
                         <th key={day.id} className="p-2 lg:p-3 text-center font-semibold border-r min-w-[140px]">
-                          <div className="text-sm lg:text-base font-bold">{day.name}</div>
-                          <div className="text-xs text-muted-foreground font-normal">{day.short}</div>
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="flex items-center justify-center gap-1">
+                              <div className="text-sm lg:text-base font-bold">{day.name}</div>
+                              {dayCount > 0 && (
+                                <Badge variant="secondary" className="h-5 w-5 p-0 flex items-center justify-center text-xs">
+                                  {dayCount}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground font-normal">{day.short}</div>
+                            
+                            {/* Quick actions dropdown */}
+                            <TooltipProvider>
+                              <DropdownMenu>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
+                                      >
+                                        <Zap className="h-3 w-3" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Tezkor amallar</TooltipContent>
+                                </Tooltip>
+                                <DropdownMenuContent align="center">
+                                  <DropdownMenuLabel className="text-xs">{day.name}</DropdownMenuLabel>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => copyDay(day.id)}>
+                                    <Copy className="mr-2 h-3 w-3" />
+                                    Nusxalash
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => pasteDay(day.id)}
+                                    disabled={copiedDay === null}
+                                  >
+                                    <Clipboard className="mr-2 h-3 w-3" />
+                                    Joylashtirish
+                                    {copiedDay && (
+                                      <Badge variant="outline" className="ml-2 text-xs">
+                                        {DAYS[copiedDay - 1].short}
+                                      </Badge>
+                                    )}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => openCopyToMultiple(day.id)}>
+                                    <Download className="mr-2 h-3 w-3" />
+                                    Ko&apos;p kunga nusxalash
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    onClick={() => clearDay(day.id)}
+                                    className="text-red-600"
+                                    disabled={dayCount === 0}
+                                  >
+                                    <Eraser className="mr-2 h-3 w-3" />
+                                    Tozalash ({dayCount})
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TooltipProvider>
+                          </div>
                         </th>
-                      ))}
+                      )}))}
                     </tr>
                   </thead>
                   <tbody>
@@ -1003,6 +1258,114 @@ export function ScheduleBuilder({
                 Saqlash
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Clear Day Confirmation Dialog */}
+      <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Kunni tozalash</AlertDialogTitle>
+            <AlertDialogDescription>
+              {dayToClear && (
+                <>
+                  <span className="font-semibold text-foreground">{DAYS[dayToClear - 1].name}</span> kunidagi{' '}
+                  <span className="font-semibold text-foreground">
+                    {schedules.filter(s => s.dayOfWeek === dayToClear).length} ta dars
+                  </span>{' '}
+                  o&apos;chiriladi. Bu amalni bekor qilib bo&apos;lmaydi.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmClearDay} className="bg-red-600 hover:bg-red-700">
+              Tozalash
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Copy to Multiple Days Dialog */}
+      <Dialog open={showCopyDialog} onOpenChange={setShowCopyDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Download className="h-5 w-5 text-blue-600" />
+              Ko&apos;p kunga nusxalash
+            </DialogTitle>
+            <DialogDescription>
+              {copyFromDay && (
+                <>
+                  <span className="font-semibold text-foreground">{DAYS[copyFromDay - 1].name}</span> kunidan{' '}
+                  <span className="font-semibold text-foreground">
+                    {schedules.filter(s => s.dayOfWeek === copyFromDay).length} ta darsni
+                  </span>{' '}
+                  qaysi kunlarga nusxalash kerak?
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3 py-4">
+            <Label className="text-sm font-semibold">Quyidagi kunlarni tanlang:</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {DAYS.filter(d => d.id !== copyFromDay).map(day => {
+                const isSelected = copyToDays.includes(day.id)
+                const dayScheduleCount = schedules.filter(s => s.dayOfWeek === day.id).length
+                return (
+                  <Button
+                    key={day.id}
+                    variant={isSelected ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      if (isSelected) {
+                        setCopyToDays(prev => prev.filter(d => d !== day.id))
+                      } else {
+                        setCopyToDays(prev => [...prev, day.id])
+                      }
+                    }}
+                    className="justify-start"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span>{day.name}</span>
+                      {dayScheduleCount > 0 && (
+                        <Badge variant={isSelected ? 'secondary' : 'outline'} className="text-xs">
+                          {dayScheduleCount} dars
+                        </Badge>
+                      )}
+                    </div>
+                  </Button>
+                )
+              })}
+            </div>
+            
+            {copyToDays.length > 0 && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="text-xs text-amber-900">
+                    <p className="font-medium">Diqqat!</p>
+                    <p>Tanlangan kunlardagi mavjud darslar o&apos;chiriladi va yangi darslar qo&apos;shiladi.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowCopyDialog(false)}>
+              Bekor qilish
+            </Button>
+            <Button 
+              onClick={confirmCopyToMultiple} 
+              disabled={copyToDays.length === 0}
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              Nusxalash ({copyToDays.length} kun)
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
