@@ -75,6 +75,7 @@ export async function GET(req: NextRequest) {
           select: {
             staffCode: true,
             position: true,
+            monthlySalary: true,  // ✅ Xodimning asosiy oylik maoshi
             user: {
               select: {
                 fullName: true,

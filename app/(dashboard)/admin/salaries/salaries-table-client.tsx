@@ -35,6 +35,7 @@ interface SalaryPayment {
   staff: {
     staffCode: string
     position: string
+    monthlySalary: any  // Xodimning asosiy oylik maoshi
     user: {
       fullName: string
       email: string | null
@@ -93,10 +94,14 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
     )
   }
 
-  const calculateProgress = (payment: SalaryPayment, useTeacherSalary = false) => {
-    // Use teacher.monthlySalary as reference if available and requested
-    const monthlySalary = payment.teacher?.monthlySalary ? Number(payment.teacher.monthlySalary) : 0
-    const totalAmount = useTeacherSalary && monthlySalary > 0 ? monthlySalary : Number(payment.amount) || 0
+  const calculateProgress = (payment: SalaryPayment, useEmployeeSalary = false) => {
+    // Use teacher.monthlySalary or staff.monthlySalary as reference if available and requested
+    const monthlySalary = payment.teacher?.monthlySalary 
+      ? Number(payment.teacher.monthlySalary) 
+      : payment.staff?.monthlySalary 
+        ? Number(payment.staff.monthlySalary) 
+        : 0
+    const totalAmount = useEmployeeSalary && monthlySalary > 0 ? monthlySalary : Number(payment.amount) || 0
     const paidAmount = Number(payment.paidAmount) || 0
     
     if (totalAmount === 0) return { percentage: 0, paid: 0, total: 0, remaining: 0 }
@@ -112,14 +117,17 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
   }
   
   // Calculate cumulative progress for grouped payments (relative to monthly salary)
-  const calculateGroupProgress = (payments: SalaryPayment[], teacher?: { monthlySalary: any }) => {
-    // Use teacher.monthlySalary as 100% reference (if available)
-    const monthlySalary = teacher?.monthlySalary ? Number(teacher.monthlySalary) : 0
+  const calculateGroupProgress = (
+    payments: SalaryPayment[], 
+    employee?: { monthlySalary: any }
+  ) => {
+    // Use employee.monthlySalary as 100% reference (if available) - works for both teacher and staff
+    const monthlySalary = employee?.monthlySalary ? Number(employee.monthlySalary) : 0
     
     // Calculate total paid from all payments (avans, oylik, mukofot)
     const totalPaid = payments.reduce((sum, p) => sum + Number(p.paidAmount || 0), 0)
     
-    // Fallback: if no teacher.monthlySalary, find FULL_SALARY payment or sum all
+    // Fallback: if no employee.monthlySalary, find FULL_SALARY payment or sum all
     let referenceAmount = monthlySalary
     if (referenceAmount === 0) {
       const monthlyPayment = payments.find(p => p.type === 'FULL_SALARY')
@@ -154,8 +162,9 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
           const employeeType = payment.teacher ? 'O\'qituvchi' : 'Xodim'
           
           // Calculate progress based on all payments in group
-          // Pass teacher to use teacher.monthlySalary as 100% reference
-          const groupProgress = groupedByEmployee ? calculateGroupProgress(payments, payment.teacher || undefined) : calculateProgress(payment, true)
+          // Pass teacher or staff to use their monthlySalary as 100% reference
+          const employeeData = payment.teacher || payment.staff
+          const groupProgress = groupedByEmployee ? calculateGroupProgress(payments, employeeData || undefined) : calculateProgress(payment, true)
           const progress = groupProgress
           
           const isExpanded = expandedPayments.includes(`group-${groupIndex}`)
