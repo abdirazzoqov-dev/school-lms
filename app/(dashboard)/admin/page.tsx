@@ -16,6 +16,7 @@ import { PaymentChart } from '@/components/charts/payment-chart'
 import { Button } from '@/components/ui/button'
 import { PAGE_CACHE_CONFIG } from '@/lib/cache-config'
 import { Progress } from '@/components/ui/progress'
+import { DashboardIncomeCard } from '@/components/dashboard-income-card'
 
 // ✅ Advanced caching: Optimized revalidation strategy
 export const revalidate = PAGE_CACHE_CONFIG.admin.revalidate
@@ -264,25 +265,14 @@ export default async function AdminDashboard() {
 
       {/* Financial Overview - 3 Cards */}
       <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-3">
-        {/* Income */}
-        <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Kirim (Bu oy)
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              +{formatNumber(stats.income)}
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {stats.completedPayments} ta to'lov qabul qilindi
-            </p>
-          </CardContent>
-        </Card>
+        {/* Income - Client Component with Modal */}
+        <DashboardIncomeCard
+          income={stats.income}
+          cashIncome={stats.cashIncome || 0}
+          cardIncome={stats.cardIncome || 0}
+          completedPayments={stats.completedPayments}
+          paymentMethods={stats.paymentMethods || []}
+        />
 
         {/* Expenses */}
         <Card className="border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
@@ -512,7 +502,8 @@ async function getDashboardStats(
     kitchenExpenses,
     // ✅ Kategoriyalar bo'yicha xarajatlar
     expensesByCategory,
-    kitchenExpensesByCategory
+    kitchenExpensesByCategory,
+    paymentTransactionsByMethod
   ] = await Promise.all([
     db.student.count({ where: { tenantId } }),
     db.student.count({ where: { tenantId, status: 'ACTIVE' } }),
@@ -583,6 +574,15 @@ async function getDashboardStats(
         date: { gte: thisMonthStart }
       },
       _sum: { amount: true }
+    }),
+    // ✅ To'lov usuli bo'yicha analitika (transactions orqali)
+    db.paymentTransaction.groupBy({
+      by: ['paymentMethod'],
+      where: {
+        tenantId,
+        transactionDate: { gte: thisMonthStart }
+      },
+      _sum: { amount: true }
     })
   ])
 
@@ -623,6 +623,21 @@ async function getDashboardStats(
     ...kitchenExpenseBreakdown
   ].sort((a, b) => b.amount - a.amount)
 
+  // ✅ To'lov usullari breakdown'ni formatlash
+  const paymentMethodsBreakdown = paymentTransactionsByMethod.map(pm => ({
+    method: pm.paymentMethod,
+    amount: Number(pm._sum.amount || 0)
+  }))
+
+  // ✅ Naqd va plastik bo'yicha guruhlash
+  const cashAmount = paymentMethodsBreakdown
+    .filter(pm => pm.method === 'CASH')
+    .reduce((sum, pm) => sum + pm.amount, 0)
+  
+  const cardAmount = paymentMethodsBreakdown
+    .filter(pm => ['CLICK', 'PAYME', 'UZUM'].includes(pm.method))
+    .reduce((sum, pm) => sum + pm.amount, 0)
+
   return {
     totalStudents,
     activeStudents,
@@ -638,7 +653,10 @@ async function getDashboardStats(
     generalExpenses: Number(generalExpenses._sum.amount || 0),
     kitchenExpenses: Number(kitchenExpenses._sum.amount || 0),
     totalExpenses: Number(generalExpenses._sum.amount || 0) + Number(kitchenExpenses._sum.amount || 0),
-    expenseCategories: allExpenses // ✅ Kategoriyalar breakdown
+    expenseCategories: allExpenses, // ✅ Kategoriyalar breakdown
+    paymentMethods: paymentMethodsBreakdown, // ✅ Barcha to'lov usullari
+    cashIncome: cashAmount, // ✅ Naqd to'lovlar
+    cardIncome: cardAmount // ✅ Plastik to'lovlar (Click, Payme, Uzum)
   }
 }
 
