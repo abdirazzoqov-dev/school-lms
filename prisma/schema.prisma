@@ -146,6 +146,7 @@ model Tenant {
   students                 Student[]
   parents                  Parent[]
   teachers                 Teacher[]
+  staff                    Staff[]
   cooks                    Cook[]
   classes                  Class[]
   groups                   Group[]
@@ -288,6 +289,7 @@ model User {
   // Relations
   student                     Student?
   teacher                     Teacher?
+  staff                       Staff?
   parent                      Parent?
   cook                        Cook?
   sentMessages                Message[]             @relation("MessageSender")
@@ -300,7 +302,6 @@ model User {
   expensesPaid                Expense[]
   dormitoryAssignmentsCreated DormitoryAssignment[]
   permissions                 Permission[] // Moderator permissions
-  staffSalaryPayments         SalaryPayment[]       @relation("StaffSalary")
   paidSalaries                SalaryPayment[]       @relation("SalaryPaidBy")
 
   @@map("users")  // PostgreSQL standard: lowercase, plural
@@ -485,6 +486,35 @@ model Teacher {
   @@index([tenantId])
   @@index([userId])
   @@index([teacherCode])
+  @@index([tenantId, hireDate])
+}
+
+// STAFF - Xodimlar (non-teaching staff)
+model Staff {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String @unique
+
+  staffCode      String // Unique per tenant
+  position       String // Lavozim (Hisobchi, Xavfsizlik, Xizmatchi, etc.)
+  department     String? // Bo'lim
+  education      String? // Ma'lumoti
+  hireDate       DateTime @default(now())
+  monthlySalary  Decimal? @db.Decimal(10, 2) // Oylik maosh
+  salaryInfo     Json? // Encrypted in application layer
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  salaryPayments SalaryPayment[]
+
+  @@unique([tenantId, staffCode])
+  @@index([tenantId])
+  @@index([userId])
+  @@index([staffCode])
   @@index([tenantId, hireDate])
 }
 
@@ -1453,7 +1483,7 @@ model SalaryPayment {
   teacher   Teacher? @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 
   staffId String?
-  staff   User?   @relation("StaffSalary", fields: [staffId], references: [id], onDelete: Cascade)
+  staff   Staff?   @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
   // To'lov ma'lumotlari
   type            SalaryPaymentType
