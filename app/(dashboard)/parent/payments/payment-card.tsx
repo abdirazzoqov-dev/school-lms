@@ -158,49 +158,60 @@ export function PaymentCard({ payment, monthNames }: PaymentCardProps) {
               </div>
             )}
 
-            {/* Payment Transactions History */}
+            {/* Payment Transactions History - Modern Design */}
             {payment.transactions && payment.transactions.length > 0 && (
-              <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="p-1.5 bg-blue-100 rounded">
-                    <Receipt className="h-4 w-4 text-blue-600" />
+              <div className="p-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-300 rounded-xl shadow-sm">
+                <div className="flex items-center gap-3 mb-4 pb-3 border-b-2 border-blue-200">
+                  <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-md">
+                    <Receipt className="h-5 w-5 text-white" />
                   </div>
-                  <p className="font-semibold text-blue-900">
-                    To'lovlar Tarixi ({payment.transactions.length} ta)
-                  </p>
+                  <div>
+                    <p className="text-base font-bold text-blue-900">
+                      To'lovlar Tarixi
+                    </p>
+                    <p className="text-xs text-blue-600 font-medium">
+                      {payment.transactions.length} ta to'lov amalga oshirilgan
+                    </p>
+                  </div>
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {payment.transactions.map((transaction, index) => (
                     <div 
                       key={transaction.id}
-                      className="p-3 bg-white border border-blue-200 rounded-lg"
+                      className="p-3 bg-white border-2 border-blue-200 rounded-xl shadow-sm hover:shadow-md transition-all hover:scale-[1.01]"
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge className="bg-blue-600 text-white text-xs">
-                          #{index + 1}
+                      <div className="flex items-center justify-between mb-3">
+                        <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold px-3 py-1 shadow-sm">
+                          To'lov #{index + 1}
                         </Badge>
-                        <p className="font-bold text-green-600">
-                          {formatNumber(Number(transaction.amount))} so'm
-                        </p>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-green-600">
+                            {formatNumber(Number(transaction.amount))}
+                          </p>
+                          <p className="text-xs text-muted-foreground">so'm</p>
+                        </div>
                       </div>
                       
-                      <div className="space-y-1 text-xs">
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Sana:</span>
-                          <span className="font-medium">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between py-2 px-3 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-blue-600" />
+                            <span className="text-xs text-muted-foreground font-medium">Sana</span>
+                          </div>
+                          <span className="text-sm font-bold text-gray-700">
                             {new Date(transaction.transactionDate).toLocaleDateString('uz-UZ', {
-                              year: 'numeric',
+                              day: 'numeric',
                               month: 'long',
-                              day: 'numeric'
+                              year: 'numeric'
                             })}
                           </span>
                         </div>
                         
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Usul:</span>
-                          <Badge variant="outline" className="text-xs">
-                            {transaction.paymentMethod === 'CASH' && '💵 Naqd'}
+                        <div className="flex items-center justify-between py-2 px-3 bg-gradient-to-r from-gray-50 to-green-50 rounded-lg">
+                          <span className="text-xs text-muted-foreground font-medium">To'lov usuli</span>
+                          <Badge variant="outline" className="text-xs font-semibold border-2">
+                            {transaction.paymentMethod === 'CASH' && '💵 Naqd pul'}
                             {transaction.paymentMethod === 'CLICK' && '💳 Click'}
                             {transaction.paymentMethod === 'PAYME' && '💳 Payme'}
                             {transaction.paymentMethod === 'UZUM' && '💳 Uzum'}
@@ -208,21 +219,38 @@ export function PaymentCard({ payment, monthNames }: PaymentCardProps) {
                         </div>
                         
                         {transaction.receivedBy && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Qabul qildi:</span>
-                            <span className="font-medium">{transaction.receivedBy.fullName}</span>
+                          <div className="flex items-center justify-between py-2 px-3 bg-gradient-to-r from-gray-50 to-purple-50 rounded-lg">
+                            <span className="text-xs text-muted-foreground font-medium">Qabul qilgan</span>
+                            <span className="text-sm font-semibold text-gray-700 text-right max-w-[180px] truncate">
+                              {transaction.receivedBy.fullName}
+                            </span>
                           </div>
                         )}
                         
                         {transaction.notes && (
-                          <div className="mt-2 pt-2 border-t">
-                            <p className="text-muted-foreground mb-1">Izoh:</p>
-                            <p className="text-xs font-medium">{transaction.notes}</p>
+                          <div className="mt-3 pt-3 border-t-2 border-gray-200">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Info className="h-4 w-4 text-amber-600" />
+                              <p className="text-xs text-muted-foreground font-semibold">Izoh</p>
+                            </div>
+                            <p className="text-sm font-medium text-gray-700 bg-gradient-to-r from-amber-50 to-yellow-50 p-3 rounded-lg border border-amber-200">
+                              {transaction.notes}
+                            </p>
                           </div>
                         )}
                       </div>
                     </div>
                   ))}
+                </div>
+                
+                {/* Summary Footer */}
+                <div className="mt-4 pt-4 border-t-2 border-blue-200">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-semibold text-blue-900">Jami to'langan:</span>
+                    <span className="text-lg font-bold text-green-600">
+                      {formatNumber(payment.transactions.reduce((sum, t) => sum + Number(t.amount), 0))} so'm
+                    </span>
+                  </div>
                 </div>
               </div>
             )}

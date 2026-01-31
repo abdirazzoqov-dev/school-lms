@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus } from 'lucide-react'
+import { Plus, Receipt, ChevronDown, ChevronUp } from 'lucide-react'
 import { bulkDeletePayments, bulkChangePaymentStatus } from '@/app/actions/payment'
 import { Checkbox } from '@/components/ui/checkbox'
 import { BulkActionsToolbar } from '@/components/bulk-actions-toolbar'
@@ -15,6 +15,11 @@ import { AddPartialPaymentModal } from '@/components/add-partial-payment-modal'
 import { ResponsiveTableWrapper } from '@/components/responsive-table-wrapper'
 import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 
 interface Payment {
   id: string
@@ -35,12 +40,25 @@ interface Payment {
     } | null
     monthlyTuitionFee: any | null
   }
+  transactions?: Array<{
+    id: string
+    amount: any
+    paymentMethod: string
+    transactionDate: Date
+    receiptNumber: string | null
+    notes: string | null
+    receivedBy: {
+      fullName: string
+      email: string | null
+    } | null
+  }>
 }
 
 export function PaymentsTable({ payments }: { payments: Payment[] }) {
   const router = useRouter()
   const { toast } = useToast()
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [expandedPayments, setExpandedPayments] = useState<Set<string>>(new Set())
   const [partialPaymentModal, setPartialPaymentModal] = useState<{
     open: boolean
     payment: Payment | null
@@ -48,6 +66,18 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
     open: false,
     payment: null
   })
+
+  const toggleExpanded = (paymentId: string) => {
+    setExpandedPayments(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(paymentId)) {
+        newSet.delete(paymentId)
+      } else {
+        newSet.add(paymentId)
+      }
+      return newSet
+    })
+  }
 
   const getPaymentTypeLabel = (type: string) => {
     const types: Record<string, string> = {
@@ -309,7 +339,85 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                           To'lov qo'shish
                         </Button>
                       )}
+                      
+                      {/* Transactions History Toggle */}
+                      {payment.transactions && payment.transactions.length > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleExpanded(payment.id)}
+                          className="w-full mt-2 text-xs"
+                        >
+                          <Receipt className="h-3 w-3 mr-1" />
+                          {expandedPayments.has(payment.id) ? 'Yashirish' : `Tarixi (${payment.transactions.length})`}
+                          {expandedPayments.has(payment.id) ? (
+                            <ChevronUp className="h-3 w-3 ml-1" />
+                          ) : (
+                            <ChevronDown className="h-3 w-3 ml-1" />
+                          )}
+                        </Button>
+                      )}
                     </div>
+                    
+                    {/* Transactions Expanded */}
+                    {expandedPayments.has(payment.id) && payment.transactions && payment.transactions.length > 0 && (
+                      <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg space-y-2">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Receipt className="h-4 w-4 text-blue-600" />
+                          <p className="text-xs font-semibold text-blue-900">
+                            To'lovlar Tarixi ({payment.transactions.length})
+                          </p>
+                        </div>
+                        {payment.transactions.map((transaction, index) => (
+                          <div 
+                            key={transaction.id}
+                            className="p-2 bg-white border border-blue-200 rounded-md space-y-1"
+                          >
+                            <div className="flex items-center justify-between">
+                              <Badge className="bg-blue-600 text-white text-xs">
+                                #{index + 1}
+                              </Badge>
+                              <span className="text-sm font-bold text-green-600">
+                                {formatNumber(Number(transaction.amount))} so'm
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-2 text-xs">
+                              <div>
+                                <span className="text-muted-foreground">Sana:</span>
+                                <p className="font-medium">
+                                  {new Date(transaction.transactionDate).toLocaleDateString('uz-UZ', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric'
+                                  })}
+                                </p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Usul:</span>
+                                <p className="font-medium">
+                                  {transaction.paymentMethod === 'CASH' && '💵 Naqd'}
+                                  {transaction.paymentMethod === 'CLICK' && '💳 Click'}
+                                  {transaction.paymentMethod === 'PAYME' && '💳 Payme'}
+                                  {transaction.paymentMethod === 'UZUM' && '💳 Uzum'}
+                                </p>
+                              </div>
+                              {transaction.receivedBy && (
+                                <div className="col-span-2">
+                                  <span className="text-muted-foreground">Qabul qildi:</span>
+                                  <p className="font-medium">{transaction.receivedBy.fullName}</p>
+                                </div>
+                              )}
+                              {transaction.notes && (
+                                <div className="col-span-2 pt-1 border-t">
+                                  <span className="text-muted-foreground">Izoh:</span>
+                                  <p className="text-xs font-medium">{transaction.notes}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </td>
                   <td className="p-4">
                     <div>
@@ -428,6 +536,91 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                           <Plus className="h-4 w-4 mr-1" />
                           To'lov qo'shish
                         </Button>
+                      )}
+                      
+                      {/* Transactions History for Mobile */}
+                      {payment.transactions && payment.transactions.length > 0 && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleExpanded(payment.id)}
+                            className="w-full mt-2 text-xs"
+                          >
+                            <Receipt className="h-3 w-3 mr-1" />
+                            {expandedPayments.has(payment.id) ? 'Yashirish' : `To'lovlar Tarixi (${payment.transactions.length})`}
+                            {expandedPayments.has(payment.id) ? (
+                              <ChevronUp className="h-3 w-3 ml-1" />
+                            ) : (
+                              <ChevronDown className="h-3 w-3 ml-1" />
+                            )}
+                          </Button>
+                          
+                          {expandedPayments.has(payment.id) && (
+                            <div className="mt-3 p-3 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-300 rounded-xl space-y-2 shadow-sm">
+                              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-blue-200">
+                                <div className="p-1.5 bg-blue-500 rounded-lg">
+                                  <Receipt className="h-4 w-4 text-white" />
+                                </div>
+                                <p className="text-sm font-bold text-blue-900">
+                                  To'lovlar Tarixi ({payment.transactions.length} ta)
+                                </p>
+                              </div>
+                              {payment.transactions.map((transaction, index) => (
+                                <div 
+                                  key={transaction.id}
+                                  className="p-3 bg-white border-2 border-blue-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-semibold">
+                                      #{index + 1}
+                                    </Badge>
+                                    <span className="text-base font-bold text-green-600">
+                                      {formatNumber(Number(transaction.amount))} so'm
+                                    </span>
+                                  </div>
+                                  <div className="space-y-1.5 text-xs">
+                                    <div className="flex items-center justify-between py-1">
+                                      <span className="text-muted-foreground font-medium">📅 Sana:</span>
+                                      <span className="font-semibold text-gray-700">
+                                        {new Date(transaction.transactionDate).toLocaleDateString('uz-UZ', {
+                                          day: 'numeric',
+                                          month: 'long',
+                                          year: 'numeric'
+                                        })}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between py-1">
+                                      <span className="text-muted-foreground font-medium">💳 Usul:</span>
+                                      <Badge variant="outline" className="text-xs font-medium">
+                                        {transaction.paymentMethod === 'CASH' && '💵 Naqd pul'}
+                                        {transaction.paymentMethod === 'CLICK' && '💳 Click'}
+                                        {transaction.paymentMethod === 'PAYME' && '💳 Payme'}
+                                        {transaction.paymentMethod === 'UZUM' && '💳 Uzum'}
+                                      </Badge>
+                                    </div>
+                                    {transaction.receivedBy && (
+                                      <div className="flex items-center justify-between py-1">
+                                        <span className="text-muted-foreground font-medium">👤 Qabul qildi:</span>
+                                        <span className="font-semibold text-gray-700 text-right max-w-[150px] truncate">
+                                          {transaction.receivedBy.fullName}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {transaction.notes && (
+                                      <div className="mt-2 pt-2 border-t border-gray-200">
+                                        <p className="text-muted-foreground font-medium mb-1">📝 Izoh:</p>
+                                        <p className="text-xs font-medium text-gray-700 bg-gray-50 p-2 rounded">
+                                          {transaction.notes}
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
 

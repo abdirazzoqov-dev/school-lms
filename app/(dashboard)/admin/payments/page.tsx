@@ -153,6 +153,19 @@ export default async function PaymentsPage({
         select: {
           fullName: true
         }
+      },
+      transactions: {
+        orderBy: {
+          transactionDate: 'desc'
+        },
+        include: {
+          receivedBy: {
+            select: {
+              fullName: true,
+              email: true
+            }
+          }
+        }
       }
     }
   })
