@@ -395,22 +395,6 @@ export function ScheduleBuilder({
     }
   }
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl+S or Cmd+S to save
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault()
-        if (hasChanges && !isSaving) {
-          handleSave()
-        }
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [hasChanges, isSaving])
-
   const handleSave = async () => {
     if (!targetId) {
       toast.error(type === 'class' ? 'Sinf tanlanmagan' : 'Guruh tanlanmagan')
@@ -452,6 +436,23 @@ export function ScheduleBuilder({
       setIsSaving(false)
     }
   }
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+S or Cmd+S to save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        if (hasChanges && !isSaving) {
+          handleSave()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasChanges, isSaving])
 
   const addNewTimeSlot = () => {
     const newId = (timeSlots.length + 1).toString()
