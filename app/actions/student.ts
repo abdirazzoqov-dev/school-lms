@@ -897,7 +897,7 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
     // ✅ UPDATE PENDING/PARTIAL PAYMENTS when fees change
     
     // 1. Update TUITION payments if monthlyTuitionFee changed
-    if (data.monthlyTuitionFee !== undefined && data.monthlyTuitionFee !== existingStudent.monthlyTuitionFee) {
+    if (data.monthlyTuitionFee !== undefined && data.monthlyTuitionFee !== Number(existingStudent.monthlyTuitionFee)) {
       const pendingTuitionPayments = await db.payment.findMany({
         where: {
           tenantId,
