@@ -37,21 +37,24 @@ export default async function CreateSalaryPaymentPage() {
     }
   })
 
-  // Get all staff (users that are not teachers/students/parents)
-  const staff = await db.user.findMany({
+  // Get all staff (non-teaching employees)
+  const staff = await db.staff.findMany({
     where: {
-      tenantId,
-      role: { in: ['ADMIN', 'MODERATOR', 'COOK'] }
+      tenantId
     },
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      avatar: true,
-      role: true
+    include: {
+      user: {
+        select: {
+          fullName: true,
+          email: true,
+          avatar: true
+        }
+      }
     },
     orderBy: {
-      fullName: 'asc'
+      user: {
+        fullName: 'asc'
+      }
     }
   })
 

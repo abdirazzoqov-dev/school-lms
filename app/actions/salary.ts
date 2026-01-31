@@ -34,7 +34,7 @@ export async function createSalaryPayment(data: SalaryPaymentFormData) {
     }
 
     if (validatedData.staffId) {
-      const staff = await db.user.findFirst({
+      const staff = await db.staff.findFirst({
         where: { id: validatedData.staffId, tenantId }
       })
       if (!staff) {

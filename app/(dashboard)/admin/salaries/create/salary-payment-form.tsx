@@ -32,10 +32,15 @@ interface Teacher {
 
 interface Staff {
   id: string
-  fullName: string
-  email: string
-  avatar: string | null
-  role: string
+  staffCode: string
+  position: string
+  monthlySalary: any
+  salaryInfo: any
+  user: {
+    fullName: string
+    email: string
+    avatar: string | null
+  }
 }
 
 interface SalaryPaymentFormProps {
@@ -73,6 +78,19 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
           ? JSON.parse(teacher.salaryInfo)
           : teacher.salaryInfo
         return salaryInfo.monthlySalary || 0
+      }
+    } else if (employeeType === 'staff' && formData.staffId) {
+      const staffMember = staff.find(s => s.id === formData.staffId)
+      if (staffMember) {
+        if (staffMember.monthlySalary) {
+          return Number(staffMember.monthlySalary)
+        }
+        if (staffMember.salaryInfo) {
+          const salaryInfo = typeof staffMember.salaryInfo === 'string'
+            ? JSON.parse(staffMember.salaryInfo)
+            : staffMember.salaryInfo
+          return salaryInfo.monthlySalary || 0
+        }
       }
     }
     return 0
@@ -220,8 +238,8 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
               staff.map(s => (
                 <SelectItem key={s.id} value={s.id}>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{s.fullName}</span>
-                    <Badge variant="outline" className="text-xs">{s.role}</Badge>
+                    <span className="font-medium">{s.user.fullName}</span>
+                    <Badge variant="outline" className="text-xs">{s.position}</Badge>
                   </div>
                 </SelectItem>
               ))
@@ -230,7 +248,7 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
         </Select>
         {selectedEmployee && (
           <p className="text-sm text-muted-foreground">
-            {'email' in selectedEmployee ? selectedEmployee.email : selectedEmployee.user.email}
+            {selectedEmployee.user.email}
           </p>
         )}
       </div>
@@ -476,7 +494,7 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
             <span>Xodim:</span>
             <span className="font-medium">
               {selectedEmployee 
-                ? ('fullName' in selectedEmployee ? selectedEmployee.fullName : selectedEmployee.user.fullName)
+                ? selectedEmployee.user.fullName
                 : 'Tanlanmagan'
               }
             </span>
