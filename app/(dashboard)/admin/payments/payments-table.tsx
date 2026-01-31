@@ -2,13 +2,16 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Plus } from 'lucide-react'
 import { bulkDeletePayments, bulkChangePaymentStatus } from '@/app/actions/payment'
 import { Checkbox } from '@/components/ui/checkbox'
 import { BulkActionsToolbar } from '@/components/bulk-actions-toolbar'
 import { exportToCSV, formatPaymentsForExport } from '@/lib/export'
 import { formatNumber } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
+import { AddPartialPaymentModal } from '@/components/add-partial-payment-modal'
 import { ResponsiveTableWrapper } from '@/components/responsive-table-wrapper'
 import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
@@ -38,6 +41,13 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
   const router = useRouter()
   const { toast } = useToast()
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [partialPaymentModal, setPartialPaymentModal] = useState<{
+    open: boolean
+    payment: Payment | null
+  }>({
+    open: false,
+    payment: null
+  })
 
   const getPaymentTypeLabel = (type: string) => {
     const types: Record<string, string> = {
@@ -48,6 +58,13 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
       'OTHER': 'Boshqa'
     }
     return types[type] || type
+  }
+
+  const handleAddPartialPayment = (payment: Payment) => {
+    setPartialPaymentModal({
+      open: true,
+      payment
+    })
   }
 
   const handleSelectAll = (checked: boolean) => {
@@ -279,6 +296,19 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                           ⏳ Qisman to'langan
                         </div>
                       )}
+                      
+                      {/* Add Payment Button */}
+                      {progress.percentage < 100 && (
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          onClick={() => handleAddPartialPayment(payment)}
+                          className="bg-green-600 hover:bg-green-700 w-full mt-2"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          To'lov qo'shish
+                        </Button>
+                      )}
                     </div>
                   </td>
                   <td className="p-4">
@@ -386,6 +416,19 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                           <span className="font-semibold">{formatNumber(progress.remaining)} so'm</span>
                         </div>
                       )}
+                      
+                      {/* Add Payment Button for Mobile */}
+                      {progress.percentage < 100 && (
+                        <Button 
+                          variant="default" 
+                          size="sm"
+                          onClick={() => handleAddPartialPayment(payment)}
+                          className="bg-green-600 hover:bg-green-700 w-full mt-2"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          To'lov qo'shish
+                        </Button>
+                      )}
                     </div>
 
                     <div className="space-y-1 text-sm text-muted-foreground">
@@ -430,6 +473,22 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
         statusOptions={statusOptions}
         entityName="to'lov"
       />
+
+      {/* Partial Payment Modal */}
+      {partialPaymentModal.payment && (
+        <AddPartialPaymentModal
+          open={partialPaymentModal.open}
+          onOpenChange={(open) => setPartialPaymentModal({ open, payment: null })}
+          payment={{
+            id: partialPaymentModal.payment.id,
+            invoiceNumber: partialPaymentModal.payment.invoiceNumber,
+            amount: Number(partialPaymentModal.payment.amount),
+            paidAmount: Number(partialPaymentModal.payment.paidAmount || 0),
+            remainingAmount: Number(partialPaymentModal.payment.remainingAmount || partialPaymentModal.payment.amount),
+            student: partialPaymentModal.payment.student
+          }}
+        />
+      )}
     </>
   )
 }
