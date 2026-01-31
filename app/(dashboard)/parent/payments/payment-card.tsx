@@ -218,11 +218,13 @@ export function PaymentCard({ payment, monthNames }: PaymentCardProps) {
                               {index + 1}
                             </div>
                             <span className="text-xs font-semibold text-gray-600">
-                              {new Date(transaction.transactionDate).toLocaleDateString('uz-UZ', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric'
-                              })}
+                              {(() => {
+                                const date = new Date(transaction.transactionDate)
+                                const day = String(date.getDate()).padStart(2, '0')
+                                const month = String(date.getMonth() + 1).padStart(2, '0')
+                                const year = date.getFullYear()
+                                return `${day}.${month}.${year}`
+                              })()}
                             </span>
                           </div>
                           <div className="text-right">
@@ -237,13 +239,16 @@ export function PaymentCard({ payment, monthNames }: PaymentCardProps) {
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-gray-500 font-medium">📅 Sana va vaqt:</span>
                             <span className="font-semibold text-gray-700">
-                              {new Date(transaction.transactionDate).toLocaleDateString('uz-UZ', {
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
+                              {(() => {
+                                const date = new Date(transaction.transactionDate)
+                                const day = date.getDate()
+                                const monthNames = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr']
+                                const month = monthNames[date.getMonth()]
+                                const year = date.getFullYear()
+                                const hours = String(date.getHours()).padStart(2, '0')
+                                const minutes = String(date.getMinutes()).padStart(2, '0')
+                                return `${day} ${month} ${year}, ${hours}:${minutes}`
+                              })()}
                             </span>
                           </div>
                           
