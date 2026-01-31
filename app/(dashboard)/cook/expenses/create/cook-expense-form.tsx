@@ -177,9 +177,7 @@ export function CookExpenseForm({ categories }: CookExpenseFormProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="CASH">Naqd</SelectItem>
-              <SelectItem value="CLICK">Click</SelectItem>
-              <SelectItem value="PAYME">Payme</SelectItem>
-              <SelectItem value="UZUM">Uzum</SelectItem>
+              <SelectItem value="CLICK">Plastik</SelectItem>
             </SelectContent>
           </Select>
         </div>

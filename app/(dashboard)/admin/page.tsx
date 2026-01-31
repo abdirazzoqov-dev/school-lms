@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { PAGE_CACHE_CONFIG } from '@/lib/cache-config'
 import { Progress } from '@/components/ui/progress'
 import { DashboardIncomeCard } from '@/components/dashboard-income-card'
+import { DashboardExpenseCard } from '@/components/dashboard-expense-card'
 
 // ✅ Advanced caching: Optimized revalidation strategy
 export const revalidate = PAGE_CACHE_CONFIG.admin.revalidate
@@ -274,61 +275,13 @@ export default async function AdminDashboard() {
           paymentMethods={stats.paymentMethods || []}
         />
 
-        {/* Expenses */}
-        <Card className="border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Xarajatlar (Bu oy)
-              </CardTitle>
-              <TrendingDown className="h-4 w-4 text-red-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              -{formatNumber(stats.totalExpenses)}
-            </div>
-            <div className="mt-3 space-y-2">
-              {/* Umumiy xarajat breakdown */}
-              {stats.expenseCategories && stats.expenseCategories.length > 0 ? (
-                stats.expenseCategories.slice(0, 3).map((cat: any) => (
-                  <div key={cat.name} className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="flex items-center gap-1.5">
-                        <div 
-                          className="w-2 h-2 rounded-full" 
-                          style={{ backgroundColor: cat.color || '#ef4444' }}
-                        />
-                        <span className="text-muted-foreground">{cat.name}</span>
-                      </span>
-                      <span className="font-medium text-red-700">
-                        -{formatNumber(cat.amount)}
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-1">
-                      <div 
-                        className="h-1 rounded-full transition-all"
-                        style={{ 
-                          width: `${(cat.amount / (stats.totalExpenses || 1)) * 100}%`,
-                          backgroundColor: cat.color || '#ef4444'
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-muted-foreground">Xarajat yo'q</p>
-              )}
-              {stats.expenseCategories && stats.expenseCategories.length > 3 && (
-                <Link href="/admin/expenses">
-                  <p className="text-xs text-blue-600 hover:underline mt-2">
-                    +{stats.expenseCategories.length - 3} ta yana...
-                  </p>
-                </Link>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Expenses - Client Component with Modal */}
+        <DashboardExpenseCard
+          totalExpenses={stats.totalExpenses}
+          expenseCash={stats.expenseCash || 0}
+          expenseCard={stats.expenseCard || 0}
+          expensePaymentMethods={stats.expensePaymentMethods || []}
+        />
 
         {/* Balance */}
         <Card className={`border-l-4 ${balance >= 0 ? 'border-l-blue-500' : 'border-l-orange-500'} hover:shadow-md transition-shadow`}>
@@ -588,6 +541,26 @@ async function getDashboardStats(
     _sum: { amount: true }
   })
 
+  // ✅ Xarajatlar bo'yicha to'lov usullari analitikasi
+  const [expensesByPaymentMethod, kitchenExpensesByPaymentMethod] = await Promise.all([
+    db.expense.groupBy({
+      by: ['paymentMethod'],
+      where: {
+        tenantId,
+        date: { gte: thisMonthStart }
+      },
+      _sum: { amount: true }
+    }),
+    db.kitchenExpense.groupBy({
+      by: ['paymentMethod'],
+      where: {
+        tenantId,
+        date: { gte: thisMonthStart }
+      },
+      _sum: { amount: true }
+    })
+  ])
+
   // ✅ Kategoriya nomlarini olish
   const [expenseCategories, kitchenCategories] = await Promise.all([
     db.expenseCategory.findMany({
@@ -631,13 +604,28 @@ async function getDashboardStats(
     amount: Number(pm._sum.amount || 0)
   }))
 
-  // ✅ Naqd va plastik bo'yicha guruhlash
+  // ✅ Naqd va plastik bo'yicha guruhlash (KIRIM)
   const cashAmount = paymentMethodsBreakdown
     .filter(pm => pm.method === 'CASH')
     .reduce((sum, pm) => sum + pm.amount, 0)
   
   // CLICK = Plastik karta (terminal orqali)
   const cardAmount = paymentMethodsBreakdown
+    .filter(pm => pm.method === 'CLICK')
+    .reduce((sum, pm) => sum + pm.amount, 0)
+
+  // ✅ Xarajatlar to'lov usullari breakdown
+  const allExpensesByMethod = [
+    ...expensesByPaymentMethod.map(e => ({ method: e.paymentMethod, amount: Number(e._sum.amount || 0) })),
+    ...kitchenExpensesByPaymentMethod.map(e => ({ method: e.paymentMethod, amount: Number(e._sum.amount || 0) }))
+  ]
+  
+  // ✅ Naqd va plastik bo'yicha guruhlash (XARAJAT)
+  const expenseCashAmount = allExpensesByMethod
+    .filter(pm => pm.method === 'CASH')
+    .reduce((sum, pm) => sum + pm.amount, 0)
+  
+  const expenseCardAmount = allExpensesByMethod
     .filter(pm => pm.method === 'CLICK')
     .reduce((sum, pm) => sum + pm.amount, 0)
 
@@ -657,9 +645,12 @@ async function getDashboardStats(
     kitchenExpenses: Number(kitchenExpenses._sum.amount || 0),
     totalExpenses: Number(generalExpenses._sum.amount || 0) + Number(kitchenExpenses._sum.amount || 0),
     expenseCategories: allExpenses, // ✅ Kategoriyalar breakdown
-    paymentMethods: paymentMethodsBreakdown, // ✅ Barcha to'lov usullari
-    cashIncome: cashAmount, // ✅ Naqd to'lovlar
-    cardIncome: cardAmount // ✅ Plastik to'lovlar (Click, Payme, Uzum)
+    paymentMethods: paymentMethodsBreakdown, // ✅ Barcha to'lov usullari (kirim)
+    cashIncome: cashAmount, // ✅ Naqd to'lovlar (kirim)
+    cardIncome: cardAmount, // ✅ Plastik to'lovlar (kirim)
+    expensePaymentMethods: allExpensesByMethod, // ✅ Xarajat to'lov usullari
+    expenseCash: expenseCashAmount, // ✅ Naqd xarajatlar
+    expenseCard: expenseCardAmount // ✅ Plastik xarajatlar
   }
 }
 
