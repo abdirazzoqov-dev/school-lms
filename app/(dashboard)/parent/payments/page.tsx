@@ -52,6 +52,20 @@ export default async function ParentPaymentsPage({
               payments: {
                 orderBy: {
                   createdAt: 'desc'
+                },
+                include: {
+                  transactions: {
+                    orderBy: {
+                      transactionDate: 'desc'
+                    },
+                    include: {
+                      receivedBy: {
+                        select: {
+                          fullName: true
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -258,7 +272,8 @@ export default async function ParentPaymentsPage({
                         paymentYear: payment.paymentYear,
                         paidDate: payment.paidDate,
                         notes: payment.notes,
-                        status: payment.status
+                        status: payment.status,
+                        transactions: payment.transactions || []
                       }}
                       monthNames={monthNames}
                     />

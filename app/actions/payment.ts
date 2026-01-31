@@ -476,21 +476,39 @@ export async function addPartialPayment(paymentId: string, amount: number, payme
       newStatus = 'PENDING'
     }
 
-    // Update payment
-    const updatedPayment = await db.payment.update({
-      where: { 
-        id: paymentId,
-        tenantId 
-      },
-      data: {
-        paidAmount: newPaidAmount,
-        remainingAmount: newRemainingAmount >= 0 ? newRemainingAmount : 0,
-        status: newStatus,
-        paidDate: newStatus === 'COMPLETED' ? new Date() : (currentPayment.paidDate || new Date()), // Keep first payment date or set current
-        receivedById: session.user.id,
-        notes: notes ? `${currentPayment.notes || ''}\n[${new Date().toLocaleDateString('uz-UZ')}] +${formatNumber(Number(amount))} so'm (${paymentMethod || 'N/A'})${notes ? ': ' + notes : ''}`.trim() : currentPayment.notes,
-      }
+    // Create transaction and update payment in a transaction
+    const result = await db.$transaction(async (tx) => {
+      // Create PaymentTransaction
+      await tx.paymentTransaction.create({
+        data: {
+          paymentId: paymentId,
+          amount: amount,
+          paymentMethod: (paymentMethod as any) || 'CASH',
+          transactionDate: new Date(),
+          receivedById: session.user.id,
+          notes: notes || null,
+        }
+      })
+
+      // Update payment
+      const updatedPayment = await tx.payment.update({
+        where: { 
+          id: paymentId,
+          tenantId 
+        },
+        data: {
+          paidAmount: newPaidAmount,
+          remainingAmount: newRemainingAmount >= 0 ? newRemainingAmount : 0,
+          status: newStatus,
+          paidDate: newStatus === 'COMPLETED' ? new Date() : (currentPayment.paidDate || new Date()),
+          receivedById: session.user.id,
+        }
+      })
+
+      return updatedPayment
     })
+
+    const updatedPayment = result
 
     // If payment is now completed and it's TUITION, check monthly status
     if (newStatus === 'COMPLETED' && currentPayment.paymentType === 'TUITION' && currentPayment.student.monthlyTuitionFee) {

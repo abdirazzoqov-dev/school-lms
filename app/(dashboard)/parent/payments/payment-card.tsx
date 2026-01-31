@@ -3,7 +3,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Calendar, Info } from 'lucide-react'
+import { Calendar, Info, Receipt } from 'lucide-react'
 import { formatNumber } from '@/lib/utils'
 import {
   Collapsible,
@@ -25,6 +25,17 @@ interface PaymentCardProps {
     paidDate: Date | null
     notes: string | null
     status: string
+    transactions?: Array<{
+      id: string
+      amount: any
+      paymentMethod: string
+      transactionDate: Date
+      receiptNumber: string | null
+      notes: string | null
+      receivedBy: {
+        fullName: string
+      } | null
+    }>
   }
   monthNames: string[]
 }
@@ -143,6 +154,75 @@ export function PaymentCard({ payment, monthNames }: PaymentCardProps) {
                     <span className="text-orange-600">⏳ Qolgan:</span>
                     <span className="font-bold text-orange-700">{formatNumber(remainingAmount)} so'm</span>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Payment Transactions History */}
+            {payment.transactions && payment.transactions.length > 0 && (
+              <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="p-1.5 bg-blue-100 rounded">
+                    <Receipt className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <p className="font-semibold text-blue-900">
+                    To'lovlar Tarixi ({payment.transactions.length} ta)
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  {payment.transactions.map((transaction, index) => (
+                    <div 
+                      key={transaction.id}
+                      className="p-3 bg-white border border-blue-200 rounded-lg"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge className="bg-blue-600 text-white text-xs">
+                          #{index + 1}
+                        </Badge>
+                        <p className="font-bold text-green-600">
+                          {formatNumber(Number(transaction.amount))} so'm
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-1 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Sana:</span>
+                          <span className="font-medium">
+                            {new Date(transaction.transactionDate).toLocaleDateString('uz-UZ', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Usul:</span>
+                          <Badge variant="outline" className="text-xs">
+                            {transaction.paymentMethod === 'CASH' && '💵 Naqd'}
+                            {transaction.paymentMethod === 'CLICK' && '💳 Click'}
+                            {transaction.paymentMethod === 'PAYME' && '💳 Payme'}
+                            {transaction.paymentMethod === 'UZUM' && '💳 Uzum'}
+                          </Badge>
+                        </div>
+                        
+                        {transaction.receivedBy && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">Qabul qildi:</span>
+                            <span className="font-medium">{transaction.receivedBy.fullName}</span>
+                          </div>
+                        )}
+                        
+                        {transaction.notes && (
+                          <div className="mt-2 pt-2 border-t">
+                            <p className="text-muted-foreground mb-1">Izoh:</p>
+                            <p className="text-xs font-medium">{transaction.notes}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

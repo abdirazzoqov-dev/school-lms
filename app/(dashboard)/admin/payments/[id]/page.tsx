@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, DollarSign, Edit, UserCircle, Calendar, FileText, CheckCircle2, Clock, XCircle } from 'lucide-react'
+import { ArrowLeft, DollarSign, Edit, UserCircle, Calendar, FileText, CheckCircle2, Clock, XCircle, Receipt } from 'lucide-react'
 import Link from 'next/link'
 import { formatNumber } from '@/lib/utils'
 import { PaymentPDFButton } from '@/components/payment-pdf-button'
@@ -56,6 +56,19 @@ export default async function PaymentDetailPage({ params }: { params: { id: stri
           select: {
             fullName: true,
             email: true,
+          }
+        },
+        transactions: {
+          orderBy: {
+            transactionDate: 'desc'
+          },
+          include: {
+            receivedBy: {
+              select: {
+                fullName: true,
+                email: true
+              }
+            }
           }
         }
       }
@@ -332,6 +345,108 @@ export default async function PaymentDetailPage({ params }: { params: { id: stri
             <div className="p-4 rounded-lg border">
               <p className="font-bold">{payment.receivedBy.fullName}</p>
               <p className="text-sm text-muted-foreground">{payment.receivedBy.email}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Payment Transactions History */}
+      {payment.transactions && payment.transactions.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5" />
+              To'lovlar Tarixi ({payment.transactions.length} ta)
+            </CardTitle>
+            <CardDescription>
+              Barcha bo'lib-bo'lib to'langan to'lovlar ro'yxati
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {payment.transactions.map((transaction, index) => (
+                <div 
+                  key={transaction.id} 
+                  className="p-4 rounded-lg border bg-gradient-to-r from-green-50 to-emerald-50 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Badge className="bg-green-600 text-white">
+                          #{index + 1}
+                        </Badge>
+                        <p className="font-bold text-xl text-green-700">
+                          {formatNumber(Number(transaction.amount))} so'm
+                        </p>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Sana</p>
+                          <p className="font-medium">
+                            {new Date(transaction.transactionDate).toLocaleDateString('uz-UZ', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <p className="text-muted-foreground">To'lov usuli</p>
+                          <Badge variant="outline" className="font-medium">
+                            {transaction.paymentMethod === 'CASH' && '💵 Naqd'}
+                            {transaction.paymentMethod === 'CLICK' && '💳 Click'}
+                            {transaction.paymentMethod === 'PAYME' && '💳 Payme'}
+                            {transaction.paymentMethod === 'UZUM' && '💳 Uzum'}
+                          </Badge>
+                        </div>
+                        
+                        {transaction.receivedBy && (
+                          <div>
+                            <p className="text-muted-foreground">Qabul qildi</p>
+                            <p className="font-medium">{transaction.receivedBy.fullName}</p>
+                          </div>
+                        )}
+                        
+                        {transaction.receiptNumber && (
+                          <div>
+                            <p className="text-muted-foreground">Chek raqami</p>
+                            <p className="font-mono text-sm">{transaction.receiptNumber}</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {transaction.notes && (
+                        <div className="mt-3 p-3 bg-white rounded-md border">
+                          <p className="text-xs text-muted-foreground mb-1">Izoh:</p>
+                          <p className="text-sm font-medium">{transaction.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Summary */}
+            <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200">
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Jami to'langan</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {formatNumber(Number(payment.paidAmount || 0))} so'm
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Qoldiq</p>
+                  <p className="text-2xl font-bold text-orange-600">
+                    {formatNumber(Number(payment.remainingAmount || 0))} so'm
+                  </p>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
