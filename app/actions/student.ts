@@ -708,6 +708,16 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
     // Track buildings that need cache update
     const buildingsToUpdate = new Set<string>()
 
+    // ✅ SAVE OLD FEES for payment update comparison (BEFORE assignment update)
+    let oldDormitoryFee: number | null = null
+    const existingAssignmentBefore = await db.dormitoryAssignment.findUnique({
+      where: { studentId },
+      select: { monthlyFee: true }
+    })
+    if (existingAssignmentBefore) {
+      oldDormitoryFee = Number(existingAssignmentBefore.monthlyFee)
+    }
+
     // Handle dormitory updates
     if (data.dormitoryBedId !== undefined) {
       // Check existing dormitory assignment
@@ -898,6 +908,10 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
     
     // 1. Update TUITION payments if monthlyTuitionFee changed
     if (data.monthlyTuitionFee !== undefined && data.monthlyTuitionFee !== Number(existingStudent.monthlyTuitionFee)) {
+      logger.info(`Updating tuition payments: ${Number(existingStudent.monthlyTuitionFee)} -> ${data.monthlyTuitionFee}`, {
+        studentId
+      })
+      
       const pendingTuitionPayments = await db.payment.findMany({
         where: {
           tenantId,
@@ -907,6 +921,8 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
           remainingAmount: { gt: 0 }
         }
       })
+
+      logger.info(`Found ${pendingTuitionPayments.length} pending tuition payments to update`)
 
       for (const payment of pendingTuitionPayments) {
         const newRemainingAmount = data.monthlyTuitionFee - Number(payment.paidAmount)
@@ -919,17 +935,21 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
             status: newRemainingAmount <= 0 ? 'COMPLETED' : (Number(payment.paidAmount) > 0 ? 'PARTIALLY_PAID' : 'PENDING')
           }
         })
+        
+        logger.info(`Updated tuition payment ${payment.id}: ${Number(payment.amount)} -> ${data.monthlyTuitionFee}, remaining: ${newRemainingAmount}`, {
+          studentId
+        })
       }
     }
 
     // 2. Update DORMITORY payments if dormitoryMonthlyFee changed
-    if (data.dormitoryMonthlyFee !== undefined) {
-      const existingAssignment = await db.dormitoryAssignment.findUnique({
-        where: { studentId }
-      })
-
-      // Only update if fee changed from existing assignment
-      if (existingAssignment && data.dormitoryMonthlyFee !== Number(existingAssignment.monthlyFee)) {
+    if (data.dormitoryMonthlyFee !== undefined && oldDormitoryFee !== null) {
+      // Only update if fee changed from ORIGINAL assignment (before update)
+      if (data.dormitoryMonthlyFee !== oldDormitoryFee) {
+        logger.info(`Updating dormitory payments: ${oldDormitoryFee} -> ${data.dormitoryMonthlyFee}`, {
+          studentId
+        })
+        
         const pendingDormPayments = await db.payment.findMany({
           where: {
             tenantId,
@@ -939,6 +959,8 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
             remainingAmount: { gt: 0 }
           }
         })
+
+        logger.info(`Found ${pendingDormPayments.length} pending dormitory payments to update`)
 
         for (const payment of pendingDormPayments) {
           const newRemainingAmount = data.dormitoryMonthlyFee - Number(payment.paidAmount)
@@ -950,6 +972,10 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
               remainingAmount: Math.max(0, newRemainingAmount),
               status: newRemainingAmount <= 0 ? 'COMPLETED' : (Number(payment.paidAmount) > 0 ? 'PARTIALLY_PAID' : 'PENDING')
             }
+          })
+          
+          logger.info(`Updated dormitory payment ${payment.id}: ${Number(payment.amount)} -> ${data.dormitoryMonthlyFee}, remaining: ${newRemainingAmount}`, {
+            studentId
           })
         }
       }
