@@ -98,10 +98,8 @@ export function AddPartialPaymentModal({ open, onOpenChange, payment }: AddParti
   }
 
   const paymentMethods = [
-    { value: 'CASH', label: 'Naqd', icon: Wallet },
-    { value: 'CLICK', label: 'Click', icon: Banknote },
-    { value: 'PAYME', label: 'Payme', icon: CreditCard },
-    { value: 'UZUM', label: 'Uzum', icon: CreditCard },
+    { value: 'CASH', label: 'Naqd', icon: Banknote },
+    { value: 'CLICK', label: 'Plastik', icon: CreditCard },
   ]
 
   const selectedMethod = paymentMethods.find(m => m.value === paymentMethod)

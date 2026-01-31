@@ -45,10 +45,8 @@ export function IncomeDetailsModal({
   const cashPercentage = totalIncome > 0 ? (cashIncome / totalIncome) * 100 : 0
   const cardPercentage = totalIncome > 0 ? (cardIncome / totalIncome) * 100 : 0
 
-  // Get individual card methods breakdown
+  // Get card payment (using CLICK enum value for all card payments)
   const clickAmount = paymentMethods.find(pm => pm.method === 'CLICK')?.amount || 0
-  const paymeAmount = paymentMethods.find(pm => pm.method === 'PAYME')?.amount || 0
-  const uzumAmount = paymentMethods.find(pm => pm.method === 'UZUM')?.amount || 0
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -130,7 +128,7 @@ export function IncomeDetailsModal({
                     <div>
                       <h4 className="font-semibold text-base">Plastik Karta</h4>
                       <p className="text-xs text-muted-foreground">
-                        Click, Payme, Uzum orqali
+                        Terminal orqali plastik karta to'lovlari
                       </p>
                     </div>
                   </div>
@@ -145,36 +143,16 @@ export function IncomeDetailsModal({
                 </div>
                 <Progress value={cardPercentage} className="h-2 bg-blue-100" />
 
-                {/* Individual Card Methods */}
+                {/* Card payment details */}
                 {cardIncome > 0 && (
                   <div className="mt-4 space-y-2 pt-3 border-t border-blue-100">
-                    {clickAmount > 0 && (
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          <span className="text-muted-foreground">Click</span>
-                        </div>
-                        <span className="font-semibold">{formatNumber(clickAmount)} so'm</span>
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span className="text-muted-foreground">Plastik karta</span>
                       </div>
-                    )}
-                    {paymeAmount > 0 && (
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-cyan-500 rounded-full"></div>
-                          <span className="text-muted-foreground">Payme</span>
-                        </div>
-                        <span className="font-semibold">{formatNumber(paymeAmount)} so'm</span>
-                      </div>
-                    )}
-                    {uzumAmount > 0 && (
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                          <span className="text-muted-foreground">Uzum</span>
-                        </div>
-                        <span className="font-semibold">{formatNumber(uzumAmount)} so'm</span>
-                      </div>
-                    )}
+                      <span className="font-semibold">{formatNumber(cardIncome)} so'm</span>
+                    </div>
                   </div>
                 )}
               </CardContent>

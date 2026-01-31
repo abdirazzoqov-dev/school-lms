@@ -636,8 +636,9 @@ async function getDashboardStats(
     .filter(pm => pm.method === 'CASH')
     .reduce((sum, pm) => sum + pm.amount, 0)
   
+  // CLICK = Plastik karta (terminal orqali)
   const cardAmount = paymentMethodsBreakdown
-    .filter(pm => ['CLICK', 'PAYME', 'UZUM'].includes(pm.method))
+    .filter(pm => pm.method === 'CLICK')
     .reduce((sum, pm) => sum + pm.amount, 0)
 
   return {
