@@ -228,7 +228,8 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
 
   const renderDesktopTable = () => (
     <div className="rounded-md border overflow-x-auto">
-      <table className="w-full">
+      <div className="min-w-[1200px]">
+        <table className="w-full">
           <thead className="border-b bg-muted/50">
             <tr>
               <th className="p-4 text-left w-12">
@@ -237,13 +238,13 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                   onCheckedChange={handleSelectAll}
                 />
               </th>
-              <th className="p-4 text-left text-sm font-medium">Invoice</th>
-              <th className="p-4 text-left text-sm font-medium">O'quvchi</th>
-              <th className="p-4 text-left text-sm font-medium">Summasi</th>
-              <th className="p-4 text-left text-sm font-medium min-w-[200px]">To'lov Holati</th>
-              <th className="p-4 text-left text-sm font-medium">Usuli</th>
-              <th className="p-4 text-left text-sm font-medium">Muddat</th>
-              <th className="p-4 text-left text-sm font-medium">Status</th>
+              <th className="p-4 text-left text-sm font-medium w-[140px]">Invoice</th>
+              <th className="p-4 text-left text-sm font-medium w-[180px]">O'quvchi</th>
+              <th className="p-4 text-left text-sm font-medium w-[140px]">Summasi</th>
+              <th className="p-4 text-left text-sm font-medium w-[320px]">To'lov Holati</th>
+              <th className="p-4 text-left text-sm font-medium w-[120px]">Usuli</th>
+              <th className="p-4 text-left text-sm font-medium w-[120px]">Muddat</th>
+              <th className="p-4 text-left text-sm font-medium w-[120px]">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -279,7 +280,7 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                     </div>
                   </td>
                   <td className="p-4">
-                    <div className="space-y-2 min-w-[200px]">
+                    <div className="space-y-2 max-w-[320px]">
                       {/* Progress Bar */}
                       <div className="flex items-center gap-2">
                         <div className="flex-1">
@@ -359,58 +360,60 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                       )}
                     </div>
                     
-                    {/* Transactions Expanded */}
+                    {/* Transactions Expanded - Compact Design */}
                     {expandedPayments.has(payment.id) && payment.transactions && payment.transactions.length > 0 && (
-                      <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg space-y-2">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Receipt className="h-4 w-4 text-blue-600" />
-                          <p className="text-xs font-semibold text-blue-900">
-                            To'lovlar Tarixi ({payment.transactions.length})
+                      <div className="mt-3 p-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg space-y-1.5 max-w-[300px]">
+                        <div className="flex items-center gap-1.5 mb-1.5 pb-1.5 border-b border-blue-200">
+                          <Receipt className="h-3.5 w-3.5 text-blue-600" />
+                          <p className="text-[10px] font-semibold text-blue-900">
+                            Tarixi ({payment.transactions.length})
                           </p>
                         </div>
                         {payment.transactions.map((transaction, index) => (
                           <div 
                             key={transaction.id}
-                            className="p-2 bg-white border border-blue-200 rounded-md space-y-1"
+                            className="p-1.5 bg-white border border-blue-200 rounded space-y-1"
                           >
-                            <div className="flex items-center justify-between">
-                              <Badge className="bg-blue-600 text-white text-xs">
+                            <div className="flex items-center justify-between gap-1">
+                              <Badge className="bg-blue-600 text-white text-[9px] px-1.5 py-0.5 h-4">
                                 #{index + 1}
                               </Badge>
-                              <span className="text-sm font-bold text-green-600">
-                                {formatNumber(Number(transaction.amount))} so'm
+                              <span className="text-xs font-bold text-green-600">
+                                {formatNumber(Number(transaction.amount))}
                               </span>
                             </div>
-                            <div className="grid grid-cols-2 gap-x-2 text-xs">
-                              <div>
+                            <div className="space-y-0.5 text-[10px]">
+                              <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground">Sana:</span>
-                                <p className="font-medium">
+                                <span className="font-medium">
                                   {new Date(transaction.transactionDate).toLocaleDateString('uz-UZ', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                    year: 'numeric'
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: '2-digit'
                                   })}
-                                </p>
+                                </span>
                               </div>
-                              <div>
+                              <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground">Usul:</span>
-                                <p className="font-medium">
-                                  {transaction.paymentMethod === 'CASH' && '💵 Naqd'}
-                                  {transaction.paymentMethod === 'CLICK' && '💳 Click'}
-                                  {transaction.paymentMethod === 'PAYME' && '💳 Payme'}
-                                  {transaction.paymentMethod === 'UZUM' && '💳 Uzum'}
-                                </p>
+                                <span className="font-medium">
+                                  {transaction.paymentMethod === 'CASH' && 'Naqd'}
+                                  {transaction.paymentMethod === 'CLICK' && 'Click'}
+                                  {transaction.paymentMethod === 'PAYME' && 'Payme'}
+                                  {transaction.paymentMethod === 'UZUM' && 'Uzum'}
+                                </span>
                               </div>
                               {transaction.receivedBy && (
-                                <div className="col-span-2">
-                                  <span className="text-muted-foreground">Qabul qildi:</span>
-                                  <p className="font-medium">{transaction.receivedBy.fullName}</p>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-muted-foreground">Admin:</span>
+                                  <span className="font-medium truncate max-w-[120px]" title={transaction.receivedBy.fullName}>
+                                    {transaction.receivedBy.fullName}
+                                  </span>
                                 </div>
                               )}
                               {transaction.notes && (
-                                <div className="col-span-2 pt-1 border-t">
-                                  <span className="text-muted-foreground">Izoh:</span>
-                                  <p className="text-xs font-medium">{transaction.notes}</p>
+                                <div className="pt-1 border-t border-gray-200">
+                                  <p className="text-[9px] text-muted-foreground mb-0.5">Izoh:</p>
+                                  <p className="text-[10px] font-medium line-clamp-2">{transaction.notes}</p>
                                 </div>
                               )}
                             </div>
@@ -457,6 +460,7 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
           </tbody>
         </table>
       </div>
+    </div>
   )
 
   const renderMobileCards = () => (
