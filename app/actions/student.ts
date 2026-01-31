@@ -393,6 +393,32 @@ export async function createStudent(data: StudentFormData) {
             occupiedBeds,
           },
         })
+
+        // ✅ Create dormitory payment for current month (like tuition)
+        if (validatedData.dormitoryMonthlyFee && validatedData.dormitoryMonthlyFee > 0) {
+          const now = new Date()
+          const currentMonth = now.getMonth() + 1
+          const currentYear = now.getFullYear()
+          
+          await tx.payment.create({
+            data: {
+              tenantId,
+              studentId: student.id,
+              parentId: primaryGuardian?.guardianId,
+              amount: validatedData.dormitoryMonthlyFee,
+              paidAmount: 0,
+              remainingAmount: validatedData.dormitoryMonthlyFee,
+              paymentType: 'DORMITORY',
+              paymentMethod: 'CASH',
+              status: 'PENDING',
+              paymentMonth: currentMonth,
+              paymentYear: currentYear,
+              invoiceNumber: `INV-DORM-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`,
+              dueDate: new Date(currentYear, currentMonth, 10),
+              notes: `Oylik yotoqxona to'lovi`,
+            }
+          })
+        }
       }
 
       // ✅ Return student and primary guardian info from transaction
@@ -795,6 +821,50 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
             where: { id: bed.room.id },
             data: { occupiedBeds: { increment: 1 } }
           })
+
+          // ✅ Create dormitory payment for current month (NEW assignment)
+          if (data.dormitoryMonthlyFee && data.dormitoryMonthlyFee > 0) {
+            const now = new Date()
+            const currentMonth = now.getMonth() + 1
+            const currentYear = now.getFullYear()
+            
+            // Check if payment already exists for this month
+            const existingPayment = await db.payment.findFirst({
+              where: {
+                tenantId,
+                studentId,
+                paymentType: 'DORMITORY',
+                paymentMonth: currentMonth,
+                paymentYear: currentYear,
+              }
+            })
+
+            if (!existingPayment) {
+              const parentRelation = await db.studentParent.findFirst({
+                where: { studentId, isPrimary: true },
+                select: { guardianId: true }
+              })
+
+              await db.payment.create({
+                data: {
+                  tenantId,
+                  studentId,
+                  parentId: parentRelation?.guardianId,
+                  amount: data.dormitoryMonthlyFee,
+                  paidAmount: 0,
+                  remainingAmount: data.dormitoryMonthlyFee,
+                  paymentType: 'DORMITORY',
+                  paymentMethod: 'CASH',
+                  status: 'PENDING',
+                  paymentMonth: currentMonth,
+                  paymentYear: currentYear,
+                  invoiceNumber: `INV-DORM-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`,
+                  dueDate: new Date(currentYear, currentMonth, 10),
+                  notes: `Oylik yotoqxona to'lovi`,
+                }
+              })
+            }
+          }
         }
       } else if (existingAssignment) {
         // Track old building for cache update
