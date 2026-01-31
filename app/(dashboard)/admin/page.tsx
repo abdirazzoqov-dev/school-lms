@@ -484,41 +484,6 @@ export default async function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base sm:text-lg">Tezkor Amallar</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            <Link href="/admin/students/create">
-              <Button variant="outline" className="w-full justify-start text-xs sm:text-sm h-9 sm:h-10">
-                <Users className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                Yangi o'quvchi
-              </Button>
-            </Link>
-            <Link href="/admin/payments/create">
-              <Button variant="outline" className="w-full justify-start text-xs sm:text-sm h-9 sm:h-10">
-                <DollarSign className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                To'lov qabul qilish
-              </Button>
-            </Link>
-            <Link href="/admin/attendance">
-              <Button variant="outline" className="w-full justify-start text-xs sm:text-sm h-9 sm:h-10">
-                <Calendar className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                Davomat belgilash
-              </Button>
-            </Link>
-            <Link href="/admin/reports">
-              <Button variant="outline" className="w-full justify-start text-xs sm:text-sm h-9 sm:h-10">
-                <BookOpen className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                Hisobotlar
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }
