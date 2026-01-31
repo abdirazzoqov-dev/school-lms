@@ -29,6 +29,17 @@ export async function GET(
           }
         },
         class: true,
+        group: true,
+        dormitoryAssignment: {
+          include: {
+            bed: true,
+            room: {
+              include: {
+                building: true
+              }
+            }
+          }
+        },
         parents: {
           include: {
             parent: {

@@ -91,37 +91,35 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
           address: student.address || '',
           trialEnabled: student.trialEnabled || false,
           trialDays: student.trialDays || 30,
-          dormitoryBedId: student.dormitoryBedId || '',
-          dormitoryMonthlyFee: Number(student.dormitoryMonthlyFee || 0),
+          dormitoryBedId: student.dormitoryAssignment?.bedId || '',
+          dormitoryMonthlyFee: Number(student.dormitoryAssignment?.monthlyFee || 0),
           monthlyTuitionFee: Number(student.monthlyTuitionFee || 0),
           paymentDueDay: student.paymentDueDay || 5,
         })
 
         // Set dormitory status
-        if (student.dormitoryBedId) {
+        if (student.dormitoryAssignment) {
           setNeedsDormitory(true)
           // Load current dormitory info to pre-select room
-          if (student.dormitoryBed) {
-            fetch(`/api/admin/dormitory/available-rooms?gender=${student.gender}`, {
-              cache: 'no-store',
-              credentials: 'include',
+          fetch(`/api/admin/dormitory/available-rooms?gender=${student.gender}`, {
+            cache: 'no-store',
+            credentials: 'include',
+          })
+            .then(res => res.json())
+            .then(data => {
+              const rooms = data.rooms || []
+              // Find the room that contains the current bed
+              const currentRoom = rooms.find((r: any) => 
+                r.beds.some((b: any) => b.id === student.dormitoryAssignment.bedId)
+              )
+              if (currentRoom) {
+                setSelectedRoom(currentRoom)
+              }
+              setAvailableRooms(rooms)
             })
-              .then(res => res.json())
-              .then(data => {
-                const rooms = data.rooms || []
-                // Find the room that contains the current bed
-                const currentRoom = rooms.find((r: any) => 
-                  r.beds.some((b: any) => b.id === student.dormitoryBedId)
-                )
-                if (currentRoom) {
-                  setSelectedRoom(currentRoom)
-                }
-                setAvailableRooms(rooms)
-              })
-              .catch(() => {
-                setAvailableRooms([])
-              })
-          }
+            .catch(() => {
+              setAvailableRooms([])
+            })
         }
 
         // Load guardians if exists
