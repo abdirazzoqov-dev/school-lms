@@ -409,7 +409,7 @@ export async function resetTeacherPassword(teacherId: string, newPassword: strin
         id: teacher.userId
       },
       data: {
-        password: hashedPassword
+        passwordHash: hashedPassword
       }
     })
 
