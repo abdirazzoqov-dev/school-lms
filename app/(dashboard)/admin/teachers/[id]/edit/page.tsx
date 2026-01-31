@@ -7,10 +7,19 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { updateTeacher } from '@/app/actions/teacher'
+import { updateTeacher, resetTeacherPassword } from '@/app/actions/teacher'
 import { useToast } from '@/components/ui/use-toast'
-import { ArrowLeft, UserPlus, Loader2 } from 'lucide-react'
+import { ArrowLeft, UserPlus, Loader2, Key, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 
 export default function EditTeacherPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -26,6 +35,11 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
     experienceYears: 0,
     monthlySalary: '',
   })
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [resettingPassword, setResettingPassword] = useState(false)
 
   useEffect(() => {
     // Load teacher data
@@ -87,6 +101,57 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      toast({
+        title: 'Xato!',
+        description: 'Parol kamida 6 belgidan iborat bo\'lishi kerak',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: 'Xato!',
+        description: 'Parollar mos kelmayapti',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setResettingPassword(true)
+
+    try {
+      const result = await resetTeacherPassword(params.id, newPassword)
+
+      if (result.success) {
+        toast({
+          title: 'Muvaffaqiyatli!',
+          description: result.message || 'Parol muvaffaqiyatli o\'zgartirildi',
+        })
+        setPasswordDialogOpen(false)
+        setNewPassword('')
+        setConfirmPassword('')
+        router.refresh()
+      } else {
+        toast({
+          title: 'Xato!',
+          description: result.error,
+          variant: 'destructive',
+        })
+      }
+    } catch (error) {
+      toast({
+        title: 'Xato!',
+        description: 'Kutilmagan xatolik yuz berdi',
+        variant: 'destructive',
+      })
+    } finally {
+      setResettingPassword(false)
     }
   }
 
@@ -222,16 +287,120 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
         </CardContent>
       </Card>
 
+      {/* Password Reset Section */}
+      <Card className="border-red-200 bg-red-50/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5 text-red-600" />
+            Xavfsizlik
+          </CardTitle>
+          <CardDescription>
+            O&apos;qituvchi parolini o&apos;zgartirish
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="p-4 bg-white rounded-lg border-2 border-dashed border-red-200">
+              <p className="text-sm text-muted-foreground mb-3">
+                Agar o&apos;qituvchi parolini unutgan bo&apos;lsa, yangi parol berish mumkin
+              </p>
+              
+              <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full sm:w-auto">
+                    <Key className="mr-2 h-4 w-4" />
+                    Parolni O&apos;zgartirish
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Yangi Parol Berish</DialogTitle>
+                    <DialogDescription>
+                      O&apos;qituvchiga yangi parol belgilang. U shu parol bilan tizimga kiradi.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword">Yangi Parol *</Label>
+                      <div className="relative">
+                        <Input
+                          id="newPassword"
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="Kamida 6 belgi"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Parolni Tasdiqlash *</Label>
+                      <Input
+                        id="confirmPassword"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Parolni qayta kiriting"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                      <p className="text-xs text-amber-900">
+                        ⚠️ <strong>Diqqat:</strong> Yangi parolni o&apos;qituvchiga yodlab qoldiring yoki xavfsiz joyga yozib qo&apos;ying.
+                      </p>
+                    </div>
+                  </div>
+
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setPasswordDialogOpen(false)
+                        setNewPassword('')
+                        setConfirmPassword('')
+                      }}
+                      disabled={resettingPassword}
+                    >
+                      Bekor qilish
+                    </Button>
+                    <Button
+                      onClick={handleResetPassword}
+                      disabled={resettingPassword || !newPassword || !confirmPassword}
+                    >
+                      {resettingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Parolni O&apos;zgartirish
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border-yellow-200 bg-yellow-50/50">
         <CardHeader>
           <CardTitle className="text-sm">📝 Eslatma</CardTitle>
         </CardHeader>
         <CardContent className="text-sm space-y-2">
           <p>
-            • Email va parolni o'zgartirish uchun alohida funksiya kerak (Security)
+            • O&apos;qituvchi kodini o&apos;zgartirganda unique ekanligiga ishonch hosil qiling
           </p>
           <p>
-            • O'qituvchi kodini o'zgartirganda unique ekanligiga ishonch hosil qiling
+            • Parol kamida 6 belgidan iborat bo&apos;lishi kerak
           </p>
         </CardContent>
       </Card>

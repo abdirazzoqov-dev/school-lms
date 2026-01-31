@@ -369,3 +369,61 @@ export async function bulkDeactivateTeachers(teacherIds: string[]) {
   }
 }
 
+// Reset teacher password
+export async function resetTeacherPassword(teacherId: string, newPassword: string) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || session.user.role !== 'ADMIN') {
+      return { success: false, error: 'Ruxsat berilmagan' }
+    }
+
+    const tenantId = session.user.tenantId!
+
+    // Check if teacher exists and belongs to this tenant
+    const teacher = await db.teacher.findFirst({
+      where: {
+        id: teacherId,
+        tenantId
+      },
+      include: {
+        user: true
+      }
+    })
+
+    if (!teacher) {
+      return { success: false, error: 'O\'qituvchi topilmadi' }
+    }
+
+    // Validate password (minimum 6 characters)
+    if (newPassword.length < 6) {
+      return { success: false, error: 'Parol kamida 6 belgidan iborat bo\'lishi kerak' }
+    }
+
+    // Hash new password
+    const hashedPassword = await hashPassword(newPassword)
+
+    // Update user password
+    await db.user.update({
+      where: {
+        id: teacher.userId
+      },
+      data: {
+        password: hashedPassword
+      }
+    })
+
+    revalidatePath('/admin/teachers')
+    revalidatePath(`/admin/teachers/${teacherId}`)
+    revalidatePath(`/admin/teachers/${teacherId}/edit`)
+
+    return { 
+      success: true, 
+      message: `${teacher.user.fullName}ning paroli muvaffaqiyatli o'zgartirildi`
+    }
+  } catch (error: any) {
+    console.error('Reset teacher password error:', error)
+    return { success: false, error: error.message || 'Xatolik yuz berdi' }
+  }
+}
+
