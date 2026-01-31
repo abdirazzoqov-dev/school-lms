@@ -62,9 +62,11 @@ export default async function SalariesPage({
       },
       {
         staff: {
-          fullName: {
-            contains: searchQuery,
-            mode: 'insensitive'
+          user: {
+            fullName: {
+              contains: searchQuery,
+              mode: 'insensitive'
+            }
           }
         }
       }
