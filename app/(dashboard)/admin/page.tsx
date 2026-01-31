@@ -502,8 +502,7 @@ async function getDashboardStats(
     kitchenExpenses,
     // ✅ Kategoriyalar bo'yicha xarajatlar
     expensesByCategory,
-    kitchenExpensesByCategory,
-    paymentTransactionsByMethod
+    kitchenExpensesByCategory
   ] = await Promise.all([
     db.student.count({ where: { tenantId } }),
     db.student.count({ where: { tenantId, status: 'ACTIVE' } }),
@@ -574,17 +573,20 @@ async function getDashboardStats(
         date: { gte: thisMonthStart }
       },
       _sum: { amount: true }
-    }),
-    // ✅ To'lov usuli bo'yicha analitika (transactions orqali)
-    db.paymentTransaction.groupBy({
-      by: ['paymentMethod'],
-      where: {
-        tenantId,
-        transactionDate: { gte: thisMonthStart }
-      },
-      _sum: { amount: true }
     })
   ])
+  
+  // ✅ To'lov usuli bo'yicha analitika - Payment orqali filter
+  const paymentTransactionsByMethod = await db.paymentTransaction.groupBy({
+    by: ['paymentMethod'],
+    where: {
+      payment: {
+        tenantId: tenantId
+      },
+      transactionDate: { gte: thisMonthStart }
+    },
+    _sum: { amount: true }
+  })
 
   // ✅ Kategoriya nomlarini olish
   const [expenseCategories, kitchenCategories] = await Promise.all([
