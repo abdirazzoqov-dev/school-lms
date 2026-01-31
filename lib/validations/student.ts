@@ -3,7 +3,15 @@ import { z } from 'zod'
 // Qarindosh (Guardian) ma'lumotlari schema
 export const guardianSchema = z.object({
   fullName: z.string().min(3, 'To\'liq ism kamida 3 ta harf bo\'lishi kerak'),
-  phone: z.string().min(9, 'Telefon raqami kamida 9 ta raqam bo\'lishi kerak'),
+  phone: z.string()
+    .min(9, 'Telefon raqami kamida 9 ta raqam bo\'lishi kerak')
+    .refine(
+      (val) => {
+        const digitsOnly = val.replace(/[^0-9]/g, '')
+        return digitsOnly.length >= 9 && digitsOnly.length <= 15
+      },
+      { message: 'Telefon raqami 9 dan 15 ta raqam orasida bo\'lishi kerak' }
+    ),
   guardianType: z.enum(['FATHER', 'MOTHER', 'OTHER'], {
     errorMap: () => ({ message: 'Qarindoshlik turini tanlang' })
   }),
@@ -30,7 +38,13 @@ export const guardianSchema = z.object({
 
 export const studentSchema = z.object({
   fullName: z.string().min(3, 'Ism kamida 3 ta harf bo\'lishi kerak'),
-  email: z.string().email('Email noto\'g\'ri').optional().or(z.literal('')),
+  email: z.string()
+    .optional()
+    .transform(val => val === '' ? undefined : val)
+    .refine(
+      val => !val || z.string().email().safeParse(val).success,
+      { message: 'Email formati noto\'g\'ri. To\'g\'ri format: example@domain.com' }
+    ),
   studentCode: z.string().min(2, 'O\'quvchi kodi kamida 2 ta belgi'),
   dateOfBirth: z.string().min(1, 'Tug\'ilgan sanani kiriting'),
   gender: z.enum(['MALE', 'FEMALE']),

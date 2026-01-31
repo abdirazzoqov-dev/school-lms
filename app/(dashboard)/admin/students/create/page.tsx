@@ -389,6 +389,22 @@ export default function CreateStudentPage() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="email">
+                  Email (Ixtiyoriy)
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="student@example.com (bo'sh qoldirish mumkin)"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Agar bo'sh qoldirilsa, avtomatik email generatsiya qilinadi
+                </p>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="dateOfBirth">Tug'ilgan Sana *</Label>
                 <Input
                   id="dateOfBirth"

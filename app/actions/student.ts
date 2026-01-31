@@ -69,15 +69,34 @@ export async function createStudent(data: StudentFormData) {
       return { success: false, error: 'Bu o\'quvchi kodi allaqachon ishlatilgan' }
     }
 
-    // Generate and check student email BEFORE creating anything
-    const studentEmail = validatedData.email || `${validatedData.studentCode.toLowerCase()}@student.local`
+    // ✅ FIX: Generate and check student email BEFORE creating anything
+    let studentEmail = ''
     
-    const existingUser = await db.user.findUnique({
-      where: { email: studentEmail }
-    })
+    if (validatedData.email && validatedData.email.trim() !== '') {
+      // User provided email - must be unique
+      studentEmail = validatedData.email.trim().toLowerCase()
+      
+      const existingUser = await db.user.findUnique({
+        where: { email: studentEmail }
+      })
 
-    if (existingUser) {
-      return { success: false, error: 'Bu email allaqachon ishlatilgan' }
+      if (existingUser) {
+        return { success: false, error: `Bu email (${studentEmail}) allaqachon ishlatilgan. Boshqa email kiriting yoki bo'sh qoldiring.` }
+      }
+    } else {
+      // Generate auto email based on student code
+      studentEmail = `${validatedData.studentCode.toLowerCase().replace(/[^a-z0-9]/g, '')}@student.local`
+      
+      // Check if generated email exists
+      const existingUser = await db.user.findUnique({
+        where: { email: studentEmail }
+      })
+
+      if (existingUser) {
+        // If generated email exists, add random suffix
+        const randomSuffix = generateRandomString(4)
+        studentEmail = `${validatedData.studentCode.toLowerCase().replace(/[^a-z0-9]/g, '')}_${randomSuffix}@student.local`
+      }
     }
 
     // ✅ USE TRANSACTION - If anything fails, everything rolls back
@@ -90,55 +109,107 @@ export async function createStudent(data: StudentFormData) {
       // Normalize phone number (remove all non-digit characters)
       const normalizedPhone = guardianData.phone.replace(/[^0-9]/g, '')
       
-      // Check if guardian phone already exists for this tenant
-      let guardian = await tx.parent.findFirst({
+      // ✅ FIX: More accurate phone lookup - check multiple formats
+      const allUsers = await tx.user.findMany({
         where: {
           tenantId,
-          user: {
-            phone: {
-              contains: normalizedPhone
+          role: 'PARENT',
+        },
+        select: {
+          id: true,
+          fullName: true,
+          phone: true,
+          email: true,
+          parent: {
+            include: {
+              user: true
             }
           }
-        },
-        include: {
-          user: true
         }
       })
 
+      // Find guardian by normalized phone
+      const matchingUser = allUsers.find(u => {
+        if (!u.phone) return false
+        const userNormalizedPhone = u.phone.replace(/[^0-9]/g, '')
+        return userNormalizedPhone === normalizedPhone
+      })
+
+      let guardian = matchingUser?.parent || null
+
       // If guardian doesn't exist, create new one
       if (!guardian) {
-        // Generate unique email using phone and timestamp (for authentication fallback)
+        // ✅ FIX: Generate truly unique email with random string
         const phoneDigits = normalizedPhone
-        const timestamp = Date.now().toString().slice(-6)
-        const guardianEmail = `parent_${phoneDigits}_${timestamp}@temp.local`
+        const randomStr = generateRandomString(8)
+        const guardianEmail = `parent_${phoneDigits}_${randomStr}@temp.local`
 
-        // Create guardian user account
-        const guardianUser = await tx.user.create({
-          data: {
-            email: guardianEmail, // Generated email
-            fullName: guardianData.fullName,
-            phone: guardianData.phone,
-            passwordHash: defaultPassword,
-            role: 'PARENT',
-            tenantId,
-            isActive: true,
-          }
+        // ✅ DOUBLE CHECK: Ensure email doesn't exist
+        const emailExists = await tx.user.findUnique({
+          where: { email: guardianEmail }
         })
+        
+        if (emailExists) {
+          // Fallback: use even more unique email
+          const timestamp = Date.now()
+          const fallbackEmail = `parent_${phoneDigits}_${timestamp}_${randomStr}@temp.local`
+          
+          // Create guardian user account
+          const guardianUser = await tx.user.create({
+            data: {
+              email: fallbackEmail,
+              fullName: guardianData.fullName,
+              phone: guardianData.phone,
+              passwordHash: defaultPassword,
+              role: 'PARENT',
+              tenantId,
+              isActive: true,
+            }
+          })
 
-        // Create parent/guardian record
-        guardian = await tx.parent.create({
-          data: {
-            tenantId,
-            userId: guardianUser.id,
-            guardianType: guardianData.guardianType,
-            customRelationship: guardianData.customRelationship || null,
-            occupation: guardianData.occupation || null,
-            workAddress: guardianData.workAddress || null,
-          },
-          include: {
-            user: true
-          }
-        })
+          // Create parent/guardian record
+          guardian = await tx.parent.create({
+            data: {
+              tenantId,
+              userId: guardianUser.id,
+              guardianType: guardianData.guardianType,
+              customRelationship: guardianData.customRelationship || null,
+              occupation: guardianData.occupation || null,
+              workAddress: guardianData.workAddress || null,
+            },
+            include: {
+              user: true
+            }
+          })
+        } else {
+          // Create guardian user account
+          const guardianUser = await tx.user.create({
+            data: {
+              email: guardianEmail, // Generated email
+              fullName: guardianData.fullName,
+              phone: guardianData.phone,
+              passwordHash: defaultPassword,
+              role: 'PARENT',
+              tenantId,
+              isActive: true,
+            }
+          })
+
+          // Create parent/guardian record
+          guardian = await tx.parent.create({
+            data: {
+              tenantId,
+              userId: guardianUser.id,
+              guardianType: guardianData.guardianType,
+              customRelationship: guardianData.customRelationship || null,
+              occupation: guardianData.occupation || null,
+              workAddress: guardianData.workAddress || null,
+            },
+            include: {
+              user: true
+            }
+          })
+        }
       }
 
       guardianResults.push({
