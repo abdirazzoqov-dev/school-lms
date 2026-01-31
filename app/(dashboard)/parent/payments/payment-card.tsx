@@ -106,11 +106,11 @@ export function PaymentCard({ payment, monthNames }: PaymentCardProps) {
               <p className="text-sm text-muted-foreground">
                 / {formatNumber(totalAmount)} so'm
               </p>
-              {hasPartialPayment && (
+              {(hasPartialPayment || (payment.transactions && payment.transactions.length > 0)) && (
                 <CollapsibleTrigger asChild>
                   <Button variant="ghost" size="sm" className="mt-1 h-6 text-xs">
-                    <Info className="h-3 w-3 mr-1" />
-                    {isOpen ? 'Yashirish' : 'Batafsil'}
+                    <Receipt className="h-3 w-3 mr-1" />
+                    {isOpen ? 'Yashirish' : 'To\'lovlar tarixi'}
                   </Button>
                 </CollapsibleTrigger>
               )}
@@ -158,99 +158,148 @@ export function PaymentCard({ payment, monthNames }: PaymentCardProps) {
               </div>
             )}
 
-            {/* Payment Transactions History - Modern Design */}
+            {/* Payment Transactions History - Receipt Style */}
             {payment.transactions && payment.transactions.length > 0 && (
-              <div className="p-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-300 rounded-xl shadow-sm">
-                <div className="flex items-center gap-3 mb-4 pb-3 border-b-2 border-blue-200">
-                  <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-md">
-                    <Receipt className="h-5 w-5 text-white" />
+              <div className="bg-white border-2 border-dashed border-gray-400 rounded-lg shadow-lg overflow-hidden">
+                {/* Receipt Header */}
+                <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white p-4 text-center border-b-2 border-dashed border-gray-400">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Receipt className="h-6 w-6" />
+                    <h3 className="text-lg font-bold uppercase tracking-wider">To'lovlar Kvitansiyasi</h3>
                   </div>
-                  <div>
-                    <p className="text-base font-bold text-blue-900">
-                      To'lovlar Tarixi
-                    </p>
-                    <p className="text-xs text-blue-600 font-medium">
-                      {payment.transactions.length} ta to'lov amalga oshirilgan
-                    </p>
-                  </div>
+                  <p className="text-xs opacity-80">
+                    {payment.paymentType === 'TUITION' && "O'qish haqi"}
+                    {payment.paymentType === 'BOOKS' && 'Kitoblar'}
+                    {payment.paymentType === 'UNIFORM' && 'Forma'}
+                    {payment.paymentType === 'OTHER' && 'Boshqa'}
+                    {payment.paymentMonth && payment.paymentYear && 
+                      ` - ${monthNames[payment.paymentMonth - 1]} ${payment.paymentYear}`
+                    }
+                  </p>
                 </div>
-                
-                <div className="space-y-3">
-                  {payment.transactions.map((transaction, index) => (
-                    <div 
-                      key={transaction.id}
-                      className="p-3 bg-white border-2 border-blue-200 rounded-xl shadow-sm hover:shadow-md transition-all hover:scale-[1.01]"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold px-3 py-1 shadow-sm">
-                          To'lov #{index + 1}
-                        </Badge>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-green-600">
-                            {formatNumber(Number(transaction.amount))}
-                          </p>
-                          <p className="text-xs text-muted-foreground">so'm</p>
-                        </div>
+
+                {/* Receipt Content */}
+                <div className="p-4 space-y-3 bg-gray-50">
+                  {/* Payment Summary */}
+                  <div className="bg-white border border-gray-300 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2 pb-2 border-b border-dashed border-gray-300">
+                      <span className="text-sm font-semibold text-gray-700">Umumiy summa:</span>
+                      <span className="text-base font-bold text-gray-900">{formatNumber(totalAmount)} so'm</span>
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-semibold text-green-600">✓ To'langan:</span>
+                      <span className="text-base font-bold text-green-600">{formatNumber(paidAmount)} so'm</span>
+                    </div>
+                    {remainingAmount > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-orange-600">⏳ Qoldiq:</span>
+                        <span className="text-base font-bold text-orange-600">{formatNumber(remainingAmount)} so'm</span>
                       </div>
-                      
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between py-2 px-3 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg">
+                    )}
+                  </div>
+
+                  {/* Transactions List */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-400 to-transparent"></div>
+                      <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">To'lovlar ro'yxati</span>
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-400 to-transparent"></div>
+                    </div>
+                    
+                    {payment.transactions.map((transaction, index) => (
+                      <div 
+                        key={transaction.id}
+                        className="bg-white border border-gray-300 rounded-lg p-3 hover:shadow-md transition-shadow"
+                      >
+                        {/* Transaction Number and Amount */}
+                        <div className="flex items-center justify-between mb-2 pb-2 border-b border-dashed border-gray-300">
                           <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-blue-600" />
-                            <span className="text-xs text-muted-foreground font-medium">Sana</span>
-                          </div>
-                          <span className="text-sm font-bold text-gray-700">
-                            {new Date(transaction.transactionDate).toLocaleDateString('uz-UZ', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric'
-                            })}
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between py-2 px-3 bg-gradient-to-r from-gray-50 to-green-50 rounded-lg">
-                          <span className="text-xs text-muted-foreground font-medium">To'lov usuli</span>
-                          <Badge variant="outline" className="text-xs font-semibold border-2">
-                            {transaction.paymentMethod === 'CASH' && '💵 Naqd pul'}
-                            {transaction.paymentMethod === 'CLICK' && '💳 Click'}
-                            {transaction.paymentMethod === 'PAYME' && '💳 Payme'}
-                            {transaction.paymentMethod === 'UZUM' && '💳 Uzum'}
-                          </Badge>
-                        </div>
-                        
-                        {transaction.receivedBy && (
-                          <div className="flex items-center justify-between py-2 px-3 bg-gradient-to-r from-gray-50 to-purple-50 rounded-lg">
-                            <span className="text-xs text-muted-foreground font-medium">Qabul qilgan</span>
-                            <span className="text-sm font-semibold text-gray-700 text-right max-w-[180px] truncate">
-                              {transaction.receivedBy.fullName}
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+                              {index + 1}
+                            </div>
+                            <span className="text-xs font-semibold text-gray-600">
+                              {new Date(transaction.transactionDate).toLocaleDateString('uz-UZ', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric'
+                              })}
                             </span>
                           </div>
-                        )}
-                        
-                        {transaction.notes && (
-                          <div className="mt-3 pt-3 border-t-2 border-gray-200">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Info className="h-4 w-4 text-amber-600" />
-                              <p className="text-xs text-muted-foreground font-semibold">Izoh</p>
-                            </div>
-                            <p className="text-sm font-medium text-gray-700 bg-gradient-to-r from-amber-50 to-yellow-50 p-3 rounded-lg border border-amber-200">
-                              {transaction.notes}
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-green-600">
+                              {formatNumber(Number(transaction.amount))} so'm
                             </p>
                           </div>
-                        )}
+                        </div>
+
+                        {/* Transaction Details */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500 font-medium">📅 Sana va vaqt:</span>
+                            <span className="font-semibold text-gray-700">
+                              {new Date(transaction.transactionDate).toLocaleDateString('uz-UZ', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500 font-medium">💳 To'lov usuli:</span>
+                            <span className="font-bold text-gray-800">
+                              {transaction.paymentMethod === 'CASH' && '💵 Naqd pul'}
+                              {transaction.paymentMethod === 'CLICK' && '💳 Click'}
+                              {transaction.paymentMethod === 'PAYME' && '💳 Payme'}
+                              {transaction.paymentMethod === 'UZUM' && '💳 Uzum'}
+                            </span>
+                          </div>
+                          
+                          {transaction.receivedBy && (
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-gray-500 font-medium">👤 Qabul qildi:</span>
+                              <span className="font-semibold text-gray-700 text-right max-w-[150px] truncate">
+                                {transaction.receivedBy.fullName}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {transaction.notes && (
+                            <div className="mt-2 pt-2 border-t border-gray-200">
+                              <p className="text-xs text-gray-500 font-medium mb-1">📝 Izoh:</p>
+                              <p className="text-xs font-medium text-gray-700 bg-amber-50 p-2 rounded border border-amber-200">
+                                {transaction.notes}
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Summary Footer */}
-                <div className="mt-4 pt-4 border-t-2 border-blue-200">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-semibold text-blue-900">Jami to'langan:</span>
-                    <span className="text-lg font-bold text-green-600">
-                      {formatNumber(payment.transactions.reduce((sum, t) => sum + Number(t.amount), 0))} so'm
-                    </span>
+                    ))}
                   </div>
+                </div>
+
+                {/* Receipt Footer */}
+                <div className="bg-gradient-to-r from-green-600 to-emerald-700 text-white p-4 border-t-2 border-dashed border-gray-400">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs opacity-90">Jami to'lovlar soni:</p>
+                      <p className="text-lg font-bold">{payment.transactions.length} ta</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs opacity-90">Jami to'langan:</p>
+                      <p className="text-2xl font-bold">
+                        {formatNumber(payment.transactions.reduce((sum, t) => sum + Number(t.amount), 0))} so'm
+                      </p>
+                    </div>
+                  </div>
+                  {percentage === 100 && (
+                    <div className="mt-3 pt-3 border-t border-green-500 text-center">
+                      <p className="text-sm font-bold">✓ To'lov to'liq amalga oshirildi!</p>
+                      <p className="text-xs opacity-90">Rahmat! Barcha to'lovlar o'z vaqtida to'landi.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
