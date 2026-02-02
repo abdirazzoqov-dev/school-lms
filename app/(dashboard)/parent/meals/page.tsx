@@ -127,18 +127,6 @@ export default async function ParentMealsPage({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 p-3 sm:p-4 md:p-6 lg:p-8">
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
       <div className="max-w-[1800px] mx-auto space-y-4 md:space-y-6">
         {/* Hero Header */}
         <div className="relative overflow-hidden bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 rounded-3xl shadow-2xl">
@@ -229,11 +217,7 @@ export default async function ParentMealsPage({
                       return (
                         <div
                           key={meal.id}
-                          className={`relative overflow-hidden rounded-2xl border-2 ${config.border} bg-gradient-to-br ${config.bg} p-3 sm:p-4 transition-all duration-300 hover:shadow-xl hover:shadow-${config.shadow} hover:-translate-y-1 cursor-pointer group/meal`}
-                          style={{
-                            animationDelay: `${mealIndex * 100}ms`,
-                            animation: 'fadeIn 0.5s ease-out forwards'
-                          }}
+                          className={`relative overflow-hidden rounded-2xl border-2 ${config.border} bg-gradient-to-br ${config.bg} p-3 sm:p-4 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer group/meal animate-in fade-in slide-in-from-bottom-4`}
                         >
                           {/* Decorative Corner */}
                           <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${config.gradientLight} opacity-10 rounded-bl-full`}></div>
