@@ -7,16 +7,15 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
 const mealSchema = z.object({
-  dayOfWeek: z.number().min(0).max(6), // 0 = Sunday, 6 = Saturday
-  mealType: z.enum(['BREAKFAST', 'LUNCH', 'DINNER']),
+  dayOfWeek: z.number().min(0).max(6), // 0 = Yakshanba, 6 = Shanba
+  mealLabel: z.string().min(1, 'Ovqat sarlavhasi kiritilishi shart'), // Custom label
+  mealTime: z.string().min(1, 'Ovqat vaqti kiritilishi shart'), // "08:00 - 09:00"
   mainDish: z.string().min(1, 'Asosiy taom kiritilishi shart'),
   sideDish: z.string().optional(),
   salad: z.string().optional(),
   dessert: z.string().optional(),
   drink: z.string().optional(),
   description: z.string().optional(),
-  effectiveFrom: z.string(), // ISO date string
-  effectiveTo: z.string().optional(),
   isActive: z.boolean().default(true),
 })
 
@@ -35,15 +34,14 @@ export async function createMeal(data: z.infer<typeof mealSchema>) {
       data: {
         tenantId,
         dayOfWeek: validatedData.dayOfWeek,
-        mealType: validatedData.mealType,
+        mealLabel: validatedData.mealLabel,
+        mealTime: validatedData.mealTime,
         mainDish: validatedData.mainDish,
         sideDish: validatedData.sideDish || null,
         salad: validatedData.salad || null,
         dessert: validatedData.dessert || null,
         drink: validatedData.drink || null,
         description: validatedData.description || null,
-        effectiveFrom: new Date(validatedData.effectiveFrom),
-        effectiveTo: validatedData.effectiveTo ? new Date(validatedData.effectiveTo) : null,
         isActive: validatedData.isActive,
       },
     })
@@ -72,15 +70,14 @@ export async function updateMeal(id: string, data: z.infer<typeof mealSchema>) {
       where: { id, tenantId },
       data: {
         dayOfWeek: validatedData.dayOfWeek,
-        mealType: validatedData.mealType,
+        mealLabel: validatedData.mealLabel,
+        mealTime: validatedData.mealTime,
         mainDish: validatedData.mainDish,
         sideDish: validatedData.sideDish || null,
         salad: validatedData.salad || null,
         dessert: validatedData.dessert || null,
         drink: validatedData.drink || null,
         description: validatedData.description || null,
-        effectiveFrom: new Date(validatedData.effectiveFrom),
-        effectiveTo: validatedData.effectiveTo ? new Date(validatedData.effectiveTo) : null,
         isActive: validatedData.isActive,
       },
     })

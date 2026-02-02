@@ -75,11 +75,7 @@ enum PaymentStatus {
   REFUNDED // Qaytarilgan
 }
 
-enum MealType {
-  BREAKFAST // Nonushta
-  LUNCH // Tushlik
-  DINNER // Kechki ovqat
-}
+// MealType enum removed - now using custom labels
 
 enum PaymentType {
   TUITION // O'qish haqi
@@ -890,8 +886,11 @@ model Meal {
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   tenantId String
 
-  dayOfWeek Int // 1-7 (Dushanba-Yakshanba)
-  mealType  MealType // BREAKFAST, LUNCH, DINNER
+  dayOfWeek Int // 0-6 (Yakshanba-Shanba)
+  
+  // Custom fields for flexibility
+  mealLabel String // Custom sarlavha: "1-ovqat", "Nonushta", "Tushlik", va hokazo
+  mealTime  String // Qo'lda kiritilgan vaqt: "08:00 - 09:00"
   
   mainDish    String // Asosiy taom
   sideDish    String? // Garnitir
@@ -901,10 +900,6 @@ model Meal {
   
   description String? @db.Text // Qo'shimcha ma'lumot
   
-  // Effective date range
-  effectiveFrom DateTime @db.Date
-  effectiveTo   DateTime? @db.Date
-  
   isActive Boolean @default(true)
   
   createdAt DateTime @default(now())
@@ -913,7 +908,6 @@ model Meal {
   @@index([tenantId])
   @@index([tenantId, dayOfWeek])
   @@index([tenantId, isActive])
-  @@index([effectiveFrom])
 }
 
 // PAYMENT - To'lovlar

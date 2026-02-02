@@ -13,8 +13,6 @@ import { useRouter } from 'next/navigation'
 import { updateMeal } from '@/app/actions/meal'
 import { toast } from 'sonner'
 import { Checkbox } from '@/components/ui/checkbox'
-import { MealType } from '@prisma/client'
-
 const dayNames = [
   { value: 1, label: 'Dushanba' },
   { value: 2, label: 'Seshanba' },
@@ -25,25 +23,29 @@ const dayNames = [
   { value: 0, label: 'Yakshanba' },
 ]
 
-const mealTypes = [
-  { value: 'BREAKFAST', label: 'Nonushta' },
-  { value: 'LUNCH', label: 'Tushlik' },
-  { value: 'DINNER', label: 'Kechki ovqat' },
+// Suggested meal labels (5 meals per day)
+const suggestedMealLabels = [
+  '1-ovqat (Nonushta)',
+  '2-ovqat',
+  '3-ovqat (Tushlik)',
+  '4-ovqat',
+  '5-ovqat (Kechki ovqat)',
 ]
 
 type Meal = {
   id: string
   dayOfWeek: number
-  mealType: MealType
+  mealLabel: string
+  mealTime: string
   mainDish: string
   sideDish: string | null
   salad: string | null
   dessert: string | null
   drink: string | null
   description: string | null
-  effectiveFrom: Date
-  effectiveTo: Date | null
   isActive: boolean
+  createdAt: Date
+  updatedAt: Date
 }
 
 export function EditMealForm({ meal }: { meal: Meal }) {
@@ -51,15 +53,14 @@ export function EditMealForm({ meal }: { meal: Meal }) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     dayOfWeek: meal.dayOfWeek,
-    mealType: meal.mealType,
+    mealLabel: meal.mealLabel,
+    mealTime: meal.mealTime,
     mainDish: meal.mainDish,
     sideDish: meal.sideDish || '',
     salad: meal.salad || '',
     dessert: meal.dessert || '',
     drink: meal.drink || '',
     description: meal.description || '',
-    effectiveFrom: new Date(meal.effectiveFrom).toISOString().split('T')[0],
-    effectiveTo: meal.effectiveTo ? new Date(meal.effectiveTo).toISOString().split('T')[0] : '',
     isActive: meal.isActive,
   })
 
@@ -138,23 +139,37 @@ export function EditMealForm({ meal }: { meal: Meal }) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="mealType">Ovqat turi *</Label>
-                  <Select
-                    value={formData.mealType}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, mealType: value as MealType }))}
+                  <Label htmlFor="mealLabel">Ovqat sarlavhasi *</Label>
+                  <Input
+                    id="mealLabel"
+                    value={formData.mealLabel}
+                    onChange={(e) => setFormData(prev => ({ ...prev, mealLabel: e.target.value }))}
+                    placeholder="1-ovqat (Nonushta), 2-ovqat, 3-ovqat (Tushlik)..."
+                    list="meal-labels-edit"
                     required
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mealTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
+                  <datalist id="meal-labels-edit">
+                    {suggestedMealLabels.map((label, index) => (
+                      <option key={index} value={label} />
+                    ))}
+                  </datalist>
+                  <p className="text-xs text-muted-foreground">
+                    Masalan: 1-ovqat, Nonushta, Tushlik, 5-ovqat
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="mealTime">Ovqat vaqti *</Label>
+                  <Input
+                    id="mealTime"
+                    value={formData.mealTime}
+                    onChange={(e) => setFormData(prev => ({ ...prev, mealTime: e.target.value }))}
+                    placeholder="08:00 - 09:00"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Masalan: 08:00 - 09:00, 12:30 - 13:30
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -207,26 +222,35 @@ export function EditMealForm({ meal }: { meal: Meal }) {
                     placeholder="Choy, kompot..."
                   />
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="effectiveFrom">Boshlanish sanasi *</Label>
-                  <Input
-                    id="effectiveFrom"
-                    type="date"
-                    value={formData.effectiveFrom}
-                    onChange={(e) => setFormData(prev => ({ ...prev, effectiveFrom: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="effectiveTo">Tugash sanasi</Label>
-                  <Input
-                    id="effectiveTo"
-                    type="date"
-                    value={formData.effectiveTo}
-                    onChange={(e) => setFormData(prev => ({ ...prev, effectiveTo: e.target.value }))}
-                  />
+              {/* Created and Updated info */}
+              <div className="p-4 bg-muted/50 rounded-lg border">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="font-medium text-muted-foreground">Yaratilgan:</span>{' '}
+                    <span className="text-foreground">
+                      {new Date(meal.createdAt).toLocaleString('uz-UZ', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-muted-foreground">Tahrirlangan:</span>{' '}
+                    <span className="text-foreground">
+                      {new Date(meal.updatedAt).toLocaleString('uz-UZ', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
                 </div>
               </div>
 

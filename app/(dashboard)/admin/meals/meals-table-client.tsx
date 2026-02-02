@@ -5,72 +5,65 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { MoreVertical, Edit, Trash2, Eye, ToggleLeft, ToggleRight, Coffee, Soup, Moon, Clock, Star, Calendar, UtensilsCrossed } from 'lucide-react'
+import { MoreVertical, Edit, Trash2, Eye, ToggleLeft, ToggleRight, Clock, Star, Calendar, UtensilsCrossed, Coffee } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { deleteMeal, toggleMealStatus } from '@/app/actions/meal'
 import { toast } from 'sonner'
-import { MealType } from '@prisma/client'
 
-const mealTypeConfig = {
-  BREAKFAST: {
-    icon: Coffee,
-    emoji: '☕',
-    label: 'Nonushta',
-    timeStart: '08:00',
-    timeEnd: '09:00',
-    description: 'Ertalabki ovqat',
+// Dynamic color schemes for different meal cards
+const colorSchemes = [
+  {
     gradient: 'from-amber-500 to-orange-500',
     gradientLight: 'from-amber-400 to-orange-400',
     bg: 'from-amber-50 via-orange-50 to-yellow-50',
     border: 'border-amber-300',
     text: 'text-amber-900',
-    shadow: 'shadow-amber-200'
   },
-  LUNCH: {
-    icon: Soup,
-    emoji: '🍽️',
-    label: 'Tushlik',
-    timeStart: '12:00',
-    timeEnd: '13:30',
-    description: 'Kunduzgi ovqat',
+  {
     gradient: 'from-blue-500 to-cyan-500',
     gradientLight: 'from-blue-400 to-cyan-400',
     bg: 'from-blue-50 via-cyan-50 to-sky-50',
     border: 'border-blue-300',
     text: 'text-blue-900',
-    shadow: 'shadow-blue-200'
   },
-  DINNER: {
-    icon: Moon,
-    emoji: '🌙',
-    label: 'Kechki ovqat',
-    timeStart: '18:00',
-    timeEnd: '19:30',
-    description: 'Kechqurun ovqat',
+  {
     gradient: 'from-purple-500 to-pink-500',
     gradientLight: 'from-purple-400 to-pink-400',
     bg: 'from-purple-50 via-pink-50 to-fuchsia-50',
     border: 'border-purple-300',
     text: 'text-purple-900',
-    shadow: 'shadow-purple-200'
-  }
-}
+  },
+  {
+    gradient: 'from-green-500 to-emerald-500',
+    gradientLight: 'from-green-400 to-emerald-400',
+    bg: 'from-green-50 via-emerald-50 to-teal-50',
+    border: 'border-green-300',
+    text: 'text-green-900',
+  },
+  {
+    gradient: 'from-red-500 to-rose-500',
+    gradientLight: 'from-red-400 to-rose-400',
+    bg: 'from-red-50 via-rose-50 to-pink-50',
+    border: 'border-red-300',
+    text: 'text-red-900',
+  },
+]
 
 type Meal = {
   id: string
   dayOfWeek: number
   dayName: string
-  mealType: MealType
-  mealTypeName: string
+  mealLabel: string
+  mealTime: string
   mainDish: string
   sideDish: string | null
   salad: string | null
   dessert: string | null
   drink: string | null
   description: string | null
-  effectiveFrom: Date
-  effectiveTo: Date | null
   isActive: boolean
+  createdAt: Date
+  updatedAt: Date
 }
 
 export function MealsTableClient({ meals }: { meals: Meal[] }) {
@@ -160,17 +153,17 @@ export function MealsTableClient({ meals }: { meals: Meal[] }) {
 
               {/* Meals for this day */}
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-                {dayMeals.map((meal) => {
-                  const config = mealTypeConfig[meal.mealType as keyof typeof mealTypeConfig]
-                  const MealIcon = config.icon
+                {dayMeals.map((meal, mealIndex) => {
+                  // Assign color based on index for variety
+                  const colorScheme = colorSchemes[mealIndex % colorSchemes.length]
 
                   return (
                     <Card
                       key={meal.id}
-                      className={`relative overflow-hidden border-2 ${config.border} bg-gradient-to-br ${config.bg} transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group`}
+                      className={`relative overflow-hidden border-2 ${colorScheme.border} bg-gradient-to-br ${colorScheme.bg} transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group`}
                     >
                       {/* Decorative Corner */}
-                      <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${config.gradientLight} opacity-10 rounded-bl-full`}></div>
+                      <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${colorScheme.gradientLight} opacity-10 rounded-bl-full`}></div>
 
                       {/* Status Badge */}
                       <div className="absolute top-3 right-3 z-20">
@@ -187,13 +180,12 @@ export function MealsTableClient({ meals }: { meals: Meal[] }) {
                       </div>
 
                       <div className="p-4 sm:p-5 space-y-4">
-                        {/* Meal Type Header */}
+                        {/* Meal Label Header */}
                         <div className="flex items-center justify-between">
-                          <div className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r ${config.gradient} shadow-lg`}>
-                            <MealIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white shrink-0" />
+                          <div className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r ${colorScheme.gradient} shadow-lg`}>
+                            <UtensilsCrossed className="h-4 w-4 sm:h-5 sm:w-5 text-white shrink-0" />
                             <div className="flex flex-col">
-                              <span className="text-xs sm:text-sm font-bold text-white leading-tight">{config.label}</span>
-                              <span className="text-[10px] text-white/90 leading-tight">{config.description}</span>
+                              <span className="text-xs sm:text-sm font-bold text-white leading-tight">{meal.mealLabel}</span>
                             </div>
                           </div>
                         </div>
@@ -201,24 +193,22 @@ export function MealsTableClient({ meals }: { meals: Meal[] }) {
                         {/* Time Display */}
                         <div className="p-2 sm:p-3 bg-white/70 backdrop-blur-sm rounded-xl border border-white/50">
                           <div className="flex items-center justify-center gap-2">
-                            <Clock className={`h-4 w-4 ${config.text}`} />
-                            <div className="flex items-center gap-1">
-                              <span className={`text-sm sm:text-base font-bold ${config.text}`}>{config.timeStart}</span>
-                              <span className={`text-xs ${config.text} opacity-60`}>-</span>
-                              <span className={`text-sm sm:text-base font-bold ${config.text}`}>{config.timeEnd}</span>
-                            </div>
+                            <Clock className={`h-4 w-4 sm:h-5 sm:w-5 ${colorScheme.text}`} />
+                            <span className={`text-sm sm:text-base md:text-lg font-bold ${colorScheme.text}`}>
+                              {meal.mealTime}
+                            </span>
                           </div>
                         </div>
 
                         {/* Main Dish */}
                         <div className="relative">
                           <div className="flex items-start gap-2 mb-1">
-                            <div className={`p-1.5 bg-gradient-to-br ${config.gradient} rounded-lg shrink-0`}>
-                              <span className="text-base sm:text-lg">{config.emoji}</span>
+                            <div className={`p-1.5 bg-gradient-to-br ${colorScheme.gradient} rounded-lg shrink-0`}>
+                              <span className="text-base sm:text-lg">🍽️</span>
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Asosiy Taom</p>
-                              <h4 className={`text-sm sm:text-base font-bold ${config.text} leading-tight`}>
+                              <h4 className={`text-sm sm:text-base font-bold ${colorScheme.text} leading-tight`}>
                                 {meal.mainDish}
                               </h4>
                             </div>
@@ -287,12 +277,30 @@ export function MealsTableClient({ meals }: { meals: Meal[] }) {
                           </div>
                         )}
 
-                        {/* Date Range */}
+                        {/* Timestamps */}
                         <div className="pt-2 border-t border-gray-200/50">
-                          <p className="text-[10px] text-gray-500">
-                            📅 {new Date(meal.effectiveFrom).toLocaleDateString('uz-UZ')}
-                            {meal.effectiveTo && ` - ${new Date(meal.effectiveTo).toLocaleDateString('uz-UZ')}`}
-                          </p>
+                          <div className="grid grid-cols-2 gap-2 text-[10px] text-gray-500">
+                            <div>
+                              <span className="font-medium">Yaratilgan:</span>
+                              <br />
+                              {new Date(meal.createdAt).toLocaleString('uz-UZ', { 
+                                month: 'short', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </div>
+                            <div>
+                              <span className="font-medium">Tahrirlangan:</span>
+                              <br />
+                              {new Date(meal.updatedAt).toLocaleString('uz-UZ', { 
+                                month: 'short', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </div>
+                          </div>
                         </div>
 
                         {/* Action Buttons */}

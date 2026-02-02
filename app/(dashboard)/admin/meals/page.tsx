@@ -13,37 +13,11 @@ export const revalidate = 0
 export const dynamic = 'force-dynamic'
 
 const dayNames = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
-const mealTypeNames = {
-  BREAKFAST: 'Nonushta',
-  LUNCH: 'Tushlik',
-  DINNER: 'Kechki ovqat'
-}
-
-const mealTypeConfig = {
-  BREAKFAST: {
-    icon: Coffee,
-    emoji: '☕',
-    label: 'Nonushta',
-    gradient: 'from-amber-500 to-orange-500',
-  },
-  LUNCH: {
-    icon: Soup,
-    emoji: '🍽️',
-    label: 'Tushlik',
-    gradient: 'from-blue-500 to-cyan-500',
-  },
-  DINNER: {
-    icon: Moon,
-    emoji: '🌙',
-    label: 'Kechki ovqat',
-    gradient: 'from-purple-500 to-pink-500',
-  }
-}
 
 export default async function AdminMealsPage({
   searchParams
 }: {
-  searchParams: { day?: string; type?: string }
+  searchParams: { day?: string }
 }) {
   const session = await getServerSession(authOptions)
 
@@ -60,22 +34,17 @@ export default async function AdminMealsPage({
     where.dayOfWeek = parseInt(searchParams.day)
   }
 
-  if (searchParams.type) {
-    where.mealType = searchParams.type
-  }
-
   const meals = await db.meal.findMany({
     where,
     orderBy: [
       { dayOfWeek: 'asc' },
-      { mealType: 'asc' },
+      { mealLabel: 'asc' },
     ],
   })
 
   const mealsWithNames = meals.map(meal => ({
     ...meal,
     dayName: dayNames[meal.dayOfWeek] || 'N/A',
-    mealTypeName: mealTypeNames[meal.mealType as keyof typeof mealTypeNames] || meal.mealType,
   }))
 
   // Group meals by day
@@ -90,9 +59,12 @@ export default async function AdminMealsPage({
   // Calculate statistics
   const totalMeals = mealsWithNames.length
   const activeMeals = mealsWithNames.filter(m => m.isActive).length
-  const breakfastCount = mealsWithNames.filter(m => m.mealType === 'BREAKFAST').length
-  const lunchCount = mealsWithNames.filter(m => m.mealType === 'LUNCH').length
-  const dinnerCount = mealsWithNames.filter(m => m.mealType === 'DINNER').length
+  
+  // Count meals by day
+  const mealsPerDay: { [key: number]: number } = {}
+  mealsWithNames.forEach(meal => {
+    mealsPerDay[meal.dayOfWeek] = (mealsPerDay[meal.dayOfWeek] || 0) + 1
+  })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-amber-50 p-3 sm:p-4 md:p-6 lg:p-8">
@@ -126,21 +98,13 @@ export default async function AdminMealsPage({
                     <p className="text-xs text-white/70">Jami</p>
                     <p className="text-xl sm:text-2xl font-bold">{totalMeals}</p>
                   </div>
-                  <div className="px-3 sm:px-4 py-2 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-                    <p className="text-xs text-white/70">Faol</p>
+                  <div className="px-3 sm:px-4 py-2 bg-green-500/20 backdrop-blur-sm rounded-xl border border-green-300/30">
+                    <p className="text-xs text-white/70">✅ Faol</p>
                     <p className="text-xl sm:text-2xl font-bold">{activeMeals}</p>
                   </div>
-                  <div className="px-3 sm:px-4 py-2 bg-amber-500/20 backdrop-blur-sm rounded-xl border border-amber-300/30">
-                    <p className="text-xs text-white/70">☕ Nonushta</p>
-                    <p className="text-xl sm:text-2xl font-bold">{breakfastCount}</p>
-                  </div>
                   <div className="px-3 sm:px-4 py-2 bg-blue-500/20 backdrop-blur-sm rounded-xl border border-blue-300/30">
-                    <p className="text-xs text-white/70">🍽️ Tushlik</p>
-                    <p className="text-xl sm:text-2xl font-bold">{lunchCount}</p>
-                  </div>
-                  <div className="px-3 sm:px-4 py-2 bg-purple-500/20 backdrop-blur-sm rounded-xl border border-purple-300/30">
-                    <p className="text-xs text-white/70">🌙 Kechki</p>
-                    <p className="text-xl sm:text-2xl font-bold">{dinnerCount}</p>
+                    <p className="text-xs text-white/70">📅 Haftalik</p>
+                    <p className="text-xl sm:text-2xl font-bold">{Object.keys(mealsByDay).length}</p>
                   </div>
                 </div>
               </div>
@@ -159,50 +123,32 @@ export default async function AdminMealsPage({
           <div className="absolute -left-8 -bottom-8 h-40 w-40 rounded-full bg-white/10 blur-3xl"></div>
         </div>
 
-        {/* Quick Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 hover:shadow-lg transition-all">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl shadow-lg">
-                  <Coffee className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Nonushta</p>
-                  <p className="text-2xl font-bold text-amber-900">{breakfastCount} ta</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 hover:shadow-lg transition-all">
-            <CardContent className="p-4 sm:p-6">
+        {/* Quick Info Card */}
+        <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 shadow-lg">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl shadow-lg">
-                  <Soup className="h-6 w-6 text-white" />
+                  <UtensilsCrossed className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Tushlik</p>
-                  <p className="text-2xl font-bold text-blue-900">{lunchCount} ta</p>
+                  <p className="text-sm text-gray-600">Maktabda kuniga</p>
+                  <p className="text-2xl font-bold text-blue-900">5 mahal ovqatlanish</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 hover:shadow-lg transition-all">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg">
-                  <Moon className="h-6 w-6 text-white" />
+              <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">Jami ovqatlar</p>
+                  <p className="text-3xl font-bold text-blue-900">{totalMeals}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Kechki ovqat</p>
-                  <p className="text-2xl font-bold text-purple-900">{dinnerCount} ta</p>
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">Faol</p>
+                  <p className="text-3xl font-bold text-green-600">{activeMeals}</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Meals List */}
         <Card className="shadow-xl border-0">

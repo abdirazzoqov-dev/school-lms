@@ -13,8 +13,6 @@ import { useRouter } from 'next/navigation'
 import { createMeal } from '@/app/actions/meal'
 import { toast } from 'sonner'
 import { Checkbox } from '@/components/ui/checkbox'
-import { MealType } from '@prisma/client'
-
 const dayNames = [
   { value: 1, label: 'Dushanba' },
   { value: 2, label: 'Seshanba' },
@@ -25,10 +23,13 @@ const dayNames = [
   { value: 0, label: 'Yakshanba' },
 ]
 
-const mealTypes = [
-  { value: 'BREAKFAST', label: 'Nonushta' },
-  { value: 'LUNCH', label: 'Tushlik' },
-  { value: 'DINNER', label: 'Kechki ovqat' },
+// Suggested meal labels (5 meals per day)
+const suggestedMealLabels = [
+  '1-ovqat (Nonushta)',
+  '2-ovqat',
+  '3-ovqat (Tushlik)',
+  '4-ovqat',
+  '5-ovqat (Kechki ovqat)',
 ]
 
 export default function CreateMealPage() {
@@ -36,27 +37,25 @@ export default function CreateMealPage() {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<{
     dayOfWeek: number
-    mealType: MealType
+    mealLabel: string
+    mealTime: string
     mainDish: string
     sideDish: string
     salad: string
     dessert: string
     drink: string
     description: string
-    effectiveFrom: string
-    effectiveTo: string
     isActive: boolean
   }>({
     dayOfWeek: 1,
-    mealType: 'LUNCH' as MealType,
+    mealLabel: '',
+    mealTime: '',
     mainDish: '',
     sideDish: '',
     salad: '',
     dessert: '',
     drink: '',
     description: '',
-    effectiveFrom: new Date().toISOString().split('T')[0],
-    effectiveTo: '',
     isActive: true,
   })
 
@@ -128,23 +127,37 @@ export default function CreateMealPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="mealType">Ovqat turi *</Label>
-                <Select
-                  value={formData.mealType}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, mealType: value as MealType }))}
+                <Label htmlFor="mealLabel">Ovqat sarlavhasi *</Label>
+                <Input
+                  id="mealLabel"
+                  value={formData.mealLabel}
+                  onChange={(e) => setFormData(prev => ({ ...prev, mealLabel: e.target.value }))}
+                  placeholder="1-ovqat (Nonushta), 2-ovqat, 3-ovqat (Tushlik)..."
+                  list="meal-labels"
                   required
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mealTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                />
+                <datalist id="meal-labels">
+                  {suggestedMealLabels.map((label, index) => (
+                    <option key={index} value={label} />
+                  ))}
+                </datalist>
+                <p className="text-xs text-muted-foreground">
+                  Masalan: 1-ovqat, Nonushta, Tushlik, 5-ovqat
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mealTime">Ovqat vaqti *</Label>
+                <Input
+                  id="mealTime"
+                  value={formData.mealTime}
+                  onChange={(e) => setFormData(prev => ({ ...prev, mealTime: e.target.value }))}
+                  placeholder="08:00 - 09:00"
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Masalan: 08:00 - 09:00, 12:30 - 13:30
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -195,27 +208,6 @@ export default function CreateMealPage() {
                   value={formData.drink}
                   onChange={(e) => setFormData(prev => ({ ...prev, drink: e.target.value }))}
                   placeholder="Choy, kompot..."
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="effectiveFrom">Boshlanish sanasi *</Label>
-                <Input
-                  id="effectiveFrom"
-                  type="date"
-                  value={formData.effectiveFrom}
-                  onChange={(e) => setFormData(prev => ({ ...prev, effectiveFrom: e.target.value }))}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="effectiveTo">Tugash sanasi</Label>
-                <Input
-                  id="effectiveTo"
-                  type="date"
-                  value={formData.effectiveTo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, effectiveTo: e.target.value }))}
                 />
               </div>
             </div>

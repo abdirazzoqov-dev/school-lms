@@ -5,52 +5,13 @@ import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Edit, Coffee, Soup, Moon, Clock, Calendar, Star } from 'lucide-react'
+import { ArrowLeft, Edit, Coffee, Clock, Calendar, Star, UtensilsCrossed } from 'lucide-react'
 import Link from 'next/link'
 
 export const revalidate = 0
 export const dynamic = 'force-dynamic'
 
 const dayNames = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
-
-const mealTypeConfig = {
-  BREAKFAST: {
-    icon: Coffee,
-    emoji: '☕',
-    label: 'Nonushta',
-    timeStart: '08:00',
-    timeEnd: '09:00',
-    description: 'Ertalabki ovqat',
-    gradient: 'from-amber-500 to-orange-500',
-    bg: 'from-amber-50 via-orange-50 to-yellow-50',
-    border: 'border-amber-300',
-    text: 'text-amber-900',
-  },
-  LUNCH: {
-    icon: Soup,
-    emoji: '🍽️',
-    label: 'Tushlik',
-    timeStart: '12:00',
-    timeEnd: '13:30',
-    description: 'Kunduzgi ovqat',
-    gradient: 'from-blue-500 to-cyan-500',
-    bg: 'from-blue-50 via-cyan-50 to-sky-50',
-    border: 'border-blue-300',
-    text: 'text-blue-900',
-  },
-  DINNER: {
-    icon: Moon,
-    emoji: '🌙',
-    label: 'Kechki ovqat',
-    timeStart: '18:00',
-    timeEnd: '19:30',
-    description: 'Kechqurun ovqat',
-    gradient: 'from-purple-500 to-pink-500',
-    bg: 'from-purple-50 via-pink-50 to-fuchsia-50',
-    border: 'border-purple-300',
-    text: 'text-purple-900',
-  }
-}
 
 export default async function MealDetailPage({
   params
@@ -76,9 +37,6 @@ export default async function MealDetailPage({
     notFound()
   }
 
-  const config = mealTypeConfig[meal.mealType as keyof typeof mealTypeConfig]
-  const MealIcon = config.icon
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-amber-50 p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto space-y-4 md:space-y-6">
@@ -100,16 +58,16 @@ export default async function MealDetailPage({
         </div>
 
         {/* Main Card */}
-        <Card className={`border-2 ${config.border} bg-gradient-to-br ${config.bg} shadow-xl`}>
-          <CardHeader className={`bg-gradient-to-r ${config.gradient} text-white rounded-t-xl`}>
-            <div className="flex items-center justify-between">
+        <Card className="border-2 border-blue-300 bg-gradient-to-br from-blue-50 via-cyan-50 to-sky-50 shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-t-xl">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <MealIcon className="h-8 w-8" />
+                  <UtensilsCrossed className="h-8 w-8" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl sm:text-3xl">{config.label}</CardTitle>
-                  <p className="text-white/90 text-sm">{config.description}</p>
+                  <CardTitle className="text-2xl sm:text-3xl">{meal.mealLabel}</CardTitle>
+                  <p className="text-white/90 text-sm">{dayNames[meal.dayOfWeek]}</p>
                 </div>
               </div>
               {meal.isActive ? (
@@ -130,21 +88,21 @@ export default async function MealDetailPage({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className={`h-5 w-5 ${config.text}`} />
+                  <Calendar className="h-5 w-5 text-blue-900" />
                   <p className="text-sm text-gray-600 font-medium">Kun</p>
                 </div>
-                <p className={`text-xl font-bold ${config.text}`}>
+                <p className="text-xl font-bold text-blue-900">
                   {dayNames[meal.dayOfWeek]}
                 </p>
               </div>
 
               <div className="p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50">
                 <div className="flex items-center gap-2 mb-2">
-                  <Clock className={`h-5 w-5 ${config.text}`} />
-                  <p className="text-sm text-gray-600 font-medium">Vaqt</p>
+                  <Clock className="h-5 w-5 text-blue-900" />
+                  <p className="text-sm text-gray-600 font-medium">Ovqat vaqti</p>
                 </div>
-                <p className={`text-xl font-bold ${config.text}`}>
-                  {config.timeStart} - {config.timeEnd}
+                <p className="text-xl font-bold text-blue-900">
+                  {meal.mealTime}
                 </p>
               </div>
             </div>
@@ -152,14 +110,14 @@ export default async function MealDetailPage({
             {/* Main Dish */}
             <div className="p-5 bg-white/70 rounded-xl border-2 border-gray-200">
               <div className="flex items-start gap-3 mb-2">
-                <div className={`p-2 bg-gradient-to-br ${config.gradient} rounded-lg`}>
-                  <span className="text-2xl">{config.emoji}</span>
+                <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg">
+                  <span className="text-2xl">🍽️</span>
                 </div>
                 <div className="flex-1">
                   <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-1">
                     Asosiy Taom
                   </p>
-                  <h3 className={`text-2xl font-bold ${config.text}`}>
+                  <h3 className="text-2xl font-bold text-blue-900">
                     {meal.mainDish}
                   </h3>
                 </div>
@@ -221,35 +179,41 @@ export default async function MealDetailPage({
               </div>
             )}
 
-            {/* Date Range */}
+            {/* Timestamps */}
             <div className="p-4 bg-white/70 rounded-xl border border-gray-200">
-              <p className="text-sm text-gray-600 font-medium mb-2">📅 Amal qilish muddati</p>
-              <p className="text-base text-gray-800">
-                {new Date(meal.effectiveFrom).toLocaleDateString('uz-UZ', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-                {meal.effectiveTo && (
-                  <> - {new Date(meal.effectiveTo).toLocaleDateString('uz-UZ', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}</>
-                )}
-              </p>
-            </div>
-
-            {/* Metadata */}
-            <div className="pt-4 border-t border-gray-200">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-gray-500">
+              <p className="text-sm text-gray-600 font-medium mb-3">📅 Vaqt Ma'lumotlari</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <span className="font-medium">Yaratilgan:</span>{' '}
-                  {new Date(meal.createdAt).toLocaleString('uz-UZ')}
+                  <p className="text-xs text-gray-500 font-medium mb-1">Yaratilgan</p>
+                  <p className="text-base text-gray-800 font-semibold">
+                    {new Date(meal.createdAt).toLocaleDateString('uz-UZ', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {new Date(meal.createdAt).toLocaleTimeString('uz-UZ', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
                 </div>
                 <div>
-                  <span className="font-medium">O'zgartirilgan:</span>{' '}
-                  {new Date(meal.updatedAt).toLocaleString('uz-UZ')}
+                  <p className="text-xs text-gray-500 font-medium mb-1">Tahrirlangan</p>
+                  <p className="text-base text-gray-800 font-semibold">
+                    {new Date(meal.updatedAt).toLocaleDateString('uz-UZ', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {new Date(meal.updatedAt).toLocaleTimeString('uz-UZ', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
                 </div>
               </div>
             </div>

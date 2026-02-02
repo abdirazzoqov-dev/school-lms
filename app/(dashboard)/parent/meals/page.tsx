@@ -14,50 +14,49 @@ const dayNamesShort = ['Yak', 'Dush', 'Sesh', 'Chor', 'Pay', 'Juma', 'Shan']
 const dayNamesFull = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
 const monthNames = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr']
 
-const mealTypeConfig = {
-  BREAKFAST: {
-    icon: Coffee,
+// Color schemes for different meals (5 meals)
+const colorSchemes = [
+  {
     emoji: '☕',
-    label: 'Nonushta',
-    timeStart: '08:00',
-    timeEnd: '09:00',
-    description: 'Ertalabki ovqat',
     gradient: 'from-amber-500 to-orange-500',
     gradientLight: 'from-amber-400 to-orange-400',
     bg: 'from-amber-50 via-orange-50 to-yellow-50',
     border: 'border-amber-300',
     text: 'text-amber-900',
-    shadow: 'shadow-amber-200'
   },
-  LUNCH: {
-    icon: Soup,
+  {
     emoji: '🍽️',
-    label: 'Tushlik',
-    timeStart: '12:00',
-    timeEnd: '13:30',
-    description: 'Kunduzgi ovqat',
     gradient: 'from-blue-500 to-cyan-500',
     gradientLight: 'from-blue-400 to-cyan-400',
     bg: 'from-blue-50 via-cyan-50 to-sky-50',
     border: 'border-blue-300',
     text: 'text-blue-900',
-    shadow: 'shadow-blue-200'
   },
-  DINNER: {
-    icon: Moon,
+  {
     emoji: '🌙',
-    label: 'Kechki ovqat',
-    timeStart: '18:00',
-    timeEnd: '19:30',
-    description: 'Kechqurun ovqat',
     gradient: 'from-purple-500 to-pink-500',
     gradientLight: 'from-purple-400 to-pink-400',
     bg: 'from-purple-50 via-pink-50 to-fuchsia-50',
     border: 'border-purple-300',
     text: 'text-purple-900',
-    shadow: 'shadow-purple-200'
-  }
-}
+  },
+  {
+    emoji: '🍴',
+    gradient: 'from-green-500 to-emerald-500',
+    gradientLight: 'from-green-400 to-emerald-400',
+    bg: 'from-green-50 via-emerald-50 to-teal-50',
+    border: 'border-green-300',
+    text: 'text-green-900',
+  },
+  {
+    emoji: '🥘',
+    gradient: 'from-red-500 to-rose-500',
+    gradientLight: 'from-red-400 to-rose-400',
+    bg: 'from-red-50 via-rose-50 to-pink-50',
+    border: 'border-red-300',
+    text: 'text-red-900',
+  },
+]
 
 export default async function ParentMealsPage({
   searchParams
@@ -211,24 +210,23 @@ export default async function ParentMealsPage({
                 <CardContent className="p-3 sm:p-4 space-y-2.5 sm:space-y-3">
                   {dayMeals.length > 0 ? (
                     dayMeals.map((meal, mealIndex) => {
-                      const config = mealTypeConfig[meal.mealType as keyof typeof mealTypeConfig]
-                      const MealIcon = config.icon
+                      // Get color scheme based on index
+                      const colorScheme = colorSchemes[mealIndex % colorSchemes.length]
 
                       return (
                         <div
                           key={meal.id}
-                          className={`relative overflow-hidden rounded-2xl border-2 ${config.border} bg-gradient-to-br ${config.bg} p-3 sm:p-4 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer group/meal animate-in fade-in slide-in-from-bottom-4`}
+                          className={`relative overflow-hidden rounded-2xl border-2 ${colorScheme.border} bg-gradient-to-br ${colorScheme.bg} p-3 sm:p-4 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer group/meal animate-in fade-in slide-in-from-bottom-4`}
                         >
                           {/* Decorative Corner */}
-                          <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${config.gradientLight} opacity-10 rounded-bl-full`}></div>
+                          <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${colorScheme.gradientLight} opacity-10 rounded-bl-full`}></div>
 
-                          {/* Meal Type Header with Time */}
+                          {/* Meal Label Header */}
                           <div className="relative flex items-center justify-between mb-3 sm:mb-4">
-                            <div className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r ${config.gradient} shadow-lg transform transition-transform group-hover/meal:scale-105`}>
-                              <MealIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white shrink-0" />
+                            <div className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r ${colorScheme.gradient} shadow-lg transform transition-transform group-hover/meal:scale-105`}>
+                              <UtensilsCrossed className="h-4 w-4 sm:h-5 sm:w-5 text-white shrink-0" />
                               <div className="flex flex-col">
-                                <span className="text-xs sm:text-sm font-bold text-white leading-tight">{config.label}</span>
-                                <span className="text-[10px] sm:text-xs text-white/90 leading-tight">{config.description}</span>
+                                <span className="text-xs sm:text-sm font-bold text-white leading-tight">{meal.mealLabel}</span>
                               </div>
                             </div>
                           </div>
@@ -236,12 +234,10 @@ export default async function ParentMealsPage({
                           {/* Time Display - Prominent */}
                           <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/40">
                             <div className="flex items-center justify-center gap-2">
-                              <Clock className={`h-4 w-4 sm:h-5 sm:w-5 ${config.text}`} />
-                              <div className="flex items-center gap-1 sm:gap-2">
-                                <span className={`text-base sm:text-lg md:text-xl font-bold ${config.text}`}>{config.timeStart}</span>
-                                <span className={`text-sm sm:text-base ${config.text} opacity-60`}>-</span>
-                                <span className={`text-base sm:text-lg md:text-xl font-bold ${config.text}`}>{config.timeEnd}</span>
-                              </div>
+                              <Clock className={`h-4 w-4 sm:h-5 sm:w-5 ${colorScheme.text}`} />
+                              <span className={`text-base sm:text-lg md:text-xl font-bold ${colorScheme.text}`}>
+                                {meal.mealTime}
+                              </span>
                             </div>
                           </div>
 
@@ -250,12 +246,12 @@ export default async function ParentMealsPage({
                             {/* Main Dish */}
                             <div className="relative">
                               <div className="flex items-start gap-2 mb-1.5">
-                                <div className={`p-1.5 bg-gradient-to-br ${config.gradient} rounded-lg shrink-0`}>
-                                  <span className="text-lg sm:text-xl">{config.emoji}</span>
+                                <div className={`p-1.5 bg-gradient-to-br ${colorScheme.gradient} rounded-lg shrink-0`}>
+                                  <span className="text-lg sm:text-xl">{colorScheme.emoji}</span>
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-[10px] sm:text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">Asosiy Taom</p>
-                                  <h4 className={`text-sm sm:text-base md:text-lg font-bold ${config.text} leading-tight`}>
+                                  <h4 className={`text-sm sm:text-base md:text-lg font-bold ${colorScheme.text} leading-tight`}>
                                     {meal.mainDish}
                                   </h4>
                                 </div>
@@ -346,79 +342,27 @@ export default async function ParentMealsPage({
         </div>
 
         {/* Info Footer - Enhanced */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-          {/* Breakfast Info */}
-          <Card className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 border-2 border-amber-200 hover:shadow-lg transition-all">
-            <CardContent className="p-4 sm:p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2.5 sm:p-3 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl shadow-lg">
-                  <Coffee className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+        <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 shadow-lg">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl shadow-lg">
+                  <UtensilsCrossed className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-base font-bold text-amber-900">Nonushta</h3>
-                  <p className="text-xs sm:text-sm text-amber-700">Ertalabki ovqat</p>
+                  <h3 className="text-base sm:text-lg font-bold text-blue-900">Maktabda kuniga 5 mahal ovqatlanish</h3>
+                  <p className="text-xs sm:text-sm text-blue-700">
+                    Har bir ovqat o'z vaqtida beriladi
+                  </p>
                 </div>
               </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs sm:text-sm">
-                  <span className="text-gray-600">Vaqti:</span>
-                  <span className="font-bold text-amber-900">08:00 - 09:00</span>
-                </div>
-                <p className="text-xs text-gray-600 pt-2 border-t border-amber-200">
-                  Energiya va vitaminlarga boy
-                </p>
+              <div className="flex items-center gap-2 bg-blue-100 px-4 py-2 rounded-xl">
+                <Star className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-bold text-blue-900">5 Ovqat</span>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Lunch Info */}
-          <Card className="bg-gradient-to-br from-blue-50 via-cyan-50 to-sky-50 border-2 border-blue-200 hover:shadow-lg transition-all">
-            <CardContent className="p-4 sm:p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2.5 sm:p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl shadow-lg">
-                  <Soup className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-sm sm:text-base font-bold text-blue-900">Tushlik</h3>
-                  <p className="text-xs sm:text-sm text-blue-700">Kunduzgi ovqat</p>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs sm:text-sm">
-                  <span className="text-gray-600">Vaqti:</span>
-                  <span className="font-bold text-blue-900">12:00 - 13:30</span>
-                </div>
-                <p className="text-xs text-gray-600 pt-2 border-t border-blue-200">
-                  To'liq va mazali ovqat
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Dinner Info */}
-          <Card className="bg-gradient-to-br from-purple-50 via-pink-50 to-fuchsia-50 border-2 border-purple-200 hover:shadow-lg transition-all">
-            <CardContent className="p-4 sm:p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2.5 sm:p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg">
-                  <Moon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-sm sm:text-base font-bold text-purple-900">Kechki Ovqat</h3>
-                  <p className="text-xs sm:text-sm text-purple-700">Oqshom ovqati</p>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs sm:text-sm">
-                  <span className="text-gray-600">Vaqti:</span>
-                  <span className="font-bold text-purple-900">18:00 - 19:30</span>
-                </div>
-                <p className="text-xs text-gray-600 pt-2 border-t border-purple-200">
-                  Yengil va sog'lom ovqat
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Professional Footer Info */}
         <Card className="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 border-0 shadow-xl">
