@@ -282,6 +282,7 @@ export default async function AdminDashboard() {
           expenseCash={stats.expenseCash || 0}
           expenseCard={stats.expenseCard || 0}
           expensePaymentMethods={stats.expensePaymentMethods || []}
+          expenseCategories={stats.expenseCategories || []}
         />
 
         {/* Balance - Client Component with Modal */}

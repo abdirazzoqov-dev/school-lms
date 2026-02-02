@@ -11,18 +11,26 @@ interface ExpenseMethod {
   amount: number
 }
 
+interface ExpenseCategory {
+  name: string
+  amount: number
+  color: string
+}
+
 interface DashboardExpenseCardProps {
   totalExpenses: number
   expenseCash: number
   expenseCard: number
   expensePaymentMethods: ExpenseMethod[]
+  expenseCategories: ExpenseCategory[]
 }
 
 export function DashboardExpenseCard({
   totalExpenses,
   expenseCash,
   expenseCard,
-  expensePaymentMethods
+  expensePaymentMethods,
+  expenseCategories
 }: DashboardExpenseCardProps) {
   const [showModal, setShowModal] = useState(false)
 
@@ -62,6 +70,7 @@ export function DashboardExpenseCard({
         expenseCash={expenseCash}
         expenseCard={expenseCard}
         expensePaymentMethods={expensePaymentMethods}
+        expenseCategories={expenseCategories}
       />
     </>
   )

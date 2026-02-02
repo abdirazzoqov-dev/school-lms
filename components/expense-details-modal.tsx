@@ -8,19 +8,29 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { formatNumber } from '@/lib/utils'
 import { 
   Banknote, 
   CreditCard, 
   Wallet, 
   TrendingDown,
-  PieChart
+  PieChart,
+  ArrowRight,
+  ExternalLink
 } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
+import Link from 'next/link'
 
 interface ExpenseMethod {
   method: string
   amount: number
+}
+
+interface ExpenseCategory {
+  name: string
+  amount: number
+  color: string
 }
 
 interface ExpenseDetailsModalProps {
@@ -30,6 +40,7 @@ interface ExpenseDetailsModalProps {
   expenseCash: number
   expenseCard: number
   expensePaymentMethods: ExpenseMethod[]
+  expenseCategories: ExpenseCategory[]
 }
 
 export function ExpenseDetailsModal({
@@ -38,7 +49,8 @@ export function ExpenseDetailsModal({
   totalExpenses,
   expenseCash,
   expenseCard,
-  expensePaymentMethods
+  expensePaymentMethods,
+  expenseCategories
 }: ExpenseDetailsModalProps) {
   const cashPercentage = totalExpenses > 0 ? (expenseCash / totalExpenses) * 100 : 0
   const cardPercentage = totalExpenses > 0 ? (expenseCard / totalExpenses) * 100 : 0
@@ -175,6 +187,113 @@ export function ExpenseDetailsModal({
               </CardContent>
             </Card>
           </div>
+
+          {/* Categories Breakdown */}
+          {expenseCategories && expenseCategories.length > 0 && (
+            <div className="space-y-4 mt-6">
+              <div className="flex items-center gap-2">
+                <PieChart className="h-5 w-5 text-purple-600" />
+                <h3 className="text-lg font-semibold">Kategoriyalar Bo'yicha</h3>
+              </div>
+
+              <div className="space-y-3">
+                {expenseCategories.map((category, index) => {
+                  const percentage = totalExpenses > 0 ? (category.amount / totalExpenses) * 100 : 0
+                  const isSalaryCategory = category.name === 'Oylik va avanslar'
+                  
+                  return (
+                    <Card 
+                      key={index} 
+                      className={`border-l-4 hover:shadow-md transition-shadow ${
+                        isSalaryCategory ? 'border-l-purple-500 bg-purple-50/30' : 'border-l-gray-300'
+                      }`}
+                    >
+                      <CardContent className="pt-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3 flex-1">
+                            <div 
+                              className="p-2 rounded-lg shrink-0"
+                              style={{ backgroundColor: `${category.color}20` }}
+                            >
+                              <div 
+                                className="w-5 h-5 rounded"
+                                style={{ backgroundColor: category.color }}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold text-base">{category.name}</h4>
+                                {isSalaryCategory && (
+                                  <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
+                                    💼 Xodimlar
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {isSalaryCategory 
+                                  ? 'O\'qituvchilar va xodimlar uchun to\'langan maoshlar' 
+                                  : `${percentage.toFixed(1)}% umumiy xarajatdan`
+                                }
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div 
+                              className="text-xl font-bold"
+                              style={{ color: category.color }}
+                            >
+                              {formatNumber(category.amount)} so'm
+                            </div>
+                            <div className="text-xs text-muted-foreground font-medium">
+                              {percentage.toFixed(1)}%
+                            </div>
+                          </div>
+                        </div>
+                        <Progress 
+                          value={percentage} 
+                          className="h-2" 
+                          style={{ 
+                            backgroundColor: `${category.color}20`
+                          }}
+                        />
+                        
+                        {/* Special info for salary category */}
+                        {isSalaryCategory && (
+                          <div className="mt-3 pt-3 border-t border-purple-100 space-y-2">
+                            <p className="text-xs text-purple-700 font-medium">
+                              Bu kategoriyada o'qituvchilar va xodimlar uchun to'langan barcha maoshlar, avanslar va mukofotlar ko'rsatilgan.
+                            </p>
+                            <div className="flex gap-2">
+                              <Link href="/admin/salaries" className="flex-1">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="w-full border-purple-300 text-purple-700 hover:bg-purple-50 hover:text-purple-800"
+                                >
+                                  <ExternalLink className="h-3 w-3 mr-1.5" />
+                                  Maoshlar sahifasi
+                                </Button>
+                              </Link>
+                              <Link href="/admin/expenses" className="flex-1">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="w-full border-purple-300 text-purple-700 hover:bg-purple-50 hover:text-purple-800"
+                                >
+                                  <ArrowRight className="h-3 w-3 mr-1.5" />
+                                  Batafsil ko'rish
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
