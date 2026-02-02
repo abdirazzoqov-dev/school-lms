@@ -63,7 +63,6 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
     bonusAmount: 0,
     deductionAmount: 0,
     paymentDate: '',
-    dueDate: '',
     paymentMethod: '',
     description: '',
     notes: ''
@@ -453,16 +452,6 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
           </Select>
         </div>
       )}
-
-      {/* Due Date */}
-      <div className="space-y-2">
-        <Label>To'lov Muddati</Label>
-        <Input
-          type="date"
-          value={formData.dueDate}
-          onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-        />
-      </div>
 
       {/* Description */}
       <div className="space-y-2">
