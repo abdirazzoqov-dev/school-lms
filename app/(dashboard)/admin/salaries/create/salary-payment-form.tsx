@@ -443,11 +443,7 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="CASH">Naqd pul</SelectItem>
-              <SelectItem value="BANK">Bank o'tkazmasi</SelectItem>
-              <SelectItem value="CLICK">Click</SelectItem>
-              <SelectItem value="PAYME">Payme</SelectItem>
-              <SelectItem value="UZUM">Uzum</SelectItem>
-              <SelectItem value="OTHER">Boshqa</SelectItem>
+              <SelectItem value="CLICK">Plastik karta</SelectItem>
             </SelectContent>
           </Select>
         </div>

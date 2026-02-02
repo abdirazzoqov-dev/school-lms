@@ -94,9 +94,8 @@ export function AddPartialSalaryModal({ open, onOpenChange, payment }: AddPartia
   }
 
   const paymentMethods = [
-    { value: 'CASH', label: 'Naqd', icon: Wallet },
-    { value: 'BANK_TRANSFER', label: 'Bank o\'tkazmasi', icon: Banknote },
-    { value: 'CARD', label: 'Karta', icon: CreditCard },
+    { value: 'CASH', label: 'Naqd pul', icon: Wallet },
+    { value: 'CLICK', label: 'Plastik karta', icon: CreditCard },
   ]
 
   const selectedMethod = paymentMethods.find(m => m.value === paymentMethod)
