@@ -84,7 +84,7 @@ export default async function ParentMealsPage({
     },
     orderBy: [
       { dayOfWeek: 'asc' },
-      { mealType: 'asc' },
+      { mealLabel: 'asc' },
     ],
   })
 
