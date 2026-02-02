@@ -219,23 +219,28 @@ export default async function ParentMealsPage({
                               </h4>
                             </div>
 
-                            {/* Side Dishes */}
-                            {meal.sideDishes && (
+                            {/* Side Dish & Salad */}
+                            {(meal.sideDish || meal.salad) && (
                               <div>
                                 <p className="text-xs text-gray-500 font-medium mb-1">Qo'shimcha</p>
-                                <p className="text-sm text-gray-700">
-                                  {meal.sideDishes}
-                                </p>
+                                <div className="space-y-1">
+                                  {meal.sideDish && (
+                                    <p className="text-sm text-gray-700">🥘 {meal.sideDish}</p>
+                                  )}
+                                  {meal.salad && (
+                                    <p className="text-sm text-gray-700">🥗 {meal.salad}</p>
+                                  )}
+                                </div>
                               </div>
                             )}
 
-                            {/* Beverage */}
-                            {meal.beverage && (
+                            {/* Drink */}
+                            {meal.drink && (
                               <div className="flex items-center gap-2 pt-2 border-t border-gray-200">
                                 <div className="p-1 bg-blue-100 rounded">
                                   <Coffee className="h-3 w-3 text-blue-600" />
                                 </div>
-                                <span className="text-xs text-gray-600">{meal.beverage}</span>
+                                <span className="text-xs text-gray-600">{meal.drink}</span>
                               </div>
                             )}
 
