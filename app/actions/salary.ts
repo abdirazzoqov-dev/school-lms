@@ -10,6 +10,82 @@ import { REVALIDATION_PATHS, revalidateMultiplePaths } from '@/lib/cache-config'
 import { formatNumber } from '@/lib/utils'
 import { Decimal } from '@prisma/client/runtime/library'
 
+/**
+ * Oylik va avans to'lovlari uchun xarajat kategoriyasini olish yoki yaratish
+ * Get or create expense category for salary and advance payments
+ */
+async function getOrCreateSalaryExpenseCategory(tenantId: string) {
+  // Avval mavjud kategoriyani qidirish
+  let category = await db.expenseCategory.findFirst({
+    where: {
+      tenantId,
+      name: 'Oylik va avanslar'
+    }
+  })
+
+  // Agar mavjud bo'lmasa, yangi yaratish
+  if (!category) {
+    category = await db.expenseCategory.create({
+      data: {
+        tenantId,
+        name: 'Oylik va avanslar',
+        description: 'O\'qituvchilar va xodimlar uchun oylik maosh va avans to\'lovlari',
+        limitAmount: 0, // Limitsiz
+        period: 'MONTHLY',
+        color: '#8b5cf6', // Binafsha rang
+        icon: 'wallet',
+        isActive: true
+      }
+    })
+  }
+
+  return category
+}
+
+/**
+ * Maosh to'lovi uchun avtomatik xarajat yaratish
+ * Automatically create expense entry when salary is paid
+ */
+async function createExpenseForSalaryPayment(
+  tenantId: string,
+  amount: number,
+  paymentDate: Date,
+  paymentMethod: string,
+  employeeName: string,
+  paymentType: string,
+  userId: string,
+  month?: number,
+  year?: number
+) {
+  try {
+    // Xarajat kategoriyasini olish yoki yaratish
+    const category = await getOrCreateSalaryExpenseCategory(tenantId)
+
+    // Tavsif yaratish
+    let description = `${employeeName} - ${paymentType === 'MONTHLY_SALARY' ? 'Oylik maosh' : 'Avans to\'lovi'}`
+    if (month && year) {
+      const monthNames = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr']
+      description += ` (${monthNames[month - 1]} ${year})`
+    }
+
+    // Xarajat yozuvini yaratish
+    await db.expense.create({
+      data: {
+        tenantId,
+        categoryId: category.id,
+        amount: new Decimal(amount),
+        date: paymentDate,
+        paymentMethod: paymentMethod as any,
+        description,
+        paidById: userId
+      }
+    })
+  } catch (error) {
+    console.error('Error creating expense for salary payment:', error)
+    // Xatoni log qilamiz, lekin jarayonni to\'xtatmaymiz
+  }
+}
+
 export async function createSalaryPayment(data: SalaryPaymentFormData) {
   try {
     const session = await getServerSession(authOptions)
@@ -23,23 +99,36 @@ export async function createSalaryPayment(data: SalaryPaymentFormData) {
     // Validate data
     const validatedData = salaryPaymentSchema.parse(data)
 
-    // Check if teacher or staff exists
+    // Check if teacher or staff exists and get employee info
+    let employeeName = 'Xodim'
     if (validatedData.teacherId) {
       const teacher = await db.teacher.findFirst({
-        where: { id: validatedData.teacherId, tenantId }
+        where: { id: validatedData.teacherId, tenantId },
+        include: {
+          user: {
+            select: { fullName: true }
+          }
+        }
       })
       if (!teacher) {
         return { success: false, error: 'O\'qituvchi topilmadi' }
       }
+      employeeName = teacher.user.fullName || 'O\'qituvchi'
     }
 
     if (validatedData.staffId) {
       const staff = await db.staff.findFirst({
-        where: { id: validatedData.staffId, tenantId }
+        where: { id: validatedData.staffId, tenantId },
+        include: {
+          user: {
+            select: { fullName: true }
+          }
+        }
       })
       if (!staff) {
         return { success: false, error: 'Xodim topilmadi' }
       }
+      employeeName = staff.user.fullName || 'Xodim'
     }
 
     // Calculate remaining amount
@@ -70,7 +159,26 @@ export async function createSalaryPayment(data: SalaryPaymentFormData) {
       }
     })
 
-    revalidateMultiplePaths([...REVALIDATION_PATHS.SALARY_CHANGED], revalidatePath)
+    // ✅ Agar to'lov qilingan bo'lsa, avtomatik xarajat yaratish
+    if (validatedData.paymentDate) {
+      await createExpenseForSalaryPayment(
+        tenantId,
+        Number(validatedData.amount),
+        new Date(validatedData.paymentDate),
+        validatedData.paymentMethod || 'CASH',
+        employeeName,
+        validatedData.type,
+        session.user.id,
+        validatedData.month,
+        validatedData.year
+      )
+    }
+
+    // ✅ Salary va Expense sahifalarini yangilash
+    revalidateMultiplePaths([
+      ...REVALIDATION_PATHS.SALARY_CHANGED,
+      ...REVALIDATION_PATHS.EXPENSE_CHANGED
+    ], revalidatePath)
     
     return { success: true, payment }
   } catch (error: any) {
@@ -88,14 +196,33 @@ export async function paySalary(paymentId: string, amount: number, paymentMethod
 
     const tenantId = session.user.tenantId!
 
-    // Get payment
+    // Get payment with employee info
     const payment = await db.salaryPayment.findFirst({
-      where: { id: paymentId, tenantId }
+      where: { id: paymentId, tenantId },
+      include: {
+        teacher: {
+          include: {
+            user: {
+              select: { fullName: true }
+            }
+          }
+        },
+        staff: {
+          include: {
+            user: {
+              select: { fullName: true }
+            }
+          }
+        }
+      }
     })
 
     if (!payment) {
       return { success: false, error: 'To\'lov topilmadi' }
     }
+
+    // Get employee name
+    const employeeName = payment.teacher?.user.fullName || payment.staff?.user.fullName || 'Xodim'
 
     // Calculate new amounts
     const newPaidAmount = Number(payment.paidAmount) + amount
@@ -122,7 +249,24 @@ export async function paySalary(paymentId: string, amount: number, paymentMethod
       }
     })
 
-    revalidateMultiplePaths([...REVALIDATION_PATHS.SALARY_CHANGED], revalidatePath)
+    // ✅ To'lov amalga oshirilganda avtomatik xarajat yaratish
+    await createExpenseForSalaryPayment(
+      tenantId,
+      amount,
+      new Date(),
+      paymentMethod,
+      employeeName,
+      payment.type,
+      session.user.id,
+      payment.month || undefined,
+      payment.year || undefined
+    )
+
+    // ✅ Salary va Expense sahifalarini yangilash
+    revalidateMultiplePaths([
+      ...REVALIDATION_PATHS.SALARY_CHANGED,
+      ...REVALIDATION_PATHS.EXPENSE_CHANGED
+    ], revalidatePath)
     
     return { success: true, payment: updatedPayment }
   } catch (error: any) {
@@ -165,7 +309,11 @@ export async function updateSalaryPayment(paymentId: string, data: Partial<Salar
       }
     })
 
-    revalidateMultiplePaths([...REVALIDATION_PATHS.SALARY_CHANGED], revalidatePath)
+    // ✅ Salary va Expense sahifalarini yangilash
+    revalidateMultiplePaths([
+      ...REVALIDATION_PATHS.SALARY_CHANGED,
+      ...REVALIDATION_PATHS.EXPENSE_CHANGED
+    ], revalidatePath)
     
     return { success: true, payment: updatedPayment }
   } catch (error: any) {
@@ -197,7 +345,11 @@ export async function deleteSalaryPayment(paymentId: string) {
       where: { id: paymentId }
     })
 
-    revalidateMultiplePaths([...REVALIDATION_PATHS.SALARY_CHANGED], revalidatePath)
+    // ✅ Salary va Expense sahifalarini yangilash
+    revalidateMultiplePaths([
+      ...REVALIDATION_PATHS.SALARY_CHANGED,
+      ...REVALIDATION_PATHS.EXPENSE_CHANGED
+    ], revalidatePath)
     
     return { success: true }
   } catch (error: any) {
@@ -344,7 +496,24 @@ export async function addPartialSalaryPayment(
       }
     })
 
-    revalidateMultiplePaths([...REVALIDATION_PATHS.SALARY_CHANGED], revalidatePath)
+    // ✅ Qisman to'lov amalga oshirilganda avtomatik xarajat yaratish
+    await createExpenseForSalaryPayment(
+      tenantId,
+      amount,
+      new Date(),
+      paymentMethod || 'CASH',
+      employeeName,
+      currentPayment.type,
+      session.user.id,
+      currentPayment.month || undefined,
+      currentPayment.year || undefined
+    )
+
+    // ✅ Salary va Expense sahifalarini yangilash
+    revalidateMultiplePaths([
+      ...REVALIDATION_PATHS.SALARY_CHANGED,
+      ...REVALIDATION_PATHS.EXPENSE_CHANGED
+    ], revalidatePath)
     
     return { 
       success: true, 
