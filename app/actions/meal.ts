@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
 const mealSchema = z.object({
-  dayOfWeek: z.number().min(1).max(7),
+  dayOfWeek: z.number().min(0).max(6), // 0 = Sunday, 6 = Saturday
   mealType: z.enum(['BREAKFAST', 'LUNCH', 'DINNER']),
   mainDish: z.string().min(1, 'Asosiy taom kiritilishi shart'),
   sideDish: z.string().optional(),
@@ -49,6 +49,7 @@ export async function createMeal(data: z.infer<typeof mealSchema>) {
     })
 
     revalidatePath('/admin/meals')
+    revalidatePath('/parent/meals')
     return { success: true, meal }
   } catch (error: any) {
     console.error('Error creating meal:', error)
@@ -85,6 +86,7 @@ export async function updateMeal(id: string, data: z.infer<typeof mealSchema>) {
     })
 
     revalidatePath('/admin/meals')
+    revalidatePath('/parent/meals')
     return { success: true, meal }
   } catch (error: any) {
     console.error('Error updating meal:', error)
@@ -107,6 +109,7 @@ export async function deleteMeal(id: string) {
     })
 
     revalidatePath('/admin/meals')
+    revalidatePath('/parent/meals')
     return { success: true }
   } catch (error: any) {
     console.error('Error deleting meal:', error)
@@ -138,6 +141,7 @@ export async function toggleMealStatus(id: string) {
     })
 
     revalidatePath('/admin/meals')
+    revalidatePath('/parent/meals')
     return { success: true, meal: updated }
   } catch (error: any) {
     console.error('Error toggling meal status:', error)
