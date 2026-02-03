@@ -67,6 +67,11 @@ export default async function ParentLayout({
       icon: 'DollarSign',
     },
     {
+      title: 'Ovqatlar Menyusi',
+      href: '/parent/meals',
+      icon: 'UtensilsCrossed',
+    },
+    {
       title: 'Xabarlar',
       href: '/parent/messages',
       icon: 'MessageSquare',
