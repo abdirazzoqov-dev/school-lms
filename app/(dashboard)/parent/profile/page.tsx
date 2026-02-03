@@ -3,7 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { User, Mail, Phone, Users, Calendar, UserCheck, AlertCircle } from 'lucide-react'
+import { User, Mail, Phone, Users, Calendar, UserCheck, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 export const revalidate = 0

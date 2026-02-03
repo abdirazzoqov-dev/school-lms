@@ -42,6 +42,7 @@ export default function TeacherClassDetailPage() {
 
   useEffect(() => {
     loadClassData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId])
 
   const loadClassData = async () => {
