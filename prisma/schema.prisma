@@ -170,7 +170,6 @@ model Tenant {
   dormitoryBeds            DormitoryBed[]
   dormitoryAssignments     DormitoryAssignment[]
   salaryPayments           SalaryPayment[]
-  meals                    Meal[]
 
   @@map("tenants")  // PostgreSQL standard: lowercase, plural
   @@index([slug])
@@ -881,35 +880,6 @@ model Material {
 }
 
 // MEAL - Ovqatlar menyusi (Oshxona)
-model Meal {
-  id       String @id @default(cuid())
-  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  tenantId String
-
-  dayOfWeek Int // 0-6 (Yakshanba-Shanba)
-  
-  // Custom fields for flexibility
-  mealLabel String // Custom sarlavha: "1-ovqat", "Nonushta", "Tushlik", va hokazo
-  mealTime  String // Qo'lda kiritilgan vaqt: "08:00 - 09:00"
-  
-  mainDish    String // Asosiy taom
-  sideDish    String? // Garnitir
-  salad       String? // Salat
-  dessert     String? // Shirinlik
-  drink       String? // Ichimlik
-  
-  description String? @db.Text // Qo'shimcha ma'lumot
-  
-  isActive Boolean @default(true)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([tenantId])
-  @@index([tenantId, dayOfWeek])
-  @@index([tenantId, isActive])
-}
-
 // PAYMENT - To'lovlar
 model Payment {
   id       String @id @default(cuid())
