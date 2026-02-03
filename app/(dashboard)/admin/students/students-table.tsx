@@ -74,8 +74,17 @@ export function StudentsTable({ students }: { students: Student[] }) {
   }
 
   const handleBulkDelete = async () => {
-    await bulkDeleteStudents(selectedIds)
-    setSelectedIds([])
+    if (!confirm(`${selectedIds.length} ta o'quvchini o'chirmoqchimisiz? Bu amalni qaytarib bo'lmaydi!`)) {
+      return
+    }
+
+    try {
+      await bulkDeleteStudents(selectedIds)
+      setSelectedIds([])
+      window.location.reload()
+    } catch (error: any) {
+      alert(error.message || 'Xatolik yuz berdi')
+    }
   }
 
   const handleBulkStatusChange = async (status: string) => {
@@ -261,7 +270,16 @@ export function StudentsTable({ students }: { students: Student[] }) {
                           className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
                           onClick={async () => {
                             if (confirm(`${student.user?.fullName || 'N/A'} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
-                              await deleteStudent(student.id)
+                              try {
+                                const result = await deleteStudent(student.id)
+                                if (result.success) {
+                                  window.location.reload()
+                                } else {
+                                  alert(result.error || 'Xatolik yuz berdi')
+                                }
+                              } catch (error: any) {
+                                alert(error.message || 'Xatolik yuz berdi')
+                              }
                             }
                           }}
                         >
@@ -361,7 +379,16 @@ export function StudentsTable({ students }: { students: Student[] }) {
                         className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
                         onClick={async () => {
                           if (confirm(`${student.user?.fullName || 'N/A'} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
-                            await deleteStudent(student.id)
+                            try {
+                              const result = await deleteStudent(student.id)
+                              if (result.success) {
+                                window.location.reload()
+                              } else {
+                                alert(result.error || 'Xatolik yuz berdi')
+                              }
+                            } catch (error: any) {
+                              alert(error.message || 'Xatolik yuz berdi')
+                            }
                           }
                         }}
                       >

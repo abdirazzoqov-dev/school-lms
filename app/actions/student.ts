@@ -1198,18 +1198,25 @@ export async function bulkDeleteStudents(studentIds: string[]) {
     const session = await getServerSession(authOptions)
     
     if (!session || session.user.role !== 'ADMIN') {
-      return { success: false, error: 'Ruxsat berilmagan' }
+      throw new Error('Ruxsat berilmagan')
     }
 
     const tenantId = session.user.tenantId!
 
-    // Check which students are safe to delete
+    // Get all students with their payment info
     const students = await db.student.findMany({
       where: { 
         id: { in: studentIds },
         tenantId 
       },
       include: {
+        user: true,
+        payments: {
+          where: {
+            status: { in: ['PENDING', 'PARTIALLY_PAID', 'FAILED'] },
+            remainingAmount: { gt: 0 }
+          }
+        },
         _count: {
           select: {
             grades: true,
@@ -1220,38 +1227,154 @@ export async function bulkDeleteStudents(studentIds: string[]) {
       }
     })
 
-    const safeToDelete = students.filter(s => 
-      s._count.grades === 0 && s._count.attendances === 0 && s._count.payments === 0
-    )
+    if (students.length === 0) {
+      throw new Error('O\'quvchilar topilmadi')
+    }
 
-    if (safeToDelete.length === 0) {
-      return { 
-        success: false, 
-        error: 'Hech bir o\'quvchini o\'chirib bo\'lmaydi. Baholar, davomat yoki to\'lovlar mavjud.' 
+    // Check for unpaid payments
+    const studentsWithUnpaidPayments = students.filter(s => s.payments.length > 0)
+    
+    if (studentsWithUnpaidPayments.length > 0) {
+      const studentNames = studentsWithUnpaidPayments
+        .map(s => s.user?.fullName || 'N/A')
+        .slice(0, 3)
+        .join(', ')
+      
+      const moreCount = studentsWithUnpaidPayments.length - 3
+      const namesText = moreCount > 0 
+        ? `${studentNames} va yana ${moreCount} ta` 
+        : studentNames
+
+      throw new Error(
+        `⚠️ ${studentsWithUnpaidPayments.length} ta o'quvchida to'lanmagan to'lovlar mavjud!\n\n` +
+        `O'quvchilar: ${namesText}\n\n` +
+        `Avval barcha to'lovlarni to'lash yoki bekor qilish kerak.`
+      )
+    }
+
+    // All students are safe to delete - proceed with deletion
+    let deletedCount = 0
+    const errors: string[] = []
+
+    for (const student of students) {
+      try {
+        // Delete in transaction for each student
+        await db.$transaction(async (tx) => {
+          // 1. Delete grades
+          if (student._count.grades > 0) {
+            await tx.grade.deleteMany({
+              where: { studentId: student.id }
+            })
+          }
+
+          // 2. Delete attendances
+          if (student._count.attendances > 0) {
+            await tx.attendance.deleteMany({
+              where: { studentId: student.id }
+            })
+          }
+
+          // 3. Delete payments (all paid/cancelled)
+          if (student._count.payments > 0) {
+            await tx.payment.deleteMany({
+              where: { studentId: student.id }
+            })
+          }
+
+          // 4. Delete student-parent relations
+          await tx.studentParent.deleteMany({
+            where: { studentId: student.id }
+          })
+
+          // 5. Free dormitory bed if occupied
+          const dormitoryAssignment = await tx.dormitoryAssignment.findUnique({
+            where: { studentId: student.id },
+            include: {
+              room: {
+                select: {
+                  buildingId: true
+                }
+              }
+            }
+          })
+          
+          if (dormitoryAssignment) {
+            await tx.dormitoryBed.update({
+              where: { id: dormitoryAssignment.bedId },
+              data: { isOccupied: false }
+            })
+            
+            await tx.dormitoryRoom.update({
+              where: { id: dormitoryAssignment.roomId },
+              data: { occupiedBeds: { decrement: 1 } }
+            })
+            
+            await tx.dormitoryAssignment.delete({
+              where: { studentId: student.id }
+            })
+
+            // Update building cache
+            if (dormitoryAssignment.room?.buildingId) {
+              const rooms = await tx.dormitoryRoom.findMany({
+                where: { buildingId: dormitoryAssignment.room.buildingId },
+                select: {
+                  capacity: true,
+                  occupiedBeds: true,
+                },
+              })
+
+              const totalCapacity = rooms.reduce((sum, r) => sum + r.capacity, 0)
+              const occupiedBeds = rooms.reduce((sum, r) => sum + r.occupiedBeds, 0)
+
+              await tx.dormitoryBuilding.update({
+                where: { id: dormitoryAssignment.room.buildingId },
+                data: {
+                  totalCapacity,
+                  occupiedBeds,
+                },
+              })
+            }
+          }
+
+          // 6. Delete student record
+          await tx.student.delete({
+            where: { 
+              id: student.id,
+              tenantId,
+            }
+          })
+
+          // 7. Delete associated user account
+          if (student.userId) {
+            await tx.user.delete({
+              where: { id: student.userId }
+            })
+          }
+        })
+
+        deletedCount++
+      } catch (err: any) {
+        errors.push(`${student.user?.fullName || 'N/A'}: ${err.message}`)
       }
     }
 
-    const safeIds = safeToDelete.map(s => s.id)
-
-    // Delete student-parent relations
-    await db.studentParent.deleteMany({
-      where: { studentId: { in: safeIds } }
-    })
-
-    // Delete students
-    const result = await db.student.deleteMany({
-      where: { id: { in: safeIds } }
-    })
-
     revalidatePath('/admin/students')
+    revalidatePath('/admin/dormitory')
+    
+    if (errors.length > 0) {
+      throw new Error(
+        `${deletedCount} ta o'quvchi o'chirildi, ${errors.length} ta xato:\n` +
+        errors.join('\n')
+      )
+    }
     
     return { 
       success: true, 
-      deleted: result.count,
-      skipped: studentIds.length - result.count
+      message: `${deletedCount} ta o'quvchi muvaffaqiyatli o'chirildi`
     }
   } catch (error: any) {
-    return handleError(error)
+    console.error('Bulk delete error:', error)
+    throw error
   }
 }
 
