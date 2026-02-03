@@ -274,7 +274,7 @@ export default async function PaymentsPage({
   })
 
   return (
-    <div className="space-y-4 md:space-y-6 p-4 md:p-6">
+    <div className="space-y-4 md:space-y-6 p-3 sm:p-4 md:p-6 pb-20 sm:pb-24 md:pb-6">
       {/* Modern Gradient Header - Enhanced Mobile */}
       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 p-4 sm:p-6 md:p-8 text-white shadow-2xl">
         <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,black)]" />

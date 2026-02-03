@@ -464,7 +464,7 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
   )
 
   const renderMobileCards = () => (
-    <div className="space-y-3 sm:space-y-4">
+    <div className="space-y-3 sm:space-y-4 pb-20">
       {payments.map((payment) => {
         const progress = calculateProgress(payment)
         const isOverdue = payment.status === 'PENDING' && new Date(payment.dueDate) < new Date()
@@ -472,7 +472,7 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
         return (
           <Card 
             key={payment.id} 
-            className={`border-2 transition-all hover:shadow-xl ${
+            className={`border-2 transition-all hover:shadow-xl overflow-visible ${
               progress.percentage === 100 
                 ? 'border-green-200 bg-gradient-to-br from-green-50 to-emerald-50' 
                 : progress.percentage > 0 
@@ -482,17 +482,17 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                     : 'border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50'
             }`}
           >
-            <CardContent className="p-4 sm:p-5">
-              {/* Header with checkbox and status */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-start gap-3">
+            <CardContent className="p-3 sm:p-4 md:p-5">
+              {/* Header with checkbox and status - Compact */}
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-start gap-2">
                   <Checkbox
                     checked={selectedIds.includes(payment.id)}
                     onCheckedChange={(checked) => handleSelectOne(payment.id, checked as boolean)}
-                    className="mt-1"
+                    className="mt-0.5"
                   />
                   <div className="flex-1">
-                    <code className="text-xs sm:text-sm bg-white/80 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border font-mono font-semibold">
+                    <code className="text-[10px] sm:text-xs bg-white/80 backdrop-blur-sm px-2 py-1 rounded border font-mono font-semibold">
                       {payment.invoiceNumber}
                     </code>
                   </div>
@@ -504,25 +504,25 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                     payment.status === 'PENDING' ? 'secondary' : 
                     'destructive'
                   } 
-                  className={`text-xs sm:text-sm font-bold ${
+                  className={`text-[10px] sm:text-xs font-bold ${
                     payment.status === 'COMPLETED' ? 'bg-green-500' :
                     payment.status === 'PARTIALLY_PAID' ? 'bg-yellow-500 text-white border-yellow-600' :
                     payment.status === 'PENDING' ? 'bg-orange-500' :
                     ''
                   }`}
                 >
-                  {payment.status === 'COMPLETED' ? '✓ To\'langan' :
-                   payment.status === 'PARTIALLY_PAID' ? '⏳ Qisman' :
-                   payment.status === 'PENDING' ? '⚠️ Kutilmoqda' : 
-                   payment.status === 'REFUNDED' ? '↩️ Qaytarilgan' :
-                   '✖ Xato'}
+                  {payment.status === 'COMPLETED' ? '✓' :
+                   payment.status === 'PARTIALLY_PAID' ? '⏳' :
+                   payment.status === 'PENDING' ? '⚠️' : 
+                   payment.status === 'REFUNDED' ? '↩️' :
+                   '✖'}
                 </Badge>
               </div>
 
-              {/* Student Name - Prominent */}
-              <div className="mb-4 pb-4 border-b">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg ${
+              {/* Student Name - Compact */}
+              <div className="mb-3 pb-3 border-b">
+                <div className="flex items-center gap-2">
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-lg ${
                     progress.percentage === 100 ? 'bg-gradient-to-br from-green-500 to-emerald-600' :
                     progress.percentage > 0 ? 'bg-gradient-to-br from-yellow-500 to-amber-600' :
                     'bg-gradient-to-br from-blue-500 to-cyan-600'
@@ -530,18 +530,18 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                     {payment.student?.user?.fullName?.charAt(0) || '?'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-base sm:text-lg text-gray-900 truncate">
+                    <h3 className="font-bold text-sm sm:text-base text-gray-900 truncate">
                       {payment.student?.user?.fullName || 'N/A'}
                     </h3>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-[10px] sm:text-xs text-gray-600">
                       {getPaymentTypeLabel(payment.paymentType)}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Amount Display - Large and Clear */}
-              <div className={`mb-4 p-4 rounded-xl border-2 ${
+              {/* Amount Display - Compact for Mobile */}
+              <div className={`mb-3 p-3 sm:p-4 rounded-xl border-2 ${
                 progress.percentage === 100 
                   ? 'bg-green-100/50 border-green-300' 
                   : progress.percentage > 0
@@ -549,74 +549,74 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                     : 'bg-red-100/50 border-red-300'
               }`}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600 font-medium">Jami summa:</span>
-                  <span className="text-xl sm:text-2xl font-bold text-gray-900">
-                    {formatNumber(progress.total)} <span className="text-sm">so'm</span>
+                  <span className="text-xs sm:text-sm text-gray-600 font-medium">Jami:</span>
+                  <span className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+                    {formatNumber(progress.total)} <span className="text-xs sm:text-sm">so'm</span>
                   </span>
                 </div>
                 
-                {/* Progress Bar - Bigger */}
-                <div className="my-3">
+                {/* Progress Bar - Compact */}
+                <div className="my-2">
                   <Progress 
                     value={progress.percentage} 
-                    className="h-3"
+                    className="h-2.5 sm:h-3"
                     indicatorClassName={getProgressColor(progress.percentage)}
                   />
                 </div>
                 
-                {/* Paid/Remaining */}
+                {/* Paid/Remaining - Compact */}
                 <div className="grid grid-cols-2 gap-2 text-center">
-                  <div className={`p-2 rounded-lg ${
+                  <div className={`p-1.5 sm:p-2 rounded-lg ${
                     progress.percentage === 100 ? 'bg-green-500' :
                     progress.percentage > 0 ? 'bg-yellow-500' :
                     'bg-gray-400'
                   }`}>
-                    <p className="text-xs text-white/90">To'langan</p>
-                    <p className="text-base sm:text-lg font-bold text-white">
+                    <p className="text-[10px] sm:text-xs text-white/90">To'langan</p>
+                    <p className="text-sm sm:text-base md:text-lg font-bold text-white">
                       {formatNumber(progress.paid)}
                     </p>
                   </div>
-                  <div className={`p-2 rounded-lg ${
+                  <div className={`p-1.5 sm:p-2 rounded-lg ${
                     progress.remaining > 0 ? 'bg-red-500' : 'bg-gray-300'
                   }`}>
-                    <p className="text-xs text-white/90">Qoldi</p>
-                    <p className="text-base sm:text-lg font-bold text-white">
+                    <p className="text-[10px] sm:text-xs text-white/90">Qoldi</p>
+                    <p className="text-sm sm:text-base md:text-lg font-bold text-white">
                       {formatNumber(progress.remaining)}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Payment Button - Large and Prominent */}
+              {/* Payment Button - Responsive */}
               {progress.percentage < 100 && (
                 <Button 
                   variant="default" 
                   size="lg"
                   onClick={() => handleAddPartialPayment(payment)}
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all h-14 text-base sm:text-lg font-bold"
+                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all h-12 sm:h-14 text-sm sm:text-base md:text-lg font-bold mb-2"
                 >
-                  <Plus className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
-                  To'lov qo'shish ({formatNumber(progress.remaining)} so'm)
+                  <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" />
+                  <span className="truncate">To'lov qo'shish ({formatNumber(progress.remaining)})</span>
                 </Button>
               )}
 
               {/* Completed Badge */}
               {progress.percentage === 100 && (
-                <div className="flex items-center justify-center gap-2 p-4 bg-green-100 border-2 border-green-300 rounded-xl">
-                  <CheckCircle2 className="h-6 w-6 text-green-600" />
-                  <span className="text-base font-bold text-green-700">To'liq to'langan ✓</span>
+                <div className="flex items-center justify-center gap-2 p-3 sm:p-4 bg-green-100 border-2 border-green-300 rounded-xl mb-2">
+                  <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+                  <span className="text-sm sm:text-base font-bold text-green-700">To'liq to'langan ✓</span>
                 </div>
               )}
 
-              {/* Additional Info - Compact */}
-              <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-3 text-xs sm:text-sm">
-                <div className="space-y-1">
-                  <p className="text-gray-500">💳 To'lov usuli:</p>
-                  <p className="font-semibold text-gray-900">{payment.paymentMethod}</p>
+              {/* Additional Info - Ultra Compact */}
+              <div className="mt-2 pt-2 border-t grid grid-cols-2 gap-2 text-[10px] sm:text-xs">
+                <div className="space-y-0.5">
+                  <p className="text-gray-500">💳 Usul:</p>
+                  <p className="font-semibold text-gray-900 text-xs sm:text-sm">{payment.paymentMethod}</p>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   <p className="text-gray-500">📅 Muddat:</p>
-                  <p className={`font-semibold ${isOverdue ? 'text-red-600' : 'text-gray-900'}`}>
+                  <p className={`font-semibold text-xs sm:text-sm ${isOverdue ? 'text-red-600' : 'text-gray-900'}`}>
                     {new Date(payment.dueDate).toLocaleDateString('uz-UZ', {
                       day: '2-digit',
                       month: 'short'
@@ -627,76 +627,75 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
 
               {/* Transactions History Toggle */}
               {payment.transactions && payment.transactions.length > 0 && (
-                <div className="mt-4">
+                <div className="mt-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => toggleExpanded(payment.id)}
-                    className="w-full border-2 hover:bg-blue-50"
+                    className="w-full border-2 hover:bg-blue-50 h-9 text-xs sm:text-sm"
                   >
-                    <Receipt className="h-4 w-4 mr-2" />
-                    {expandedPayments.has(payment.id) ? 'Tarixni yashirish' : `To'lovlar tarixi (${payment.transactions.length} ta)`}
+                    <Receipt className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                    {expandedPayments.has(payment.id) ? 'Yashirish' : `Tarix (${payment.transactions.length})`}
                     {expandedPayments.has(payment.id) ? (
-                      <ChevronUp className="h-4 w-4 ml-auto" />
+                      <ChevronUp className="h-3 w-3 sm:h-4 sm:w-4 ml-auto" />
                     ) : (
-                      <ChevronDown className="h-4 w-4 ml-auto" />
+                      <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 ml-auto" />
                     )}
                   </Button>
                   
                   {/* Expanded Transactions */}
                   {expandedPayments.has(payment.id) && (
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-2 space-y-2">
                       {payment.transactions.map((transaction, index) => (
                         <div 
                           key={transaction.id}
-                          className="p-3 sm:p-4 bg-gradient-to-br from-white to-blue-50 border-2 border-blue-200 rounded-xl shadow-md"
+                          className="p-2.5 sm:p-3 bg-gradient-to-br from-white to-blue-50 border-2 border-blue-200 rounded-lg shadow-md"
                         >
-                          {/* Transaction Header */}
-                          <div className="flex items-center justify-between mb-3 pb-2 border-b border-blue-200">
-                            <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs sm:text-sm font-bold px-3 py-1">
-                              To'lov #{index + 1}
+                          {/* Transaction Header - Compact */}
+                          <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-blue-200">
+                            <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5">
+                              #{index + 1}
                             </Badge>
-                            <span className="text-lg sm:text-xl font-bold text-green-600">
-                              {formatNumber(Number(transaction.amount))} so'm
+                            <span className="text-base sm:text-lg font-bold text-green-600">
+                              {formatNumber(Number(transaction.amount))}
                             </span>
                           </div>
 
-                          {/* Transaction Details */}
-                          <div className="space-y-2 text-sm">
-                            <div className="flex items-center justify-between p-2 bg-white/60 rounded-lg">
-                              <span className="text-gray-600 font-medium">📅 Sana:</span>
+                          {/* Transaction Details - Compact */}
+                          <div className="space-y-1.5 text-xs sm:text-sm">
+                            <div className="flex items-center justify-between p-1.5 bg-white/60 rounded">
+                              <span className="text-gray-600">📅 Sana:</span>
                               <span className="font-bold text-gray-900">
                                 {new Date(transaction.transactionDate).toLocaleDateString('uz-UZ', {
                                   day: '2-digit',
-                                  month: 'long',
-                                  year: 'numeric'
+                                  month: 'short'
                                 })}
                               </span>
                             </div>
 
-                            <div className="flex items-center justify-between p-2 bg-white/60 rounded-lg">
-                              <span className="text-gray-600 font-medium">💳 Usuli:</span>
-                              <Badge variant="outline" className="text-sm font-bold">
-                                {transaction.paymentMethod === 'CASH' && '💵 Naqd pul'}
-                                {transaction.paymentMethod === 'CLICK' && '💳 Click'}
-                                {transaction.paymentMethod === 'PAYME' && '💳 Payme'}
-                                {transaction.paymentMethod === 'UZUM' && '💳 Uzum'}
+                            <div className="flex items-center justify-between p-1.5 bg-white/60 rounded">
+                              <span className="text-gray-600">💳 Usul:</span>
+                              <Badge variant="outline" className="text-xs font-bold">
+                                {transaction.paymentMethod === 'CASH' && 'Naqd'}
+                                {transaction.paymentMethod === 'CLICK' && 'Click'}
+                                {transaction.paymentMethod === 'PAYME' && 'Payme'}
+                                {transaction.paymentMethod === 'UZUM' && 'Uzum'}
                               </Badge>
                             </div>
 
                             {transaction.receivedBy && (
-                              <div className="flex items-center justify-between p-2 bg-white/60 rounded-lg">
-                                <span className="text-gray-600 font-medium">👤 Qabul qildi:</span>
-                                <span className="font-semibold text-gray-900 text-right">
+                              <div className="flex items-center justify-between p-1.5 bg-white/60 rounded">
+                                <span className="text-gray-600">👤</span>
+                                <span className="font-semibold text-gray-900 text-right truncate max-w-[150px]">
                                   {transaction.receivedBy.fullName}
                                 </span>
                               </div>
                             )}
 
                             {transaction.notes && (
-                              <div className="p-3 bg-white/80 rounded-lg border border-blue-200">
-                                <p className="text-gray-600 font-medium mb-1.5 text-xs">📝 Izoh:</p>
-                                <p className="text-sm font-medium text-gray-800">
+                              <div className="p-2 bg-white/80 rounded border border-blue-200">
+                                <p className="text-[10px] text-gray-600 mb-0.5">📝 Izoh:</p>
+                                <p className="text-xs font-medium text-gray-800">
                                   {transaction.notes}
                                 </p>
                               </div>
