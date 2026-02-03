@@ -34,21 +34,13 @@ export default async function AdminMealsPage({
     where.dayOfWeek = parseInt(searchParams.day)
   }
 
-  // Fetch meals with error handling
-  let meals = []
-  try {
-    meals = await db.meal.findMany({
-      where,
-      orderBy: [
-        { dayOfWeek: 'asc' },
-        { mealLabel: 'asc' },
-      ],
-    })
-  } catch (error) {
-    console.error('Error fetching meals:', error)
-    // Return empty array on error
-    meals = []
-  }
+  const meals = await db.meal.findMany({
+    where,
+    orderBy: [
+      { dayOfWeek: 'asc' },
+      { mealLabel: 'asc' },
+    ],
+  })
 
   const mealsWithNames = meals.map(meal => ({
     ...meal,

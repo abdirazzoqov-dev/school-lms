@@ -76,23 +76,17 @@ export default async function ParentMealsPage({
   const currentMonth = searchParams.month ? parseInt(searchParams.month) : today.getMonth()
   const currentYear = searchParams.year ? parseInt(searchParams.year) : today.getFullYear()
 
-  // Get meals for current week/month with error handling
-  let meals = []
-  try {
-    meals = await db.meal.findMany({
-      where: {
-        tenantId,
-        isActive: true,
-      },
-      orderBy: [
-        { dayOfWeek: 'asc' },
-        { mealLabel: 'asc' },
-      ],
-    })
-  } catch (error) {
-    console.error('Error fetching parent meals:', error)
-    meals = []
-  }
+  // Get meals for current week/month
+  const meals = await db.meal.findMany({
+    where: {
+      tenantId,
+      isActive: true,
+    },
+    orderBy: [
+      { dayOfWeek: 'asc' },
+      { mealLabel: 'asc' },
+    ],
+  })
 
   // Group meals by day
   const mealsByDay: Record<number, typeof meals> = {}
