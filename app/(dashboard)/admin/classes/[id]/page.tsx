@@ -71,6 +71,11 @@ export default async function ClassDetailPage({ params }: PageProps) {
         }
       },
       schedules: {
+        where: {
+          type: 'LESSON', // Faqat darslar
+          subjectId: { not: null },
+          teacherId: { not: null }
+        },
         include: {
           subject: true,
           teacher: {
@@ -162,28 +167,38 @@ export default async function ClassDetailPage({ params }: PageProps) {
     : 0
 
   // ✅ Auto-generate subjects from schedule
-  const subjectsFromSchedule = classItem.schedules.reduce((acc, schedule) => {
-    const key = `${schedule.subjectId}-${schedule.teacherId}`
-    if (!acc.has(key)) {
-      acc.set(key, {
-        subjectId: schedule.subjectId,
-        subjectName: schedule.subject.name,
-        teacherId: schedule.teacherId,
-        teacherName: schedule.teacher.user.fullName,
-        teacherEmail: schedule.teacher.user.email,
-        hoursPerWeek: 1 // Count hours
-      })
-    } else {
-      // Increment hours if already exists
-      const existing = acc.get(key)!
-      existing.hoursPerWeek += 1
-    }
-    return acc
-  }, new Map<string, any>())
+  const subjectsFromSchedule = classItem.schedules
+    .filter(schedule => schedule.subject && schedule.teacher) // Null check
+    .reduce((acc, schedule) => {
+      const key = `${schedule.subjectId}-${schedule.teacherId}`
+      if (!acc.has(key)) {
+        acc.set(key, {
+          subjectId: schedule.subjectId!,
+          subjectName: schedule.subject!.name,
+          teacherId: schedule.teacherId!,
+          teacherName: schedule.teacher!.user.fullName,
+          teacherEmail: schedule.teacher!.user.email,
+          hoursPerWeek: 1 // Count hours
+        })
+      } else {
+        // Increment hours if already exists
+        const existing = acc.get(key)!
+        existing.hoursPerWeek += 1
+      }
+      return acc
+    }, new Map<string, any>())
 
   const autoSubjects = Array.from(subjectsFromSchedule.values()).sort((a, b) => 
     a.subjectName.localeCompare(b.subjectName)
   )
+
+  // Debug log (remove in production)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Class ID:', params.id)
+    console.log('Total schedules:', classItem.schedules.length)
+    console.log('Auto subjects:', autoSubjects.length)
+    console.log('Auto subjects data:', autoSubjects)
+  }
 
   return (
     <div className="space-y-6 p-6">
