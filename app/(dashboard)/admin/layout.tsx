@@ -117,11 +117,6 @@ export default async function AdminLayout({
       icon: 'ChefHat',
       children: [
         {
-          title: 'Ovqatlar Menyusi',
-          href: '/admin/meals',
-          icon: 'UtensilsCrossed',
-        },
-        {
           title: 'Xarajatlar',
           href: '/admin/kitchen',
           icon: 'TrendingDown',
