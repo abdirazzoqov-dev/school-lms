@@ -275,39 +275,47 @@ export default async function PaymentsPage({
 
   return (
     <div className="space-y-4 md:space-y-6 p-4 md:p-6">
-      {/* Modern Gradient Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 p-6 md:p-8 text-white shadow-2xl">
+      {/* Modern Gradient Header - Enhanced Mobile */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 p-4 sm:p-6 md:p-8 text-white shadow-2xl">
         <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,black)]" />
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-              <DollarSign className="h-6 w-6 md:h-8 md:w-8" />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 sm:p-3 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg">
+                <DollarSign className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">To'lovlar</h1>
+                <p className="text-green-100 text-xs sm:text-sm md:text-base mt-0.5 sm:mt-1">
+                  Barcha to'lovlarni boshqaring
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl md:text-4xl font-bold tracking-tight">To'lovlar</h1>
-              <p className="text-green-100 text-sm md:text-base mt-1">
-                Barcha to'lovlarni boshqaring va kuzating
-              </p>
+            <div className="text-sm sm:text-base bg-white/10 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-lg border border-white/20">
+              <span className="text-white/80">Jami: </span>
+              <span className="font-bold">{totalPayments} ta</span>
             </div>
           </div>
         </div>
+        <div className="absolute -right-8 -top-8 h-32 w-32 sm:h-40 sm:w-40 rounded-full bg-white/10 blur-3xl"></div>
+        <div className="absolute -left-8 -bottom-8 h-32 w-32 sm:h-40 sm:w-40 rounded-full bg-white/10 blur-3xl"></div>
       </div>
 
-      {/* Modern Search and Filter */}
+      {/* Modern Search and Filter - Mobile Optimized */}
       <Card className="border-2 shadow-lg">
-        <CardContent className="pt-6">
-          <div className="space-y-4">
-            {/* Search Bar */}
-            <div className="flex flex-col sm:flex-row gap-3">
+        <CardContent className="p-3 sm:p-4 md:pt-6">
+          <div className="space-y-3 sm:space-y-4">
+            {/* Search Bar - Mobile First */}
+            <div className="flex flex-col gap-2 sm:gap-3">
               <SearchBar 
-                placeholder="Invoice, O'quvchi, Kod bo'yicha qidirish..." 
-                className="flex-1"
+                placeholder="Invoice, O'quvchi, Kod..." 
+                className="w-full text-base"
               />
               <ClearFilters className="w-full sm:w-auto" />
             </div>
 
-            {/* Filters */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {/* Filters - Mobile Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
               <FilterSelect
                 paramName="status"
                 options={[
@@ -349,18 +357,11 @@ export default async function PaymentsPage({
               />
             </div>
 
-            {/* Info Row */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-4 border-t">
+            {/* Info Row - Mobile Optimized */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t">
               <PageSizeSelector currentPageSize={pageSize} />
               <div className="text-xs sm:text-sm text-muted-foreground">
-                <span className="font-medium text-gray-900">{totalPayments}</span> ta to'lov topildi
-                {Object.keys(paymentTypeStats).length > 0 && (
-                  <span className="hidden lg:inline ml-2">
-                    ({Object.entries(paymentTypeStats).map(([type, count]) => 
-                      `${type === 'TUITION' ? 'O\'qish' : type === 'DORMITORY' ? 'Yotoqxona' : type}: ${count}`
-                    ).join(', ')})
-                  </span>
-                )}
+                <span className="font-bold text-gray-900 text-sm sm:text-base">{totalPayments}</span> ta to'lov
               </div>
             </div>
           </div>
@@ -548,61 +549,61 @@ export default async function PaymentsPage({
         </Card>
       )}
 
-      {/* Modern Summary Stats */}
-      <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-green-500 hover:shadow-lg transition-shadow">
-          <CardContent className="p-4 md:p-6">
-            <div className="flex items-start justify-between mb-2">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
+      {/* Modern Summary Stats - Mobile Enhanced */}
+      <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
+        <Card className="border-l-4 border-l-green-500 hover:shadow-xl transition-all hover:-translate-y-1">
+          <CardContent className="p-3 sm:p-4 md:p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 sm:p-2.5 bg-green-100 rounded-lg sm:rounded-xl shadow-md">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
               </div>
             </div>
-            <div className="text-2xl md:text-3xl font-bold text-green-600 mb-1">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600 mb-1 truncate">
               {formatNumber(totalRevenue)}
             </div>
-            <p className="text-xs md:text-sm text-muted-foreground">To'langan summa</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground font-medium">To'langan summa</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-shadow">
-          <CardContent className="p-4 md:p-6">
-            <div className="flex items-start justify-between mb-2">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Clock className="h-5 w-5 text-orange-600" />
+        <Card className="border-l-4 border-l-orange-500 hover:shadow-xl transition-all hover:-translate-y-1">
+          <CardContent className="p-3 sm:p-4 md:p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 sm:p-2.5 bg-orange-100 rounded-lg sm:rounded-xl shadow-md">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
               </div>
             </div>
-            <div className="text-2xl md:text-3xl font-bold text-orange-600 mb-1">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-600 mb-1 truncate">
               {formatNumber(pendingAmount)}
             </div>
-            <p className="text-xs md:text-sm text-muted-foreground">Kutilayotgan</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground font-medium">Kutilayotgan</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow">
-          <CardContent className="p-4 md:p-6">
-            <div className="flex items-start justify-between mb-2">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <DollarSign className="h-5 w-5 text-blue-600" />
+        <Card className="border-l-4 border-l-blue-500 hover:shadow-xl transition-all hover:-translate-y-1">
+          <CardContent className="p-3 sm:p-4 md:p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 sm:p-2.5 bg-blue-100 rounded-lg sm:rounded-xl shadow-md">
+                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
               </div>
             </div>
-            <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-1">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 mb-1">
               {payments.filter(p => p.status === 'COMPLETED').length}
             </div>
-            <p className="text-xs md:text-sm text-muted-foreground">To'langan to'lovlar</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground font-medium">To'langan</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-red-500 hover:shadow-lg transition-shadow">
-          <CardContent className="p-4 md:p-6">
-            <div className="flex items-start justify-between mb-2">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <XCircle className="h-5 w-5 text-red-600" />
+        <Card className="border-l-4 border-l-red-500 hover:shadow-xl transition-all hover:-translate-y-1">
+          <CardContent className="p-3 sm:p-4 md:p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="p-2 sm:p-2.5 bg-red-100 rounded-lg sm:rounded-xl shadow-md">
+                <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
               </div>
             </div>
-            <div className="text-2xl md:text-3xl font-bold text-red-600 mb-1">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-red-600 mb-1">
               {payments.filter(p => p.status === 'PENDING' && p.dueDate < new Date()).length}
             </div>
-            <p className="text-xs md:text-sm text-muted-foreground">Muddati o'tgan</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground font-medium">Muddati o'tgan</p>
           </CardContent>
         </Card>
       </div>
