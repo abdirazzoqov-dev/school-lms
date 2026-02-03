@@ -70,6 +70,21 @@ export default async function ClassDetailPage({ params }: PageProps) {
           }
         }
       },
+      schedules: {
+        include: {
+          subject: true,
+          teacher: {
+            include: {
+              user: {
+                select: {
+                  fullName: true,
+                  email: true
+                }
+              }
+            }
+          }
+        }
+      },
       students: {
         where: {
           status: 'ACTIVE'
@@ -146,6 +161,30 @@ export default async function ClassDetailPage({ params }: PageProps) {
     ? (totalAttendance / (activeStudentsCount * 30)) * 100 // Approximate monthly rate
     : 0
 
+  // ✅ Auto-generate subjects from schedule
+  const subjectsFromSchedule = classItem.schedules.reduce((acc, schedule) => {
+    const key = `${schedule.subjectId}-${schedule.teacherId}`
+    if (!acc.has(key)) {
+      acc.set(key, {
+        subjectId: schedule.subjectId,
+        subjectName: schedule.subject.name,
+        teacherId: schedule.teacherId,
+        teacherName: schedule.teacher.user.fullName,
+        teacherEmail: schedule.teacher.user.email,
+        hoursPerWeek: 1 // Count hours
+      })
+    } else {
+      // Increment hours if already exists
+      const existing = acc.get(key)!
+      existing.hoursPerWeek += 1
+    }
+    return acc
+  }, new Map<string, any>())
+
+  const autoSubjects = Array.from(subjectsFromSchedule.values()).sort((a, b) => 
+    a.subjectName.localeCompare(b.subjectName)
+  )
+
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -215,9 +254,9 @@ export default async function ClassDetailPage({ params }: PageProps) {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{classItem._count.classSubjects}</div>
+            <div className="text-2xl font-bold">{autoSubjects.length}</div>
             <p className="text-xs text-muted-foreground mt-2">
-              Ta'lim fanlar soni
+              Dars jadvalidagi fanlar
             </p>
           </CardContent>
         </Card>
@@ -498,7 +537,7 @@ export default async function ClassDetailPage({ params }: PageProps) {
         </CardContent>
       </Card>
 
-      {/* Subjects */}
+      {/* Subjects - Auto from Schedule */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -508,48 +547,62 @@ export default async function ClassDetailPage({ params }: PageProps) {
                 O'qitiladigan Fanlar
               </CardTitle>
               <CardDescription>
-                {classItem._count.classSubjects} ta fan
+                {autoSubjects.length} ta fan • Dars jadvalidan avtomatik
               </CardDescription>
             </div>
             <Button variant="outline" size="sm" asChild>
-              <Link href={`/admin/classes/${classItem.id}/subjects`}>
-                <Plus className="h-4 w-4 mr-2" />
-                Fan biriktirish
+              <Link href={`/admin/schedules?type=class&classId=${classItem.id}`}>
+                <Calendar className="h-4 w-4 mr-2" />
+                Dars jadvali
               </Link>
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          {classItem.classSubjects.length > 0 ? (
+          {autoSubjects.length > 0 ? (
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {classItem.classSubjects.map((cs) => (
+              {autoSubjects.map((subject) => (
                 <div
-                  key={cs.id}
-                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                  key={`${subject.subjectId}-${subject.teacherId}`}
+                  className="flex items-center justify-between p-4 rounded-lg border bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 hover:shadow-md transition-all"
                 >
                   <div className="flex-1">
-                    <p className="font-medium">{cs.subject.name}</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                      <p className="font-semibold text-sm">{subject.subjectName}</p>
+                    </div>
                     <p className="text-sm text-muted-foreground">
-                      {cs.teacher.user.fullName}
+                      {subject.teacherName}
                     </p>
+                    {subject.teacherEmail && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {subject.teacherEmail}
+                      </p>
+                    )}
                   </div>
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    <span>{cs.hoursPerWeek}s/hf</span>
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-1 text-sm font-medium text-blue-600">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span>{subject.hoursPerWeek}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">soat/hafta</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <BookOpen className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground mb-3">
-                Hozircha fanlar biriktirilmagan
+            <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-lg">
+              <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-lg font-medium text-muted-foreground mb-2">
+                Dars jadvali yaratilmagan
               </p>
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/admin/classes/${classItem.id}/subjects`}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Birinchi fanni biriktirish
+              <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+                Dars jadvali yaratilganda fanlar va o'qituvchilar avtomatik bu yerda ko'rinadi
+              </p>
+              <Button asChild>
+                <Link href={`/admin/schedules?type=class&classId=${classItem.id}`}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Dars jadvali yaratish
                 </Link>
               </Button>
             </div>
