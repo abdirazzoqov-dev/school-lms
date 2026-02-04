@@ -171,6 +171,7 @@ model Tenant {
   dormitoryAssignments     DormitoryAssignment[]
   salaryPayments           SalaryPayment[]
   meals                    Meal[]
+  contactPersons           ContactPerson[]
 
   @@map("tenants")  // PostgreSQL standard: lowercase, plural
   @@index([slug])
@@ -878,6 +879,29 @@ model Material {
   @@index([teacherId])
   @@index([subjectId])
   @@index([classId])
+}
+
+// CONTACT PERSON - Tezkor bog'lanish (Ma'sul xodimlar)
+model ContactPerson {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  fullName    String // FIO
+  position    String // Lavozim (Direktor, Zamdirektor, etc.)
+  phone       String // Telefon raqam
+  email       String? // Email (ixtiyoriy)
+  description String? @db.Text // Qo'shimcha ma'lumot
+  
+  displayOrder Int @default(0) // Tartib raqami
+  isActive     Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([tenantId, isActive])
+  @@index([tenantId, displayOrder])
 }
 
 // MEAL - Ovqatlar menyusi (Oshxona)

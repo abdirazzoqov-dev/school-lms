@@ -144,6 +144,11 @@ export default async function AdminLayout({
       icon: 'BarChart3',
     },
     {
+      title: 'Ma\'sul Xodimlar',
+      href: '/admin/contacts',
+      icon: 'Users',
+    },
+    {
       title: 'Sozlamalar',
       href: '/admin/settings',
       icon: 'Settings',

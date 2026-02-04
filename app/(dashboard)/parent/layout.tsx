@@ -77,6 +77,11 @@ export default async function ParentLayout({
       icon: 'MessageSquare',
     },
     {
+      title: 'Tezkor Bog\'lanish',
+      href: '/parent/contacts',
+      icon: 'Phone',
+    },
+    {
       title: 'Bildirishnomalar',
       href: '/parent/notifications',
       icon: 'Bell',
