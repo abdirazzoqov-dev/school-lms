@@ -1,6 +1,6 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { redirect } from 'next/redirect'
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Phone, Mail, User, Clock } from 'lucide-react'
