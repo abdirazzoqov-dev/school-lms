@@ -13,31 +13,36 @@ export async function createContactPerson(data: {
   description?: string
   displayOrder?: number
 }) {
-  const session = await getServerSession(authOptions)
-  
-  if (!session || session.user.role !== 'ADMIN') {
-    throw new Error('Ruxsat berilmagan')
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session || session.user.role !== 'ADMIN') {
+      throw new Error('Ruxsat berilmagan')
+    }
+
+    const tenantId = session.user.tenantId!
+
+    const contact = await db.contactPerson.create({
+      data: {
+        tenantId,
+        fullName: data.fullName,
+        position: data.position,
+        phone: data.phone,
+        email: data.email || null,
+        description: data.description || null,
+        displayOrder: data.displayOrder || 0,
+        isActive: true,
+      },
+    })
+
+    revalidatePath('/admin/contacts')
+    revalidatePath('/parent/contacts')
+    
+    return { success: true, contact }
+  } catch (error: any) {
+    console.error('Create contact error:', error)
+    throw new Error(error.message || 'Xatolik yuz berdi')
   }
-
-  const tenantId = session.user.tenantId!
-
-  const contact = await db.contactPerson.create({
-    data: {
-      tenantId,
-      fullName: data.fullName,
-      position: data.position,
-      phone: data.phone,
-      email: data.email || null,
-      description: data.description || null,
-      displayOrder: data.displayOrder || 0,
-      isActive: true,
-    },
-  })
-
-  revalidatePath('/admin/contacts')
-  revalidatePath('/parent/contacts')
-  
-  return { success: true, contact }
 }
 
 export async function updateContactPerson(
