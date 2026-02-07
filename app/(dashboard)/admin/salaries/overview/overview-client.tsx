@@ -189,7 +189,7 @@ export function SalaryOverviewClient({ employees, currentYear, months }: Props) 
             </CardHeader>
             
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <p className="text-xs text-muted-foreground mb-1">Oylik</p>
                   <p className="text-xl font-bold text-blue-600">{(emp.salary / 1000000).toFixed(1)}M</p>
@@ -201,6 +201,14 @@ export function SalaryOverviewClient({ employees, currentYear, months }: Props) 
                 <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
                   <p className="text-xs text-muted-foreground mb-1">Qolgan</p>
                   <p className="text-xl font-bold text-orange-600">{(emp.totalDebt / 1000000).toFixed(1)}M</p>
+                </div>
+                <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                  <p className="text-xs text-muted-foreground mb-1">Ushlab qolish</p>
+                  <p className="text-xl font-bold text-red-600">
+                    {((emp.payments
+                      .filter(p => p.type === 'DEDUCTION')
+                      .reduce((s, p) => s + p.paidAmount, 0)) / 1000000).toFixed(1)}M
+                  </p>
                 </div>
                 <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
                   <p className="text-xs text-muted-foreground mb-1">Oylar</p>

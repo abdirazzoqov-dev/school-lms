@@ -138,11 +138,18 @@ export default async function TeacherSalaryPage({
                 {teacher.user.fullName} • Oylik maosh va to'lovlar tarixi
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-green-100 mb-1">Joriy oy</p>
-              <p className="text-3xl font-bold">
-                {monthNames[selectedMonth - 1]} {selectedYear}
-              </p>
+            <div className="flex flex-col sm:flex-row items-end gap-3">
+              <div className="text-right">
+                <p className="text-sm text-green-100 mb-1">Joriy oy</p>
+                <p className="text-3xl font-bold">
+                  {monthNames[selectedMonth - 1]} {selectedYear}
+                </p>
+              </div>
+              <Button asChild variant="secondary" className="whitespace-nowrap">
+                <Link href="/teacher/salary/overview">
+                  📊 Yillik Ko'rinish
+                </Link>
+              </Button>
             </div>
           </div>
         </div>
