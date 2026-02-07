@@ -403,18 +403,6 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
                 <div className="text-xs text-muted-foreground">Oylik maoshdan oldindan to'lov</div>
               </div>
             </SelectItem>
-            <SelectItem value="BONUS">
-              <div>
-                <div className="font-medium">Mukofot</div>
-                <div className="text-xs text-muted-foreground">Qo'shimcha mukofot to'lovi</div>
-              </div>
-            </SelectItem>
-            <SelectItem value="DEDUCTION">
-              <div>
-                <div className="font-medium">Ushlab Qolish</div>
-                <div className="text-xs text-muted-foreground">Jarima yoki boshqa ushlab qolishlar</div>
-              </div>
-            </SelectItem>
           </SelectContent>
         </Select>
       </div>
