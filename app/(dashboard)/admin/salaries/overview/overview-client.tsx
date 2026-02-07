@@ -210,10 +210,23 @@ export function SalaryOverviewClient({ employees, currentYear, months }: Props) 
 
               <div className="flex gap-1 sm:gap-2 overflow-x-auto pb-2">
                 {months.map((month, i) => {
-                  const monthPayment = emp.payments.find(p => p.month === i + 1 && p.type === 'FULL_SALARY')
-                  const isPaid = monthPayment?.status === 'PAID'
-                  const isPartial = monthPayment?.status === 'PARTIALLY_PAID'
-                  const isPending = monthPayment && !isPaid && !isPartial
+                  // Get ALL payments for this month (all types)
+                  const monthPayments = emp.payments.filter(p => p.month === i + 1)
+                  
+                  // Calculate total paid for this month
+                  const totalPaidThisMonth = monthPayments
+                    .filter(p => p.status === 'PAID' || p.status === 'PARTIALLY_PAID')
+                    .reduce((sum, p) => sum + p.paidAmount, 0)
+                  
+                  // Check if there's any pending payment
+                  const hasPending = monthPayments.some(p => p.status === 'PENDING')
+                  
+                  // Determine status based on paid amount vs monthly salary
+                  const monthSalary = emp.salary
+                  const isPaid = totalPaidThisMonth >= monthSalary
+                  const isPartial = totalPaidThisMonth > 0 && totalPaidThisMonth < monthSalary
+                  const isPending = hasPending && totalPaidThisMonth === 0
+                  const notPaid = monthPayments.length === 0 || totalPaidThisMonth === 0
                   
                   return (
                     <div
@@ -224,7 +237,12 @@ export function SalaryOverviewClient({ employees, currentYear, months }: Props) 
                         isPending ? 'bg-orange-500 border-orange-600 text-white' :
                         'bg-gray-100 border-gray-300 text-gray-500'
                       }`}
-                      title={`${month} ${currentYear}`}
+                      title={`${month} ${currentYear} - ${
+                        isPaid ? 'To\'langan' : 
+                        isPartial ? `Qisman: ${(totalPaidThisMonth/1000000).toFixed(1)}M / ${(monthSalary/1000000).toFixed(1)}M` :
+                        isPending ? 'Kutilmoqda' : 
+                        'Berilmagan'
+                      }`}
                     >
                       <p className="text-xs font-bold">{month}</p>
                       <p className="text-[10px] mt-1">
