@@ -48,14 +48,26 @@ export default async function SalariesOverviewPage() {
       name: t.user.fullName,
       email: t.user.email,
       salary: Number(t.monthlySalary) || 0,
-      payments: t.salaryPayments
+      payments: t.salaryPayments.map(p => ({
+        month: p.month,
+        type: p.type,
+        status: p.status,
+        paidAmount: Number(p.paidAmount) || 0,
+        remainingAmount: Number(p.remainingAmount) || 0
+      }))
     })),
     ...staff.map(s => ({
       id: s.id,
       name: s.user.fullName,
       email: s.user.email,
       salary: Number(s.monthlySalary) || 0,
-      payments: s.salaryPayments
+      payments: s.salaryPayments.map(p => ({
+        month: p.month,
+        type: p.type,
+        status: p.status,
+        paidAmount: Number(p.paidAmount) || 0,
+        remainingAmount: Number(p.remainingAmount) || 0
+      }))
     }))
   ]
 

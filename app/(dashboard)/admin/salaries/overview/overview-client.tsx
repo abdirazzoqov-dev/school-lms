@@ -12,8 +12,8 @@ interface Payment {
   month: number
   type: string
   status: string
-  paidAmount: any
-  remainingAmount: any
+  paidAmount: number
+  remainingAmount: number
 }
 
 interface Employee {
@@ -40,8 +40,8 @@ export function SalaryOverviewClient({ employees, currentYear, months }: Props) 
   // Process and filter employees
   const processedEmployees = useMemo(() => {
     return employees.map(emp => {
-      const totalPaid = emp.payments.filter(p => p.status === 'PAID').reduce((s, p) => s + Number(p.paidAmount), 0)
-      const totalDebt = emp.payments.filter(p => p.status !== 'PAID' && p.status !== 'CANCELLED').reduce((s, p) => s + Number(p.remainingAmount), 0)
+      const totalPaid = emp.payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.paidAmount, 0)
+      const totalDebt = emp.payments.filter(p => p.status !== 'PAID' && p.status !== 'CANCELLED').reduce((s, p) => s + p.remainingAmount, 0)
       const monthsPaid = emp.payments.filter(p => p.type === 'FULL_SALARY' && p.status === 'PAID').length
       const hasPartial = emp.payments.some(p => p.status === 'PARTIALLY_PAID')
       
