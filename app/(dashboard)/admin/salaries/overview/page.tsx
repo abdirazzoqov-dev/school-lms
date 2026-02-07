@@ -15,7 +15,7 @@ export const revalidate = 0
 export default async function SalariesOverviewPage({
   searchParams
 }: {
-  searchParams: { search?: string; filter?: string }
+  searchParams: { search?: string; filter?: string; sort?: string }
 }) {
   const session = await getServerSession(authOptions)
 
@@ -27,6 +27,7 @@ export default async function SalariesOverviewPage({
   const currentYear = new Date().getFullYear()
   const searchQuery = searchParams.search
   const filterType = searchParams.filter // 'debt', 'paid', 'all'
+  const sortType = searchParams.sort || 'name' // 'name', 'debt', 'progress'
 
   // Get all teachers with salary info
   const teachers = await db.teacher.findMany({
@@ -166,6 +167,27 @@ export default async function SalariesOverviewPage({
     )
   }
 
+  // Apply sort
+  filteredEmployees.sort((a, b) => {
+    if (sortType === 'debt') {
+      const aDebt = a.payments.filter(p => p.status !== 'PAID').reduce((s, p) => s + p.remainingAmount, 0)
+      const bDebt = b.payments.filter(p => p.status !== 'PAID').reduce((s, p) => s + p.remainingAmount, 0)
+      return bDebt - aDebt // Highest debt first
+    } else if (sortType === 'progress') {
+      const currentMonth = new Date().getMonth() + 1
+      const aExpected = a.monthlySalary * currentMonth
+      const aPaid = a.payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.paidAmount, 0)
+      const aProgress = aExpected > 0 ? (aPaid / aExpected) * 100 : 0
+      
+      const bExpected = b.monthlySalary * currentMonth
+      const bPaid = b.payments.filter(p => p.status === 'PAID').reduce((s, p) => s + p.paidAmount, 0)
+      const bProgress = bExpected > 0 ? (bPaid / bExpected) * 100 : 0
+      
+      return bProgress - aProgress // Highest progress first
+    }
+    return a.name.localeCompare(b.name) // Name (default)
+  })
+
   // Calculate statistics
   const totalDebt = employees.reduce((sum, e) => 
     sum + e.payments
@@ -179,33 +201,32 @@ export default async function SalariesOverviewPage({
   ).length
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-8 text-white shadow-2xl">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-6">
+      {/* Header - Mobile Optimized */}
+      <div className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-4 sm:p-8 text-white shadow-2xl">
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="relative z-10">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+          <Button
+            asChild
+            variant="secondary"
+            size="sm"
+            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm mb-3 sm:mb-4"
+          >
+            <Link href="/admin/salaries">
+              <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="text-xs sm:text-sm">Ortga</span>
+            </Link>
+          </Button>
+          
+          <div className="flex items-start gap-2 sm:gap-3 mb-2">
+            <div className="p-2 sm:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
+              <Users className="h-5 w-5 sm:h-8 sm:w-8" />
+            </div>
             <div>
-              <div className="flex items-center gap-3 mb-4">
-                <Button
-                  asChild
-                  variant="secondary"
-                  size="sm"
-                  className="bg-white/20 hover:bg-white/30 backdrop-blur-sm"
-                >
-                  <Link href="/admin/salaries">
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Ortga
-                  </Link>
-                </Button>
-              </div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <Users className="h-8 w-8" />
-                </div>
-                <h1 className="text-4xl font-bold">Xodimlar Umumiy Ko'rinish</h1>
-              </div>
-              <p className="text-indigo-50 text-lg">
+              <h1 className="text-xl sm:text-3xl lg:text-4xl font-bold">
+                Xodimlar Umumiy Ko'rinish
+              </h1>
+              <p className="text-indigo-50 text-xs sm:text-sm lg:text-lg mt-1">
                 Har bir xodim uchun oylik-oylik to'lov holati va qarzlar
               </p>
             </div>
@@ -213,90 +234,128 @@ export default async function SalariesOverviewPage({
         </div>
       </div>
 
-      {/* Statistics */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+      {/* Statistics - Mobile Optimized */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-3">
+        <Card className="border sm:border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
+          <CardContent className="p-3 sm:pt-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-2">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Jami Xodimlar</p>
-                <p className="text-3xl font-bold text-blue-600">{employees.length}</p>
+                <p className="text-[10px] sm:text-sm font-medium text-muted-foreground">Jami</p>
+                <p className="text-xl sm:text-3xl font-bold text-blue-600">{employees.length}</p>
               </div>
-              <Users className="h-8 w-8 text-blue-600" />
+              <Users className="h-5 w-5 sm:h-8 sm:w-8 text-blue-600" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-red-200 bg-gradient-to-br from-red-50 to-orange-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+        <Card className="border sm:border-2 border-red-200 bg-gradient-to-br from-red-50 to-orange-50">
+          <CardContent className="p-3 sm:pt-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-2">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Qarzdorlar</p>
-                <p className="text-3xl font-bold text-red-600">{employeesWithDebt}</p>
+                <p className="text-[10px] sm:text-sm font-medium text-muted-foreground">Qarzd.</p>
+                <p className="text-xl sm:text-3xl font-bold text-red-600">{employeesWithDebt}</p>
               </div>
-              <TrendingDown className="h-8 w-8 text-red-600" />
+              <TrendingDown className="h-5 w-5 sm:h-8 sm:w-8 text-red-600" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+        <Card className="border sm:border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50">
+          <CardContent className="p-3 sm:pt-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-2">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Jami Qarz</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {totalDebt.toLocaleString('uz-UZ')}
+                <p className="text-[10px] sm:text-sm font-medium text-muted-foreground">Qarz</p>
+                <p className="text-base sm:text-2xl font-bold text-orange-600">
+                  {(totalDebt / 1000000).toFixed(1)}M
                 </p>
-                <p className="text-xs text-muted-foreground">so'm</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">so'm</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Search and Filters */}
+      {/* Search and Filters - Mobile Enhanced */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Qidiruv va Filtrlar</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm sm:text-lg">Qidiruv va Filtrlar</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <form method="GET">
-                <Input
-                  name="search"
-                  placeholder="Xodim ismi bo'yicha qidirish..."
-                  defaultValue={searchQuery}
-                  className="w-full"
-                />
-              </form>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                asChild
-                variant={!filterType || filterType === 'all' ? 'default' : 'outline'}
-                size="sm"
-              >
-                <Link href="/admin/salaries/overview">
-                  Barchasi ({employees.length})
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant={filterType === 'debt' ? 'destructive' : 'outline'}
-                size="sm"
-              >
-                <Link href="/admin/salaries/overview?filter=debt">
-                  Qarzdorlar ({employeesWithDebt})
-                </Link>
-              </Button>
-            </div>
+        <CardContent className="space-y-3">
+          {/* Search */}
+          <form method="GET">
+            <Input
+              name="search"
+              placeholder="Xodim ismi..."
+              defaultValue={searchQuery}
+              className="w-full text-sm"
+            />
+            <input type="hidden" name="filter" value={filterType || ''} />
+            <input type="hidden" name="sort" value={sortType} />
+          </form>
+
+          {/* Filter Chips */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              asChild
+              variant={!filterType || filterType === 'all' ? 'default' : 'outline'}
+              size="sm"
+              className="text-xs sm:text-sm"
+            >
+              <Link href={`/admin/salaries/overview?sort=${sortType}`}>
+                Barchasi ({employees.length})
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant={filterType === 'debt' ? 'destructive' : 'outline'}
+              size="sm"
+              className="text-xs sm:text-sm"
+            >
+              <Link href={`/admin/salaries/overview?filter=debt&sort=${sortType}`}>
+                Qarzdorlar ({employeesWithDebt})
+              </Link>
+            </Button>
+          </div>
+
+          {/* Sort Options */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">Saralash:</span>
+            <Button
+              asChild
+              variant={sortType === 'name' ? 'secondary' : 'ghost'}
+              size="sm"
+              className="text-xs"
+            >
+              <Link href={`/admin/salaries/overview?${filterType ? `filter=${filterType}&` : ''}sort=name`}>
+                Ism
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant={sortType === 'debt' ? 'secondary' : 'ghost'}
+              size="sm"
+              className="text-xs"
+            >
+              <Link href={`/admin/salaries/overview?${filterType ? `filter=${filterType}&` : ''}sort=debt`}>
+                Qarz
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant={sortType === 'progress' ? 'secondary' : 'ghost'}
+              size="sm"
+              className="text-xs"
+            >
+              <Link href={`/admin/salaries/overview?${filterType ? `filter=${filterType}&` : ''}sort=progress`}>
+                Progress
+              </Link>
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Employees Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {/* Employees Grid - Responsive */}
+      <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
         {filteredEmployees.map(employee => (
           <SalaryOverviewCard
             key={employee.id}
