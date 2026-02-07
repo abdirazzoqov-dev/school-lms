@@ -221,6 +221,11 @@ export function SalaryOverviewClient({ employees, currentYear, months }: Props) 
                   // Get ALL payments for this month (all types)
                   const monthPayments = emp.payments.filter(p => p.month === i + 1)
                   
+                  // Check if there's FULL_SALARY payment that is PAID
+                  const hasFullSalaryPaid = monthPayments.some(p => 
+                    p.type === 'FULL_SALARY' && p.status === 'PAID'
+                  )
+                  
                   // Calculate total paid for this month
                   const totalPaidThisMonth = monthPayments
                     .filter(p => p.status === 'PAID' || p.status === 'PARTIALLY_PAID')
@@ -229,10 +234,11 @@ export function SalaryOverviewClient({ employees, currentYear, months }: Props) 
                   // Check if there's any pending payment
                   const hasPending = monthPayments.some(p => p.status === 'PENDING')
                   
-                  // Determine status based on paid amount vs monthly salary
+                  // Determine status
                   const monthSalary = emp.salary
-                  const isPaid = totalPaidThisMonth >= monthSalary
-                  const isPartial = totalPaidThisMonth > 0 && totalPaidThisMonth < monthSalary
+                  // If FULL_SALARY is paid, month is considered fully paid (even with deductions)
+                  const isPaid = hasFullSalaryPaid || totalPaidThisMonth >= monthSalary
+                  const isPartial = !hasFullSalaryPaid && totalPaidThisMonth > 0 && totalPaidThisMonth < monthSalary
                   const isPending = hasPending && totalPaidThisMonth === 0
                   const notPaid = monthPayments.length === 0 || totalPaidThisMonth === 0
                   

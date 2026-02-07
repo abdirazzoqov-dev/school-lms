@@ -140,6 +140,11 @@ export default async function TeacherSalaryOverviewPage() {
             // Get ALL payments for this month
             const monthPayments = payments.filter(p => p.month === i + 1)
             
+            // Check if there's FULL_SALARY payment that is PAID
+            const hasFullSalaryPaid = monthPayments.some(p => 
+              p.type === 'FULL_SALARY' && p.status === 'PAID'
+            )
+            
             // Calculate total paid for this month
             const totalPaidThisMonth = monthPayments
               .filter(p => p.status === 'PAID' || p.status === 'PARTIALLY_PAID')
@@ -159,8 +164,9 @@ export default async function TeacherSalaryOverviewPage() {
             const hasPending = monthPayments.some(p => p.status === 'PENDING')
             
             // Determine status
-            const isPaid = totalPaidThisMonth >= monthlySalary
-            const isPartial = totalPaidThisMonth > 0 && totalPaidThisMonth < monthlySalary
+            // If FULL_SALARY is paid, month is considered fully paid (even with deductions)
+            const isPaid = hasFullSalaryPaid || totalPaidThisMonth >= monthlySalary
+            const isPartial = !hasFullSalaryPaid && totalPaidThisMonth > 0 && totalPaidThisMonth < monthlySalary
             const isPending = hasPending && totalPaidThisMonth === 0
             
             return (
