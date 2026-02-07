@@ -197,11 +197,26 @@ export default async function SalariesPage({
   // Get salary payments with notes for payment history
   const salaryPayments = await db.salaryPayment.findMany({
     where,
-    include: {
+    select: {
+      id: true,
+      amount: true,
+      paidAmount: true,
+      remainingAmount: true,
+      baseSalary: true,
+      bonusAmount: true,
+      deductionAmount: true,
+      type: true,
+      status: true,
+      month: true,
+      year: true,
+      description: true,
+      notes: true,
+      paymentDate: true,
+      createdAt: true,
       teacher: {
         select: {
           id: true,
-          monthlySalary: true,  // ✅ O'qituvchining asosiy oylik maoshi
+          monthlySalary: true,
           user: {
             select: {
               fullName: true,
@@ -216,7 +231,7 @@ export default async function SalariesPage({
         select: {
           staffCode: true,
           position: true,
-          monthlySalary: true,  // ✅ Xodimning asosiy oylik maoshi
+          monthlySalary: true,
           user: {
             select: {
               fullName: true,

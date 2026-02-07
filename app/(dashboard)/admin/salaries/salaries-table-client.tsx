@@ -16,6 +16,9 @@ interface SalaryPayment {
   amount: any
   paidAmount: any
   remainingAmount: any
+  baseSalary?: any // For FULL_SALARY type
+  bonusAmount?: any
+  deductionAmount?: any
   type: string
   status: string
   month: number | null
@@ -124,7 +127,22 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
     // Use employee.monthlySalary as 100% reference (if available) - works for both teacher and staff
     const monthlySalary = employee?.monthlySalary ? Number(employee.monthlySalary) : 0
     
-    // Calculate total paid from all payments (avans, oylik, mukofot)
+    // Calculate base paid (for progress %) - excludes bonus/deduction from FULL_SALARY
+    const totalBasePaid = payments.reduce((sum, p) => {
+      if (p.type === 'ADVANCE') {
+        // Avans counts towards base
+        return sum + Number(p.paidAmount || 0)
+      } else if (p.type === 'FULL_SALARY') {
+        // For FULL_SALARY, use baseSalary if available, otherwise use amount (not paidAmount)
+        // This is because baseSalary represents the actual salary portion, not including bonus/deduction
+        const baseSalary = (p as any).baseSalary ? Number((p as any).baseSalary) : Number(p.amount || 0)
+        return sum + baseSalary
+      }
+      // BONUS and DEDUCTION don't count towards base progress
+      return sum
+    }, 0)
+    
+    // Calculate actual total paid (including bonus/deduction) for display
     const totalPaid = payments.reduce((sum, p) => sum + Number(p.paidAmount || 0), 0)
     
     // Fallback: if no employee.monthlySalary, find FULL_SALARY payment or sum all
@@ -136,13 +154,14 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
     
     if (referenceAmount === 0) return { percentage: 0, paid: 0, total: 0, remaining: 0 }
     
-    const percentage = Math.min(Math.round((totalPaid / referenceAmount) * 100), 100)
+    // Percentage based on base salary paid (not total paid)
+    const percentage = Math.min(Math.round((totalBasePaid / referenceAmount) * 100), 100)
     
     return {
       percentage,
-      paid: totalPaid,
+      paid: totalPaid, // Show actual amount received
       total: referenceAmount,
-      remaining: Math.max(0, referenceAmount - totalPaid)
+      remaining: Math.max(0, referenceAmount - totalBasePaid) // Remaining based on base
     }
   }
 
