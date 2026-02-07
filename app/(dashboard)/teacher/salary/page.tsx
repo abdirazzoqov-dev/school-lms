@@ -136,11 +136,13 @@ export default async function TeacherSalaryPage({
     return sum
   }, 0)
 
-  // Get all payments history (for recent activity)
+  // Get payments for current month only (for payment history)
   const allPayments = await db.salaryPayment.findMany({
     where: {
       tenantId,
-      teacherId: teacher.id
+      teacherId: teacher.id,
+      month: selectedMonth,
+      year: selectedYear
     },
     select: {
       id: true,
@@ -164,8 +166,7 @@ export default async function TeacherSalaryPage({
     },
     orderBy: {
       createdAt: 'desc'
-    },
-    take: 10
+    }
   })
 
   const getProgressColor = (percentage: number) => {
