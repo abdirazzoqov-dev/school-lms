@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   DollarSign, TrendingUp, Clock, Calendar, Award
 } from 'lucide-react'
@@ -10,6 +11,7 @@ import { Progress } from '@/components/ui/progress'
 import { currentMonth, currentYear, monthNames } from '@/lib/validations/salary'
 import { formatNumber } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
+import Link from 'next/link'
 
 export const revalidate = 0
 export const dynamic = 'force-dynamic'
