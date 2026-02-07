@@ -62,7 +62,22 @@ export default async function TeacherSalaryPage({
       month: selectedMonth,
       year: selectedYear
     },
-    include: {
+    select: {
+      id: true,
+      type: true,
+      status: true,
+      amount: true,
+      paidAmount: true,
+      remainingAmount: true,
+      baseSalary: true,
+      bonusAmount: true,
+      deductionAmount: true,
+      month: true,
+      year: true,
+      paymentDate: true,
+      createdAt: true,
+      description: true,
+      notes: true,
       paidBy: {
         select: {
           fullName: true
@@ -89,13 +104,26 @@ export default async function TeacherSalaryPage({
     .filter(p => p.type === 'ADVANCE')
     .reduce((sum, p) => sum + Number(p.paidAmount), 0)
 
-  const totalBonuses = salaryPayments
-    .filter(p => p.type === 'BONUS')
-    .reduce((sum, p) => sum + Number(p.paidAmount), 0)
+  // Calculate bonuses and deductions from all payment types
+  const totalBonuses = salaryPayments.reduce((sum, p) => {
+    // Add BONUS type payments + bonusAmount from FULL_SALARY
+    if (p.type === 'BONUS') {
+      return sum + Number(p.paidAmount)
+    } else if (p.type === 'FULL_SALARY' && p.bonusAmount) {
+      return sum + Number(p.bonusAmount)
+    }
+    return sum
+  }, 0)
 
-  const totalDeductions = salaryPayments
-    .filter(p => p.type === 'DEDUCTION')
-    .reduce((sum, p) => sum + Number(p.amount), 0)
+  const totalDeductions = salaryPayments.reduce((sum, p) => {
+    // Add DEDUCTION type payments + deductionAmount from FULL_SALARY
+    if (p.type === 'DEDUCTION') {
+      return sum + Number(p.paidAmount)
+    } else if (p.type === 'FULL_SALARY' && p.deductionAmount) {
+      return sum + Number(p.deductionAmount)
+    }
+    return sum
+  }, 0)
 
   // Get all payments history (for recent activity)
   const allPayments = await db.salaryPayment.findMany({
@@ -103,7 +131,20 @@ export default async function TeacherSalaryPage({
       tenantId,
       teacherId: teacher.id
     },
-    include: {
+    select: {
+      id: true,
+      type: true,
+      status: true,
+      amount: true,
+      paidAmount: true,
+      baseSalary: true,
+      bonusAmount: true,
+      deductionAmount: true,
+      month: true,
+      year: true,
+      paymentDate: true,
+      createdAt: true,
+      description: true,
       paidBy: {
         select: {
           fullName: true
@@ -374,6 +415,28 @@ export default async function TeacherSalaryPage({
                             </p>
                           </div>
                         </div>
+
+                        {/* Bonus & Deduction details for FULL_SALARY */}
+                        {payment.type === 'FULL_SALARY' && (payment.bonusAmount || payment.deductionAmount) && (
+                          <div className="grid grid-cols-2 gap-2 max-w-sm mb-2">
+                            {payment.bonusAmount && Number(payment.bonusAmount) > 0 && (
+                              <div className="bg-green-50 border border-green-200 rounded px-3 py-2">
+                                <p className="text-xs text-green-600">🎁 Bonus</p>
+                                <p className="text-sm font-bold text-green-700">
+                                  +{formatNumber(Number(payment.bonusAmount))} so'm
+                                </p>
+                              </div>
+                            )}
+                            {payment.deductionAmount && Number(payment.deductionAmount) > 0 && (
+                              <div className="bg-red-50 border-2 border-red-300 rounded px-3 py-2">
+                                <p className="text-xs text-red-600">⛔ Ushlab qolish</p>
+                                <p className="text-sm font-bold text-red-700">
+                                  -{formatNumber(Number(payment.deductionAmount))} so'm
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
                         
                         {/* Progress bar for individual payment */}
                         {paymentPercentage < 100 && (
