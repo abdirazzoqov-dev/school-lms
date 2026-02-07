@@ -52,6 +52,10 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [employeeType, setEmployeeType] = useState<'teacher' | 'staff'>('teacher')
+  
+  // Bugungi sana (YYYY-MM-DD format)
+  const today = new Date().toISOString().split('T')[0]
+  
   const [formData, setFormData] = useState({
     teacherId: '',
     staffId: '',
@@ -62,7 +66,7 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
     baseSalary: 0,
     bonusAmount: 0,
     deductionAmount: 0,
-    paymentDate: '',
+    paymentDate: today, // Avtomatik bugungi kun
     paymentMethod: '',
     description: '',
     notes: ''
@@ -422,10 +426,12 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
         <Input
           type="date"
           value={formData.paymentDate}
-          onChange={(e) => setFormData({ ...formData, paymentDate: e.target.value })}
+          readOnly
+          disabled
+          className="bg-gray-100 cursor-not-allowed"
         />
         <p className="text-xs text-muted-foreground">
-          Bo'sh qoldirsa, "Kutilmoqda" statusida saqlanadi
+          📅 Avtomatik: Bugungi sana (o'zgartirib bo'lmaydi)
         </p>
       </div>
 
