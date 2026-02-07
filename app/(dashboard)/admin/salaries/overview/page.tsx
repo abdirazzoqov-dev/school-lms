@@ -5,7 +5,7 @@ import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, User, Users, DollarSign, AlertCircle, CheckCircle2, TrendingUp } from 'lucide-react'
+import { ArrowLeft, User, Users, DollarSign, AlertCircle, CheckCircle2, TrendingUp, Award, MinusCircle } from 'lucide-react'
 import Link from 'next/link'
 import { SalaryOverviewClient } from './overview-client'
 
@@ -26,7 +26,15 @@ export default async function SalariesOverviewPage() {
       user: { select: { fullName: true, email: true } },
       salaryPayments: {
         where: { year: currentYear },
-        select: { month: true, type: true, status: true, paidAmount: true, remainingAmount: true }
+        select: { 
+          month: true, 
+          type: true, 
+          status: true, 
+          paidAmount: true, 
+          remainingAmount: true,
+          bonusAmount: true,
+          deductionAmount: true
+        }
       }
     }
   })
@@ -37,7 +45,15 @@ export default async function SalariesOverviewPage() {
       user: { select: { fullName: true, email: true } },
       salaryPayments: {
         where: { year: currentYear },
-        select: { month: true, type: true, status: true, paidAmount: true, remainingAmount: true }
+        select: { 
+          month: true, 
+          type: true, 
+          status: true, 
+          paidAmount: true, 
+          remainingAmount: true,
+          bonusAmount: true,
+          deductionAmount: true
+        }
       }
     }
   })
@@ -53,7 +69,9 @@ export default async function SalariesOverviewPage() {
         type: p.type,
         status: p.status,
         paidAmount: Number(p.paidAmount) || 0,
-        remainingAmount: Number(p.remainingAmount) || 0
+        remainingAmount: Number(p.remainingAmount) || 0,
+        bonusAmount: Number(p.bonusAmount) || 0,
+        deductionAmount: Number(p.deductionAmount) || 0
       }))
     })),
     ...staff.map(s => ({
@@ -66,7 +84,9 @@ export default async function SalariesOverviewPage() {
         type: p.type,
         status: p.status,
         paidAmount: Number(p.paidAmount) || 0,
-        remainingAmount: Number(p.remainingAmount) || 0
+        remainingAmount: Number(p.remainingAmount) || 0,
+        bonusAmount: Number(p.bonusAmount) || 0,
+        deductionAmount: Number(p.deductionAmount) || 0
       }))
     }))
   ]
@@ -76,16 +96,22 @@ export default async function SalariesOverviewPage() {
   let totalSalaryBudget = 0
   let totalPaidAmount = 0
   let totalDebtAmount = 0
+  let totalBonuses = 0
+  let totalDeductions = 0
   let fullyPaidCount = 0
 
   allEmployees.forEach(emp => {
     const paid = emp.payments.filter(p => p.status === 'PAID').reduce((s, p) => s + Number(p.paidAmount), 0)
     const debt = emp.payments.filter(p => p.status !== 'PAID' && p.status !== 'CANCELLED').reduce((s, p) => s + Number(p.remainingAmount), 0)
+    const bonuses = emp.payments.reduce((s, p) => s + Number(p.bonusAmount), 0)
+    const deductions = emp.payments.reduce((s, p) => s + Number(p.deductionAmount), 0)
     const monthsPaid = emp.payments.filter(p => p.type === 'FULL_SALARY' && p.status === 'PAID').length
     
     totalSalaryBudget += emp.salary * 12
     totalPaidAmount += paid
     totalDebtAmount += debt
+    totalBonuses += bonuses
+    totalDeductions += deductions
     if (monthsPaid === 12 && debt === 0) fullyPaidCount++
   })
 
@@ -107,7 +133,7 @@ export default async function SalariesOverviewPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
         <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100">
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
@@ -141,6 +167,30 @@ export default async function SalariesOverviewPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-green-600">{(totalPaidAmount / 1000000).toFixed(1)}M</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-amber-100">
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-2">
+              <Award className="h-4 w-4" />
+              Bonuslar
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-amber-600">{(totalBonuses / 1000000).toFixed(1)}M</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-red-200 bg-gradient-to-br from-red-50 to-red-100">
+          <CardHeader className="pb-2">
+            <CardDescription className="flex items-center gap-2">
+              <MinusCircle className="h-4 w-4" />
+              Ushlab Qolish
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-red-600">{(totalDeductions / 1000000).toFixed(1)}M</p>
           </CardContent>
         </Card>
 

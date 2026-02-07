@@ -14,6 +14,8 @@ interface Payment {
   status: string
   paidAmount: number
   remainingAmount: number
+  bonusAmount?: number
+  deductionAmount?: number
 }
 
 interface Employee {
