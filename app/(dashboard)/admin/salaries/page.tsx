@@ -157,16 +157,29 @@ export default async function SalariesPage({
                 O'qituvchilar va xodimlar oylik maoshi, avans va mukofotlarni boshqarish
               </p>
             </div>
-            <Button 
-              asChild 
-              size="lg" 
-              className="bg-white text-green-600 hover:bg-green-50 shadow-lg hover:shadow-xl transition-all"
-            >
-              <Link href="/admin/salaries/create">
-                <Plus className="mr-2 h-5 w-5" />
-                Maosh To'lash
-              </Link>
-            </Button>
+            <div className="flex gap-3">
+              <Button 
+                asChild 
+                size="lg" 
+                variant="secondary"
+                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border-2 border-white/40 shadow-lg hover:shadow-xl transition-all"
+              >
+                <Link href="/admin/salaries/overview">
+                  <Users className="mr-2 h-5 w-5" />
+                  Umumiy Ko'rinish
+                </Link>
+              </Button>
+              <Button 
+                asChild 
+                size="lg" 
+                className="bg-white text-green-600 hover:bg-green-50 shadow-lg hover:shadow-xl transition-all"
+              >
+                <Link href="/admin/salaries/create">
+                  <Plus className="mr-2 h-5 w-5" />
+                  Maosh To'lash
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
         
