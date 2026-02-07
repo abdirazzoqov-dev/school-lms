@@ -93,12 +93,23 @@ export default async function TeacherSalaryPage({
   // Calculate statistics
   const monthlySalary = teacher.monthlySalary ? Number(teacher.monthlySalary) : 0
   
+  // For percentage calculation: count base salary paid (not including bonus/deduction adjustments)
+  const totalBasePaid = salaryPayments.reduce((sum, p) => {
+    if (p.type === 'ADVANCE') {
+      return sum + Number(p.paidAmount)
+    } else if (p.type === 'FULL_SALARY') {
+      // Count baseSalary for percentage (bonus/deduction don't affect "100%" status)
+      return sum + Number(p.baseSalary || p.paidAmount)
+    }
+    return sum
+  }, 0)
+  
   const totalPaid = salaryPayments.reduce((sum, p) => sum + Number(p.paidAmount), 0)
   const totalAmount = salaryPayments.reduce((sum, p) => sum + Number(p.amount), 0)
-  const remaining = monthlySalary > 0 ? Math.max(0, monthlySalary - totalPaid) : Math.max(0, totalAmount - totalPaid)
+  const remaining = monthlySalary > 0 ? Math.max(0, monthlySalary - totalBasePaid) : Math.max(0, totalAmount - totalPaid)
   
   const referenceAmount = monthlySalary > 0 ? monthlySalary : totalAmount
-  const percentage = referenceAmount > 0 ? Math.min(Math.round((totalPaid / referenceAmount) * 100), 100) : 0
+  const percentage = referenceAmount > 0 ? Math.min(Math.round((totalBasePaid / referenceAmount) * 100), 100) : 0
 
   const totalAdvances = salaryPayments
     .filter(p => p.type === 'ADVANCE')
