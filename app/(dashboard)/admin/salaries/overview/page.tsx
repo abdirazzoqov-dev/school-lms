@@ -49,7 +49,7 @@ export default async function SalariesOverviewPage() {
       email: t.user.email,
       salary: Number(t.monthlySalary) || 0,
       payments: t.salaryPayments.map(p => ({
-        month: p.month,
+        month: p.month || 0,
         type: p.type,
         status: p.status,
         paidAmount: Number(p.paidAmount) || 0,
@@ -62,7 +62,7 @@ export default async function SalariesOverviewPage() {
       email: s.user.email,
       salary: Number(s.monthlySalary) || 0,
       payments: s.salaryPayments.map(p => ({
-        month: p.month,
+        month: p.month || 0,
         type: p.type,
         status: p.status,
         paidAmount: Number(p.paidAmount) || 0,

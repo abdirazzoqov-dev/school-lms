@@ -93,9 +93,10 @@ export function SalaryOverviewClient({ employees, currentYear, months }: Props) 
   )
 
   // Reset to page 1 when filters change
-  useMemo(() => {
-    setCurrentPage(1)
-  }, [searchQuery, filterStatus, sortBy])
+  const resetPage = () => setCurrentPage(1)
+  if (currentPage > totalPages && totalPages > 0) {
+    resetPage()
+  }
 
   return (
     <div className="space-y-4">
