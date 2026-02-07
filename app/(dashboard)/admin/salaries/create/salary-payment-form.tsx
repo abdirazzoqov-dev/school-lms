@@ -407,8 +407,8 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
         </Select>
       </div>
 
-      {/* Month & Year (for FULL_SALARY) */}
-      {formData.type === 'FULL_SALARY' && (
+      {/* Month & Year (for FULL_SALARY and ADVANCE) */}
+      {(formData.type === 'FULL_SALARY' || formData.type === 'ADVANCE') && (
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Oy *</Label>
@@ -622,10 +622,10 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
         </div>
       )}
 
-      {/* Simple Amount (for other types) */}
-      {formData.type !== 'FULL_SALARY' && (
+      {/* Simple Amount (for ADVANCE) */}
+      {formData.type === 'ADVANCE' && (
         <div className="space-y-2">
-          <Label>Summa (so'm) *</Label>
+          <Label>Avans Summasi (so'm) *</Label>
           <Input
             type="number"
             min="0"
