@@ -13,6 +13,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import { createSalaryPayment, getEmployeeMonthlyPayments } from '@/app/actions/salary'
 import { Loader2, Calculator, AlertCircle, CheckCircle2, Info } from 'lucide-react'
@@ -55,6 +65,7 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [loadingPayments, setLoadingPayments] = useState(false)
   const [employeeType, setEmployeeType] = useState<'teacher' | 'staff'>('teacher')
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   
   // Already paid tracking
   const [alreadyPaid, setAlreadyPaid] = useState(0)
@@ -157,13 +168,31 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
     return Math.max(0, total - alreadyPaid)
   }
   
-  // Check if payment would exceed remaining
+  // Check if payment would exceed remaining (only for base salary, not bonus)
   const wouldExceedLimit = () => {
     if (formData.type !== 'FULL_SALARY' && formData.type !== 'ADVANCE') return false
     
+    // For FULL_SALARY: check only base salary (bonus is extra, so it's OK to exceed)
+    if (formData.type === 'FULL_SALARY') {
+      const base = Number(formData.baseSalary) || 0
+      const remaining = getRemainingAmount()
+      return base > remaining
+    }
+    
+    // For ADVANCE: check total
     const newPayment = calculateAmount()
     const remaining = getRemainingAmount()
     return newPayment > remaining
+  }
+  
+  // Check if total payment (with bonus) exceeds salary significantly
+  const hasLargeExcess = () => {
+    if (formData.type !== 'FULL_SALARY') return false
+    
+    const total = calculateAmount()
+    const monthlySalary = getMonthlySalary()
+    // If total exceeds salary by more than 50%, show warning
+    return total > (monthlySalary * 1.5)
   }
 
   // Calculate total amount
@@ -202,31 +231,14 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!formData.teacherId && !formData.staffId) {
-      toast.error('Xodim yoki o\'qituvchi tanlang')
-      return
-    }
+  const confirmAndSubmit = async () => {
+    setShowConfirmDialog(false)
+    await processPayment()
+  }
 
-    const finalAmount = calculateAmount()
-    if (finalAmount <= 0) {
-      toast.error('To\'lov summasi 0 dan katta bo\'lishi kerak')
-      return
-    }
-
-    // Validate against remaining amount
-    if (wouldExceedLimit()) {
-      const remaining = getRemainingAmount()
-      toast.error(
-        `⚠️ Ortiqcha to'lov! Qolgan summa: ${(remaining / 1000000).toFixed(1)}M so'm`,
-        { duration: 5000 }
-      )
-      return
-    }
-
+  const processPayment = async () => {
     setIsLoading(true)
+    const finalAmount = calculateAmount()
     
     try {
       // BUGFIX: Only send teacherId OR staffId, not both
@@ -254,6 +266,40 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!formData.teacherId && !formData.staffId) {
+      toast.error('Xodim yoki o\'qituvchi tanlang')
+      return
+    }
+
+    const finalAmount = calculateAmount()
+    if (finalAmount <= 0) {
+      toast.error('To\'lov summasi 0 dan katta bo\'lishi kerak')
+      return
+    }
+
+    // Validate against remaining amount (base salary only for FULL_SALARY)
+    if (wouldExceedLimit()) {
+      const remaining = getRemainingAmount()
+      toast.error(
+        `⚠️ Ortiqcha to'lov! Asosiy maosh qolgan: ${(remaining / 1000000).toFixed(1)}M so'm`,
+        { duration: 5000 }
+      )
+      return
+    }
+
+    // If total exceeds salary significantly due to large bonus, confirm
+    if (hasLargeExcess()) {
+      setShowConfirmDialog(true)
+      return
+    }
+
+    // Otherwise, proceed
+    await processPayment()
   }
 
   const selectedEmployee = employeeType === 'teacher'
@@ -721,6 +767,69 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
           Saqlash
         </Button>
       </div>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-orange-500" />
+              Ishonchingiz komilmi?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 pt-4">
+              <p className="text-base">
+                Siz juda katta <strong className="text-orange-600">bonus</strong> berayapsiz!
+              </p>
+              
+              <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-4 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Oylik maosh:</span>
+                  <span className="font-bold">{(getMonthlySalary() / 1000000).toFixed(1)}M so'm</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Asosiy to'lov:</span>
+                  <span className="font-semibold">{((Number(formData.baseSalary) || 0) / 1000000).toFixed(1)}M so'm</span>
+                </div>
+                {formData.bonusAmount && Number(formData.bonusAmount) > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>🎁 Bonus:</span>
+                    <span className="font-bold">+{(Number(formData.bonusAmount) / 1000000).toFixed(1)}M so'm</span>
+                  </div>
+                )}
+                {formData.deductionAmount && Number(formData.deductionAmount) > 0 && (
+                  <div className="flex justify-between text-red-600">
+                    <span>⛔ Ushlab qolish:</span>
+                    <span className="font-bold">-{(Number(formData.deductionAmount) / 1000000).toFixed(1)}M so'm</span>
+                  </div>
+                )}
+                <div className="border-t-2 pt-2 flex justify-between">
+                  <span className="font-semibold">JAMI to'lov:</span>
+                  <span className="text-lg font-bold text-blue-600">
+                    {(calculateAmount() / 1000000).toFixed(1)}M so'm
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                Davom etmoqchimisiz?
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isLoading}>
+              Yo'q, bekor qilish
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmAndSubmit}
+              disabled={isLoading}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Ha, tasdiqlash
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   )
 }
