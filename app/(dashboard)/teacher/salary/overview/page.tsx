@@ -20,24 +20,8 @@ export default async function TeacherSalaryOverviewPage() {
   const tenantId = session.user.tenantId!
   const currentYear = new Date().getFullYear()
 
-  // Get teacher
+  // Get teacher with full payment details
   const teacher = await db.teacher.findUnique({
-    where: { userId: session.user.id },
-    include: {
-      user: { select: { fullName: true, email: true } },
-      salaryPayments: {
-        where: { year: currentYear },
-        select: { month: true, type: true, status: true, paidAmount: true, remainingAmount: true, description: true }
-      }
-    }
-  })
-
-  if (!teacher) redirect('/unauthorized')
-
-  const monthlySalary = Number(teacher.monthlySalary) || 0
-  
-  // Get teacher with full payment details (including bonus/deduction fields)
-  const teacherWithDetails = await db.teacher.findUnique({
     where: { userId: session.user.id },
     include: {
       user: { select: { fullName: true, email: true } },
@@ -61,8 +45,12 @@ export default async function TeacherSalaryOverviewPage() {
     }
   })
 
+  if (!teacher) redirect('/unauthorized')
+
+  const monthlySalary = Number(teacher.monthlySalary) || 0
+  
   // Process payments
-  const payments = (teacherWithDetails || teacher).salaryPayments.map(p => ({
+  const payments = teacher.salaryPayments.map(p => ({
     id: p.id,
     month: p.month || 0,
     type: p.type,
@@ -70,11 +58,11 @@ export default async function TeacherSalaryOverviewPage() {
     paidAmount: Number(p.paidAmount) || 0,
     remainingAmount: Number(p.remainingAmount) || 0,
     description: p.description,
-    baseSalary: Number((p as any).baseSalary) || 0,
-    bonusAmount: Number((p as any).bonusAmount) || 0,
-    deductionAmount: Number((p as any).deductionAmount) || 0,
-    paymentDate: (p as any).paymentDate,
-    createdAt: (p as any).createdAt
+    baseSalary: Number(p.baseSalary) || 0,
+    bonusAmount: Number(p.bonusAmount) || 0,
+    deductionAmount: Number(p.deductionAmount) || 0,
+    paymentDate: p.paymentDate,
+    createdAt: p.createdAt
   }))
 
   // Calculate totals with bonus/deduction from FULL_SALARY
