@@ -423,6 +423,28 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                                     </p>
                                   </div>
                                 </div>
+
+                                {/* Bonus & Deduction for FULL_SALARY */}
+                                {p.type === 'FULL_SALARY' && (p.bonusAmount || p.deductionAmount) && (
+                                  <div className="grid grid-cols-2 gap-2 max-w-sm mt-2">
+                                    {p.bonusAmount && Number(p.bonusAmount) > 0 && (
+                                      <div className="bg-green-50 border border-green-200 rounded px-2 py-1.5">
+                                        <p className="text-xs text-green-600">🎁 Bonus</p>
+                                        <p className="text-sm font-bold text-green-700">
+                                          +{formatNumber(Number(p.bonusAmount))}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {p.deductionAmount && Number(p.deductionAmount) > 0 && (
+                                      <div className="bg-red-50 border-2 border-red-300 rounded px-2 py-1.5">
+                                        <p className="text-xs text-red-600">⛔ Ushlab qolish</p>
+                                        <p className="text-sm font-bold text-red-700">
+                                          -{formatNumber(Number(p.deductionAmount))}
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                                 
                                 {p.description && (
                                   <p className="text-xs text-muted-foreground mt-2">📝 {p.description}</p>
