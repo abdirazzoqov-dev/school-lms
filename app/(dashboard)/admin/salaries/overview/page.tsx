@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Users, TrendingDown, ArrowLeft, Download } from 'lucide-react'
 import Link from 'next/link'
-import { SalaryOverviewCard } from '@/components/salary-overview-card'
+import { SalaryOverviewCard } from '@/components/employee-salary-card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 
