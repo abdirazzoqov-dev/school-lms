@@ -4,9 +4,10 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   DollarSign, Users, TrendingUp, AlertCircle, Plus,
-  CreditCard, CheckCircle2, Clock, Download
+  CreditCard, CheckCircle2, Clock, Download, XCircle, User
 } from 'lucide-react'
 import Link from 'next/link'
 import { Progress } from '@/components/ui/progress'
@@ -17,6 +18,181 @@ import { formatNumber } from '@/lib/utils'
 
 export const revalidate = 0
 export const dynamic = 'force-dynamic'
+
+// Helper: Employee Summary Component (Inline Server Component)
+async function EmployeeSalarySummary({ tenantId, currentYear }: { tenantId: string; currentYear: number }) {
+  const teachers = await db.teacher.findMany({
+    where: { tenantId },
+    include: {
+      user: { select: { fullName: true, email: true } },
+      salaryPayments: {
+        where: { year: currentYear },
+        select: { month: true, type: true, status: true, paidAmount: true, remainingAmount: true }
+      }
+    }
+  })
+
+  const staff = await db.staff.findMany({
+    where: { tenantId },
+    include: {
+      user: { select: { fullName: true, email: true } },
+      salaryPayments: {
+        where: { year: currentYear },
+        select: { month: true, type: true, status: true, paidAmount: true, remainingAmount: true }
+      }
+    }
+  })
+
+  const allEmployees = [
+    ...teachers.map(t => ({
+      name: t.user.fullName,
+      email: t.user.email,
+      salary: Number(t.monthlySalary) || 0,
+      payments: t.salaryPayments
+    })),
+    ...staff.map(s => ({
+      name: s.user.fullName,
+      email: s.user.email,
+      salary: Number(s.monthlySalary) || 0,
+      payments: s.salaryPayments
+    }))
+  ]
+
+  return (
+    <div className="space-y-3">
+      {allEmployees.map((emp, idx) => {
+        const totalPaid = emp.payments.filter(p => p.status === 'PAID').reduce((s, p) => s + Number(p.paidAmount), 0)
+        const totalDebt = emp.payments.filter(p => p.status !== 'PAID').reduce((s, p) => s + Number(p.remainingAmount), 0)
+        const monthsPaid = emp.payments.filter(p => p.type === 'FULL_SALARY' && p.status === 'PAID').length
+        
+        return (
+          <div key={idx} className="p-4 bg-white rounded-lg border-2 hover:shadow-lg transition-all">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold shrink-0">
+                  {emp.name.charAt(0)}
+                </div>
+                <div>
+                  <h4 className="font-semibold">{emp.name}</h4>
+                  <p className="text-xs text-muted-foreground">{emp.email}</p>
+                </div>
+              </div>
+              {totalDebt > 0 && (
+                <Badge variant="destructive">
+                  Qarz: {totalDebt.toLocaleString('uz-UZ')} so'm
+                </Badge>
+              )}
+            </div>
+
+            <div className="grid grid-cols-4 gap-2 text-center">
+              <div className="p-2 bg-blue-50 rounded border border-blue-200">
+                <p className="text-xs text-muted-foreground">Oylik</p>
+                <p className="font-bold text-blue-600">{(emp.salary / 1000000).toFixed(1)}M</p>
+              </div>
+              <div className="p-2 bg-green-50 rounded border border-green-200">
+                <p className="text-xs text-muted-foreground">To'langan</p>
+                <p className="font-bold text-green-600">{(totalPaid / 1000000).toFixed(1)}M</p>
+              </div>
+              <div className="p-2 bg-orange-50 rounded border border-orange-200">
+                <p className="text-xs text-muted-foreground">Qolgan</p>
+                <p className="font-bold text-orange-600">{(totalDebt / 1000000).toFixed(1)}M</p>
+              </div>
+              <div className="p-2 bg-purple-50 rounded border border-purple-200">
+                <p className="text-xs text-muted-foreground">Oylar</p>
+                <p className="font-bold text-purple-600">{monthsPaid}/12</p>
+              </div>
+            </div>
+
+            <div className="mt-3 flex gap-2 text-xs">
+              {monthNames.slice(0, 12).map((month, i) => {
+                const monthPayment = emp.payments.find(p => p.month === i + 1 && p.type === 'FULL_SALARY')
+                const status = monthPayment?.status === 'PAID' ? 'paid' : 
+                              monthPayment?.status === 'PARTIALLY_PAID' ? 'partial' :
+                              monthPayment ? 'pending' : 'none'
+                
+                return (
+                  <div
+                    key={i}
+                    className={`flex-1 p-1 rounded text-center ${
+                      status === 'paid' ? 'bg-green-500 text-white' :
+                      status === 'partial' ? 'bg-yellow-500 text-white' :
+                      status === 'pending' ? 'bg-orange-500 text-white' :
+                      'bg-gray-200 text-gray-500'
+                    }`}
+                    title={`${month}: ${status === 'paid' ? 'To\'langan' : status === 'partial' ? 'Qisman' : status === 'pending' ? 'Kutilmoqda' : 'Berilmagan'}`}
+                  >
+                    {i + 1}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
+      {allEmployees.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          <User className="h-12 w-12 mx-auto mb-2 opacity-50" />
+          <p>Xodimlar topilmadi</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+      {/* Payments List - Modern Design */}
+      <Card className="border-2">
+        <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <div className="h-8 w-1 bg-gradient-to-b from-green-600 to-emerald-600 rounded-full"></div>
+                To'lovlar Ro'yxati
+              </CardTitle>
+              <CardDescription className="mt-1">
+                {salaryPayments.length} ta to'lov topildi • Avans va qolgan summalar bilan
+              </CardDescription>
+            </div>
+            {salaryPayments.length > 0 && (
+              <Button
+                asChild
+                variant="outline"
+                className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
+              >
+                <Link href={`/api/admin/salaries/export?month=${selectedMonth}&year=${selectedYear}${selectedType ? `&type=${selectedType}` : ''}${selectedStatus ? `&status=${selectedStatus}` : ''}${searchQuery ? `&search=${searchQuery}` : ''}`}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Excel
+                </Link>
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6">
+          {salaryPayments.length > 0 ? (
+            <SalariesTableClient 
+              salaryPayments={salaryPayments as any} 
+              groupedByEmployee={true}
+            />
+          ) : (
+            <div className="text-center py-12">
+              <div className="inline-block p-4 bg-gradient-to-br from-gray-100 to-slate-100 rounded-full mb-4">
+                <AlertCircle className="h-16 w-16 text-muted-foreground opacity-50" />
+              </div>
+              <p className="text-lg font-semibold text-muted-foreground mb-2">
+                To'lovlar topilmadi
+              </p>
+              <p className="text-sm text-muted-foreground mb-4">
+                Tanlangan filtrlar bo'yicha hech qanday to'lov topilmadi
+              </p>
+              <Button asChild className="bg-green-600 hover:bg-green-700">
+                <Link href="/admin/salaries/create">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Yangi to'lov qo'shish
+                </Link>
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
 export default async function SalariesPage({
   searchParams
@@ -271,6 +447,24 @@ export default async function SalariesPage({
           <SalarySearchFilter />
         </CardContent>
       </Card>
+
+      {/* Employee Summary View - New Feature */}
+      {!selectedMonth && !searchQuery && (
+        <Card className="border-2 bg-gradient-to-br from-blue-50 to-indigo-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Xodimlar Umumiy Ko'rinish ({currentYear} yil)
+            </CardTitle>
+            <CardDescription>
+              Har bir xodim uchun yillik to'lovlar va qarzlar
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <EmployeeSalarySummary tenantId={tenantId} currentYear={currentYear} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Payments List - Modern Design */}
       <Card className="border-2">
