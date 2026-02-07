@@ -139,61 +139,6 @@ async function EmployeeSalarySummary({ tenantId, currentYear }: { tenantId: stri
   )
 }
 
-      {/* Payments List - Modern Design */}
-      <Card className="border-2">
-        <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <div className="h-8 w-1 bg-gradient-to-b from-green-600 to-emerald-600 rounded-full"></div>
-                To'lovlar Ro'yxati
-              </CardTitle>
-              <CardDescription className="mt-1">
-                {salaryPayments.length} ta to'lov topildi • Avans va qolgan summalar bilan
-              </CardDescription>
-            </div>
-            {salaryPayments.length > 0 && (
-              <Button
-                asChild
-                variant="outline"
-                className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
-              >
-                <Link href={`/api/admin/salaries/export?month=${selectedMonth}&year=${selectedYear}${selectedType ? `&type=${selectedType}` : ''}${selectedStatus ? `&status=${selectedStatus}` : ''}${searchQuery ? `&search=${searchQuery}` : ''}`}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Excel
-                </Link>
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="pt-6">
-          {salaryPayments.length > 0 ? (
-            <SalariesTableClient 
-              salaryPayments={salaryPayments as any} 
-              groupedByEmployee={true}
-            />
-          ) : (
-            <div className="text-center py-12">
-              <div className="inline-block p-4 bg-gradient-to-br from-gray-100 to-slate-100 rounded-full mb-4">
-                <AlertCircle className="h-16 w-16 text-muted-foreground opacity-50" />
-              </div>
-              <p className="text-lg font-semibold text-muted-foreground mb-2">
-                To'lovlar topilmadi
-              </p>
-              <p className="text-sm text-muted-foreground mb-4">
-                Tanlangan filtrlar bo'yicha hech qanday to'lov topilmadi
-              </p>
-              <Button asChild className="bg-green-600 hover:bg-green-700">
-                <Link href="/admin/salaries/create">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Yangi to'lov qo'shish
-                </Link>
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
 export default async function SalariesPage({
   searchParams
 }: {
