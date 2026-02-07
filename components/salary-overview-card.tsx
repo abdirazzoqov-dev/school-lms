@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { 
   CheckCircle2, Clock, XCircle, AlertTriangle, 
-  TrendingUp, TrendingDown, Calendar, Phone, 
+  TrendingUp, Calendar, Phone, 
   DollarSign, History, ChevronDown, ChevronUp,
   Mail
 } from 'lucide-react'
@@ -43,24 +43,19 @@ const MONTHS = [
 
 export function SalaryOverviewCard({ employee, monthlySalary, currentYear, payments }: SalaryOverviewCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  // Calculate total paid this year
+
   const totalPaid = payments
     .filter(p => p.year === currentYear && p.status === 'PAID')
     .reduce((sum, p) => sum + Number(p.paidAmount), 0)
 
-  // Calculate total debt
   const totalDebt = payments
     .filter(p => p.status !== 'PAID' && p.status !== 'CANCELLED')
     .reduce((sum, p) => sum + Number(p.remainingAmount), 0)
 
-  // Expected total for year (current month included)
   const currentMonth = new Date().getMonth() + 1
   const expectedTotal = monthlySalary * currentMonth
-
-  // Payment progress
   const progressPercentage = expectedTotal > 0 ? (totalPaid / expectedTotal) * 100 : 0
 
-  // Month statuses
   const getMonthStatus = (monthIndex: number) => {
     const monthPayments = payments.filter(p => 
       p.month === monthIndex + 1 && 
@@ -80,7 +75,6 @@ export function SalaryOverviewCard({ employee, monthlySalary, currentYear, payme
     return 'pending'
   }
 
-  // Get upcoming payment
   const currentMonthPayment = payments.find(p => 
     p.month === currentMonth && 
     p.year === currentYear &&
@@ -90,7 +84,6 @@ export function SalaryOverviewCard({ employee, monthlySalary, currentYear, payme
   return (
     <Card className="border-2 hover:shadow-xl transition-all overflow-hidden">
       <CardContent className="p-4 sm:p-6">
-        {/* Employee Info - Mobile Optimized */}
         <div className="flex items-start gap-3 sm:gap-4 mb-4">
           <Avatar className="h-12 w-12 sm:h-14 sm:w-14 border-2 border-blue-200 shrink-0">
             <AvatarImage src={employee.avatar || undefined} />
@@ -116,7 +109,6 @@ export function SalaryOverviewCard({ employee, monthlySalary, currentYear, payme
             </div>
           </div>
 
-          {/* Debt Badge - Mobile Compact */}
           {totalDebt > 0 && (
             <Badge variant="destructive" className="text-xs shrink-0">
               <AlertTriangle className="h-3 w-3 sm:mr-1" />
@@ -126,7 +118,6 @@ export function SalaryOverviewCard({ employee, monthlySalary, currentYear, payme
           )}
         </div>
 
-        {/* Quick Actions - Mobile First */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
           <Button
             size="sm"
@@ -181,7 +172,6 @@ export function SalaryOverviewCard({ employee, monthlySalary, currentYear, payme
           </Button>
         </div>
 
-        {/* Summary Stats - Responsive Grid */}
         <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-2 sm:p-3 rounded-lg border border-green-200">
             <p className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">To'landi</p>
@@ -208,7 +198,6 @@ export function SalaryOverviewCard({ employee, monthlySalary, currentYear, payme
           </div>
         </div>
 
-        {/* Progress - Touch Friendly */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs sm:text-sm font-medium">Yillik Progress</span>
@@ -222,7 +211,6 @@ export function SalaryOverviewCard({ employee, monthlySalary, currentYear, payme
           </p>
         </div>
 
-        {/* Monthly Timeline - Collapsible on Mobile */}
         <div className="space-y-2">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
@@ -269,8 +257,7 @@ export function SalaryOverviewCard({ employee, monthlySalary, currentYear, payme
               })}
             </div>
 
-          {/* Legend - Compact */}
-          <div className="flex flex-wrap gap-2 sm:gap-3 mt-2 sm:mt-3 text-[10px] sm:text-xs">
+            <div className="flex flex-wrap gap-2 sm:gap-3 mt-2 sm:mt-3 text-[10px] sm:text-xs">
               <div className="flex items-center gap-0.5 sm:gap-1">
                 <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-green-600" />
                 <span>To'langan</span>
@@ -291,7 +278,6 @@ export function SalaryOverviewCard({ employee, monthlySalary, currentYear, payme
           )}
         </div>
 
-        {/* Next Payment Alert - Mobile Optimized */}
         {currentMonthPayment && (
           <div className="mt-4 p-2 sm:p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border sm:border-2 border-blue-200 rounded-lg">
             <div className="flex items-center gap-2">
