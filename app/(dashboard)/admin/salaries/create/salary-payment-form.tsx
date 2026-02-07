@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,10 +14,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { createSalaryPayment } from '@/app/actions/salary'
-import { Loader2, Calculator } from 'lucide-react'
+import { createSalaryPayment, getEmployeeMonthlyPayments } from '@/app/actions/salary'
+import { Loader2, Calculator, AlertCircle, CheckCircle2, Info } from 'lucide-react'
 import { currentMonth, currentYear, monthNames } from '@/lib/validations/salary'
 import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Card } from '@/components/ui/card'
 
 interface Teacher {
   id: string
@@ -51,7 +53,12 @@ interface SalaryPaymentFormProps {
 export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingPayments, setLoadingPayments] = useState(false)
   const [employeeType, setEmployeeType] = useState<'teacher' | 'staff'>('teacher')
+  
+  // Already paid tracking
+  const [alreadyPaid, setAlreadyPaid] = useState(0)
+  const [previousPayments, setPreviousPayments] = useState<any[]>([])
   
   // Bugungi sana (YYYY-MM-DD format)
   const today = new Date().toISOString().split('T')[0]
@@ -97,6 +104,66 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
       }
     }
     return 0
+  }
+
+  // Fetch existing payments when employee/month/year changes
+  useEffect(() => {
+    const fetchExistingPayments = async () => {
+      const employeeId = employeeType === 'teacher' ? formData.teacherId : formData.staffId
+      
+      if (!employeeId || !formData.month || !formData.year) {
+        setAlreadyPaid(0)
+        setPreviousPayments([])
+        return
+      }
+
+      setLoadingPayments(true)
+      try {
+        const result = await getEmployeeMonthlyPayments(
+          employeeId,
+          employeeType,
+          formData.month,
+          formData.year
+        )
+
+        if (result.success) {
+          setAlreadyPaid(result.totalPaid)
+          setPreviousPayments(result.payments)
+          
+          // Auto-calculate remaining amount for FULL_SALARY
+          if (formData.type === 'FULL_SALARY') {
+            const monthlySalary = getEmployeeSalary()
+            const remaining = Math.max(0, monthlySalary - result.totalPaid)
+            setFormData(prev => ({
+              ...prev,
+              baseSalary: remaining
+            }))
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch payments:', error)
+      } finally {
+        setLoadingPayments(false)
+      }
+    }
+
+    fetchExistingPayments()
+  }, [formData.teacherId, formData.staffId, formData.month, formData.year, employeeType])
+
+  // Calculate remaining amount
+  const getMonthlySalary = () => getEmployeeSalary()
+  const getRemainingAmount = () => {
+    const total = getMonthlySalary()
+    return Math.max(0, total - alreadyPaid)
+  }
+  
+  // Check if payment would exceed remaining
+  const wouldExceedLimit = () => {
+    if (formData.type !== 'FULL_SALARY' && formData.type !== 'ADVANCE') return false
+    
+    const newPayment = calculateAmount()
+    const remaining = getRemainingAmount()
+    return newPayment > remaining
   }
 
   // Calculate total amount
@@ -146,6 +213,16 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
     const finalAmount = calculateAmount()
     if (finalAmount <= 0) {
       toast.error('To\'lov summasi 0 dan katta bo\'lishi kerak')
+      return
+    }
+
+    // Validate against remaining amount
+    if (wouldExceedLimit()) {
+      const remaining = getRemainingAmount()
+      toast.error(
+        `⚠️ Ortiqcha to'lov! Qolgan summa: ${(remaining / 1000000).toFixed(1)}M so'm`,
+        { duration: 5000 }
+      )
       return
     }
 
@@ -337,6 +414,115 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
               </SelectContent>
             </Select>
           </div>
+        </div>
+      )}
+
+      {/* Payment History & Remaining Amount - Show for FULL_SALARY and ADVANCE */}
+      {(formData.type === 'FULL_SALARY' || formData.type === 'ADVANCE') && (formData.teacherId || formData.staffId) && (
+        <div className="space-y-3">
+          {loadingPayments ? (
+            <Card className="p-4 bg-blue-50 border-blue-200">
+              <div className="flex items-center gap-2 text-blue-600">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm">To'lovlar yuklanmoqda...</span>
+              </div>
+            </Card>
+          ) : (
+            <>
+              {/* Monthly Salary & Already Paid Info */}
+              <Card className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">💰 Oylik Maosh</p>
+                    <p className="text-xl font-bold text-blue-600">
+                      {(getMonthlySalary() / 1000000).toFixed(1)}M
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      {alreadyPaid > 0 ? '✅ Avval Berilgan' : '⏳ Hali Berilmagan'}
+                    </p>
+                    <p className={`text-xl font-bold ${alreadyPaid > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                      {(alreadyPaid / 1000000).toFixed(1)}M
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">📊 Qolgan Summa</p>
+                    <p className="text-xl font-bold text-orange-600">
+                      {(getRemainingAmount() / 1000000).toFixed(1)}M
+                    </p>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                {getMonthlySalary() > 0 && (
+                  <div className="mt-3">
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all"
+                        style={{ width: `${Math.min(100, (alreadyPaid / getMonthlySalary()) * 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 text-right">
+                      {((alreadyPaid / getMonthlySalary()) * 100).toFixed(1)}% to'langan
+                    </p>
+                  </div>
+                )}
+              </Card>
+
+              {/* Previous Payments List */}
+              {previousPayments.length > 0 && (
+                <Card className="p-4 bg-green-50 border-green-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <h4 className="font-semibold text-green-900">Oldingi To'lovlar</h4>
+                  </div>
+                  <div className="space-y-2">
+                    {previousPayments.map((payment, idx) => (
+                      <div key={payment.id} className="flex items-center justify-between text-sm bg-white p-2 rounded border border-green-200">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {payment.type === 'FULL_SALARY' ? 'Oylik' : payment.type === 'ADVANCE' ? 'Avans' : payment.type}
+                          </Badge>
+                          {payment.description && (
+                            <span className="text-xs text-muted-foreground">{payment.description}</span>
+                          )}
+                        </div>
+                        <span className="font-semibold text-green-600">
+                          {(payment.amount / 1000000).toFixed(1)}M
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
+              {/* Overpayment Warning */}
+              {wouldExceedLimit() && (
+                <Alert variant="destructive" className="border-2">
+                  <AlertCircle className="h-5 w-5" />
+                  <AlertDescription className="font-semibold">
+                    ⚠️ OGOHLANTIRISH: Bu to'lov qolgan summadan oshib ketmoqda!
+                    <br />
+                    <span className="text-sm">
+                      Qolgan: {(getRemainingAmount() / 1000000).toFixed(1)}M so'm | 
+                      Siz kiritayotgan: {(calculateAmount() / 1000000).toFixed(1)}M so'm
+                    </span>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Info about auto-fill */}
+              {formData.type === 'FULL_SALARY' && getRemainingAmount() > 0 && !wouldExceedLimit() && (
+                <Alert className="border-blue-200 bg-blue-50">
+                  <Info className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-sm text-blue-900">
+                    💡 Qolgan summa avtomatik to'ldirildi. Kerak bo'lsa o'zgartirishingiz mumkin.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </>
+          )}
         </div>
       )}
 

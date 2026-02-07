@@ -86,6 +86,70 @@ async function createExpenseForSalaryPayment(
   }
 }
 
+/**
+ * Get existing payments for an employee in a specific month/year
+ * Returns total already paid amount
+ */
+export async function getEmployeeMonthlyPayments(
+  employeeId: string,
+  employeeType: 'teacher' | 'staff',
+  month: number,
+  year: number
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || session.user.role !== 'ADMIN') {
+      return { success: false, error: 'Ruxsat berilmagan', totalPaid: 0, payments: [] }
+    }
+
+    const tenantId = session.user.tenantId!
+
+    // Fetch all payments for this employee in this month/year
+    const payments = await db.salaryPayment.findMany({
+      where: {
+        tenantId,
+        month,
+        year,
+        status: {
+          in: ['PAID', 'PARTIALLY_PAID']
+        },
+        ...(employeeType === 'teacher' 
+          ? { teacherId: employeeId } 
+          : { staffId: employeeId }
+        )
+      },
+      select: {
+        id: true,
+        type: true,
+        paidAmount: true,
+        createdAt: true,
+        description: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
+
+    // Calculate total paid
+    const totalPaid = payments.reduce((sum, p) => sum + Number(p.paidAmount), 0)
+
+    return {
+      success: true,
+      totalPaid,
+      payments: payments.map(p => ({
+        id: p.id,
+        type: p.type,
+        amount: Number(p.paidAmount),
+        date: p.createdAt,
+        description: p.description
+      }))
+    }
+  } catch (error: any) {
+    console.error('Get employee monthly payments error:', error)
+    return { success: false, error: error.message, totalPaid: 0, payments: [] }
+  }
+}
+
 export async function createSalaryPayment(data: SalaryPaymentFormData) {
   try {
     const session = await getServerSession(authOptions)
