@@ -671,7 +671,6 @@ async function getDashboardStats(
     kitchenExpenses,
     // ✅ To'lovlar summalari
     completedPaymentsAmount,
-    pendingPaymentsList, // ✅ Array of pending payments for calculation
     // ✅ Kategoriyalar bo'yicha xarajatlar
     expensesByCategory,
     kitchenExpensesByCategory
@@ -723,17 +722,6 @@ async function getDashboardStats(
       },
       _sum: { amount: true }
     }),
-    // ✅ PENDING to'lovlarning qolgan summasini hisoblash uchun findMany
-    db.payment.findMany({
-      where: {
-        tenantId,
-        status: 'PENDING'
-      },
-      select: {
-        amount: true,
-        paidAmount: true
-      }
-    }),
     db.expense.aggregate({
       where: {
         tenantId,
@@ -767,6 +755,18 @@ async function getDashboardStats(
       _sum: { amount: true }
     })
   ])
+
+  // ✅ PENDING to'lovlarning qolgan summasini hisoblash uchun findMany (alohida)
+  const pendingPaymentsList = await db.payment.findMany({
+    where: {
+      tenantId,
+      status: 'PENDING'
+    },
+    select: {
+      amount: true,
+      paidAmount: true
+    }
+  })
   
   // ✅ To'lov usuli bo'yicha analitika - Payment orqali filter
   const paymentTransactionsByMethod = await db.paymentTransaction.groupBy({
