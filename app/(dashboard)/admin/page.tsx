@@ -831,11 +831,8 @@ async function getDashboardStats(
     }
   })
 
-  // ✅ Barcha xarajatlarni birlashtirish
-  const allExpenses = [
-    ...generalExpenseBreakdown,
-    ...kitchenExpenseBreakdown
-  ].sort((a, b) => b.amount - a.amount)
+  // ✅ Faqat jami xarajatlar kategoriyalari (Xarajatlar sahifasiga mos)
+  const allExpenses = generalExpenseBreakdown.sort((a, b) => b.amount - a.amount)
 
   // ✅ To'lov usullari breakdown'ni formatlash
   const paymentMethodsBreakdown = paymentTransactionsByMethod.map(pm => ({
@@ -853,13 +850,13 @@ async function getDashboardStats(
     .filter(pm => pm.method === 'CLICK')
     .reduce((sum, pm) => sum + pm.amount, 0)
 
-  // ✅ Xarajatlar to'lov usullari breakdown
-  const allExpensesByMethod = [
-    ...expensesByPaymentMethod.map(e => ({ method: e.paymentMethod, amount: Number(e._sum.amount || 0) })),
-    ...kitchenExpensesByPaymentMethod.map(e => ({ method: e.paymentMethod, amount: Number(e._sum.amount || 0) }))
-  ]
+  // ✅ Faqat jami xarajatlar to'lov usullari breakdown (Xarajatlar sahifasiga mos)
+  const allExpensesByMethod = expensesByPaymentMethod.map(e => ({ 
+    method: e.paymentMethod, 
+    amount: Number(e._sum.amount || 0) 
+  }))
   
-  // ✅ Naqd va plastik bo'yicha guruhlash (XARAJAT)
+  // ✅ Naqd va plastik bo'yicha guruhlash (FAQAT JAMI XARAJAT)
   const expenseCashAmount = allExpensesByMethod
     .filter(pm => pm.method === 'CASH')
     .reduce((sum, pm) => sum + pm.amount, 0)
@@ -891,7 +888,7 @@ async function getDashboardStats(
     pendingPaymentsAmount: pendingPaymentsAmount, // ✅ Calculated qolgan summa
     generalExpenses: Number(generalExpenses._sum.amount || 0),
     kitchenExpenses: Number(kitchenExpenses._sum.amount || 0),
-    totalExpenses: Number(generalExpenses._sum.amount || 0) + Number(kitchenExpenses._sum.amount || 0),
+    totalExpenses: Number(generalExpenses._sum.amount || 0), // ✅ Faqat jami xarajatlar (Xarajatlar sahifasiga mos)
     expenseCategories: allExpenses, // ✅ Kategoriyalar breakdown
     paymentMethods: paymentMethodsBreakdown, // ✅ Barcha to'lov usullari (kirim)
     cashIncome: cashAmount, // ✅ Naqd to'lovlar (kirim)
