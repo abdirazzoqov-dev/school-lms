@@ -174,9 +174,34 @@ export default async function PaymentsPage({
     .filter(p => Number(p.paidAmount) > 0)
     .reduce((sum, p) => sum + Number(p.paidAmount), 0)
 
-  const pendingAmount = payments
-    .filter(p => p.status === 'PENDING')
-    .reduce((sum, p) => sum + Number(p.remainingAmount), 0)
+  // ✅ Barcha PENDING to'lovlar summasi (filter qo'llanmasdan)
+  const allPendingPayments = await db.payment.findMany({
+    where: {
+      tenantId,
+      status: 'PENDING'
+    },
+    select: {
+      remainingAmount: true
+    }
+  })
+
+  const pendingAmount = allPendingPayments.reduce((sum, p) => sum + Number(p.remainingAmount), 0)
+
+  // ✅ Barcha COMPLETED to'lovlar soni (filter qo'llanmasdan)
+  const totalCompletedPayments = await db.payment.count({
+    where: {
+      tenantId,
+      status: 'COMPLETED'
+    }
+  })
+
+  // ✅ Barcha PENDING to'lovlar soni (filter qo'llanmasdan)
+  const totalPendingPayments = await db.payment.count({
+    where: {
+      tenantId,
+      status: 'PENDING'
+    }
+  })
 
   // Debug: Count payment types
   const paymentTypeStats = payments.reduce((acc: any, p) => {
@@ -587,7 +612,7 @@ export default async function PaymentsPage({
               </div>
             </div>
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 mb-1">
-              {payments.filter(p => p.status === 'COMPLETED').length}
+              {totalCompletedPayments}
             </div>
             <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground font-medium">To'langan</p>
           </CardContent>
@@ -601,9 +626,9 @@ export default async function PaymentsPage({
               </div>
             </div>
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-red-600 mb-1">
-              {payments.filter(p => p.status === 'PENDING' && p.dueDate < new Date()).length}
+              {totalPendingPayments}
             </div>
-            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground font-medium">Muddati o'tgan</p>
+            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground font-medium">Kutilmoqda</p>
           </CardContent>
         </Card>
       </div>

@@ -193,8 +193,8 @@ export default async function AdminDashboard() {
         </Card>
       )}
 
-      {/* Enhanced Main Stats - 5 Cards with Gradients and Animations */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+      {/* Enhanced Main Stats - 3 Cards (First Row) */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {/* Students - Enhanced Design */}
         <Link href="/admin/students">
           <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-blue-500 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-white to-blue-50">
@@ -316,6 +316,10 @@ export default async function AdminDashboard() {
             </CardContent>
           </Card>
         </Link>
+      </div>
+
+      {/* Payment Stats - 2 Cards (Second Row) */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
 
         {/* Payments - To'langan (Completed) */}
         <Link href="/admin/payments?status=COMPLETED">
