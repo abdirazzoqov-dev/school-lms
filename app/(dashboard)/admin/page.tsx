@@ -53,6 +53,8 @@ export default async function AdminDashboard() {
     pendingPayments: 0,
     overduePayments: 0,
     income: 0,
+    completedPaymentsAmount: 0,
+    pendingPaymentsAmount: 0,
     totalExpenses: 0,
     expenseCategories: []
   }
@@ -191,8 +193,8 @@ export default async function AdminDashboard() {
         </Card>
       )}
 
-      {/* Enhanced Main Stats - 4 Cards with Gradients and Animations */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Enhanced Main Stats - 5 Cards with Gradients and Animations */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
         {/* Students - Enhanced Design */}
         <Link href="/admin/students">
           <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-blue-500 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-white to-blue-50">
@@ -315,40 +317,76 @@ export default async function AdminDashboard() {
           </Card>
         </Link>
 
-        {/* Payments - Enhanced */}
-        <Link href="/admin/payments">
-          <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-amber-500 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-white to-amber-50">
+        {/* Payments - To'langan (Completed) */}
+        <Link href="/admin/payments?status=COMPLETED">
+          <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-green-500 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-white to-green-50">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-                To'lovlar
+                To'langan
               </CardTitle>
-              <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-md group-hover:scale-110 transition-transform">
-                <DollarSign className="h-4 w-4 text-white" />
+              <div className="p-2 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-md group-hover:scale-110 transition-transform">
+                <CheckCircle2 className="h-4 w-4 text-white" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-baseline gap-2">
-                <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">
+              <div className="flex items-baseline gap-2 mb-2">
+                <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
                   {stats.completedPayments}
                 </div>
-                <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-xs">
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                  To'langan
+                <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  Soni
                 </Badge>
               </div>
-              <div className="flex flex-wrap items-center gap-2 mt-3 text-xs">
-                <span className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded-full font-medium">
-                  <Clock className="h-3 w-3" />
-                  {stats.pendingPayments} kutish
-                </span>
-                {stats.overduePayments > 0 && (
-                  <span className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium">
-                    <XCircle className="h-3 w-3" />
-                    {stats.overduePayments} kech
-                  </span>
-                )}
+              <div className="mt-3 pt-3 border-t border-green-100">
+                <p className="text-xs text-muted-foreground mb-1">Jami summa:</p>
+                <p className="text-lg font-bold text-green-600">
+                  +{formatNumber(stats.completedPaymentsAmount || 0)}
+                </p>
               </div>
-              <div className="mt-3 text-xs text-amber-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+              <div className="mt-3 text-xs text-green-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                Batafsil <ChevronRight className="h-3 w-3" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        {/* Payments - Kutilmoqda (Pending) */}
+        <Link href="/admin/payments?status=PENDING">
+          <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-orange-500 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-white to-orange-50">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                Kutilmoqda
+              </CardTitle>
+              <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-md group-hover:scale-110 transition-transform">
+                <Clock className="h-4 w-4 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-baseline gap-2 mb-2">
+                <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">
+                  {stats.pendingPayments}
+                </div>
+                <Badge variant="secondary" className="bg-orange-100 text-orange-700 text-xs">
+                  <Clock className="h-3 w-3 mr-1" />
+                  Soni
+                </Badge>
+              </div>
+              <div className="mt-3 pt-3 border-t border-orange-100">
+                <p className="text-xs text-muted-foreground mb-1">Kutilayotgan summa:</p>
+                <p className="text-lg font-bold text-orange-600">
+                  {formatNumber(stats.pendingPaymentsAmount || 0)}
+                </p>
+              </div>
+              {stats.overduePayments > 0 && (
+                <div className="mt-2 text-xs">
+                  <Badge variant="secondary" className="bg-red-100 text-red-700">
+                    <XCircle className="h-3 w-3 mr-1" />
+                    {stats.overduePayments} kechikkan
+                  </Badge>
+                </div>
+              )}
+              <div className="mt-3 text-xs text-orange-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                 Batafsil <ChevronRight className="h-3 w-3" />
               </div>
             </CardContent>
@@ -627,6 +665,9 @@ async function getDashboardStats(
     income,
     generalExpenses,
     kitchenExpenses,
+    // ✅ To'lovlar summalari
+    completedPaymentsAmount,
+    pendingPaymentsAmount,
     // ✅ Kategoriyalar bo'yicha xarajatlar
     expensesByCategory,
     kitchenExpensesByCategory
@@ -668,6 +709,23 @@ async function getDashboardStats(
         paidDate: { gte: thisMonthStart }
       },
       _sum: { paidAmount: true }
+    }),
+    // ✅ To'langan to'lovlar summasi
+    db.payment.aggregate({
+      where: {
+        tenantId,
+        status: 'COMPLETED',
+        paidDate: { gte: thisMonthStart }
+      },
+      _sum: { amount: true }
+    }),
+    // ✅ Kutilayotgan to'lovlar summasi
+    db.payment.aggregate({
+      where: {
+        tenantId,
+        status: 'PENDING'
+      },
+      _sum: { amount: true }
     }),
     db.expense.aggregate({
       where: {
@@ -815,6 +873,9 @@ async function getDashboardStats(
     pendingPayments,
     overduePayments,
     income: Number(income._sum.paidAmount || 0),
+    // ✅ To'lovlar summalari
+    completedPaymentsAmount: Number(completedPaymentsAmount._sum.amount || 0),
+    pendingPaymentsAmount: Number(pendingPaymentsAmount._sum.amount || 0),
     generalExpenses: Number(generalExpenses._sum.amount || 0),
     kitchenExpenses: Number(kitchenExpenses._sum.amount || 0),
     totalExpenses: Number(generalExpenses._sum.amount || 0) + Number(kitchenExpenses._sum.amount || 0),
