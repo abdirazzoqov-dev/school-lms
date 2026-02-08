@@ -22,7 +22,7 @@ import { DashboardBalanceCard } from '@/components/dashboard-balance-card'
 import { Badge } from '@/components/ui/badge'
 
 // ✅ Advanced caching: Optimized revalidation strategy
-export const revalidate = PAGE_CACHE_CONFIG.admin.revalidate
+export const revalidate = 0 // ✅ No cache for real-time updates
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'default-no-store'
 
