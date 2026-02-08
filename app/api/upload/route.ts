@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { validateFile, MAX_FILE_SIZE } from '@/lib/file-validation'
 import { withRateLimit } from '@/lib/rate-limit'
+import { uploadFile, isStorageConfigured } from '@/lib/storage'
+import { handleApiError } from '@/lib/api-error-handler'
 
 export async function POST(request: NextRequest) {
   return withRateLimit(request, async () => {
@@ -18,6 +18,15 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      // ✅ SECURITY: Check if storage is properly configured
+      if (!isStorageConfigured()) {
+        console.error('Storage not configured properly!')
+        return NextResponse.json(
+          { error: 'Configuration error', message: 'File storage sozlanmagan' },
+          { status: 503 }
+        )
+      }
+
       const formData = await request.formData()
       const file = formData.get('file') as File
       
@@ -28,7 +37,7 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // ✅ Xavfsizlik: File validatsiya
+      // ✅ SECURITY: File validatsiya
       const validation = validateFile(file, {
         maxSize: MAX_FILE_SIZE.document, // 10MB
       })
@@ -40,40 +49,33 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const bytes = await file.arrayBuffer()
-      const buffer = Buffer.from(bytes)
-
-      // ✅ Xavfsizlik: Sanitized filename
+      // ✅ SECURITY: Sanitized filename
       const filename = validation.sanitizedFilename!
-    
-    // Create upload directory if it doesn't exist
-    const uploadDir = join(process.cwd(), 'public', 'uploads')
-    try {
-      await mkdir(uploadDir, { recursive: true })
-    } catch (error) {
-      // Directory might already exist
-    }
 
-    // Save file
-    const filepath = join(uploadDir, filename)
-    await writeFile(filepath, buffer)
+      // ✅ PRODUCTION-READY: Upload to configured storage
+      const uploadResult = await uploadFile(file, filename)
+
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || 'Upload failed')
+      }
 
       // Return file info
       return NextResponse.json({
         success: true,
         file: {
-          url: `/uploads/${filename}`,
+          url: uploadResult.url,
           name: file.name,
           size: file.size,
           type: file.type,
+          key: uploadResult.key,
         }
       })
     } catch (error) {
-      console.error('Upload error:', error)
-      return NextResponse.json(
-        { error: 'Upload failed', message: 'Fayl yuklashda xatolik' },
-        { status: 500 }
-      )
+      return handleApiError(error, {
+        userId: (await getServerSession(authOptions))?.user?.id,
+        action: 'FILE_UPLOAD',
+        path: request.nextUrl.pathname,
+      })
     }
   })
 }

@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions, hashPassword } from '@/lib/auth'
 import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
+import { passwordSchema } from '@/lib/validations/password'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,9 +27,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (newPassword.length < 8) {
+    // ✅ SECURITY: Strong password validation
+    try {
+      passwordSchema.parse(newPassword)
+    } catch (validationError: any) {
+      const errors = validationError.errors?.map((e: any) => e.message).join(', ')
       return NextResponse.json(
-        { error: 'Yangi parol kamida 8 belgidan iborat bo\'lishi kerak' },
+        { error: errors || 'Parol talablarga javob bermaydi' },
         { status: 400 }
       )
     }
@@ -51,8 +57,23 @@ export async function POST(req: NextRequest) {
     )
 
     if (!isPasswordValid) {
+      // ✅ SECURITY: Log failed password change attempts
+      logger.warn('Failed password change attempt', {
+        userId: session.user.id,
+        action: 'CHANGE_PASSWORD_FAILED',
+      })
+      
       return NextResponse.json(
         { error: 'Joriy parol noto\'g\'ri' },
+        { status: 400 }
+      )
+    }
+
+    // ✅ SECURITY: Check if new password is same as current
+    const isSamePassword = await bcrypt.compare(newPassword, user.passwordHash)
+    if (isSamePassword) {
+      return NextResponse.json(
+        { error: 'Yangi parol eski paroldan farq qilishi kerak' },
         { status: 400 }
       )
     }
@@ -66,12 +87,21 @@ export async function POST(req: NextRequest) {
       data: { passwordHash: newPasswordHash },
     })
 
+    // ✅ SECURITY: Log successful password change
+    logger.info('Password changed successfully', {
+      userId: session.user.id,
+      action: 'CHANGE_PASSWORD_SUCCESS',
+    })
+
     return NextResponse.json(
       { message: 'Parol muvaffaqiyatli o\'zgartirildi' },
       { status: 200 }
     )
   } catch (error) {
-    console.error('Change password error:', error)
+    logger.error('Change password error', error, {
+      action: 'CHANGE_PASSWORD_ERROR',
+    })
+    
     return NextResponse.json(
       { error: 'Serverda xatolik yuz berdi' },
       { status: 500 }

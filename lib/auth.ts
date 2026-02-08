@@ -7,7 +7,11 @@ import { UserRole } from '@prisma/client'
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    // ✅ SECURITY: Reduced session duration for better security
+    // 7 days instead of 30 days - stolen tokens expire faster
+    maxAge: 7 * 24 * 60 * 60, // 7 days
+    // Update session age every hour
+    updateAge: 60 * 60, // 1 hour
   },
   pages: {
     signIn: '/login',
