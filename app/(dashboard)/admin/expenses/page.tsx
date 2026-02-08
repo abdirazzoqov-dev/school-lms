@@ -29,6 +29,10 @@ export default async function ExpensesPage({
 
   const tenantId = session.user.tenantId!
 
+  // ✅ Default: bu oy xarajatlari (Dashboard bilan mos)
+  const now = new Date()
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  
   // Build filter
   const where: any = { tenantId }
 
@@ -36,6 +40,7 @@ export default async function ExpensesPage({
     where.categoryId = searchParams.categoryId
   }
 
+  // ✅ Agar foydalanuvchi filter bermaganda - bu oyni ko'rsat
   if (searchParams.startDate || searchParams.endDate) {
     where.date = {}
     if (searchParams.startDate) {
@@ -44,6 +49,9 @@ export default async function ExpensesPage({
     if (searchParams.endDate) {
       where.date.lte = new Date(searchParams.endDate)
     }
+  } else {
+    // ✅ Default: Bu oy (Dashboard bilan parallel)
+    where.date = { gte: thisMonthStart }
   }
 
   // Get expenses
