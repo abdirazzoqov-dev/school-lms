@@ -723,13 +723,13 @@ async function getDashboardStats(
       },
       _sum: { amount: true }
     }),
-    // ✅ Kutilayotgan to'lovlar summasi
+    // ✅ Kutilayotgan to'lovlar summasi (qolgan summa)
     db.payment.aggregate({
       where: {
         tenantId,
         status: 'PENDING'
       },
-      _sum: { amount: true }
+      _sum: { remainingAmount: true }
     }),
     db.expense.aggregate({
       where: {
@@ -879,7 +879,7 @@ async function getDashboardStats(
     income: Number(income._sum.paidAmount || 0),
     // ✅ To'lovlar summalari
     completedPaymentsAmount: Number(completedPaymentsAmount._sum.amount || 0),
-    pendingPaymentsAmount: Number(pendingPaymentsAmount._sum.amount || 0),
+    pendingPaymentsAmount: Number(pendingPaymentsAmount._sum.remainingAmount || 0), // ✅ remainingAmount
     generalExpenses: Number(generalExpenses._sum.amount || 0),
     kitchenExpenses: Number(kitchenExpenses._sum.amount || 0),
     totalExpenses: Number(generalExpenses._sum.amount || 0) + Number(kitchenExpenses._sum.amount || 0),
