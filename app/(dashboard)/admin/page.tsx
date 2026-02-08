@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { 
   Users, GraduationCap, BookOpen, DollarSign, TrendingUp, TrendingDown,
   AlertCircle, Calendar, ArrowUpRight, ArrowDownRight, CheckCircle2, 
-  Clock, XCircle, Activity
+  Clock, XCircle, Activity, Target, Award, Sparkles, Bell, ChevronRight
 } from 'lucide-react'
 import { getCurrentAcademicYear, formatNumber } from '@/lib/utils'
 import Link from 'next/link'
@@ -19,6 +19,7 @@ import { Progress } from '@/components/ui/progress'
 import { DashboardIncomeCard } from '@/components/dashboard-income-card'
 import { DashboardExpenseCard } from '@/components/dashboard-expense-card'
 import { DashboardBalanceCard } from '@/components/dashboard-balance-card'
+import { Badge } from '@/components/ui/badge'
 
 // ✅ Advanced caching: Optimized revalidation strategy
 export const revalidate = PAGE_CACHE_CONFIG.admin.revalidate
@@ -138,131 +139,221 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground mt-1 text-sm md:text-base">
-            Salom, {session.user.fullName} • {session.user.tenant?.name}
+      {/* Enhanced Header with Welcome Message */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Dashboard
+            </h1>
+            <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse" />
+          </div>
+          <p className="text-muted-foreground text-sm md:text-base flex items-center gap-2">
+            <span className="font-medium text-foreground">Salom, {session.user.fullName}!</span>
+            <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-0.5 rounded-full">
+              {session.user.tenant?.name}
+            </span>
+          </p>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Calendar className="h-3 w-3" />
+            {new Date().toLocaleDateString('uz-UZ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="text-left sm:text-right">
-            <p className="text-xs md:text-sm text-muted-foreground">O'quv yili</p>
-            <p className="text-base md:text-lg font-semibold">{academicYear}</p>
-          </div>
+        <div className="flex items-center gap-3">
+          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+            <CardContent className="p-3">
+              <p className="text-xs text-muted-foreground mb-1">O'quv yili</p>
+              <p className="text-lg font-bold text-blue-600">{academicYear}</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      {/* Alerts */}
+      {/* Enhanced Alerts with Bell Icon */}
       {session.user.tenant?.status === 'GRACE_PERIOD' && (
-        <Card className="border-orange-300 bg-orange-50">
+        <Card className="border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-50 to-red-50 shadow-md">
           <CardContent className="flex items-center gap-3 pt-6">
-            <AlertCircle className="h-5 w-5 text-orange-600 shrink-0" />
-            <p className="text-sm font-medium text-orange-800">
-              Obuna muddati tugadi. 7 kun ichida to'lov qiling!
-            </p>
+            <div className="p-2 bg-orange-100 rounded-full">
+              <Bell className="h-5 w-5 text-orange-600 animate-bounce" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-orange-800">
+                ⚠️ Obuna muddati tugadi!
+              </p>
+              <p className="text-xs text-orange-700">
+                7 kun ichida to'lov qiling, aks holda hizmatlar to'xtatiladi.
+              </p>
+            </div>
+            <Button size="sm" className="bg-orange-600 hover:bg-orange-700">
+              To'lash
+            </Button>
           </CardContent>
         </Card>
       )}
 
-      {/* Main Stats - 4 Cards */}
+      {/* Enhanced Main Stats - 4 Cards with Gradients and Animations */}
       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Students */}
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              O'quvchilar
-            </CardTitle>
-            <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg shrink-0">
-              <Users className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl sm:text-3xl font-bold">{stats.totalStudents}</div>
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-2 text-[10px] sm:text-xs">
-              <span className="flex items-center gap-0.5 sm:gap-1 text-green-600">
-                <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                {stats.activeStudents} faol
-              </span>
-              {stats.trialStudents > 0 && (
-                <span className="flex items-center gap-0.5 sm:gap-1 text-orange-600">
-                  <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                  {stats.trialStudents} sinov
-                </span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Teachers & Classes */}
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Xodimlar
-            </CardTitle>
-            <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg shrink-0">
-              <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4 text-purple-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl sm:text-3xl font-bold">{stats.totalTeachers}</div>
-            <div className="flex items-center gap-2 sm:gap-3 mt-2 text-[10px] sm:text-xs text-muted-foreground">
-              <span>{stats.totalClasses} ta sinf</span>
-              <span>•</span>
-              <span>{stats.totalSubjects} fan</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Today's Attendance */}
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Bugungi Davomat
-            </CardTitle>
-            <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg shrink-0">
-              <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl sm:text-3xl font-bold">{stats.presentToday}</div>
-            <div className="mt-2 space-y-1">
-              <div className="flex items-center justify-between text-[10px] sm:text-xs">
-                <span className="text-muted-foreground">Davomat darajasi</span>
-                <span className="font-medium">{attendanceRate.toFixed(0)}%</span>
+        {/* Students - Enhanced Design */}
+        <Link href="/admin/students">
+          <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-blue-500 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-white to-blue-50">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                O'quvchilar
+              </CardTitle>
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-md group-hover:scale-110 transition-transform">
+                <Users className="h-4 w-4 text-white" />
               </div>
-              <Progress value={attendanceRate} className="h-1.5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Payments */}
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-              To'lovlar
-            </CardTitle>
-            <div className="p-1.5 sm:p-2 bg-amber-100 rounded-lg shrink-0">
-              <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl sm:text-3xl font-bold">{stats.completedPayments}</div>
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-2 text-[10px] sm:text-xs">
-              <span className="flex items-center gap-0.5 sm:gap-1 text-orange-600">
-                <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                {stats.pendingPayments} kutilmoqda
-              </span>
-              {stats.overduePayments > 0 && (
-                <span className="flex items-center gap-0.5 sm:gap-1 text-red-600">
-                  <XCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                  {stats.overduePayments} kechikkan
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-baseline gap-2">
+                <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                  {stats.totalStudents}
+                </div>
+                <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-xs">
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  Jami
+                </Badge>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 mt-3 text-xs">
+                <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">
+                  <CheckCircle2 className="h-3 w-3" />
+                  {stats.activeStudents} faol
                 </span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                {stats.trialStudents > 0 && (
+                  <span className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded-full font-medium">
+                    <Clock className="h-3 w-3" />
+                    {stats.trialStudents} sinov
+                  </span>
+                )}
+              </div>
+              <div className="mt-3 text-xs text-blue-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                Batafsil <ChevronRight className="h-3 w-3" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        {/* Teachers & Classes - Enhanced */}
+        <Link href="/admin/teachers">
+          <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-purple-500 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-white to-purple-50">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                Xodimlar
+              </CardTitle>
+              <div className="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-md group-hover:scale-110 transition-transform">
+                <GraduationCap className="h-4 w-4 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-baseline gap-2">
+                <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+                  {stats.totalTeachers}
+                </div>
+                <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-xs">
+                  <Award className="h-3 w-3 mr-1" />
+                  Ustoz
+                </Badge>
+              </div>
+              <div className="flex items-center gap-3 mt-3 text-xs">
+                <span className="flex items-center gap-1 px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full font-medium">
+                  <BookOpen className="h-3 w-3" />
+                  {stats.totalClasses} sinf
+                </span>
+                <span className="flex items-center gap-1 px-2 py-1 bg-violet-100 text-violet-700 rounded-full font-medium">
+                  <Target className="h-3 w-3" />
+                  {stats.totalSubjects} fan
+                </span>
+              </div>
+              <div className="mt-3 text-xs text-purple-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                Batafsil <ChevronRight className="h-3 w-3" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        {/* Today's Attendance - Enhanced */}
+        <Link href="/admin/attendance">
+          <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-green-500 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-white to-green-50">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                Bugungi Davomat
+              </CardTitle>
+              <div className="p-2 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-md group-hover:scale-110 transition-transform">
+                <Activity className="h-4 w-4 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-baseline gap-2">
+                <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
+                  {stats.presentToday}
+                </div>
+                <Badge 
+                  variant="secondary" 
+                  className={`text-xs ${
+                    attendanceRate >= 90 ? 'bg-green-100 text-green-700' : 
+                    attendanceRate >= 75 ? 'bg-yellow-100 text-yellow-700' : 
+                    'bg-red-100 text-red-700'
+                  }`}
+                >
+                  {attendanceRate.toFixed(0)}%
+                </Badge>
+              </div>
+              <div className="mt-3 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground font-medium">Davomat darajasi</span>
+                  <span className="font-bold text-green-600">{attendanceRate.toFixed(1)}%</span>
+                </div>
+                <Progress 
+                  value={attendanceRate} 
+                  className="h-2 bg-green-100" 
+                />
+              </div>
+              <div className="mt-3 text-xs text-green-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                Batafsil <ChevronRight className="h-3 w-3" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        {/* Payments - Enhanced */}
+        <Link href="/admin/payments">
+          <Card className="group hover:shadow-xl transition-all duration-300 border-l-4 border-l-amber-500 hover:-translate-y-1 cursor-pointer bg-gradient-to-br from-white to-amber-50">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                To'lovlar
+              </CardTitle>
+              <div className="p-2 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-md group-hover:scale-110 transition-transform">
+                <DollarSign className="h-4 w-4 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-baseline gap-2">
+                <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent">
+                  {stats.completedPayments}
+                </div>
+                <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-xs">
+                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                  To'langan
+                </Badge>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 mt-3 text-xs">
+                <span className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded-full font-medium">
+                  <Clock className="h-3 w-3" />
+                  {stats.pendingPayments} kutish
+                </span>
+                {stats.overduePayments > 0 && (
+                  <span className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-full font-medium">
+                    <XCircle className="h-3 w-3" />
+                    {stats.overduePayments} kech
+                  </span>
+                )}
+              </div>
+              <div className="mt-3 text-xs text-amber-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                Batafsil <ChevronRight className="h-3 w-3" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Financial Overview - 3 Cards */}
@@ -295,6 +386,65 @@ export default async function AdminDashboard() {
         />
       </div>
 
+      {/* Quick Actions & Insights */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="group hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-blue-50 to-white border-blue-100">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-blue-500 rounded-xl shadow-md group-hover:scale-110 transition-transform">
+                <Users className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">To'lov kutilmoqda</p>
+                <p className="text-xl font-bold text-blue-600">{stats.pendingPayments}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="group hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-red-50 to-white border-red-100">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-red-500 rounded-xl shadow-md group-hover:scale-110 transition-transform">
+                <AlertCircle className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Kechikkan to'lovlar</p>
+                <p className="text-xl font-bold text-red-600">{stats.overduePayments}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="group hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-purple-50 to-white border-purple-100">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-purple-500 rounded-xl shadow-md group-hover:scale-110 transition-transform">
+                <BookOpen className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Sinflar</p>
+                <p className="text-xl font-bold text-purple-600">{stats.totalClasses}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="group hover:shadow-lg transition-all cursor-pointer bg-gradient-to-br from-green-50 to-white border-green-100">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-green-500 rounded-xl shadow-md group-hover:scale-110 transition-transform">
+                <Target className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Fanlar</p>
+                <p className="text-xl font-bold text-green-600">{stats.totalSubjects}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Charts - 2 Column Grid */}
       <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2">
         <AttendanceChart data={attendanceData} />
@@ -304,96 +454,148 @@ export default async function AdminDashboard() {
       {/* Grade Distribution - Full Width */}
       <GradeDistributionChart data={gradeDistribution} />
 
-      {/* Recent Activity - 2 Columns */}
+      {/* Enhanced Recent Activity - 2 Columns */}
       <div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2">
-        {/* Recent Students */}
-        <Card>
-          <CardHeader>
+        {/* Recent Students - Enhanced */}
+        <Card className="border-t-4 border-t-blue-500">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-transparent">
             <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-base sm:text-lg">Yangi O'quvchilar</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Users className="h-4 w-4 text-blue-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-base sm:text-lg">Yangi O'quvchilar</CardTitle>
+                  <p className="text-xs text-muted-foreground">So'nggi 5 ta qo'shilgan</p>
+                </div>
+              </div>
               <Link href="/admin/students">
-                <Button variant="ghost" size="sm" className="text-[10px] sm:text-xs h-7 sm:h-8">
-                  Barchasi <ArrowUpRight className="ml-0.5 sm:ml-1 h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                <Button variant="outline" size="sm" className="text-xs hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors">
+                  Barchasi 
+                  <ArrowUpRight className="ml-1 h-3 w-3" />
                 </Button>
               </Link>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4">
             <div className="space-y-3">
               {recentStudents.length > 0 ? (
-                recentStudents.map((student: any) => (
+                recentStudents.map((student: any, index: number) => (
                   <div
                     key={student.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                    className="group flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all duration-200 cursor-pointer hover:shadow-md"
                   >
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">
-                        {student.user?.fullName || 'Noma\'lum'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {student.class?.name || 'Sinfsiz'} • {student.studentCode}
-                      </p>
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold shadow-md">
+                        {student.user?.fullName?.charAt(0) || '?'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                          {student.user?.fullName || 'Noma\'lum'}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <BookOpen className="h-3 w-3" />
+                            {student.class?.name || 'Sinfsiz'}
+                          </p>
+                          <span className="text-xs text-gray-400">•</span>
+                          <p className="text-xs text-blue-600 font-mono">
+                            {student.studentCode}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      student.status === 'ACTIVE' 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-gray-100 text-gray-700'
-                    }`}>
-                      {student.status}
-                    </span>
+                    <Badge 
+                      variant="secondary" 
+                      className={`text-xs font-medium ${
+                        student.status === 'ACTIVE' 
+                          ? 'bg-green-100 text-green-700 border-green-200' 
+                          : 'bg-gray-100 text-gray-700 border-gray-200'
+                      }`}
+                    >
+                      {student.status === 'ACTIVE' ? '✓ Faol' : student.status}
+                    </Badge>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-sm text-muted-foreground py-8">
-                  Hozircha o'quvchilar yo'q
-                </p>
+                <div className="text-center py-12">
+                  <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    Hozircha o'quvchilar yo'q
+                  </p>
+                </div>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Recent Payments */}
-        <Card>
-          <CardHeader>
+        {/* Recent Payments - Enhanced */}
+        <Card className="border-t-4 border-t-green-500">
+          <CardHeader className="bg-gradient-to-r from-green-50 to-transparent">
             <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-base sm:text-lg">So'nggi To'lovlar</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <DollarSign className="h-4 w-4 text-green-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-base sm:text-lg">So'nggi To'lovlar</CardTitle>
+                  <p className="text-xs text-muted-foreground">Oxirgi 5 ta tranzaksiya</p>
+                </div>
+              </div>
               <Link href="/admin/payments">
-                <Button variant="ghost" size="sm" className="text-[10px] sm:text-xs h-7 sm:h-8">
-                  Barchasi <ArrowUpRight className="ml-0.5 sm:ml-1 h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                <Button variant="outline" size="sm" className="text-xs hover:bg-green-50 hover:text-green-600 hover:border-green-300 transition-colors">
+                  Barchasi 
+                  <ArrowUpRight className="ml-1 h-3 w-3" />
                 </Button>
               </Link>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4">
             <div className="space-y-3">
               {recentPayments.length > 0 ? (
                 recentPayments.map((payment: any) => (
                   <div
                     key={payment.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                    className="group flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:border-green-200 hover:bg-green-50/50 transition-all duration-200 cursor-pointer hover:shadow-md"
                   >
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">
-                        {payment.student?.user?.fullName || 'Noma\'lum'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('uz-UZ') : 'N/A'}
-                      </p>
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white shadow-md">
+                        <DollarSign className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-gray-900 truncate group-hover:text-green-600 transition-colors">
+                          {payment.student?.user?.fullName || 'Noma\'lum'}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {payment.paidDate ? new Date(payment.paidDate).toLocaleDateString('uz-UZ') : 'N/A'}
+                          </p>
+                          <span className="text-xs text-gray-400">•</span>
+                          <Badge variant="outline" className="text-xs">
+                            {payment.paymentMethod as string}
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-sm text-green-600">
+                      <p className="font-bold text-sm text-green-600 flex items-center gap-1">
+                        <TrendingUp className="h-4 w-4" />
                         +{formatNumber(Number(payment.paidAmount))}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {payment.paymentMethod as string}
+                        so'm
                       </p>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-sm text-muted-foreground py-8">
-                  Hozircha to'lovlar yo'q
-                </p>
+                <div className="text-center py-12">
+                  <DollarSign className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    Hozircha to'lovlar yo'q
+                  </p>
+                </div>
               )}
             </div>
           </CardContent>
