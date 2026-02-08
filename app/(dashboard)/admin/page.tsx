@@ -671,7 +671,7 @@ async function getDashboardStats(
     kitchenExpenses,
     // ✅ To'lovlar summalari
     completedPaymentsAmount,
-    pendingPaymentsAmount,
+    pendingPaymentsList, // ✅ Array of pending payments for calculation
     // ✅ Kategoriyalar bo'yicha xarajatlar
     expensesByCategory,
     kitchenExpensesByCategory
@@ -869,7 +869,7 @@ async function getDashboardStats(
     .reduce((sum, pm) => sum + pm.amount, 0)
 
   // ✅ Kutilayotgan to'lovlar summasi - manual calculation
-  const pendingPaymentsTotal = pendingPaymentsAmount.reduce((sum, p) => {
+  const pendingPaymentsAmount = pendingPaymentsList.reduce((sum, p) => {
     const remaining = Number(p.amount) - Number(p.paidAmount || 0)
     return sum + remaining
   }, 0)
@@ -888,7 +888,7 @@ async function getDashboardStats(
     income: Number(income._sum.paidAmount || 0),
     // ✅ To'lovlar summalari
     completedPaymentsAmount: Number(completedPaymentsAmount._sum.amount || 0),
-    pendingPaymentsAmount: pendingPaymentsTotal, // ✅ Calculated qolgan summa
+    pendingPaymentsAmount: pendingPaymentsAmount, // ✅ Calculated qolgan summa
     generalExpenses: Number(generalExpenses._sum.amount || 0),
     kitchenExpenses: Number(kitchenExpenses._sum.amount || 0),
     totalExpenses: Number(generalExpenses._sum.amount || 0) + Number(kitchenExpenses._sum.amount || 0),
