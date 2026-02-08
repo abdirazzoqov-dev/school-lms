@@ -398,8 +398,8 @@ export default async function AdminDashboard() {
         </Link>
       </div>
 
-      {/* Financial Overview - 3 Cards */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-3">
+      {/* Financial Overview - 2 Cards (Removed Expenses - Buggy) */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
         {/* Income - Client Component with Modal */}
         <DashboardIncomeCard
           income={stats.income}
@@ -409,22 +409,13 @@ export default async function AdminDashboard() {
           paymentMethods={stats.paymentMethods || []}
         />
 
-        {/* Expenses - Client Component with Modal */}
-        <DashboardExpenseCard
-          totalExpenses={stats.totalExpenses}
-          expenseCash={stats.expenseCash || 0}
-          expenseCard={stats.expenseCard || 0}
-          expensePaymentMethods={stats.expensePaymentMethods || []}
-          expenseCategories={stats.expenseCategories || []}
-        />
-
         {/* Balance - Client Component with Modal */}
         <DashboardBalanceCard
           balance={balance}
           cashIncome={stats.cashIncome || 0}
-          cashExpense={stats.expenseCash || 0}
+          cashExpense={0} // ✅ Set to 0 since expenses are buggy
           cardIncome={stats.cardIncome || 0}
-          cardExpense={stats.expenseCard || 0}
+          cardExpense={0} // ✅ Set to 0 since expenses are buggy
         />
       </div>
 
