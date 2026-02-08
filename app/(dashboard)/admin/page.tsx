@@ -723,13 +723,16 @@ async function getDashboardStats(
       },
       _sum: { amount: true }
     }),
-    // ✅ Kutilayotgan to'lovlar summasi (qolgan summa)
-    db.payment.aggregate({
+    // ✅ PENDING to'lovlarning qolgan summasini hisoblash uchun findMany
+    db.payment.findMany({
       where: {
         tenantId,
         status: 'PENDING'
       },
-      _sum: { remainingAmount: true }
+      select: {
+        amount: true,
+        paidAmount: true
+      }
     }),
     db.expense.aggregate({
       where: {
@@ -865,6 +868,12 @@ async function getDashboardStats(
     .filter(pm => pm.method === 'CLICK')
     .reduce((sum, pm) => sum + pm.amount, 0)
 
+  // ✅ Kutilayotgan to'lovlar summasi - manual calculation
+  const pendingPaymentsTotal = pendingPaymentsAmount.reduce((sum, p) => {
+    const remaining = Number(p.amount) - Number(p.paidAmount || 0)
+    return sum + remaining
+  }, 0)
+
   return {
     totalStudents,
     activeStudents,
@@ -879,7 +888,7 @@ async function getDashboardStats(
     income: Number(income._sum.paidAmount || 0),
     // ✅ To'lovlar summalari
     completedPaymentsAmount: Number(completedPaymentsAmount._sum.amount || 0),
-    pendingPaymentsAmount: Number(pendingPaymentsAmount._sum.remainingAmount || 0), // ✅ remainingAmount
+    pendingPaymentsAmount: pendingPaymentsTotal, // ✅ Calculated qolgan summa
     generalExpenses: Number(generalExpenses._sum.amount || 0),
     kitchenExpenses: Number(kitchenExpenses._sum.amount || 0),
     totalExpenses: Number(generalExpenses._sum.amount || 0) + Number(kitchenExpenses._sum.amount || 0),
