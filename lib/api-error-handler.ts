@@ -10,7 +10,7 @@ import { Prisma } from '@prisma/client'
 
 interface ErrorContext {
   userId?: string
-  tenantId?: string | null
+  tenantId?: string
   action?: string
   path?: string
   method?: string
