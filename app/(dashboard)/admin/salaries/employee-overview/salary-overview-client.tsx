@@ -9,6 +9,11 @@ import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card'
 import { 
   DollarSign, 
   CheckCircle2, 
@@ -17,7 +22,11 @@ import {
   Search,
   Calendar,
   Briefcase,
-  GraduationCap
+  GraduationCap,
+  TrendingUp,
+  TrendingDown,
+  Gift,
+  Info
 } from 'lucide-react'
 import Link from 'next/link'
 import { formatMoney, getMonthNameUz } from '@/lib/utils/payment-helper'
@@ -62,6 +71,20 @@ interface MonthSalaryStatus {
   hasSalary: boolean
   salaryId: string | null
   status: 'paid' | 'partially_paid' | 'pending' | 'overdue' | 'not_due'
+  payments: PaymentDetail[]
+}
+
+interface PaymentDetail {
+  id: string
+  type: string
+  amount: number
+  paidAmount: number
+  remainingAmount: number
+  status: string
+  paymentDate: Date | null
+  description: string | null
+  bonusAmount: number
+  deductionAmount: number
 }
 
 export function SalaryOverviewClient({ 
@@ -343,69 +366,208 @@ export function SalaryOverviewClient({
       ) : selectedEmployeeId && monthlyStatuses.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {monthlyStatuses.map((status) => (
-            <Card 
-              key={`${status.month}-${status.year}`}
-              className={`transition-all hover:shadow-lg ${getStatusColor(status.status)}`}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">
-                    <Calendar className="inline h-4 w-4 mr-2" />
-                    {status.monthName} {status.year}
-                  </CardTitle>
-                  {getStatusBadge(status)}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {/* Progress */}
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-muted-foreground">To'langan:</span>
-                    <span className="font-semibold">{formatMoney(status.totalPaid)} so'm</span>
-                  </div>
-                  <Progress 
-                    value={status.percentagePaid} 
-                    className="h-2"
-                  />
-                  <div className="flex justify-between text-xs mt-1 text-muted-foreground">
-                    <span>{status.percentagePaid}%</span>
-                    <span>{formatMoney(status.requiredAmount)} so'm</span>
-                  </div>
-                </div>
+            <HoverCard key={`${status.month}-${status.year}`} openDelay={200}>
+              <HoverCardTrigger asChild>
+                <Card 
+                  className={`transition-all hover:shadow-lg cursor-pointer ${getStatusColor(status.status)}`}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">
+                        <Calendar className="inline h-4 w-4 mr-2" />
+                        {status.monthName} {status.year}
+                      </CardTitle>
+                      <div className="flex items-center gap-1">
+                        {getStatusBadge(status)}
+                        {status.payments.length > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            <Info className="h-3 w-3" />
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {/* Progress */}
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-muted-foreground">To'langan:</span>
+                        <span className="font-semibold">{formatMoney(status.totalPaid)} so'm</span>
+                      </div>
+                      <Progress 
+                        value={status.percentagePaid} 
+                        className="h-2"
+                      />
+                      <div className="flex justify-between text-xs mt-1 text-muted-foreground">
+                        <span>{status.percentagePaid}%</span>
+                        <span>{formatMoney(status.requiredAmount)} so'm</span>
+                      </div>
+                    </div>
 
-                {/* Remaining Amount */}
-                {!status.isFullyPaid && (
-                  <div className="flex justify-between text-sm border-t pt-2">
-                    <span className="text-orange-600 font-medium">Qoldi:</span>
-                    <span className="text-orange-600 font-semibold">
-                      {formatMoney(status.requiredAmount - status.totalPaid)} so'm
-                    </span>
-                  </div>
-                )}
+                    {/* Remaining Amount */}
+                    {!status.isFullyPaid && (
+                      <div className="flex justify-between text-sm border-t pt-2">
+                        <span className="text-orange-600 font-medium">Qoldi:</span>
+                        <span className="text-orange-600 font-semibold">
+                          {formatMoney(status.requiredAmount - status.totalPaid)} so'm
+                        </span>
+                      </div>
+                    )}
 
-                {/* Action Button */}
-                {!status.isFullyPaid && (
-                  status.hasSalary && status.salaryId ? (
-                    <Link href={`/admin/salaries/${status.salaryId}/edit`} className="block">
-                      <Button size="sm" className="w-full" variant="default">
-                        <DollarSign className="h-4 w-4 mr-2" />
-                        Maosh to'lash
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Link 
-                      href={`/admin/salaries/create?employeeId=${selectedEmployeeId}&employeeType=${employeeType}&month=${status.month}&year=${status.year}`}
-                      className="block"
-                    >
-                      <Button size="sm" className="w-full" variant="outline">
-                        <DollarSign className="h-4 w-4 mr-2" />
-                        Maosh yaratish
-                      </Button>
-                    </Link>
-                  )
-                )}
-              </CardContent>
-            </Card>
+                    {/* Action Button */}
+                    {!status.isFullyPaid && (
+                      status.hasSalary && status.salaryId ? (
+                        <Link href={`/admin/salaries/${status.salaryId}/edit`} className="block">
+                          <Button size="sm" className="w-full" variant="default">
+                            <DollarSign className="h-4 w-4 mr-2" />
+                            Maosh to'lash
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Link 
+                          href={`/admin/salaries/create?employeeId=${selectedEmployeeId}&employeeType=${employeeType}&month=${status.month}&year=${status.year}`}
+                          className="block"
+                        >
+                          <Button size="sm" className="w-full" variant="outline">
+                            <DollarSign className="h-4 w-4 mr-2" />
+                            Maosh yaratish
+                          </Button>
+                        </Link>
+                      )
+                    )}
+                  </CardContent>
+                </Card>
+              </HoverCardTrigger>
+              
+              {/* Hover Content - Payment Details */}
+              {status.payments.length > 0 && (
+                <HoverCardContent className="w-96" side="top">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 border-b pb-2">
+                      <Calendar className="h-4 w-4 text-primary" />
+                      <h4 className="font-semibold text-sm">
+                        {status.monthName} {status.year} - To'lovlar tarixi
+                      </h4>
+                    </div>
+                    
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                      {status.payments.map((payment, idx) => {
+                        const getPaymentTypeInfo = (type: string) => {
+                          switch (type) {
+                            case 'FULL_SALARY':
+                              return { label: 'To\'liq oylik', icon: DollarSign, color: 'text-blue-600 bg-blue-50' }
+                            case 'ADVANCE':
+                              return { label: 'Avans', icon: TrendingUp, color: 'text-green-600 bg-green-50' }
+                            case 'BONUS':
+                              return { label: 'Bonus', icon: Gift, color: 'text-purple-600 bg-purple-50' }
+                            case 'DEDUCTION':
+                              return { label: 'Ushlab qolish', icon: TrendingDown, color: 'text-red-600 bg-red-50' }
+                            default:
+                              return { label: type, icon: DollarSign, color: 'text-gray-600 bg-gray-50' }
+                          }
+                        }
+
+                        const typeInfo = getPaymentTypeInfo(payment.type)
+                        const PaymentIcon = typeInfo.icon
+
+                        return (
+                          <div 
+                            key={payment.id} 
+                            className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                          >
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <div className={`p-1.5 rounded ${typeInfo.color}`}>
+                                  <PaymentIcon className="h-3.5 w-3.5" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-xs">{typeInfo.label}</p>
+                                  {payment.paymentDate && (
+                                    <p className="text-[10px] text-muted-foreground">
+                                      {new Date(payment.paymentDate).toLocaleDateString('uz-UZ')}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <Badge 
+                                variant={payment.status === 'PAID' ? 'default' : 'secondary'}
+                                className="text-[10px] h-5"
+                              >
+                                {payment.status === 'PAID' ? '✓ To\'langan' : 
+                                 payment.status === 'PARTIALLY_PAID' ? 'Qisman' : 'Kutilmoqda'}
+                              </Badge>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <p className="text-muted-foreground">To'lov:</p>
+                                <p className="font-semibold text-green-600">
+                                  {formatMoney(payment.paidAmount)} so'm
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Jami:</p>
+                                <p className="font-semibold">
+                                  {formatMoney(payment.amount)} so'm
+                                </p>
+                              </div>
+                            </div>
+
+                            {payment.bonusAmount > 0 && (
+                              <div className="mt-2 pt-2 border-t">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-purple-600">💰 Bonus:</span>
+                                  <span className="font-semibold text-purple-600">
+                                    +{formatMoney(payment.bonusAmount)} so'm
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
+                            {payment.deductionAmount > 0 && (
+                              <div className="mt-2 pt-2 border-t">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-red-600">⚠️ Ushlab qolish:</span>
+                                  <span className="font-semibold text-red-600">
+                                    -{formatMoney(payment.deductionAmount)} so'm
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
+                            {payment.remainingAmount > 0 && (
+                              <div className="mt-2 pt-2 border-t">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-orange-600">Qoldi:</span>
+                                  <span className="font-semibold text-orange-600">
+                                    {formatMoney(payment.remainingAmount)} so'm
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
+                            {payment.description && (
+                              <div className="mt-2 pt-2 border-t">
+                                <p className="text-[10px] text-muted-foreground italic">
+                                  {payment.description}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    <div className="pt-2 border-t">
+                      <div className="flex justify-between items-center text-sm font-semibold">
+                        <span>Jami to'langan:</span>
+                        <span className="text-green-600">{formatMoney(status.totalPaid)} so'm</span>
+                      </div>
+                    </div>
+                  </div>
+                </HoverCardContent>
+              )}
+            </HoverCard>
           ))}
         </div>
       ) : selectedEmployeeId ? (

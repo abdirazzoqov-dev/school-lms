@@ -58,10 +58,15 @@ export async function GET(request: Request) {
         year: true,
         amount: true,
         paidAmount: true,
+        remainingAmount: true,
         status: true,
         type: true,
         salaryAmountAtPayment: true,
-        dueDate: true
+        dueDate: true,
+        paymentDate: true,
+        description: true,
+        bonusAmount: true,
+        deductionAmount: true
       }
     })
 
@@ -130,7 +135,19 @@ export async function GET(request: Request) {
         isOverdue,
         hasSalary,
         salaryId: primarySalary?.id || null,
-        status
+        status,
+        payments: monthPayments.map(p => ({
+          id: p.id,
+          type: p.type,
+          amount: Number(p.amount),
+          paidAmount: Number(p.paidAmount),
+          remainingAmount: Number(p.remainingAmount),
+          status: p.status,
+          paymentDate: p.paymentDate,
+          description: p.description,
+          bonusAmount: Number(p.bonusAmount || 0),
+          deductionAmount: Number(p.deductionAmount || 0)
+        }))
       })
     }
 
