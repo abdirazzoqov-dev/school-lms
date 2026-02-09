@@ -636,28 +636,6 @@ export function SalaryOverviewClient({
                     </span>
                   </div>
                 )}
-
-                {/* Action Button */}
-                {!status.isFullyPaid && (
-                  status.hasSalary && status.salaryId ? (
-                    <Link href={`/admin/salaries/${status.salaryId}`} className="block">
-                      <Button size="sm" className="w-full" variant="default">
-                        <DollarSign className="h-4 w-4 mr-2" />
-                        Maosh to'lash
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Link 
-                      href={`/admin/salaries/create?employeeId=${selectedEmployeeId}&employeeType=${employeeType}&month=${status.month}&year=${status.year}`}
-                      className="block"
-                    >
-                      <Button size="sm" className="w-full" variant="outline">
-                        <DollarSign className="h-4 w-4 mr-2" />
-                        Maosh yaratish
-                      </Button>
-                    </Link>
-                  )
-                )}
               </CardContent>
             </Card>
           ))}
