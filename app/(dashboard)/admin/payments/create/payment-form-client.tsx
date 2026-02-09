@@ -39,9 +39,18 @@ interface Class {
 interface PaymentFormClientProps {
   initialStudents: Student[]
   initialClasses: Class[]
+  preSelectedStudentId?: string // ✅ URL'dan kelgan studentId
+  preSelectedMonth?: number // ✅ URL'dan kelgan month
+  preSelectedYear?: number // ✅ URL'dan kelgan year
 }
 
-export function PaymentFormClient({ initialStudents, initialClasses }: PaymentFormClientProps) {
+export function PaymentFormClient({ 
+  initialStudents, 
+  initialClasses,
+  preSelectedStudentId,
+  preSelectedMonth,
+  preSelectedYear
+}: PaymentFormClientProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
@@ -54,14 +63,18 @@ export function PaymentFormClient({ initialStudents, initialClasses }: PaymentFo
   const [acceptPayment, setAcceptPayment] = useState(true)
   
   const [formData, setFormData] = useState({
-    studentId: '',
+    studentId: preSelectedStudentId || '', // ✅ Pre-fill
     amount: 0,
     paymentType: 'TUITION' as 'TUITION' | 'BOOKS' | 'UNIFORM' | 'OTHER',
     paymentMethod: 'CASH' as 'CASH' | 'CLICK' | 'PAYME' | 'UZUM',
-    dueDate: new Date().toISOString().split('T')[0],
+    dueDate: preSelectedMonth && preSelectedYear 
+      ? new Date(preSelectedYear, preSelectedMonth - 1, 5).toISOString().split('T')[0] // ✅ Pre-fill due date
+      : new Date().toISOString().split('T')[0],
     paidDate: '',
     receiptNumber: '',
-    notes: '',
+    notes: preSelectedMonth && preSelectedYear
+      ? `${preSelectedYear}-${String(preSelectedMonth).padStart(2, '0')} oyi uchun to'lov` // ✅ Pre-fill notes
+      : '',
   })
 
   // Filter students by class and search

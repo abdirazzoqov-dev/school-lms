@@ -102,13 +102,22 @@ export function MonthlyPaymentProgress({
       </div>
 
       {/* ✅ To'lov qilish tugmasi */}
-      {!isFullyPaid && paymentId && (
-        <Link href={`/admin/payments/${paymentId}/pay`}>
-          <Button size="sm" className="w-full" variant="default">
-            <DollarSign className="h-4 w-4 mr-2" />
-            To'lov qilish
-          </Button>
-        </Link>
+      {!isFullyPaid && (
+        paymentId ? (
+          <Link href={`/admin/payments/${paymentId}/edit`}>
+            <Button size="sm" className="w-full" variant="default">
+              <DollarSign className="h-4 w-4 mr-2" />
+              To'lov qilish
+            </Button>
+          </Link>
+        ) : (
+          <Link href={`/admin/payments/create?studentId=${studentId}&month=${month}&year=${year}`}>
+            <Button size="sm" className="w-full" variant="outline">
+              <DollarSign className="h-4 w-4 mr-2" />
+              To'lov yaratish
+            </Button>
+          </Link>
+        )
       )}
     </div>
   )

@@ -936,12 +936,14 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
           studentId
         })
         
+        // ✅ CRITICAL: Faqat hali to'lov qilinmagan (paidAmount = 0) PENDING paymentlarni yangilash
         const pendingTuitionPayments = await db.payment.findMany({
           where: {
             tenantId,
             studentId,
             paymentType: 'TUITION',
-            status: { in: ['PENDING', 'PARTIALLY_PAID'] },
+            status: 'PENDING', // ✅ Faqat PENDING (PARTIALLY_PAID emas!)
+            paidAmount: 0, // ✅ Hali hech narsa to'lanmagan
             remainingAmount: { gt: 0 }
           }
         })
@@ -949,19 +951,16 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
         logger.info(`Found ${pendingTuitionPayments.length} pending tuition payments to update`)
 
         for (const payment of pendingTuitionPayments) {
-          const newRemainingAmount = newTuitionFee - Number(payment.paidAmount)
-          
           await db.payment.update({
             where: { id: payment.id },
             data: {
               amount: newTuitionFee,
-              remainingAmount: Math.max(0, newRemainingAmount),
-              status: newRemainingAmount <= 0 ? 'COMPLETED' : (Number(payment.paidAmount) > 0 ? 'PARTIALLY_PAID' : 'PENDING'),
+              remainingAmount: newTuitionFee, // ✅ paidAmount = 0 bo'lgani uchun
               tuitionFeeAtPayment: newTuitionFee // ✅ Update snapshot for future PENDING payments
             }
           })
           
-          logger.info(`Updated tuition payment ${payment.id}: ${Number(payment.amount)} -> ${newTuitionFee}, remaining: ${newRemainingAmount}`, {
+          logger.info(`Updated tuition payment ${payment.id}: ${Number(payment.amount)} -> ${newTuitionFee}`, {
             studentId
           })
         }

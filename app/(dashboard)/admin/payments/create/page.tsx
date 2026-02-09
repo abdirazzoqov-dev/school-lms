@@ -10,7 +10,11 @@ import { PaymentFormClient } from './payment-form-client'
 export const revalidate = 0
 export const dynamic = 'force-dynamic'
 
-export default async function CreatePaymentPage() {
+export default async function CreatePaymentPage({
+  searchParams
+}: {
+  searchParams: { studentId?: string; month?: string; year?: string }
+}) {
   const session = await getServerSession(authOptions)
 
   if (!session || session.user.role !== 'ADMIN') {
@@ -72,7 +76,10 @@ export default async function CreatePaymentPage() {
 
       <PaymentFormClient 
         initialStudents={students} 
-        initialClasses={classes} 
+        initialClasses={classes}
+        preSelectedStudentId={searchParams.studentId}
+        preSelectedMonth={searchParams.month ? parseInt(searchParams.month) : undefined}
+        preSelectedYear={searchParams.year ? parseInt(searchParams.year) : undefined}
       />
     </div>
   )
