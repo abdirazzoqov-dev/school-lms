@@ -5,12 +5,12 @@ import { db } from '@/lib/db'
 import { handleApiError } from '@/lib/api-error-handler'
 
 /**
- * TOPSHIRIQ 3: Bir nechta oy uchun to'lov API
+ * TOPSHIRIQ 3: Bir nechta oy uchun to\'lov API
  * 
  * Senior Software Engineer yechimi:
- * - O'quvchi bir vaqtda bir nechta oy uchun to'lov qilishi mumkin
+ * - O\'quvchi bir vaqtda bir nechta oy uchun to\'lov qilishi mumkin
  * - Har bir oy uchun alohida payment record yaratiladi
- * - Har bir payment o'sha oyning narxini snapshot sifatida saqlaydi
+ * - Har bir payment o\'sha oyning narxini snapshot sifatida saqlaydi
  */
 export async function POST(req: NextRequest) {
   try {
@@ -27,13 +27,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     
     const { 
-      studentId,       // O'quvchi ID
-      startMonth,      // Boshlang'ich oy (1-12)
-      startYear,       // Boshlang'ich yil
+      studentId,       // O\'quvchi ID
+      startMonth,      // Boshlang\'ich oy (1-12)
+      startYear,       // Boshlang\'ich yil
       monthsCount,     // Necha oy uchun
-      paymentAmount,   // To'langan summa
-      paymentMethod = 'CASH', // To'lov usuli
-      paidDate = new Date().toISOString().split('T')[0] // To'lov sanasi
+      paymentAmount,   // To\'langan summa
+      paymentMethod = 'CASH', // To\'lov usuli
+      paidDate = new Date().toISOString().split('T')[0] // To\'lov sanasi
     } = body
 
     // Validation
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // O'quvchini topish
+    // O\'quvchini topish
     const student = await db.student.findFirst({
       where: { id: studentId, tenantId }
     })
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // ✅ Bir nechta oy uchun to'lovlar yaratish
+    // ✅ Bir nechta oy uchun to\'lovlar yaratish
     const payments = []
     let currentMonth = startMonth
     let currentYear = startYear
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
         currentYear++
       }
 
-      // Shu oy uchun to'lov bormi tekshirish
+      // Shu oy uchun to\'lov bormi tekshirish
       const existingPayment = await db.payment.findFirst({
         where: {
           tenantId,
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
       })
 
       if (existingPayment) {
-        // Mavjud to'lovni yangilash
+        // Mavjud to\'lovni yangilash
         const paidForThisMonth = Math.min(remainingPayment, monthlyFee)
         const newPaidAmount = Number(existingPayment.paidAmount) + paidForThisMonth
         const newStatus = newPaidAmount >= Number(existingPayment.amount) ? 'COMPLETED' : 
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
 
         remainingPayment -= paidForThisMonth
       } else {
-        // Yangi to'lov yaratish
+        // Yangi to\'lov yaratish
         const paidForThisMonth = Math.min(remainingPayment, monthlyFee)
         const status = paidForThisMonth >= monthlyFee ? 'COMPLETED' : 
                       paidForThisMonth > 0 ? 'PARTIALLY_PAID' : 'PENDING'
@@ -165,7 +165,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `${monthsCount} oy uchun to'lovlar yaratildi`,
+      message: `${monthsCount} oy uchun to\'lovlar yaratildi`,
       payments,
       totalAmount,
       paidAmount: paymentAmount

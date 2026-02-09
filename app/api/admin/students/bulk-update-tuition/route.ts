@@ -5,12 +5,12 @@ import { db } from '@/lib/db'
 import { handleApiError } from '@/lib/api-error-handler'
 
 /**
- * TOPSHIRIQ 2: Ommaviy to'lov o'zgartirish API
+ * TOPSHIRIQ 2: Ommaviy to\'lov o\'zgartirish API
  * 
  * Senior Software Engineer yechimi:
- * - Bir nechta o'quvchining oylik to'lovini bir vaqtda o'zgartirish
- * - Faqat kelgusi to'lovlarga ta'sir qiladi
- * - Avvalgi to'lovlar o'zgarmaydi (snapshot orqali)
+ * - Bir nechta o\'quvchining oylik to\'lovini bir vaqtda o\'zgartirish
+ * - Faqat kelgusi to\'lovlarga ta\'sir qiladi
+ * - Avvalgi to\'lovlar o\'zgarmaydi (snapshot orqali)
  */
 export async function POST(req: NextRequest) {
   try {
@@ -27,15 +27,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     
     const { 
-      studentIds,      // O'quvchilar ID'lari
-      newTuitionFee,   // Yangi to'lov miqdori
+      studentIds,      // O\'quvchilar ID\'lari
+      newTuitionFee,   // Yangi to\'lov miqdori
       effectiveDate    // Qaysi oydan boshlab (optional)
     } = body
 
     // Validation
     if (!Array.isArray(studentIds) || studentIds.length === 0) {
       return NextResponse.json(
-        { error: 'Kamida bitta o'quvchi tanlang' },
+        { error: 'Kamida bitta o\'quvchi tanlang' },
         { status: 400 }
       )
     }
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `${result.count} ta o'quvchining to'lovi yangilandi`,
+      message: `${result.count} ta o\'quvchining to\'lovi yangilandi`,
       updatedCount: result.count
     })
 
