@@ -13,8 +13,9 @@ import { handleApiError } from '@/lib/api-error-handler'
  * - Har bir payment o\'sha oyning narxini snapshot sifatida saqlaydi
  */
 export async function POST(req: NextRequest) {
+  let session
   try {
-    const session = await getServerSession(authOptions)
+    session = await getServerSession(authOptions)
     
     if (!session || !['ADMIN', 'ACCOUNTANT'].includes(session.user.role)) {
       return NextResponse.json(

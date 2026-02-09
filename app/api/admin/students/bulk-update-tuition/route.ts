@@ -13,8 +13,9 @@ import { handleApiError } from '@/lib/api-error-handler'
  * - Avvalgi to\'lovlar o\'zgarmaydi (snapshot orqali)
  */
 export async function POST(req: NextRequest) {
+  let session
   try {
-    const session = await getServerSession(authOptions)
+    session = await getServerSession(authOptions)
     
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
