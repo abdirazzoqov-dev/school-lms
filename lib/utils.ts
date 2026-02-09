@@ -149,3 +149,12 @@ export function sanitizeString(str: string): string {
     .replace(/'/g, '&#x27;')
 }
 
+/**
+ * Format number with spaces (1000000 → "1 000 000")
+ */
+export function formatNumberWithSpaces(value: number | string): string {
+  const numValue = typeof value === 'string' ? value.replace(/\D/g, '') : value.toString()
+  if (!numValue || numValue === '0') return ''
+  return numValue.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+}
+
