@@ -545,7 +545,7 @@ export function SalaryOverviewClient({
                 {/* Action Button */}
                 {!status.isFullyPaid && (
                   status.hasSalary && status.salaryId ? (
-                    <Link href={`/admin/salaries/${status.salaryId}/edit`} className="block">
+                    <Link href={`/admin/salaries/${status.salaryId}`} className="block">
                       <Button size="sm" className="w-full" variant="default">
                         <DollarSign className="h-4 w-4 mr-2" />
                         Maosh to'lash
