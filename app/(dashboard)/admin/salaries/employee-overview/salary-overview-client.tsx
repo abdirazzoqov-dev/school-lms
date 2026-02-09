@@ -97,6 +97,15 @@ export function SalaryOverviewClient({
     setMonthlyStatuses([])
   }, [employeeType])
 
+  // Auto-select employee if only one match found
+  useEffect(() => {
+    if (searchQuery && filteredEmployees.length === 1) {
+      setSelectedEmployeeId(filteredEmployees[0].id)
+    } else if (searchQuery && filteredEmployees.length === 0) {
+      setSelectedEmployeeId('')
+    }
+  }, [searchQuery, filteredEmployees])
+
   // Fetch salary statuses
   useEffect(() => {
     if (!selectedEmployeeId) {
@@ -213,24 +222,50 @@ export function SalaryOverviewClient({
         </div>
       </div>
 
-      {/* Employee Dropdown */}
-      <div className="space-y-2">
-        <Label htmlFor="employee">{employeeType === 'teacher' ? 'O\'qituvchini' : 'Xodimni'} tanlang</Label>
-        <Select value={selectedEmployeeId} onValueChange={setSelectedEmployeeId}>
-          <SelectTrigger>
-            <SelectValue placeholder={`${employeeType === 'teacher' ? 'O\'qituvchini' : 'Xodimni'} tanlang...`} />
-          </SelectTrigger>
-          <SelectContent className="max-h-[300px]">
-            {filteredEmployees.map(employee => (
-              <SelectItem key={employee.id} value={employee.id}>
-                {employee.user?.fullName} ({employeeType === 'teacher' ? (employee as Teacher).teacherCode : (employee as Staff).staffCode}) 
-                {' - '} 
-                {employeeType === 'teacher' ? (employee as Teacher).specialization : (employee as Staff).position}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Employee Dropdown - only show if needed */}
+      {(!searchQuery || filteredEmployees.length > 1) && (
+        <div className="space-y-2">
+          <Label htmlFor="employee">{employeeType === 'teacher' ? 'O\'qituvchini' : 'Xodimni'} tanlang</Label>
+          <Select value={selectedEmployeeId} onValueChange={setSelectedEmployeeId}>
+            <SelectTrigger>
+              <SelectValue placeholder={`${employeeType === 'teacher' ? 'O\'qituvchini' : 'Xodimni'} tanlang...`} />
+            </SelectTrigger>
+            <SelectContent className="max-h-[300px]">
+              {filteredEmployees.map(employee => (
+                <SelectItem key={employee.id} value={employee.id}>
+                  {employee.user?.fullName} ({employeeType === 'teacher' ? (employee as Teacher).teacherCode : (employee as Staff).staffCode}) 
+                  {' - '} 
+                  {employeeType === 'teacher' ? (employee as Teacher).specialization : (employee as Staff).position}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Show selected employee info when auto-selected */}
+      {searchQuery && filteredEmployees.length === 1 && selectedEmployeeId && (
+        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-green-700">
+            <CheckCircle2 className="h-5 w-5" />
+            <p className="font-medium">
+              Tanlandi: <span className="font-bold">{selectedEmployee?.user?.fullName}</span>
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Show "not found" message when no results */}
+      {searchQuery && filteredEmployees.length === 0 && (
+        <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-orange-700">
+            <AlertCircle className="h-5 w-5" />
+            <p className="font-medium">
+              Hech qanday natija topilmadi
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Employee Info & Stats */}
       {selectedEmployee && (
