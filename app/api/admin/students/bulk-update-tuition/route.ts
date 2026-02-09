@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Faqat admin ruxsat etilgan' },
+        { error: "Faqat admin ruxsat etilgan" },
         { status: 403 }
       )
     }
@@ -35,14 +35,14 @@ export async function POST(req: NextRequest) {
     // Validation
     if (!Array.isArray(studentIds) || studentIds.length === 0) {
       return NextResponse.json(
-        { error: 'Kamida bitta o\'quvchi tanlang' },
+        { error: "Kamida bitta o'quvchi tanlang" },
         { status: 400 }
       )
     }
 
     if (!newTuitionFee || parseFloat(newTuitionFee) < 0) {
       return NextResponse.json(
-        { error: 'To\'lov miqdori noto\'g\'ri' },
+        { error: "To'lov miqdori noto'g'ri" },
         { status: 400 }
       )
     }
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `${result.count} ta o\'quvchining to\'lovi yangilandi`,
+      message: `${result.count} ta o'quvchining to'lovi yangilandi`,
       updatedCount: result.count
     })
 

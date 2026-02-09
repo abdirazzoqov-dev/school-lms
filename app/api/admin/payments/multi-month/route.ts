@@ -39,14 +39,14 @@ export async function POST(req: NextRequest) {
     // Validation
     if (!studentId || !startMonth || !startYear || !monthsCount) {
       return NextResponse.json(
-        { error: 'Barcha ma\'lumotlarni kiriting' },
+        { error: "Barcha ma'lumotlarni kiriting" },
         { status: 400 }
       )
     }
 
     if (monthsCount < 1 || monthsCount > 12) {
       return NextResponse.json(
-        { error: 'Oylar soni 1 dan 12 gacha bo\'lishi kerak' },
+        { error: "Oylar soni 1 dan 12 gacha bo'lishi kerak" },
         { status: 400 }
       )
     }
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
 
     if (!student) {
       return NextResponse.json(
-        { error: 'O\'quvchi topilmadi' },
+        { error: "O'quvchi topilmadi" },
         { status: 404 }
       )
     }
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     const monthlyFee = Number(student.monthlyTuitionFee || 0)
     if (monthlyFee === 0) {
       return NextResponse.json(
-        { error: 'O\'quvchining oylik to\'lovi belgilanmagan' },
+        { error: "O'quvchining oylik to'lovi belgilanmagan" },
         { status: 400 }
       )
     }
@@ -165,7 +165,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `${monthsCount} oy uchun to\'lovlar yaratildi`,
+      message: `${monthsCount} oy uchun to'lovlar yaratildi`,
       payments,
       totalAmount,
       paidAmount: paymentAmount
