@@ -434,11 +434,10 @@ async function getDashboardStats(
     pendingPayments,
     overduePayments,
     income,
+    completedPaymentsAmount,
     generalExpenses,
     kitchenExpenses,
-    completedPaymentsAmount,
-    expensesByCategory,
-    kitchenExpensesByCategory
+    expensesByCategory
   ] = await Promise.all([
     db.student.count({ where: { tenantId } }),
     db.student.count({ where: { tenantId, status: 'ACTIVE' } }),
@@ -446,43 +445,48 @@ async function getDashboardStats(
     db.teacher.count({ where: { tenantId } }),
     db.class.count({ where: { tenantId, academicYear } }),
     db.subject.count({ where: { tenantId } }),
+    // ✅ TOPSHIRIQ 2: To'langan to'lovlar (Bu oy ichida to'langan)
     db.payment.count({
       where: {
         tenantId,
         status: 'COMPLETED',
-        paidDate: { gte: thisMonthStart }
+        paidDate: { gte: thisMonthStart } // ✅ Bu oy ichida to'langan
       }
     }),
+    // ✅ TOPSHIRIQ 1: Kutilayotgan to'lovlar (PENDING + PARTIALLY_PAID)
     db.payment.count({
       where: {
         tenantId,
-        status: 'PENDING',
-        dueDate: { gte: thisMonthStart }
+        status: { in: ['PENDING', 'PARTIALLY_PAID'] } // ✅ Ikkalasi ham
       }
     }),
+    // Kechikkan to'lovlar
     db.payment.count({
       where: {
         tenantId,
-        status: 'PENDING',
+        status: { in: ['PENDING', 'PARTIALLY_PAID'] }, // ✅ Ikkalasi ham
         dueDate: { lt: today }
       }
     }),
+    // ✅ TOPSHIRIQ 2: Kirim - Bu oy ichida to'langan barcha to'lovlar summasi
     db.payment.aggregate({
       where: {
         tenantId,
         paidAmount: { gt: 0 },
-        paidDate: { gte: thisMonthStart }
+        paidDate: { gte: thisMonthStart, not: null } // ✅ Bu oy ichida to'langan
       },
       _sum: { paidAmount: true }
     }),
+    // ✅ TOPSHIRIQ 2: To'langan to'lovlar umumiy summasi (faqat COMPLETED)
     db.payment.aggregate({
       where: {
         tenantId,
         status: 'COMPLETED',
-        paidDate: { gte: thisMonthStart }
+        paidDate: { gte: thisMonthStart, not: null } // ✅ Bu oy ichida to'langan
       },
-      _sum: { amount: true }
+      _sum: { amount: true } // ✅ To'liq to'langan to'lovlarning umumiy miqdori
     }),
+    // ✅ TOPSHIRIQ 3: Xarajatlar - Faqat Expense (kitchen yo'q)
     db.expense.aggregate({
       where: {
         tenantId,
@@ -490,6 +494,7 @@ async function getDashboardStats(
       },
       _sum: { amount: true }
     }),
+    // Kitchen expenses - hisobda faqat, lekin totalExpenses'ga qo'shilmaydi
     db.kitchenExpense.aggregate({
       where: {
         tenantId,
@@ -497,6 +502,7 @@ async function getDashboardStats(
       },
       _sum: { amount: true }
     }),
+    // ✅ TOPSHIRIQ 3: Xarajat kategoriyalari (faqat Expense)
     db.expense.groupBy({
       by: ['categoryId'],
       where: {
@@ -505,21 +511,13 @@ async function getDashboardStats(
       },
       _sum: { amount: true }
     }),
-    db.kitchenExpense.groupBy({
-      by: ['categoryId'],
-      where: {
-        tenantId,
-        date: { gte: thisMonthStart }
-      },
-      _sum: { amount: true }
-    })
   ])
 
-  // ✅ PENDING to'lovlarning qolgan summasini hisoblash
+  // ✅ TOPSHIRIQ 1: PENDING va PARTIALLY_PAID to'lovlarning qolgan summasini hisoblash
   const pendingPaymentsList = await db.payment.findMany({
     where: {
       tenantId,
-      status: 'PENDING'
+      status: { in: ['PENDING', 'PARTIALLY_PAID'] } // ✅ Ikkalasi ham
     },
     select: {
       amount: true,
@@ -527,6 +525,7 @@ async function getDashboardStats(
     }
   })
 
+  // ✅ Qolgan summa = umumiy - to'langan
   const pendingPaymentsAmount = pendingPaymentsList.reduce((sum, p) => {
     const remaining = Number(p.amount) - Number(p.paidAmount || 0)
     return sum + remaining
@@ -544,39 +543,23 @@ async function getDashboardStats(
     _sum: { amount: true }
   })
 
-  // ✅ Xarajatlar to'lov usullari
-  const [expensesByPaymentMethod, kitchenExpensesByPaymentMethod] = await Promise.all([
-    db.expense.groupBy({
-      by: ['paymentMethod'],
-      where: {
-        tenantId,
-        date: { gte: thisMonthStart }
-      },
-      _sum: { amount: true }
-    }),
-    db.kitchenExpense.groupBy({
-      by: ['paymentMethod'],
-      where: {
-        tenantId,
-        date: { gte: thisMonthStart }
-      },
-      _sum: { amount: true }
-    })
-  ])
+  // ✅ TOPSHIRIQ 3: Xarajat to'lov usullari (faqat Expense)
+  const expensesByPaymentMethod = await db.expense.groupBy({
+    by: ['paymentMethod'],
+    where: {
+      tenantId,
+      date: { gte: thisMonthStart }
+    },
+    _sum: { amount: true }
+  })
 
   // ✅ Kategoriyalar
-  const [expenseCategories, kitchenCategories] = await Promise.all([
-    db.expenseCategory.findMany({
-      where: { tenantId },
-      select: { id: true, name: true, color: true }
-    }),
-    db.kitchenExpenseCategory.findMany({
-      where: { tenantId },
-      select: { id: true, name: true, color: true }
-    })
-  ])
+  const expenseCategories = await db.expenseCategory.findMany({
+    where: { tenantId },
+    select: { id: true, name: true, color: true }
+  })
 
-  // ✅ Kategoriyalar bilan birlashtirish
+  // ✅ TOPSHIRIQ 3: Xarajat kategoriyalari bilan birlashtirish
   const generalExpenseBreakdown = expensesByCategory.map(exp => {
     const cat = expenseCategories.find(c => c.id === exp.categoryId)
     return {
@@ -588,7 +571,7 @@ async function getDashboardStats(
 
   const allExpenses = generalExpenseBreakdown.sort((a, b) => b.amount - a.amount)
 
-  // ✅ To'lov usullari breakdown
+  // ✅ To'lov usullari breakdown (kirim)
   const paymentMethodsBreakdown = paymentTransactionsByMethod.map(pm => ({
     method: pm.paymentMethod,
     amount: Number(pm._sum.amount || 0)
@@ -602,6 +585,7 @@ async function getDashboardStats(
     .filter(pm => pm.method === 'CLICK')
     .reduce((sum, pm) => sum + pm.amount, 0)
 
+  // ✅ TOPSHIRIQ 3: Xarajat to'lov usullari breakdown
   const allExpensesByMethod = expensesByPaymentMethod.map(e => ({ 
     method: e.paymentMethod, 
     amount: Number(e._sum.amount || 0) 
@@ -622,21 +606,21 @@ async function getDashboardStats(
     totalTeachers,
     totalClasses,
     totalSubjects,
-    completedPayments,
-    pendingPayments,
+    completedPayments, // ✅ TOPSHIRIQ 2: Bu oy ichida COMPLETED bo'lgan to'lovlar soni
+    pendingPayments, // ✅ TOPSHIRIQ 1: PENDING + PARTIALLY_PAID to'lovlar soni
     overduePayments,
-    income: Number(income._sum.paidAmount || 0),
-    completedPaymentsAmount: Number(completedPaymentsAmount._sum.amount || 0),
-    pendingPaymentsAmount: pendingPaymentsAmount,
+    income: Number(income._sum.paidAmount || 0), // ✅ Bu oy ichida to'langan barcha to'lovlar
+    completedPaymentsAmount: Number(completedPaymentsAmount._sum.amount || 0), // ✅ TOPSHIRIQ 2: To'liq to'langan to'lovlar summasi
+    pendingPaymentsAmount: pendingPaymentsAmount, // ✅ TOPSHIRIQ 1: Kutilayotgan qolgan summa (PENDING + PARTIALLY_PAID)
     generalExpenses: Number(generalExpenses._sum.amount || 0),
     kitchenExpenses: Number(kitchenExpenses._sum.amount || 0),
-    totalExpenses: Number(generalExpenses._sum.amount || 0),
-    expenseCategories: allExpenses,
+    totalExpenses: Number(generalExpenses._sum.amount || 0), // ✅ TOPSHIRIQ 3: Faqat Expense (kitchen yo'q)
+    expenseCategories: allExpenses, // ✅ TOPSHIRIQ 3: Faqat Expense kategoriyalari
     paymentMethods: paymentMethodsBreakdown,
     cashIncome: cashAmount,
     cardIncome: cardAmount,
-    expensePaymentMethods: allExpensesByMethod,
-    expenseCash: expenseCashAmount,
-    expenseCard: expenseCardAmount
+    expensePaymentMethods: allExpensesByMethod, // ✅ TOPSHIRIQ 3: Faqat Expense to'lov usullari
+    expenseCash: expenseCashAmount, // ✅ TOPSHIRIQ 3: Faqat Expense naqd
+    expenseCard: expenseCardAmount // ✅ TOPSHIRIQ 3: Faqat Expense plastik
   }
 }
