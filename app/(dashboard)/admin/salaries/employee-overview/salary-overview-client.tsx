@@ -385,127 +385,200 @@ export function SalaryOverviewClient({
                             <Info className="h-3 w-3" />
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-96" side="top" align="end">
+                        <PopoverContent className="w-[500px]" side="top" align="end">
                           <div className="space-y-3">
                             <div className="flex items-center gap-2 border-b pb-2">
                               <Calendar className="h-4 w-4 text-primary" />
                               <h4 className="font-semibold text-sm">
                                 {status.monthName} {status.year} - To'lovlar tarixi
                               </h4>
+                              <span className="ml-auto text-xs text-muted-foreground">
+                                {status.payments.length} ta to'lov
+                              </span>
                             </div>
                             
-                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                              {status.payments.map((payment, idx) => {
+                            <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                              {/* Group payments by type */}
+                              {(() => {
+                                const grouped = {
+                                  FULL_SALARY: status.payments.filter(p => p.type === 'FULL_SALARY'),
+                                  ADVANCE: status.payments.filter(p => p.type === 'ADVANCE'),
+                                  BONUS: status.payments.filter(p => p.type === 'BONUS'),
+                                  DEDUCTION: status.payments.filter(p => p.type === 'DEDUCTION')
+                                }
+
                                 const getPaymentTypeInfo = (type: string) => {
                                   switch (type) {
                                     case 'FULL_SALARY':
-                                      return { label: 'To\'liq oylik', icon: DollarSign, color: 'text-blue-600 bg-blue-50' }
+                                      return { 
+                                        label: 'To\'liq Oylik', 
+                                        icon: DollarSign, 
+                                        color: 'text-blue-600 bg-blue-50 border-blue-200',
+                                        headerColor: 'bg-blue-100 text-blue-900'
+                                      }
                                     case 'ADVANCE':
-                                      return { label: 'Avans', icon: TrendingUp, color: 'text-green-600 bg-green-50' }
+                                      return { 
+                                        label: 'Avans', 
+                                        icon: TrendingUp, 
+                                        color: 'text-green-600 bg-green-50 border-green-200',
+                                        headerColor: 'bg-green-100 text-green-900'
+                                      }
                                     case 'BONUS':
-                                      return { label: 'Bonus', icon: Gift, color: 'text-purple-600 bg-purple-50' }
+                                      return { 
+                                        label: 'Mukofot / Bonus', 
+                                        icon: Gift, 
+                                        color: 'text-purple-600 bg-purple-50 border-purple-200',
+                                        headerColor: 'bg-purple-100 text-purple-900'
+                                      }
                                     case 'DEDUCTION':
-                                      return { label: 'Ushlab qolish', icon: TrendingDown, color: 'text-red-600 bg-red-50' }
+                                      return { 
+                                        label: 'Ushlab Qolish', 
+                                        icon: TrendingDown, 
+                                        color: 'text-red-600 bg-red-50 border-red-200',
+                                        headerColor: 'bg-red-100 text-red-900'
+                                      }
                                     default:
-                                      return { label: type, icon: DollarSign, color: 'text-gray-600 bg-gray-50' }
+                                      return { 
+                                        label: type, 
+                                        icon: DollarSign, 
+                                        color: 'text-gray-600 bg-gray-50 border-gray-200',
+                                        headerColor: 'bg-gray-100 text-gray-900'
+                                      }
                                   }
                                 }
 
-                                const typeInfo = getPaymentTypeInfo(payment.type)
-                                const PaymentIcon = typeInfo.icon
-
                                 return (
-                                  <div 
-                                    key={payment.id} 
-                                    className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                                  >
-                                    <div className="flex items-start justify-between mb-2">
-                                      <div className="flex items-center gap-2">
-                                        <div className={`p-1.5 rounded ${typeInfo.color}`}>
-                                          <PaymentIcon className="h-3.5 w-3.5" />
-                                        </div>
-                                        <div>
-                                          <p className="font-medium text-xs">{typeInfo.label}</p>
-                                          {payment.paymentDate && (
-                                            <p className="text-[10px] text-muted-foreground">
-                                              {new Date(payment.paymentDate).toLocaleDateString('uz-UZ')}
-                                            </p>
-                                          )}
-                                        </div>
-                                      </div>
-                                      <Badge 
-                                        variant={payment.status === 'PAID' ? 'default' : 'secondary'}
-                                        className="text-[10px] h-5"
-                                      >
-                                        {payment.status === 'PAID' ? '✓ To\'langan' : 
-                                         payment.status === 'PARTIALLY_PAID' ? 'Qisman' : 'Kutilmoqda'}
-                                      </Badge>
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-2 gap-2 text-xs">
-                                      <div>
-                                        <p className="text-muted-foreground">To'lov:</p>
-                                        <p className="font-semibold text-green-600">
-                                          {formatMoney(payment.paidAmount)} so'm
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <p className="text-muted-foreground">Jami:</p>
-                                        <p className="font-semibold">
-                                          {formatMoney(payment.amount)} so'm
-                                        </p>
-                                      </div>
-                                    </div>
+                                  <>
+                                    {Object.entries(grouped).map(([type, payments]) => {
+                                      if (payments.length === 0) return null
+                                      
+                                      const typeInfo = getPaymentTypeInfo(type)
+                                      const TypeIcon = typeInfo.icon
+                                      const totalAmount = payments.reduce((sum, p) => sum + p.paidAmount, 0)
 
-                                    {payment.bonusAmount > 0 && (
-                                      <div className="mt-2 pt-2 border-t">
-                                        <div className="flex items-center justify-between text-xs">
-                                          <span className="text-purple-600">💰 Bonus:</span>
-                                          <span className="font-semibold text-purple-600">
-                                            +{formatMoney(payment.bonusAmount)} so'm
-                                          </span>
-                                        </div>
-                                      </div>
-                                    )}
+                                      return (
+                                        <div key={type} className={`rounded-lg border-2 ${typeInfo.color.split(' ').slice(-1)[0].replace('bg-', 'border-')}`}>
+                                          {/* Type Header */}
+                                          <div className={`flex items-center justify-between px-3 py-2 rounded-t-md ${typeInfo.headerColor}`}>
+                                            <div className="flex items-center gap-2">
+                                              <TypeIcon className="h-4 w-4" />
+                                              <span className="font-semibold text-sm">{typeInfo.label}</span>
+                                              <Badge variant="secondary" className="text-[10px]">
+                                                {payments.length} ta
+                                              </Badge>
+                                            </div>
+                                            <span className="text-sm font-bold">
+                                              {formatMoney(totalAmount)} so'm
+                                            </span>
+                                          </div>
 
-                                    {payment.deductionAmount > 0 && (
-                                      <div className="mt-2 pt-2 border-t">
-                                        <div className="flex items-center justify-between text-xs">
-                                          <span className="text-red-600">⚠️ Ushlab qolish:</span>
-                                          <span className="font-semibold text-red-600">
-                                            -{formatMoney(payment.deductionAmount)} so'm
-                                          </span>
-                                        </div>
-                                      </div>
-                                    )}
+                                          {/* Payments List */}
+                                          <div className="p-2 space-y-2">
+                                            {payments.map((payment, idx) => (
+                                              <div 
+                                                key={payment.id} 
+                                                className="p-3 rounded-md bg-white border hover:shadow-sm transition-all"
+                                              >
+                                                <div className="flex items-start justify-between mb-2">
+                                                  <div>
+                                                    <p className="text-xs text-muted-foreground">
+                                                      To'lov #{idx + 1}
+                                                    </p>
+                                                    {payment.paymentDate && (
+                                                      <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                                                        📅 {new Date(payment.paymentDate).toLocaleDateString('uz-UZ', { 
+                                                          day: 'numeric', 
+                                                          month: 'short',
+                                                          year: 'numeric'
+                                                        })}
+                                                      </p>
+                                                    )}
+                                                  </div>
+                                                  <Badge 
+                                                    variant={payment.status === 'PAID' ? 'default' : 'secondary'}
+                                                    className="text-[10px] h-5"
+                                                  >
+                                                    {payment.status === 'PAID' ? '✓ To\'langan' : 
+                                                     payment.status === 'PARTIALLY_PAID' ? 'Qisman' : 'Kutilmoqda'}
+                                                  </Badge>
+                                                </div>
+                                                
+                                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                                  <div>
+                                                    <p className="text-muted-foreground">To'langan:</p>
+                                                    <p className="font-semibold text-green-600">
+                                                      {formatMoney(payment.paidAmount)} so'm
+                                                    </p>
+                                                  </div>
+                                                  <div>
+                                                    <p className="text-muted-foreground">Jami:</p>
+                                                    <p className="font-semibold">
+                                                      {formatMoney(payment.amount)} so'm
+                                                    </p>
+                                                  </div>
+                                                </div>
 
-                                    {payment.remainingAmount > 0 && (
-                                      <div className="mt-2 pt-2 border-t">
-                                        <div className="flex items-center justify-between text-xs">
-                                          <span className="text-orange-600">Qoldi:</span>
-                                          <span className="font-semibold text-orange-600">
-                                            {formatMoney(payment.remainingAmount)} so'm
-                                          </span>
-                                        </div>
-                                      </div>
-                                    )}
+                                                {payment.bonusAmount > 0 && (
+                                                  <div className="mt-2 pt-2 border-t">
+                                                    <div className="flex items-center justify-between text-xs">
+                                                      <span className="text-purple-600 flex items-center gap-1">
+                                                        <Gift className="h-3 w-3" />
+                                                        Bonus:
+                                                      </span>
+                                                      <span className="font-semibold text-purple-600">
+                                                        +{formatMoney(payment.bonusAmount)} so'm
+                                                      </span>
+                                                    </div>
+                                                  </div>
+                                                )}
 
-                                    {payment.description && (
-                                      <div className="mt-2 pt-2 border-t">
-                                        <p className="text-[10px] text-muted-foreground italic">
-                                          {payment.description}
-                                        </p>
-                                      </div>
-                                    )}
-                                  </div>
+                                                {payment.deductionAmount > 0 && (
+                                                  <div className="mt-2 pt-2 border-t">
+                                                    <div className="flex items-center justify-between text-xs">
+                                                      <span className="text-red-600 flex items-center gap-1">
+                                                        <TrendingDown className="h-3 w-3" />
+                                                        Ushlab qolish:
+                                                      </span>
+                                                      <span className="font-semibold text-red-600">
+                                                        -{formatMoney(payment.deductionAmount)} so'm
+                                                      </span>
+                                                    </div>
+                                                  </div>
+                                                )}
+
+                                                {payment.remainingAmount > 0 && (
+                                                  <div className="mt-2 pt-2 border-t">
+                                                    <div className="flex items-center justify-between text-xs">
+                                                      <span className="text-orange-600">Qolgan:</span>
+                                                      <span className="font-semibold text-orange-600">
+                                                        {formatMoney(payment.remainingAmount)} so'm
+                                                      </span>
+                                                    </div>
+                                                  </div>
+                                                )}
+
+                                                {payment.description && (
+                                                  <div className="mt-2 pt-2 border-t">
+                                                    <p className="text-[10px] text-muted-foreground italic">
+                                                      💬 {payment.description}
+                                                    </p>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )
+                                    })}
+                                  </>
                                 )
-                              })}
+                              })()}
                             </div>
 
-                            <div className="pt-2 border-t">
-                              <div className="flex justify-between items-center text-sm font-semibold">
-                                <span>Jami to'langan:</span>
-                                <span className="text-green-600">{formatMoney(status.totalPaid)} so'm</span>
+                            <div className="pt-2 border-t bg-gradient-to-r from-green-50 to-emerald-50 -mx-4 px-4 py-3 -mb-3 rounded-b-lg">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-semibold text-green-800">Jami to'langan:</span>
+                                <span className="text-lg font-bold text-green-600">{formatMoney(status.totalPaid)} so'm</span>
                               </div>
                             </div>
                           </div>
