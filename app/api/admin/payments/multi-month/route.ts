@@ -174,8 +174,8 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     return handleApiError(error, {
-      tenantId: session?.user?.tenantId,
-      userId: session?.user?.id,
+      tenantId: session?.user?.tenantId || undefined,
+      userId: session?.user?.id || undefined,
       action: 'create-multi-month-payment'
     })
   }
