@@ -33,11 +33,34 @@ export function ExpenseForm({ categories, generatedReceiptNumber }: ExpenseFormP
   const [formData, setFormData] = useState({
     categoryId: '',
     amount: '',
+    displayAmount: '', // ✅ TOPSHIRIQ 2: Formatted display value
     date: new Date().toISOString().split('T')[0],
     paymentMethod: 'CASH' as 'CASH' | 'CLICK' | 'PAYME' | 'UZUM',
     receiptNumber: generatedReceiptNumber,
     description: '',
   })
+
+  // ✅ TOPSHIRIQ 2: Format number with spaces (1000000 → "1 000 000")
+  const formatNumberWithSpaces = (value: string): string => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '')
+    if (!digits) return ''
+    
+    // Add spaces every 3 digits from right
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+  }
+
+  // ✅ TOPSHIRIQ 2: Handle amount input change
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value
+    const digitsOnly = inputValue.replace(/\D/g, '') // Remove all non-digits
+    
+    setFormData({ 
+      ...formData, 
+      amount: digitsOnly, // Store raw number
+      displayAmount: formatNumberWithSpaces(digitsOnly) // Display formatted
+    })
+  }
 
   // Get selected category for limit warning
   const selectedCategory = categories.find(c => c.id === formData.categoryId)
@@ -112,15 +135,19 @@ export function ExpenseForm({ categories, generatedReceiptNumber }: ExpenseFormP
         </Label>
         <Input
           id="amount"
-          type="number"
+          type="text"
           inputMode="numeric"
-          step="1"
-          min="0"
-          value={formData.amount}
-          onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-          placeholder="500000"
+          value={formData.displayAmount}
+          onChange={handleAmountChange}
+          placeholder="500 000"
           required
+          className="text-lg font-mono"
         />
+        {formData.amount && (
+          <p className="text-xs text-muted-foreground">
+            {parseInt(formData.amount).toLocaleString('uz-UZ')} so'm
+          </p>
+        )}
         {showWarning && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -135,14 +162,22 @@ export function ExpenseForm({ categories, generatedReceiptNumber }: ExpenseFormP
       <div className="space-y-2">
         <Label htmlFor="date">
           Sana <span className="text-red-500">*</span>
+          <span className="ml-2 text-xs text-green-600 font-normal">
+            ✓ Bugungi sana
+          </span>
         </Label>
         <Input
           id="date"
           type="date"
           value={formData.date}
-          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+          readOnly
+          disabled
+          className="bg-muted cursor-not-allowed"
           required
         />
+        <p className="text-xs text-muted-foreground">
+          Xarajat bugungi sana bilan avtomatik yoziladi
+        </p>
       </div>
 
       {/* Payment Method */}

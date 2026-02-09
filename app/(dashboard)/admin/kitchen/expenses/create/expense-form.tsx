@@ -34,6 +34,7 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [displayAmount, setDisplayAmount] = useState('') // ✅ TOPSHIRIQ 2: Formatted display
 
   const {
     register,
@@ -50,6 +51,23 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
   })
 
   const selectedCategory = watch('categoryId')
+  const amount = watch('amount')
+
+  // ✅ TOPSHIRIQ 2: Format number with spaces
+  const formatNumberWithSpaces = (value: string): string => {
+    const digits = value.replace(/\D/g, '')
+    if (!digits) return ''
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+  }
+
+  // ✅ TOPSHIRIQ 2: Handle amount input
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value
+    const digitsOnly = inputValue.replace(/\D/g, '')
+    
+    setValue('amount', parseFloat(digitsOnly) || 0)
+    setDisplayAmount(formatNumberWithSpaces(digitsOnly))
+  }
 
   const onSubmit = async (data: KitchenExpenseFormData) => {
     setIsLoading(true)
@@ -129,13 +147,23 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="date">Sana *</Label>
+            <Label htmlFor="date">
+              Sana <span className="text-red-500">*</span>
+              <span className="ml-2 text-xs text-green-600 font-normal">
+                ✓ Bugungi sana
+              </span>
+            </Label>
             <Input
               id="date"
               type="date"
               {...register('date')}
-              disabled={isLoading}
+              readOnly
+              disabled
+              className="bg-muted cursor-not-allowed"
             />
+            <p className="text-xs text-muted-foreground">
+              Xarajat bugungi sana bilan avtomatik yoziladi
+            </p>
             {errors.date && (
               <p className="text-sm text-red-500">{errors.date.message}</p>
             )}
@@ -147,14 +175,19 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
             <Label htmlFor="amount">Summa (so'm) *</Label>
             <Input
               id="amount"
-              type="number"
+              type="text"
               inputMode="numeric"
-              min="0"
-              step="1"
-              placeholder="500000"
-              {...register('amount', { valueAsNumber: true })}
+              placeholder="500 000"
+              value={displayAmount}
+              onChange={handleAmountChange}
               disabled={isLoading}
+              className="text-lg font-mono"
             />
+            {amount > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {amount.toLocaleString('uz-UZ')} so'm
+              </p>
+            )}
             {errors.amount && (
               <p className="text-sm text-red-500">{errors.amount.message}</p>
             )}
