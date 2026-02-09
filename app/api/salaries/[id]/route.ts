@@ -15,7 +15,18 @@ export async function PATCH(
     }
 
     const tenantId = session.user.tenantId!
-    const { paidAmount, paymentDate, paymentMethod, description, notes } = await request.json()
+    const { 
+      type,
+      baseSalary, 
+      bonusAmount, 
+      deductionAmount, 
+      amount,
+      paidAmount, 
+      paymentDate, 
+      paymentMethod, 
+      description, 
+      notes 
+    } = await request.json()
 
     // Get current salary payment
     const salary = await db.salaryPayment.findUnique({
@@ -26,7 +37,7 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: 'Maosh to\'lovi topilmadi' }, { status: 404 })
     }
 
-    const totalAmount = Number(salary.amount)
+    const totalAmount = Number(amount)
     const newPaidAmount = Number(paidAmount)
     const remainingAmount = Math.max(0, totalAmount - newPaidAmount)
     
@@ -42,6 +53,11 @@ export async function PATCH(
     const updatedSalary = await db.salaryPayment.update({
       where: { id: params.id },
       data: {
+        type: type || salary.type,
+        baseSalary: baseSalary ? Number(baseSalary) : salary.baseSalary,
+        bonusAmount: bonusAmount !== undefined ? Number(bonusAmount) : salary.bonusAmount,
+        deductionAmount: deductionAmount !== undefined ? Number(deductionAmount) : salary.deductionAmount,
+        amount: totalAmount,
         paidAmount: newPaidAmount,
         remainingAmount,
         status,

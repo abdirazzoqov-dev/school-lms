@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+import { Loader2, DollarSign, TrendingDown, Gift, Calculator } from 'lucide-react'
 import { formatNumberWithSpaces } from '@/lib/utils'
 
 interface SalaryEditFormProps {
@@ -20,7 +20,10 @@ export function SalaryEditForm({ salaryPayment }: SalaryEditFormProps) {
   const [isLoading, setIsLoading] = useState(false)
 
   const [formData, setFormData] = useState({
-    amount: formatNumberWithSpaces(Number(salaryPayment.amount)),
+    type: salaryPayment.type || 'FULL_SALARY',
+    baseSalary: formatNumberWithSpaces(Number(salaryPayment.baseSalary || salaryPayment.amount)),
+    bonusAmount: formatNumberWithSpaces(Number(salaryPayment.bonusAmount || 0)),
+    deductionAmount: formatNumberWithSpaces(Number(salaryPayment.deductionAmount || 0)),
     paidAmount: formatNumberWithSpaces(Number(salaryPayment.paidAmount || 0)),
     paymentDate: salaryPayment.paymentDate 
       ? new Date(salaryPayment.paymentDate).toISOString().split('T')[0]
@@ -30,15 +33,27 @@ export function SalaryEditForm({ salaryPayment }: SalaryEditFormProps) {
     notes: salaryPayment.notes || ''
   })
 
+  // Calculate total amount
+  const calculateTotal = () => {
+    const base = Number(formData.baseSalary.replace(/\s/g, '') || 0)
+    const bonus = Number(formData.bonusAmount.replace(/\s/g, '') || 0)
+    const deduction = Number(formData.deductionAmount.replace(/\s/g, '') || 0)
+    return base + bonus - deduction
+  }
+
+  const totalAmount = calculateTotal()
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
-      const amount = Number(formData.amount.replace(/\s/g, ''))
+      const baseSalary = Number(formData.baseSalary.replace(/\s/g, ''))
+      const bonusAmount = Number(formData.bonusAmount.replace(/\s/g, ''))
+      const deductionAmount = Number(formData.deductionAmount.replace(/\s/g, ''))
       const paidAmount = Number(formData.paidAmount.replace(/\s/g, ''))
 
-      if (paidAmount > amount) {
+      if (paidAmount > totalAmount) {
         toast.error('To\'langan summa umumiy summadan katta bo\'lishi mumkin emas')
         setIsLoading(false)
         return
@@ -48,6 +63,11 @@ export function SalaryEditForm({ salaryPayment }: SalaryEditFormProps) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          type: formData.type,
+          baseSalary,
+          bonusAmount,
+          deductionAmount,
+          amount: totalAmount,
           paidAmount,
           paymentDate: formData.paymentDate,
           paymentMethod: formData.paymentMethod,
@@ -73,7 +93,7 @@ export function SalaryEditForm({ salaryPayment }: SalaryEditFormProps) {
     }
   }
 
-  const handleAmountChange = (field: 'amount' | 'paidAmount', value: string) => {
+  const handleAmountChange = (field: 'baseSalary' | 'bonusAmount' | 'deductionAmount' | 'paidAmount', value: string) => {
     const numbersOnly = value.replace(/\D/g, '')
     const formatted = formatNumberWithSpaces(Number(numbersOnly))
     setFormData(prev => ({ ...prev, [field]: formatted }))
@@ -97,37 +117,122 @@ export function SalaryEditForm({ salaryPayment }: SalaryEditFormProps) {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Total Amount - readonly */}
-        <div className="space-y-2">
-          <Label htmlFor="amount">Umumiy Summa (so'm)</Label>
-          <Input
-            id="amount"
-            type="text"
-            inputMode="numeric"
-            value={formData.amount}
-            readOnly
-            className="bg-muted cursor-not-allowed"
-          />
-          <p className="text-xs text-muted-foreground">
-            Ushbu summa o'zgartirilmaydi
-          </p>
-        </div>
+      {/* Payment Type */}
+      <div className="space-y-2">
+        <Label htmlFor="type">To'lov Turi *</Label>
+        <Select
+          value={formData.type}
+          onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="FULL_SALARY">To'liq Oylik</SelectItem>
+            <SelectItem value="ADVANCE">Avans</SelectItem>
+            <SelectItem value="BONUS">Mukofot/Bonus</SelectItem>
+            <SelectItem value="DEDUCTION">Ushlab Qolish</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-        {/* Paid Amount */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Base Salary */}
         <div className="space-y-2">
-          <Label htmlFor="paidAmount">To'langan Summa (so'm) *</Label>
+          <Label htmlFor="baseSalary" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Asosiy Maosh (so'm) *
+          </Label>
           <Input
-            id="paidAmount"
+            id="baseSalary"
             type="text"
             inputMode="numeric"
             placeholder="0"
-            value={formData.paidAmount}
-            onChange={(e) => handleAmountChange('paidAmount', e.target.value)}
+            value={formData.baseSalary}
+            onChange={(e) => handleAmountChange('baseSalary', e.target.value)}
             required
           />
         </div>
 
+        {/* Bonus Amount */}
+        <div className="space-y-2">
+          <Label htmlFor="bonusAmount" className="flex items-center gap-2">
+            <Gift className="h-4 w-4 text-purple-600" />
+            Mukofot/Bonus (so'm)
+          </Label>
+          <Input
+            id="bonusAmount"
+            type="text"
+            inputMode="numeric"
+            placeholder="0"
+            value={formData.bonusAmount}
+            onChange={(e) => handleAmountChange('bonusAmount', e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Qo'shimcha to'lov
+          </p>
+        </div>
+
+        {/* Deduction Amount */}
+        <div className="space-y-2">
+          <Label htmlFor="deductionAmount" className="flex items-center gap-2">
+            <TrendingDown className="h-4 w-4 text-red-600" />
+            Ushlab Qolish (so'm)
+          </Label>
+          <Input
+            id="deductionAmount"
+            type="text"
+            inputMode="numeric"
+            placeholder="0"
+            value={formData.deductionAmount}
+            onChange={(e) => handleAmountChange('deductionAmount', e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Jarima yoki chegirma
+          </p>
+        </div>
+
+        {/* Total Amount - Calculated */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            <Calculator className="h-4 w-4 text-green-600" />
+            Jami Summa (so'm)
+          </Label>
+          <Input
+            type="text"
+            value={formatNumberWithSpaces(totalAmount)}
+            readOnly
+            className="bg-green-50 border-green-200 font-bold text-green-700 cursor-not-allowed"
+          />
+          <p className="text-xs text-muted-foreground">
+            Asosiy + Bonus - Ushlab qolish
+          </p>
+        </div>
+      </div>
+
+      {/* Paid Amount */}
+      <div className="space-y-2">
+        <Label htmlFor="paidAmount" className="text-base font-semibold">
+          Hozir To'lanadigan Summa (so'm) *
+        </Label>
+        <Input
+          id="paidAmount"
+          type="text"
+          inputMode="numeric"
+          placeholder="0"
+          value={formData.paidAmount}
+          onChange={(e) => handleAmountChange('paidAmount', e.target.value)}
+          required
+          className="text-lg font-semibold"
+        />
+        <p className="text-sm text-muted-foreground">
+          Qoldi: <span className="font-semibold text-orange-600">
+            {formatNumberWithSpaces(Math.max(0, totalAmount - Number(formData.paidAmount.replace(/\s/g, ''))))} so'm
+          </span>
+        </p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
         {/* Payment Date */}
         <div className="space-y-2">
           <Label htmlFor="paymentDate">To'lov Sanasi *</Label>
@@ -186,7 +291,7 @@ export function SalaryEditForm({ salaryPayment }: SalaryEditFormProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end gap-4">
+      <div className="flex justify-end gap-4 pt-4 border-t">
         <Button
           type="button"
           variant="outline"
@@ -195,9 +300,9 @@ export function SalaryEditForm({ salaryPayment }: SalaryEditFormProps) {
         >
           Bekor qilish
         </Button>
-        <Button type="submit" disabled={isLoading}>
+        <Button type="submit" disabled={isLoading} size="lg">
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Saqlash
+          💰 Saqlash
         </Button>
       </div>
     </form>
