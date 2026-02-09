@@ -155,7 +155,7 @@ export async function updateStaff(staffId: string, data: Partial<Omit<StaffFormD
         where: {
           tenantId,
           staffId,
-          type: 'MONTHLY',
+          type: 'FULL_SALARY', // ✅ To'liq oylik
           status: 'PENDING',
           paidAmount: 0 // ✅ Faqat hali to'lanmagan
         }

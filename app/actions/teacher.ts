@@ -173,7 +173,7 @@ export async function updateTeacher(teacherId: string, data: Partial<Omit<Teache
         where: {
           tenantId,
           teacherId,
-          type: 'MONTHLY',
+          type: 'FULL_SALARY', // ✅ To'liq oylik
           status: 'PENDING',
           paidAmount: 0 // ✅ Faqat hali to'lanmagan
         }
