@@ -101,6 +101,11 @@ export default async function AdminLayout({
           icon: 'DollarSign',
         },
         {
+          title: 'To\'lov Panoramasi',
+          href: '/admin/payments/student-overview',
+          icon: 'BarChart3',
+        },
+        {
           title: 'Maoshlar',
           href: '/admin/salaries',
           icon: 'Banknote',
