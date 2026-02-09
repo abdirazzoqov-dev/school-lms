@@ -516,6 +516,8 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
                         isFullyPaid={schedule.isFullyPaid}
                         dueDate={schedule.dueDate}
                         paymentCount={schedule.paymentCount}
+                        paymentId={schedule.paymentId}
+                        studentId={student.id}
                       />
                     ))}
                   </div>

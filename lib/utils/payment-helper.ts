@@ -96,6 +96,9 @@ export async function calculateMonthlyPaymentProgress(
   const dueDay = student.paymentDueDay || 5
   const dueDate = new Date(year, month - 1, dueDay) // month - 1 chunki JS'da oylar 0'dan boshlanadi
 
+  // ✅ Primary payment ID (PENDING yoki PARTIALLY_PAID birinchi to'lov)
+  const primaryPayment = payments.find(p => p.status === 'PENDING' || p.status === 'PARTIALLY_PAID')
+
   return {
     studentName: student.user?.fullName || 'Noma\'lum',
     monthlyTuitionFee: requiredAmount,
@@ -106,7 +109,8 @@ export async function calculateMonthlyPaymentProgress(
     dueDate,
     dueDay,
     paymentCount: payments.length,
-    payments
+    payments,
+    paymentId: primaryPayment?.id || null // ✅ To'lov qilish uchun
   }
 }
 

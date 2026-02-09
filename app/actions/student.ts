@@ -956,7 +956,8 @@ export async function updateStudent(studentId: string, data: Partial<StudentForm
             data: {
               amount: newTuitionFee,
               remainingAmount: Math.max(0, newRemainingAmount),
-              status: newRemainingAmount <= 0 ? 'COMPLETED' : (Number(payment.paidAmount) > 0 ? 'PARTIALLY_PAID' : 'PENDING')
+              status: newRemainingAmount <= 0 ? 'COMPLETED' : (Number(payment.paidAmount) > 0 ? 'PARTIALLY_PAID' : 'PENDING'),
+              tuitionFeeAtPayment: newTuitionFee // ✅ Update snapshot for future PENDING payments
             }
           })
           

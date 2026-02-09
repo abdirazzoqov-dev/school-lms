@@ -2,8 +2,10 @@
 
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle2, Clock, AlertCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { CheckCircle2, Clock, AlertCircle, DollarSign } from 'lucide-react'
 import { formatMoney, getMonthNameUz } from '@/lib/utils/payment-helper'
+import Link from 'next/link'
 
 interface MonthlyPaymentProgressProps {
   month: number
@@ -15,6 +17,8 @@ interface MonthlyPaymentProgressProps {
   isFullyPaid: boolean
   dueDate: Date
   paymentCount?: number
+  paymentId?: string // ✅ Payment ID for link
+  studentId: string // ✅ Student ID for new payment
 }
 
 export function MonthlyPaymentProgress({
@@ -26,7 +30,9 @@ export function MonthlyPaymentProgress({
   percentagePaid,
   isFullyPaid,
   dueDate,
-  paymentCount = 0
+  paymentCount = 0,
+  paymentId,
+  studentId
 }: MonthlyPaymentProgressProps) {
   const monthName = getMonthNameUz(month)
   const isOverdue = new Date() > dueDate && !isFullyPaid
@@ -94,6 +100,16 @@ export function MonthlyPaymentProgress({
           </p>
         )}
       </div>
+
+      {/* ✅ To'lov qilish tugmasi */}
+      {!isFullyPaid && paymentId && (
+        <Link href={`/admin/payments/${paymentId}/pay`}>
+          <Button size="sm" className="w-full" variant="default">
+            <DollarSign className="h-4 w-4 mr-2" />
+            To'lov qilish
+          </Button>
+        </Link>
+      )}
     </div>
   )
 }
