@@ -300,9 +300,9 @@ export default async function SalariesPage({
                 variant="secondary"
                 className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border-2 border-white/40"
               >
-                <Link href="/admin/salaries/overview">
+                <Link href="/admin/salaries/employee-overview">
                   <Users className="mr-2 h-5 w-5" />
-                  Umumiy Ko'rinish
+                  Maosh Panoramasi
                 </Link>
               </Button>
               <Button 
