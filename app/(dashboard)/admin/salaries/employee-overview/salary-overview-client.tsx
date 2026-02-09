@@ -81,10 +81,13 @@ export function SalaryOverviewClient({
   const currentEmployees = employeeType === 'teacher' ? teachers : staff
 
   // Filter employees
-  const filteredEmployees = currentEmployees.filter(e =>
-    e.user?.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (employeeType === 'teacher' ? e.teacherCode : e.staffCode)?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredEmployees = currentEmployees.filter(e => {
+    const nameMatch = e.user?.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
+    const codeMatch = employeeType === 'teacher' 
+      ? (e as Teacher).teacherCode?.toLowerCase().includes(searchQuery.toLowerCase())
+      : (e as Staff).staffCode?.toLowerCase().includes(searchQuery.toLowerCase())
+    return nameMatch || codeMatch
+  })
 
   const selectedEmployee = currentEmployees.find(e => e.id === selectedEmployeeId)
 
@@ -220,7 +223,7 @@ export function SalaryOverviewClient({
           <SelectContent className="max-h-[300px]">
             {filteredEmployees.map(employee => (
               <SelectItem key={employee.id} value={employee.id}>
-                {employee.user?.fullName} ({employeeType === 'teacher' ? employee.teacherCode : (employee as any).staffCode}) 
+                {employee.user?.fullName} ({employeeType === 'teacher' ? (employee as Teacher).teacherCode : (employee as Staff).staffCode}) 
                 {' - '} 
                 {employeeType === 'teacher' ? (employee as Teacher).specialization : (employee as Staff).position}
               </SelectItem>
@@ -238,7 +241,7 @@ export function SalaryOverviewClient({
                 <p className="text-sm text-muted-foreground">{employeeType === 'teacher' ? 'O\'qituvchi' : 'Xodim'}</p>
                 <p className="text-lg font-semibold">{selectedEmployee.user?.fullName}</p>
                 <p className="text-xs text-muted-foreground">
-                  {employeeType === 'teacher' ? selectedEmployee.teacherCode : (selectedEmployee as any).staffCode}
+                  {employeeType === 'teacher' ? (selectedEmployee as Teacher).teacherCode : (selectedEmployee as Staff).staffCode}
                 </p>
               </div>
               <div>
