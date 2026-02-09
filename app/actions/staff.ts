@@ -118,6 +118,9 @@ export async function updateStaff(staffId: string, data: Partial<Omit<StaffFormD
       return { success: false, error: 'Xodim topilmadi' }
     }
 
+    const oldSalary = Number(staff.monthlySalary || 0)
+    const newSalary = data.monthlySalary || 0
+
     // Update user
     await db.user.update({
       where: { id: staff.userId },
@@ -145,6 +148,31 @@ export async function updateStaff(staffId: string, data: Partial<Omit<StaffFormD
         }),
       }
     })
+
+    // ✅ Update PENDING salary payments if monthlySalary changed
+    if (data.monthlySalary !== undefined && newSalary !== oldSalary) {
+      const pendingSalaries = await db.salaryPayment.findMany({
+        where: {
+          tenantId,
+          staffId,
+          type: 'MONTHLY',
+          status: 'PENDING',
+          paidAmount: 0 // ✅ Faqat hali to'lanmagan
+        }
+      })
+
+      for (const salary of pendingSalaries) {
+        await db.salaryPayment.update({
+          where: { id: salary.id },
+          data: {
+            amount: newSalary,
+            remainingAmount: newSalary,
+            baseSalary: newSalary,
+            salaryAmountAtPayment: newSalary // ✅ Snapshot
+          }
+        })
+      }
+    }
 
     revalidatePath('/admin/staff')
     revalidatePath(`/admin/staff/${staffId}`)

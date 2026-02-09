@@ -1515,6 +1515,9 @@ model SalaryPayment {
   paidAmount      Decimal             @default(0) @db.Decimal(12, 2)
   remainingAmount Decimal             @default(0) @db.Decimal(12, 2)
 
+  // ✅ Snapshot: To'lov yaratilgandagi maosh miqdori
+  salaryAmountAtPayment Decimal? @db.Decimal(12, 2)
+
   // Oylik uchun
   month           Int? // 1-12
   year            Int? // 2024, 2025

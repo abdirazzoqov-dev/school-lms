@@ -136,6 +136,9 @@ export async function updateTeacher(teacherId: string, data: Partial<Omit<Teache
       return { success: false, error: 'O\'qituvchi topilmadi' }
     }
 
+    const oldSalary = Number(teacher.monthlySalary || 0)
+    const newSalary = data.monthlySalary || 0
+
     // Update user
     await db.user.update({
       where: { id: teacher.userId },
@@ -163,6 +166,31 @@ export async function updateTeacher(teacherId: string, data: Partial<Omit<Teache
         }),
       }
     })
+
+    // ✅ Update PENDING salary payments if monthlySalary changed
+    if (data.monthlySalary !== undefined && newSalary !== oldSalary) {
+      const pendingSalaries = await db.salaryPayment.findMany({
+        where: {
+          tenantId,
+          teacherId,
+          type: 'MONTHLY',
+          status: 'PENDING',
+          paidAmount: 0 // ✅ Faqat hali to'lanmagan
+        }
+      })
+
+      for (const salary of pendingSalaries) {
+        await db.salaryPayment.update({
+          where: { id: salary.id },
+          data: {
+            amount: newSalary,
+            remainingAmount: newSalary,
+            baseSalary: newSalary,
+            salaryAmountAtPayment: newSalary // ✅ Snapshot
+          }
+        })
+      }
+    }
 
     revalidatePath('/admin/teachers')
     revalidatePath('/admin') // Dashboard: totalTeachers

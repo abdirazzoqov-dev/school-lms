@@ -165,6 +165,8 @@ export async function createSalaryPayment(data: SalaryPaymentFormData) {
 
     // Check if teacher or staff exists and get employee info
     let employeeName = 'Xodim'
+    let employeeSalary = 0 // ✅ Get current salary for snapshot
+    
     if (validatedData.teacherId) {
       const teacher = await db.teacher.findFirst({
         where: { id: validatedData.teacherId, tenantId },
@@ -178,6 +180,7 @@ export async function createSalaryPayment(data: SalaryPaymentFormData) {
         return { success: false, error: 'O\'qituvchi topilmadi' }
       }
       employeeName = teacher.user.fullName || 'O\'qituvchi'
+      employeeSalary = Number(teacher.monthlySalary || 0) // ✅ Snapshot
     }
 
     if (validatedData.staffId) {
@@ -193,6 +196,7 @@ export async function createSalaryPayment(data: SalaryPaymentFormData) {
         return { success: false, error: 'Xodim topilmadi' }
       }
       employeeName = staff.user.fullName || 'Xodim'
+      employeeSalary = Number(staff.monthlySalary || 0) // ✅ Snapshot
     }
 
     // Calculate remaining amount
@@ -209,6 +213,7 @@ export async function createSalaryPayment(data: SalaryPaymentFormData) {
         amount: validatedData.amount,
         paidAmount: validatedData.paymentDate ? validatedData.amount : 0,
         remainingAmount: validatedData.paymentDate ? 0 : remainingAmount,
+        salaryAmountAtPayment: employeeSalary || validatedData.baseSalary, // ✅ Snapshot
         month: validatedData.month,
         year: validatedData.year,
         baseSalary: validatedData.baseSalary,
