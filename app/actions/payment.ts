@@ -88,6 +88,11 @@ export async function createPayment(data: PaymentFormData) {
     const paidAmount = isPaid ? totalAmount : 0
     const remainingAmount = isPaid ? 0 : totalAmount
     
+    // ✅ TOPSHIRIQ 1: Payment snapshot - o'sha vaqtdagi narxni saqlash
+    const tuitionFeeAtPayment = validatedData.paymentType === 'TUITION' && student.monthlyTuitionFee
+      ? student.monthlyTuitionFee
+      : null
+    
     const payment = await db.payment.create({
       data: {
         tenantId,
@@ -96,6 +101,7 @@ export async function createPayment(data: PaymentFormData) {
         amount: totalAmount,
         paidAmount: paidAmount,
         remainingAmount: remainingAmount,
+        tuitionFeeAtPayment, // ✅ Snapshot saqlash
         paymentType: validatedData.paymentType,
         paymentMethod: validatedData.paymentMethod,
         dueDate: new Date(validatedData.dueDate),
