@@ -17,7 +17,7 @@ interface MonthlyPaymentProgressProps {
   isFullyPaid: boolean
   dueDate: Date
   paymentCount?: number
-  paymentId?: string // ✅ Payment ID for link
+  paymentId?: string | null // ✅ Allow null
   studentId: string // ✅ Student ID for new payment
 }
 
