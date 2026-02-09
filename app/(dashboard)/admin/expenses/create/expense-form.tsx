@@ -113,7 +113,9 @@ export function ExpenseForm({ categories, generatedReceiptNumber }: ExpenseFormP
         <Input
           id="amount"
           type="number"
-          step="1000"
+          inputMode="numeric"
+          step="1"
+          min="0"
           value={formData.amount}
           onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
           placeholder="500000"

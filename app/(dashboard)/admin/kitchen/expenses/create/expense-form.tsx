@@ -148,7 +148,9 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
             <Input
               id="amount"
               type="number"
+              inputMode="numeric"
               min="0"
+              step="1"
               placeholder="500000"
               {...register('amount', { valueAsNumber: true })}
               disabled={isLoading}

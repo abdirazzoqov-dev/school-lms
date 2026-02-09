@@ -235,7 +235,9 @@ export default function CreateTeacherPage() {
               <Input
                 id="monthlySalary"
                 type="number"
+                inputMode="numeric"
                 min="0"
+                step="1"
                 placeholder="5000000"
                 value={formData.monthlySalary || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, monthlySalary: parseFloat(e.target.value) || 0 }))}

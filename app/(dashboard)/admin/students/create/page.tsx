@@ -729,9 +729,10 @@ export default function CreateStudentPage() {
               <Input
                 id="monthlyTuitionFee"
                 type="number"
+                inputMode="numeric"
                 min="0"
                 max="200000000"
-                step="10000"
+                step="1"
                 placeholder="Masalan: 500000 (0 dan 200,000,000 gacha)"
                 value={formData.monthlyTuitionFee || ''}
                 onChange={(e) => setFormData(prev => ({ 
