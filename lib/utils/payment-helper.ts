@@ -62,7 +62,8 @@ export async function calculateMonthlyPaymentProgress(
       paidDate: true,
       status: true,
       paymentMonth: true,
-      paymentYear: true
+      paymentYear: true,
+      tuitionFeeAtPayment: true // ✅ Snapshot field
     }
   })
 
@@ -87,7 +88,12 @@ export async function calculateMonthlyPaymentProgress(
     return sum + paid
   }, 0)
 
-  const requiredAmount = Number(student.monthlyTuitionFee)
+  // ✅ CRITICAL: Use tuitionFeeAtPayment (snapshot) if available, fallback to current monthlyTuitionFee
+  // This ensures completed payments are calculated against their original amount
+  const requiredAmount = payments.length > 0 && payments[0].tuitionFeeAtPayment
+    ? Number(payments[0].tuitionFeeAtPayment)
+    : Number(student.monthlyTuitionFee)
+  
   const remainingAmount = Math.max(0, requiredAmount - totalPaid)
   const percentagePaid = requiredAmount > 0 ? (totalPaid / requiredAmount) * 100 : 0
   const isFullyPaid = totalPaid >= requiredAmount
