@@ -111,6 +111,11 @@ export default async function AdminLayout({
           icon: 'Banknote',
         },
         {
+          title: 'Maosh Panoramasi',
+          href: '/admin/salaries/employee-overview',
+          icon: 'BarChart2',
+        },
+        {
           title: 'Xarajatlar',
           href: '/admin/expenses',
           icon: 'TrendingDown',

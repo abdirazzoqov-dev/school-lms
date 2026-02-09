@@ -58,13 +58,24 @@ interface Staff {
 interface SalaryPaymentFormProps {
   teachers: Teacher[]
   staff: Staff[]
+  preselectedEmployeeId?: string
+  preselectedEmployeeType?: 'teacher' | 'staff'
+  preselectedMonth?: number
+  preselectedYear?: number
 }
 
-export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
+export function SalaryPaymentForm({ 
+  teachers, 
+  staff,
+  preselectedEmployeeId,
+  preselectedEmployeeType,
+  preselectedMonth,
+  preselectedYear
+}: SalaryPaymentFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [loadingPayments, setLoadingPayments] = useState(false)
-  const [employeeType, setEmployeeType] = useState<'teacher' | 'staff'>('teacher')
+  const [employeeType, setEmployeeType] = useState<'teacher' | 'staff'>(preselectedEmployeeType || 'teacher')
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   
   // Already paid tracking
@@ -75,12 +86,12 @@ export function SalaryPaymentForm({ teachers, staff }: SalaryPaymentFormProps) {
   const today = new Date().toISOString().split('T')[0]
   
   const [formData, setFormData] = useState({
-    teacherId: '',
-    staffId: '',
+    teacherId: preselectedEmployeeType === 'teacher' ? preselectedEmployeeId || '' : '',
+    staffId: preselectedEmployeeType === 'staff' ? preselectedEmployeeId || '' : '',
     type: 'FULL_SALARY',
     amount: 0,
-    month: currentMonth,
-    year: currentYear,
+    month: preselectedMonth || currentMonth,
+    year: preselectedYear || currentYear,
     baseSalary: 0,
     bonusAmount: 0,
     deductionAmount: 0,

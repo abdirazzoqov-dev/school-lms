@@ -9,7 +9,11 @@ import Link from 'next/link'
 import { SalaryPaymentForm } from './salary-payment-form'
 import { currentMonth, currentYear } from '@/lib/validations/salary'
 
-export default async function CreateSalaryPaymentPage() {
+export default async function CreateSalaryPaymentPage({
+  searchParams
+}: {
+  searchParams: { employeeId?: string; employeeType?: string; month?: string; year?: string }
+}) {
   const session = await getServerSession(authOptions)
 
   if (!session || session.user.role !== 'ADMIN') {
@@ -17,6 +21,12 @@ export default async function CreateSalaryPaymentPage() {
   }
 
   const tenantId = session.user.tenantId!
+  
+  // Extract query params
+  const preselectedEmployeeId = searchParams.employeeId
+  const preselectedEmployeeType = searchParams.employeeType as 'teacher' | 'staff' | undefined
+  const preselectedMonth = searchParams.month ? parseInt(searchParams.month) : undefined
+  const preselectedYear = searchParams.year ? parseInt(searchParams.year) : undefined
 
   // Get all teachers
   const teachers = await db.teacher.findMany({
@@ -81,7 +91,14 @@ export default async function CreateSalaryPaymentPage() {
           <CardTitle>To'lov Ma'lumotlari</CardTitle>
         </CardHeader>
         <CardContent>
-          <SalaryPaymentForm teachers={teachers} staff={staff} />
+          <SalaryPaymentForm 
+            teachers={teachers} 
+            staff={staff}
+            preselectedEmployeeId={preselectedEmployeeId}
+            preselectedEmployeeType={preselectedEmployeeType}
+            preselectedMonth={preselectedMonth}
+            preselectedYear={preselectedYear}
+          />
         </CardContent>
       </Card>
     </div>
