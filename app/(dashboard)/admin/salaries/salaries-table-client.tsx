@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Users, Plus, ChevronDown, ChevronUp } from 'lucide-react'
+import { Users, Plus, ChevronDown, ChevronUp, Download } from 'lucide-react'
 import { formatNumber } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
 import { AddPartialSalaryModal } from '@/components/add-partial-salary-modal'
 import { SalaryPaymentHistory } from '@/components/salary-payment-history'
 import { monthNames } from '@/lib/validations/salary'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import * as XLSX from 'xlsx'
 
 interface SalaryPayment {
   id: string
@@ -171,8 +172,127 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
     return 'text-green-600'
   }
 
+  const exportToExcel = () => {
+    // Prepare data for Excel
+    const excelData: any[] = []
+    
+    employeeGroups.forEach((payments) => {
+      const payment = payments[0]
+      const employee = payment.teacher ? payment.teacher.user : payment.staff?.user
+      const employeeType = payment.teacher ? 'O\'qituvchi' : 'Xodim'
+      const employeeData = payment.teacher || payment.staff
+      const groupProgress = groupedByEmployee ? calculateGroupProgress(payments, employeeData || undefined) : calculateProgress(payment, true)
+      
+      // Main row for employee
+      const mainRow = {
+        'Xodim/O\'qituvchi': employee?.fullName || 'N/A',
+        'Turi': employeeType,
+        'Email': employee?.email || '',
+        'Telefon': employee?.phone || '',
+        'Oy': payment.month ? monthNames[payment.month - 1] : '',
+        'Yil': payment.year || '',
+        'Asosiy Oylik Maosh': Number(employeeData?.monthlySalary || 0),
+        'To\'langan (Avans)': groupProgress.paid,
+        'Qolgan': groupProgress.remaining,
+        'Foiz': `${groupProgress.percentage}%`,
+        'Status': groupProgress.percentage === 100 ? 'To\'langan' : 
+                  groupProgress.percentage === 0 ? 'Kutilmoqda' : 'Qisman'
+      }
+      
+      excelData.push(mainRow)
+      
+      // Add detailed payments
+      payments.forEach((p, idx) => {
+        const detailRow = {
+          'Xodim/O\'qituvchi': `  ↳ To'lov #${idx + 1}`,
+          'Turi': p.type === 'FULL_SALARY' ? 'To\'liq Oylik' :
+                  p.type === 'ADVANCE' ? 'Avans' :
+                  p.type === 'BONUS' ? 'Mukofot' :
+                  p.type === 'DEDUCTION' ? 'Ushlab Qolish' : p.type,
+          'Email': '',
+          'Telefon': '',
+          'Oy': '',
+          'Yil': '',
+          'Asosiy Oylik Maosh': '',
+          'To\'langan (Avans)': Number(p.paidAmount || 0),
+          'Qolgan': Number(p.remainingAmount || 0),
+          'Foiz': p.status === 'PAID' ? '100%' : 
+                  p.status === 'PENDING' ? '0%' : 'Qisman',
+          'Status': p.status === 'PAID' ? 'To\'langan' : 
+                    p.status === 'PENDING' ? 'Kutilmoqda' : 'Qisman'
+        }
+        
+        // Add bonus/deduction for FULL_SALARY
+        if (p.type === 'FULL_SALARY') {
+          if (p.bonusAmount && Number(p.bonusAmount) > 0) {
+            (detailRow as any)['Bonus'] = Number(p.bonusAmount)
+          }
+          if (p.deductionAmount && Number(p.deductionAmount) > 0) {
+            (detailRow as any)['Ushlab Qolish'] = Number(p.deductionAmount)
+          }
+        }
+        
+        if (p.description) {
+          (detailRow as any)['Izoh'] = p.description
+        }
+        
+        if (p.paymentDate) {
+          (detailRow as any)['To\'lov Sanasi'] = new Date(p.paymentDate).toLocaleDateString('uz-UZ')
+        }
+        
+        excelData.push(detailRow)
+      })
+      
+      // Empty row for separation
+      excelData.push({})
+    })
+    
+    // Create worksheet
+    const ws = XLSX.utils.json_to_sheet(excelData)
+    
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 25 }, // Xodim
+      { wch: 15 }, // Turi
+      { wch: 25 }, // Email
+      { wch: 15 }, // Telefon
+      { wch: 10 }, // Oy
+      { wch: 8 },  // Yil
+      { wch: 18 }, // Asosiy Oylik
+      { wch: 18 }, // To'langan
+      { wch: 15 }, // Qolgan
+      { wch: 10 }, // Foiz
+      { wch: 12 }, // Status
+    ]
+    
+    // Create workbook and add worksheet
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Maoshlar')
+    
+    // Generate file name with date
+    const date = new Date().toISOString().split('T')[0]
+    const fileName = `Maoshlar_${date}.xlsx`
+    
+    // Download file
+    XLSX.writeFile(wb, fileName)
+  }
+
   return (
     <>
+      {/* Excel Export Button */}
+      {employeeGroups.length > 0 && (
+        <div className="mb-4 flex justify-end">
+          <Button
+            onClick={exportToExcel}
+            variant="outline"
+            className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Excel yuklab olish
+          </Button>
+        </div>
+      )}
+      
       <div className="space-y-3">
         {employeeGroups.map((payments, groupIndex) => {
           // For grouped view, use first payment as representative
