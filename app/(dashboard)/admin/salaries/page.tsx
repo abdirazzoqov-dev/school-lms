@@ -265,10 +265,16 @@ export default async function SalariesPage({
     .filter(p => p.type === 'FULL_SALARY')
     .reduce((sum, p) => sum + Number(p.remainingAmount), 0)
 
-  // 3. Total deductions
+  // 3. Total deductions - include both DEDUCTION type and deductionAmount from FULL_SALARY
   const totalDeductions = salaryPayments
-    .filter(p => p.type === 'DEDUCTION')
-    .reduce((sum, p) => sum + Number(p.paidAmount), 0)
+    .reduce((sum, p) => {
+      if (p.type === 'DEDUCTION') {
+        return sum + Number(p.paidAmount)
+      } else if (p.type === 'FULL_SALARY' && p.deductionAmount) {
+        return sum + Number(p.deductionAmount)
+      }
+      return sum
+    }, 0)
   
   // 4. Total advances
   const totalAdvances = salaryPayments
