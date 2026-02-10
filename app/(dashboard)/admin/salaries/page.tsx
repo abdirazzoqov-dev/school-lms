@@ -281,6 +281,17 @@ export default async function SalariesPage({
     .filter(p => p.type === 'ADVANCE')
     .reduce((sum, p) => sum + Number(p.paidAmount), 0)
 
+  // 5. Total bonuses - include both BONUS type and bonusAmount from FULL_SALARY
+  const totalBonuses = salaryPayments
+    .reduce((sum, p) => {
+      if (p.type === 'BONUS') {
+        return sum + Number(p.paidAmount)
+      } else if (p.type === 'FULL_SALARY' && p.bonusAmount) {
+        return sum + Number(p.bonusAmount)
+      }
+      return sum
+    }, 0)
+
   const paidCount = salaryPayments.filter(p => p.status === 'PAID').length
   const pendingCount = salaryPayments.filter(p => p.status === 'PENDING' || p.status === 'PARTIALLY_PAID').length
   
@@ -335,7 +346,7 @@ export default async function SalariesPage({
       </div>
 
       {/* Statistics Cards - Enterprise LMS Design */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         {/* 1. Total Salary Amount - Primary */}
         <Card className="relative overflow-hidden border-2 border-blue-200 bg-gradient-to-br from-blue-50 via-blue-100 to-blue-50 hover:shadow-xl transition-all group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400/10 rounded-full -mr-16 -mt-16" />
@@ -427,6 +438,30 @@ export default async function SalariesPage({
               </p>
               <p className="text-xs text-green-600/70">
                 so'm • Oldindan berilgan
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 5. Total Bonuses */}
+        <Card className="relative overflow-hidden border-2 border-purple-200 bg-gradient-to-br from-purple-50 via-purple-100 to-purple-50 hover:shadow-xl transition-all group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-400/10 rounded-full -mr-16 -mt-16" />
+          <CardContent className="pt-6 relative z-10">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 bg-purple-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
+                <CreditCard className="h-6 w-6 text-white" />
+              </div>
+              <Badge className="bg-purple-100 text-purple-700 border-0 text-xs font-semibold">
+                Bonus
+              </Badge>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-purple-600 mb-1">Bonuslar</p>
+              <p className="text-3xl font-bold text-purple-700 mb-1">
+                {formatNumber(totalBonuses)}
+              </p>
+              <p className="text-xs text-purple-600/70">
+                so'm • Qo'shimcha to'lov
               </p>
             </div>
           </CardContent>
