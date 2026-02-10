@@ -89,9 +89,14 @@ export async function GET(request: Request) {
       
       const totalPaid = monthPayments.reduce((sum, p) => sum + Number(p.paidAmount || 0), 0)
       
-      // Use salaryAmountAtPayment if available, otherwise use current monthlySalary
-      const requiredAmount = monthPayments.length > 0 && monthPayments[0].salaryAmountAtPayment
-        ? Number(monthPayments[0].salaryAmountAtPayment)
+      // ✅ CRITICAL: Find FULL_SALARY payment - its amount is the 100% target
+      const fullSalaryPayment = monthPayments.find(p => p.type === 'FULL_SALARY')
+      
+      // Required amount is:
+      // 1. If FULL_SALARY payment exists -> use its amount (includes bonus/deduction)
+      // 2. Otherwise -> use current monthlySalary as default
+      const requiredAmount = fullSalaryPayment
+        ? Number(fullSalaryPayment.amount)
         : monthlySalary
 
       const percentagePaid = requiredAmount > 0 ? (totalPaid / requiredAmount) * 100 : 0
