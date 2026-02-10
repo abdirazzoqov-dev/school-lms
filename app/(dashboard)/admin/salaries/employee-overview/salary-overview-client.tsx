@@ -514,6 +514,19 @@ export function SalaryOverviewClient({
 
                                             {/* Amount - Large and prominent */}
                                             <div className="bg-white rounded-md p-3 mb-3 border shadow-sm">
+                                              {/* Show base salary for FULL_SALARY type */}
+                                              {payment.type === 'FULL_SALARY' && selectedEmployee && (
+                                                <div className="flex items-center justify-between mb-2 pb-2 border-b bg-blue-50 -mx-3 -mt-3 px-3 py-2 rounded-t-md">
+                                                  <span className="text-xs font-medium text-blue-700 flex items-center gap-1">
+                                                    <DollarSign className="h-3.5 w-3.5" />
+                                                    Asosiy maosh:
+                                                  </span>
+                                                  <span className="text-sm font-bold text-blue-600">
+                                                    {formatMoney(Number(selectedEmployee.monthlySalary))} so'm
+                                                  </span>
+                                                </div>
+                                              )}
+                                              
                                               <div className="flex items-center justify-between">
                                                 <span className="text-xs font-medium text-muted-foreground">To'langan:</span>
                                                 <span className="text-xl font-bold text-green-600">
