@@ -272,7 +272,7 @@ export default async function SalariesPage({
   }>()
 
   salaryPayments.forEach(payment => {
-    const employeeId = payment.teacherId || payment.staffId || ''
+    const employeeId = payment.teacher?.id || payment.staff?.id || ''
     const month = payment.month || 0
     const year = payment.year || 0
     const key = `${employeeId}-${month}-${year}`
