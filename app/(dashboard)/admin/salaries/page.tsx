@@ -275,10 +275,13 @@ export default async function SalariesPage({
     .filter(p => p.type === 'DEDUCTION')
     .reduce((sum, p) => sum + Number(p.paidAmount), 0)
   
-  // Calculate expected amount - total amount that should be paid (FULL_SALARY amount only, since bonus/deduction are already included in FULL_SALARY.amount)
-  const expectedAmount = salaryPayments
+  // Calculate expected amount - FULL_SALARY amount (jami oylik maosh)
+  const totalFullSalaryAmount = salaryPayments
     .filter(p => p.type === 'FULL_SALARY')
     .reduce((sum, p) => sum + Number(p.amount), 0)
+  
+  // Ko'zda tutilgan = Jami oylik maosh - To'langan
+  const expectedAmount = Math.max(0, totalFullSalaryAmount - totalPaid)
 
   const paidCount = salaryPayments.filter(p => p.status === 'PAID').length
   const pendingCount = salaryPayments.filter(p => p.status === 'PENDING' || p.status === 'PARTIALLY_PAID').length
