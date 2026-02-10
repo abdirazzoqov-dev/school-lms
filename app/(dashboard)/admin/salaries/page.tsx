@@ -345,8 +345,9 @@ export default async function SalariesPage({
         <div className="absolute -left-8 -bottom-8 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
       </div>
 
-      {/* Statistics Cards - Enterprise LMS Design */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      {/* Statistics Cards - Professional LMS Grid Layout */}
+      {/* First Row - Primary Metrics (3 cards) */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* 1. Total Salary Amount - Primary */}
         <Card className="relative overflow-hidden border-2 border-blue-200 bg-gradient-to-br from-blue-50 via-blue-100 to-blue-50 hover:shadow-xl transition-all group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400/10 rounded-full -mr-16 -mt-16" />
@@ -418,7 +419,10 @@ export default async function SalariesPage({
             </div>
           </CardContent>
         </Card>
+      </div>
 
+      {/* Second Row - Secondary Metrics (2 cards) */}
+      <div className="grid gap-4 md:grid-cols-2">
         {/* 4. Total Advances */}
         <Card className="relative overflow-hidden border-2 border-green-200 bg-gradient-to-br from-green-50 via-green-100 to-green-50 hover:shadow-xl transition-all group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-green-400/10 rounded-full -mr-16 -mt-16" />
