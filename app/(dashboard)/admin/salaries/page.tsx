@@ -260,10 +260,53 @@ export default async function SalariesPage({
     .filter(p => p.type === 'FULL_SALARY')
     .reduce((sum, p) => sum + Number(p.amount), 0)
 
-  // 2. Unpaid salary amount (remaining from FULL_SALARY)
-  const unpaidSalaryAmount = salaryPayments
-    .filter(p => p.type === 'FULL_SALARY')
-    .reduce((sum, p) => sum + Number(p.remainingAmount), 0)
+  // 2. Unpaid salary amount - CORRECT CALCULATION
+  // For each employee/month, calculate: requiredAmount - totalPaid
+  // Group by employee + month + year
+  const employeeMonthMap = new Map<string, {
+    requiredAmount: number
+    totalPaid: number
+    employeeId: string
+    month: number
+    year: number
+  }>()
+
+  salaryPayments.forEach(payment => {
+    const employeeId = payment.teacherId || payment.staffId || ''
+    const month = payment.month || 0
+    const year = payment.year || 0
+    const key = `${employeeId}-${month}-${year}`
+
+    if (!employeeMonthMap.has(key)) {
+      employeeMonthMap.set(key, {
+        requiredAmount: 0,
+        totalPaid: 0,
+        employeeId,
+        month,
+        year
+      })
+    }
+
+    const record = employeeMonthMap.get(key)!
+
+    // Set requiredAmount from FULL_SALARY
+    if (payment.type === 'FULL_SALARY') {
+      record.requiredAmount = Number(payment.amount)
+    }
+
+    // Add all paid amounts (FULL_SALARY, ADVANCE, BONUS, etc.)
+    // For DEDUCTION, we don't add to totalPaid (it's already subtracted from FULL_SALARY.amount)
+    if (payment.type !== 'DEDUCTION') {
+      record.totalPaid += Number(payment.paidAmount || 0)
+    }
+  })
+
+  // Calculate total unpaid amount across all employees/months
+  let unpaidSalaryAmount = 0
+  employeeMonthMap.forEach(record => {
+    const unpaid = Math.max(0, record.requiredAmount - record.totalPaid)
+    unpaidSalaryAmount += unpaid
+  })
 
   // 3. Total deductions - include both DEDUCTION type and deductionAmount from FULL_SALARY
   const totalDeductions = salaryPayments
