@@ -309,6 +309,15 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
           const isExpanded = expandedPayments.includes(`group-${groupIndex}`)
           const hasHistory = payments.some(p => p.notes && p.notes.includes('['))
           const hasMultiplePayments = payments.length > 1
+          
+          // Check if single FULL_SALARY payment has bonus or deduction
+          const hasBonusOrDeduction = payments.length === 1 && 
+            payments[0].type === 'FULL_SALARY' && 
+            ((payments[0].bonusAmount && Number(payments[0].bonusAmount) > 0) || 
+             (payments[0].deductionAmount && Number(payments[0].deductionAmount) > 0))
+          
+          // Show "Batafsil" if: multiple payments OR has bonus/deduction OR has history
+          const shouldShowDetails = hasMultiplePayments || hasBonusOrDeduction || hasHistory
 
           return (
             <Collapsible
@@ -341,8 +350,8 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                           </Badge>
                         )}
                         
-                        {/* Show expand toggle if has multiple payments or history */}
-                        {(hasMultiplePayments || hasHistory) && (
+                        {/* Show expand toggle if should show details */}
+                        {shouldShowDetails && (
                           <CollapsibleTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-6 px-2">
                               {isExpanded ? (
@@ -489,7 +498,7 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                 </div>
 
                 {/* Detailed Payments (Collapsible) - Enhanced */}
-                {(hasMultiplePayments || hasHistory) && (
+                {shouldShowDetails && (
                   <CollapsibleContent className="mt-4 pt-4 border-t">
                     <div className="space-y-3">
                       <p className="text-sm font-medium text-muted-foreground mb-2">
