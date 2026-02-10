@@ -275,17 +275,10 @@ export default async function SalariesPage({
     .filter(p => p.type === 'DEDUCTION')
     .reduce((sum, p) => sum + Number(p.paidAmount), 0)
   
-  // Calculate expected amount (FULL_SALARY + BONUS - DEDUCTION)
+  // Calculate expected amount - total amount that should be paid (FULL_SALARY amount only, since bonus/deduction are already included in FULL_SALARY.amount)
   const expectedAmount = salaryPayments
-    .filter(p => p.type === 'FULL_SALARY' || p.type === 'BONUS' || p.type === 'DEDUCTION')
-    .reduce((sum, p) => {
-      if (p.type === 'FULL_SALARY' || p.type === 'BONUS') {
-        return sum + Number(p.amount)
-      } else if (p.type === 'DEDUCTION') {
-        return sum - Number(p.amount)
-      }
-      return sum
-    }, 0)
+    .filter(p => p.type === 'FULL_SALARY')
+    .reduce((sum, p) => sum + Number(p.amount), 0)
 
   const paidCount = salaryPayments.filter(p => p.status === 'PAID').length
   const pendingCount = salaryPayments.filter(p => p.status === 'PENDING' || p.status === 'PARTIALLY_PAID').length
