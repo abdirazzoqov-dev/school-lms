@@ -255,33 +255,25 @@ export default async function SalariesPage({
   })
 
   // Calculate statistics based on filtered data
-  const totalPaid = salaryPayments
-    .filter(p => p.status === 'PAID')
-    .reduce((sum, p) => sum + Number(p.paidAmount), 0)
+  // 1. Total salary amount that should be paid (FULL_SALARY amount)
+  const totalSalaryAmount = salaryPayments
+    .filter(p => p.type === 'FULL_SALARY')
+    .reduce((sum, p) => sum + Number(p.amount), 0)
 
-  const totalPending = salaryPayments
-    .filter(p => p.status === 'PENDING' || p.status === 'PARTIALLY_PAID')
+  // 2. Unpaid salary amount (remaining from FULL_SALARY)
+  const unpaidSalaryAmount = salaryPayments
+    .filter(p => p.type === 'FULL_SALARY')
     .reduce((sum, p) => sum + Number(p.remainingAmount), 0)
 
-  const totalAdvances = salaryPayments
-    .filter(p => p.type === 'ADVANCE')
-    .reduce((sum, p) => sum + Number(p.paidAmount), 0)
-
-  const totalBonuses = salaryPayments
-    .filter(p => p.type === 'BONUS')
-    .reduce((sum, p) => sum + Number(p.paidAmount), 0)
-  
+  // 3. Total deductions
   const totalDeductions = salaryPayments
     .filter(p => p.type === 'DEDUCTION')
     .reduce((sum, p) => sum + Number(p.paidAmount), 0)
   
-  // Calculate expected amount - FULL_SALARY amount (jami oylik maosh)
-  const totalFullSalaryAmount = salaryPayments
-    .filter(p => p.type === 'FULL_SALARY')
-    .reduce((sum, p) => sum + Number(p.amount), 0)
-  
-  // Ko'zda tutilgan = Jami oylik maosh - To'langan
-  const expectedAmount = Math.max(0, totalFullSalaryAmount - totalPaid)
+  // 4. Total advances
+  const totalAdvances = salaryPayments
+    .filter(p => p.type === 'ADVANCE')
+    .reduce((sum, p) => sum + Number(p.paidAmount), 0)
 
   const paidCount = salaryPayments.filter(p => p.status === 'PAID').length
   const pendingCount = salaryPayments.filter(p => p.status === 'PENDING' || p.status === 'PARTIALLY_PAID').length
@@ -336,104 +328,100 @@ export default async function SalariesPage({
         <div className="absolute -left-8 -bottom-8 h-40 w-40 rounded-full bg-white/10 blur-2xl"></div>
       </div>
 
-      {/* Statistics Cards - Modern Design */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <Card className="relative overflow-hidden border-2 border-green-200 bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 hover:shadow-lg transition-all group">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 to-emerald-400/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      {/* Statistics Cards - Enterprise LMS Design */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* 1. Total Salary Amount - Primary */}
+        <Card className="relative overflow-hidden border-2 border-blue-200 bg-gradient-to-br from-blue-50 via-blue-100 to-blue-50 hover:shadow-xl transition-all group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400/10 rounded-full -mr-16 -mt-16" />
           <CardContent className="pt-6 relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">To'langan</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {formatNumber(totalPaid)}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  so'm
-                </p>
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 bg-blue-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
+                <DollarSign className="h-6 w-6 text-white" />
               </div>
-              <div className="p-3 bg-green-100 rounded-full group-hover:scale-110 transition-transform">
-                <CheckCircle2 className="h-6 w-6 text-green-600" />
-              </div>
+              <Badge className="bg-blue-100 text-blue-700 border-0 text-xs font-semibold">
+                Bu oy
+              </Badge>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-blue-600 mb-1">Jami Oylik Maosh</p>
+              <p className="text-3xl font-bold text-blue-700 mb-1">
+                {formatNumber(totalSalaryAmount)}
+              </p>
+              <p className="text-xs text-blue-600/70">
+                so'm • Berilishi kerak
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden border-2 border-blue-200 bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 hover:shadow-lg transition-all group">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-cyan-400/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        {/* 2. Unpaid Salary - Warning */}
+        <Card className="relative overflow-hidden border-2 border-orange-200 bg-gradient-to-br from-orange-50 via-orange-100 to-orange-50 hover:shadow-xl transition-all group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-orange-400/10 rounded-full -mr-16 -mt-16" />
           <CardContent className="pt-6 relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Avanslar</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {formatNumber(totalAdvances)}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  so'm
-                </p>
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 bg-orange-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
+                <Clock className="h-6 w-6 text-white" />
               </div>
-              <div className="p-3 bg-blue-100 rounded-full group-hover:scale-110 transition-transform">
-                <CreditCard className="h-6 w-6 text-blue-600" />
-              </div>
+              <Badge className="bg-orange-100 text-orange-700 border-0 text-xs font-semibold">
+                Qolgan
+              </Badge>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-orange-600 mb-1">Berilmagan Maosh</p>
+              <p className="text-3xl font-bold text-orange-700 mb-1">
+                {formatNumber(unpaidSalaryAmount)}
+              </p>
+              <p className="text-xs text-orange-600/70">
+                so'm • To'lanishi kerak
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden border-2 border-red-200 bg-gradient-to-br from-red-50 via-rose-50 to-red-100 hover:shadow-lg transition-all group">
-          <div className="absolute inset-0 bg-gradient-to-br from-red-400/10 to-rose-400/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        {/* 3. Total Deductions */}
+        <Card className="relative overflow-hidden border-2 border-red-200 bg-gradient-to-br from-red-50 via-red-100 to-red-50 hover:shadow-xl transition-all group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-red-400/10 rounded-full -mr-16 -mt-16" />
           <CardContent className="pt-6 relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Ushlab qolish</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {formatNumber(totalDeductions)}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  so'm
-                </p>
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 bg-red-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
+                <XCircle className="h-6 w-6 text-white" />
               </div>
-              <div className="p-3 bg-red-100 rounded-full group-hover:scale-110 transition-transform">
-                <XCircle className="h-6 w-6 text-red-600" />
-              </div>
+              <Badge className="bg-red-100 text-red-700 border-0 text-xs font-semibold">
+                Ushlab qolish
+              </Badge>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-red-600 mb-1">Ushlab Qolish</p>
+              <p className="text-3xl font-bold text-red-700 mb-1">
+                {formatNumber(totalDeductions)}
+              </p>
+              <p className="text-xs text-red-600/70">
+                so'm • Jami kamayish
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden border-2 border-purple-200 bg-gradient-to-br from-purple-50 via-pink-50 to-purple-100 hover:shadow-lg transition-all group">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-400/10 to-pink-400/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        {/* 4. Total Advances */}
+        <Card className="relative overflow-hidden border-2 border-green-200 bg-gradient-to-br from-green-50 via-green-100 to-green-50 hover:shadow-xl transition-all group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-green-400/10 rounded-full -mr-16 -mt-16" />
           <CardContent className="pt-6 relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Bonus</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {formatNumber(totalBonuses)}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  so'm
-                </p>
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 bg-green-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
+                <TrendingUp className="h-6 w-6 text-white" />
               </div>
-              <div className="p-3 bg-purple-100 rounded-full group-hover:scale-110 transition-transform">
-                <TrendingUp className="h-6 w-6 text-purple-600" />
-              </div>
+              <Badge className="bg-green-100 text-green-700 border-0 text-xs font-semibold">
+                Avans
+              </Badge>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden border-2 border-orange-200 bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 hover:shadow-lg transition-all group">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-400/10 to-amber-400/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <CardContent className="pt-6 relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Ko'zda tutilgan</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {formatNumber(expectedAmount)}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  so'm
-                </p>
-              </div>
-              <div className="p-3 bg-orange-100 rounded-full group-hover:scale-110 transition-transform">
-                <Clock className="h-6 w-6 text-orange-600" />
-              </div>
+            <div>
+              <p className="text-sm font-medium text-green-600 mb-1">Avanslar</p>
+              <p className="text-3xl font-bold text-green-700 mb-1">
+                {formatNumber(totalAdvances)}
+              </p>
+              <p className="text-xs text-green-600/70">
+                so'm • Oldindan berilgan
+              </p>
             </div>
           </CardContent>
         </Card>
