@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, DollarSign, CheckCircle2, Clock, XCircle } from 'lucide-react'
+import { Plus, DollarSign, CheckCircle2, Clock, XCircle, Users } from 'lucide-react'
 import Link from 'next/link'
 import { SearchBar } from '@/components/search-bar'
 import { FilterSelect } from '@/components/filter-select'
@@ -316,9 +316,22 @@ export default async function PaymentsPage({
                 </p>
               </div>
             </div>
-            <div className="text-sm sm:text-base bg-white/10 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-lg border border-white/20">
-              <span className="text-white/80">Jami: </span>
-              <span className="font-bold">{totalPayments} ta</span>
+            <div className="flex gap-3">
+              <Button 
+                asChild 
+                size="lg" 
+                variant="secondary"
+                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border-2 border-white/40"
+              >
+                <Link href="/admin/payments/student-overview">
+                  <Users className="mr-2 h-5 w-5" />
+                  To'lov Panoramasi
+                </Link>
+              </Button>
+              <div className="text-sm sm:text-base bg-white/10 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-lg border border-white/20">
+                <span className="text-white/80">Jami: </span>
+                <span className="font-bold">{totalPayments} ta</span>
+              </div>
             </div>
           </div>
         </div>
