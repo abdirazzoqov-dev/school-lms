@@ -229,6 +229,7 @@ export default async function SalariesPage({
       },
       staff: {
         select: {
+          id: true,
           staffCode: true,
           position: true,
           monthlySalary: true,
