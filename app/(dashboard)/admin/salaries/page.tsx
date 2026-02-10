@@ -254,7 +254,7 @@ export default async function SalariesPage({
     ]
   })
 
-  // Calculate statistics
+  // Calculate statistics based on filtered data
   const totalPaid = salaryPayments
     .filter(p => p.status === 'PAID')
     .reduce((sum, p) => sum + Number(p.paidAmount), 0)
@@ -270,6 +270,22 @@ export default async function SalariesPage({
   const totalBonuses = salaryPayments
     .filter(p => p.type === 'BONUS')
     .reduce((sum, p) => sum + Number(p.paidAmount), 0)
+  
+  const totalDeductions = salaryPayments
+    .filter(p => p.type === 'DEDUCTION')
+    .reduce((sum, p) => sum + Number(p.paidAmount), 0)
+  
+  // Calculate expected amount (FULL_SALARY + BONUS - DEDUCTION)
+  const expectedAmount = salaryPayments
+    .filter(p => p.type === 'FULL_SALARY' || p.type === 'BONUS' || p.type === 'DEDUCTION')
+    .reduce((sum, p) => {
+      if (p.type === 'FULL_SALARY' || p.type === 'BONUS') {
+        return sum + Number(p.amount)
+      } else if (p.type === 'DEDUCTION') {
+        return sum - Number(p.amount)
+      }
+      return sum
+    }, 0)
 
   const paidCount = salaryPayments.filter(p => p.status === 'PAID').length
   const pendingCount = salaryPayments.filter(p => p.status === 'PENDING' || p.status === 'PARTIALLY_PAID').length
@@ -325,7 +341,7 @@ export default async function SalariesPage({
       </div>
 
       {/* Statistics Cards - Modern Design */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card className="relative overflow-hidden border-2 border-green-200 bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 hover:shadow-lg transition-all group">
           <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 to-emerald-400/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
           <CardContent className="pt-6 relative z-10">
@@ -333,34 +349,14 @@ export default async function SalariesPage({
               <div>
                 <p className="text-sm font-medium text-muted-foreground">To'langan</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {formatNumber(totalPaid)} so'm
+                  {formatNumber(totalPaid)}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {paidCount} ta to'lov
+                  so'm
                 </p>
               </div>
               <div className="p-3 bg-green-100 rounded-full group-hover:scale-110 transition-transform">
                 <CheckCircle2 className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden border-2 border-orange-200 bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 hover:shadow-lg transition-all group">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-400/10 to-amber-400/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <CardContent className="pt-6 relative z-10">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Qolgan (Kutilmoqda)</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {formatNumber(totalPending)} so'm
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {pendingCount} ta to'lov
-                </p>
-              </div>
-              <div className="p-3 bg-orange-100 rounded-full group-hover:scale-110 transition-transform">
-                <Clock className="h-6 w-6 text-orange-600" />
               </div>
             </div>
           </CardContent>
@@ -373,14 +369,34 @@ export default async function SalariesPage({
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Avanslar</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {formatNumber(totalAdvances)} so'm
+                  {formatNumber(totalAdvances)}
                 </p>
-                <p className="text-xs text-blue-600/70 mt-1 font-medium">
-                  Oldindan to'langan
+                <p className="text-xs text-muted-foreground mt-1">
+                  so'm
                 </p>
               </div>
               <div className="p-3 bg-blue-100 rounded-full group-hover:scale-110 transition-transform">
                 <CreditCard className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden border-2 border-red-200 bg-gradient-to-br from-red-50 via-rose-50 to-red-100 hover:shadow-lg transition-all group">
+          <div className="absolute inset-0 bg-gradient-to-br from-red-400/10 to-rose-400/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <CardContent className="pt-6 relative z-10">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Ushlab qolish</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {formatNumber(totalDeductions)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  so'm
+                </p>
+              </div>
+              <div className="p-3 bg-red-100 rounded-full group-hover:scale-110 transition-transform">
+                <XCircle className="h-6 w-6 text-red-600" />
               </div>
             </div>
           </CardContent>
@@ -391,16 +407,36 @@ export default async function SalariesPage({
           <CardContent className="pt-6 relative z-10">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Mukofotlar</p>
+                <p className="text-sm font-medium text-muted-foreground">Bonus</p>
                 <p className="text-2xl font-bold text-purple-600">
-                  {formatNumber(totalBonuses)} so'm
+                  {formatNumber(totalBonuses)}
                 </p>
-                <p className="text-xs text-purple-600/70 mt-1 font-medium">
-                  Qo'shimcha to'lovlar
+                <p className="text-xs text-muted-foreground mt-1">
+                  so'm
                 </p>
               </div>
               <div className="p-3 bg-purple-100 rounded-full group-hover:scale-110 transition-transform">
                 <TrendingUp className="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="relative overflow-hidden border-2 border-orange-200 bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 hover:shadow-lg transition-all group">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-400/10 to-amber-400/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <CardContent className="pt-6 relative z-10">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Ko'zda tutilgan</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {formatNumber(expectedAmount)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  so'm
+                </p>
+              </div>
+              <div className="p-3 bg-orange-100 rounded-full group-hover:scale-110 transition-transform">
+                <Clock className="h-6 w-6 text-orange-600" />
               </div>
             </div>
           </CardContent>
