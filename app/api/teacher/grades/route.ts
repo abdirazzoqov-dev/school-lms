@@ -34,6 +34,8 @@ export async function POST(req: NextRequest) {
     // Get classId and subjectId from the first grade record
     const classId = grades[0]?.classId
     const subjectId = grades[0]?.subjectId
+    const startTime = grades[0]?.startTime
+    const endTime = grades[0]?.endTime
     
     if (!classId) {
       return NextResponse.json({ error: 'Class ID required' }, { status: 400 })
@@ -86,6 +88,8 @@ export async function POST(req: NextRequest) {
         quarter: quarter,
         academicYear,
         date: today,
+        startTime: startTime || null,
+        endTime: endTime || null,
       })),
     })
 

@@ -29,7 +29,9 @@ type Props = {
 
 export function TeacherClassesClient({ classes }: Props) {
   const [selectedClass, setSelectedClass] = useState<ClassData | null>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isSubjectDialogOpen, setIsSubjectDialogOpen] = useState(false)
+  const [selectedSubject, setSelectedSubject] = useState<{ id: string; name: string } | null>(null)
+  const [isTimeSlotDialogOpen, setIsTimeSlotDialogOpen] = useState(false)
 
   const gradients = [
     'from-blue-500 to-indigo-600',
@@ -61,14 +63,46 @@ export function TeacherClassesClient({ classes }: Props) {
 
   const handleClassClick = (classItem: ClassData) => {
     setSelectedClass(classItem)
-    setIsDialogOpen(true)
+    setIsSubjectDialogOpen(true)
   }
 
-  const handleSubjectSelect = (subjectId: string) => {
-    if (selectedClass) {
-      // Redirect to class page with subject filter
-      window.location.href = `/teacher/classes/${selectedClass.classId}?subjectId=${subjectId}`
+  const handleSubjectSelect = (subjectId: string, subjectName: string) => {
+    setSelectedSubject({ id: subjectId, name: subjectName })
+    setIsSubjectDialogOpen(false)
+    setIsTimeSlotDialogOpen(true)
+  }
+
+  const handleTimeSlotSelect = (startTime: string, endTime: string) => {
+    if (selectedClass && selectedSubject) {
+      // Redirect to class page with subject and time slot
+      window.location.href = `/teacher/classes/${selectedClass.classId}?subjectId=${selectedSubject.id}&startTime=${startTime}&endTime=${endTime}`
     }
+  }
+
+  // Get available time slots for selected subject
+  const getTimeSlots = () => {
+    if (!selectedClass || !selectedSubject) return []
+    
+    const slots = selectedClass.schedules
+      .filter(s => s.subjectId === selectedSubject.id)
+      .map(s => ({
+        startTime: s.startTime,
+        endTime: s.endTime,
+        dayOfWeek: s.dayOfWeek,
+        roomNumber: s.roomNumber
+      }))
+      // Group by time slot (same time on different days)
+      .reduce((acc, slot) => {
+        const timeKey = `${slot.startTime}-${slot.endTime}`
+        if (!acc.find(s => `${s.startTime}-${s.endTime}` === timeKey)) {
+          acc.push(slot)
+        }
+        return acc
+      }, [] as typeof slots)
+      // Sort by start time
+      .sort((a, b) => a.startTime.localeCompare(b.startTime))
+
+    return slots
   }
 
   return (
@@ -253,7 +287,7 @@ export function TeacherClassesClient({ classes }: Props) {
       )}
 
       {/* Subject Selection Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isSubjectDialogOpen} onOpenChange={setIsSubjectDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
@@ -267,7 +301,7 @@ export function TeacherClassesClient({ classes }: Props) {
             {selectedClass && getClassSubjects(selectedClass).map((subject) => (
               <Button
                 key={subject.id}
-                onClick={() => handleSubjectSelect(subject.id)}
+                onClick={() => handleSubjectSelect(subject.id, subject.name)}
                 className="w-full justify-start h-auto py-4 px-6 text-left bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/30 dark:hover:to-indigo-900/30 text-gray-900 dark:text-gray-100 border border-blue-200 dark:border-blue-800"
                 variant="outline"
               >
@@ -279,6 +313,44 @@ export function TeacherClassesClient({ classes }: Props) {
                     <p className="font-semibold text-lg">{subject.name}</p>
                     <p className="text-sm text-muted-foreground">
                       {selectedClass.schedules.filter(s => s.subjectId === subject.id).length} ta dars/hafta
+                    </p>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                </div>
+              </Button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Time Slot Selection Dialog */}
+      <Dialog open={isTimeSlotDialogOpen} onOpenChange={setIsTimeSlotDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">
+              Dars vaqtini tanlang
+            </DialogTitle>
+            <DialogDescription>
+              {selectedSubject?.name} fani uchun qaysi darsga kirmoqchisiz?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            {getTimeSlots().map((slot, index) => (
+              <Button
+                key={`${slot.startTime}-${slot.endTime}`}
+                onClick={() => handleTimeSlotSelect(slot.startTime, slot.endTime)}
+                className="w-full justify-start h-auto py-4 px-6 text-left bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 text-gray-900 dark:text-gray-100 border border-green-200 dark:border-green-800"
+                variant="outline"
+              >
+                <div className="flex items-center gap-4 w-full">
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 text-white">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-lg">{index + 1}-dars</p>
+                    <p className="text-sm text-muted-foreground">
+                      {slot.startTime} - {slot.endTime}
+                      {slot.roomNumber && ` • Xona: ${slot.roomNumber}`}
                     </p>
                   </div>
                   <ArrowRight className="h-5 w-5 text-muted-foreground" />

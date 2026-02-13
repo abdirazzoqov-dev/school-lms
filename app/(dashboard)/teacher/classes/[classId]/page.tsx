@@ -5,7 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ArrowLeft, Save, Check, X, Loader2, BookOpen } from 'lucide-react'
+import { ArrowLeft, Save, Check, X, Loader2, BookOpen, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { useToast } from '@/components/ui/use-toast'
 import { Badge } from '@/components/ui/badge'
@@ -36,6 +36,8 @@ export default function TeacherClassDetailPage() {
   const { toast } = useToast()
   const classId = params.classId as string
   const subjectId = searchParams.get('subjectId')
+  const startTime = searchParams.get('startTime')
+  const endTime = searchParams.get('endTime')
 
   const [classData, setClassData] = useState<ClassData | null>(null)
   const [subjectData, setSubjectData] = useState<SubjectData | null>(null)
@@ -51,7 +53,7 @@ export default function TeacherClassDetailPage() {
   useEffect(() => {
     loadClassData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classId, subjectId])
+  }, [classId, subjectId, startTime, endTime])
 
   const loadClassData = async () => {
     try {
@@ -129,7 +131,9 @@ export default function TeacherClassDetailPage() {
         status,
         date: new Date().toISOString(),
         classId,
-        subjectId: subjectId || undefined, // Add subjectId
+        subjectId: subjectId || undefined,
+        startTime: startTime || undefined,
+        endTime: endTime || undefined,
       }))
 
       const res = await fetch('/api/teacher/attendance', {
@@ -172,7 +176,9 @@ export default function TeacherClassDetailPage() {
           studentId,
           grade: parseInt(grade),
           classId,
-          subjectId: subjectId || undefined, // Add subjectId
+          subjectId: subjectId || undefined,
+          startTime: startTime || undefined,
+          endTime: endTime || undefined,
         }))
 
       const res = await fetch('/api/teacher/grades', {
@@ -236,6 +242,12 @@ export default function TeacherClassDetailPage() {
               <Badge variant="secondary" className="text-base px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
                 <BookOpen className="h-4 w-4 mr-1.5" />
                 {subjectData.name}
+              </Badge>
+            )}
+            {startTime && endTime && (
+              <Badge variant="secondary" className="text-base px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white">
+                <Clock className="h-4 w-4 mr-1.5" />
+                {startTime} - {endTime}
               </Badge>
             )}
           </div>

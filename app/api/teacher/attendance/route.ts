@@ -37,6 +37,8 @@ export async function POST(req: NextRequest) {
     // Get classId and subjectId from the first record
     const classId = attendanceRecords[0]?.classId
     const subjectId = attendanceRecords[0]?.subjectId
+    const startTime = attendanceRecords[0]?.startTime
+    const endTime = attendanceRecords[0]?.endTime
     
     if (!classId) {
       return NextResponse.json({ error: 'Class ID required' }, { status: 400 })
@@ -65,14 +67,16 @@ export async function POST(req: NextRequest) {
 
     // Delete existing attendance for today (if any)
     const studentIds = attendanceRecords.map((r) => r.studentId)
-    await db.attendance.deleteMany({
-      where: {
-        teacherId: teacher.id,
-        classId,
-        subjectId,
-        date: today,
-      },
-    })
+    const deleteWhere: any = {
+      teacherId: teacher.id,
+      classId,
+      subjectId,
+      date: today,
+    }
+    if (startTime) {
+      deleteWhere.startTime = startTime
+    }
+    await db.attendance.deleteMany({ where: deleteWhere })
 
     // Create new attendance records
     const created = await db.attendance.createMany({
@@ -83,6 +87,8 @@ export async function POST(req: NextRequest) {
         classId: record.classId,
         subjectId: subjectId,
         date: today,
+        startTime: startTime || null,
+        endTime: endTime || null,
         status: record.status,
       })),
     })
