@@ -31,23 +31,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
     }
 
-    // Need to get subjectId from classSubjects
-    // For now, we'll use the first subject the teacher teaches in this class
+    // Get classId and subjectId from the first grade record
     const classId = grades[0]?.classId
+    const subjectId = grades[0]?.subjectId
+    
     if (!classId) {
       return NextResponse.json({ error: 'Class ID required' }, { status: 400 })
     }
 
-    const classSubject = await db.classSubject.findFirst({
+    if (!subjectId) {
+      return NextResponse.json({ error: 'Subject ID required' }, { status: 400 })
+    }
+
+    // Verify teacher teaches this class and subject via Schedule (constructor)
+    const schedule = await db.schedule.findFirst({
       where: {
         classId,
+        subjectId,
         teacherId: teacher.id,
+        type: 'LESSON'
       },
     })
 
-    if (!classSubject) {
+    if (!schedule) {
       return NextResponse.json(
-        { error: 'You do not teach this class' },
+        { error: 'You do not teach this subject in this class' },
         { status: 403 }
       )
     }
@@ -61,7 +69,7 @@ export async function POST(req: NextRequest) {
         tenantId,
         studentId: gradeData.studentId,
         teacherId: teacher.id,
-        subjectId: classSubject.subjectId,
+        subjectId: subjectId,
         gradeType: 'ORAL', // Default type
         score: gradeData.grade,
         maxScore: 5,

@@ -34,22 +34,31 @@ export async function POST(req: NextRequest) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    // Get the first classSubject for this teacher and class to find subjectId
+    // Get classId and subjectId from the first record
     const classId = attendanceRecords[0]?.classId
+    const subjectId = attendanceRecords[0]?.subjectId
+    
     if (!classId) {
       return NextResponse.json({ error: 'Class ID required' }, { status: 400 })
     }
 
-    const classSubject = await db.classSubject.findFirst({
+    if (!subjectId) {
+      return NextResponse.json({ error: 'Subject ID required' }, { status: 400 })
+    }
+
+    // Verify teacher teaches this class and subject via Schedule (constructor)
+    const schedule = await db.schedule.findFirst({
       where: {
         classId,
+        subjectId,
         teacherId: teacher.id,
+        type: 'LESSON'
       },
     })
 
-    if (!classSubject) {
+    if (!schedule) {
       return NextResponse.json(
-        { error: 'You do not teach this class' },
+        { error: 'You do not teach this subject in this class' },
         { status: 403 }
       )
     }
@@ -59,7 +68,8 @@ export async function POST(req: NextRequest) {
     await db.attendance.deleteMany({
       where: {
         teacherId: teacher.id,
-        studentId: { in: studentIds },
+        classId,
+        subjectId,
         date: today,
       },
     })
@@ -71,7 +81,7 @@ export async function POST(req: NextRequest) {
         studentId: record.studentId,
         teacherId: teacher.id,
         classId: record.classId,
-        subjectId: classSubject.subjectId,
+        subjectId: subjectId,
         date: today,
         status: record.status,
       })),
