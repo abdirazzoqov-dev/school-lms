@@ -120,6 +120,9 @@ export function MarkAttendanceForm({ classes, subjects, teachers, timeSlots }: M
     setIsSubmitting(true)
 
     try {
+      // Parse time slot
+      const [startTime, endTime] = selectedTimeSlot.split('-')
+      
       const response = await fetch('/api/attendance/bulk', {
         method: 'POST',
         headers: {
@@ -130,6 +133,8 @@ export function MarkAttendanceForm({ classes, subjects, teachers, timeSlots }: M
           subjectId: selectedSubjectId,
           teacherId: selectedTeacherId,
           date: selectedDate,
+          startTime, // NEW: Add start time
+          endTime,   // NEW: Add end time
           records: selectedClass.students.map(student => ({
             studentId: student.id,
             status: attendanceRecords[student.id]?.status || 'PRESENT',

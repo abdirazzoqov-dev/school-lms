@@ -9,6 +9,8 @@ const bulkAttendanceSchema = z.object({
   subjectId: z.string(),
   teacherId: z.string(),
   date: z.string(),
+  startTime: z.string().optional(), // NEW: Start time
+  endTime: z.string().optional(),   // NEW: End time
   records: z.array(
     z.object({
       studentId: z.string(),
@@ -91,25 +93,27 @@ export async function POST(req: NextRequest) {
 
     const date = new Date(validatedData.date)
 
-    // Check if attendance already exists for this date/class/subject
+    // Check if attendance already exists for this date/class/subject/time
+    const existingWhere: any = {
+      tenantId,
+      classId: validatedData.classId,
+      subjectId: validatedData.subjectId,
+      date,
+    }
+    
+    // Add time filter if provided
+    if (validatedData.startTime) {
+      existingWhere.startTime = validatedData.startTime
+    }
+    
     const existingRecords = await db.attendance.findMany({
-      where: {
-        tenantId,
-        classId: validatedData.classId,
-        subjectId: validatedData.subjectId,
-        date,
-      },
+      where: existingWhere,
     })
 
     // If records exist, delete them first (update scenario)
     if (existingRecords.length > 0) {
       await db.attendance.deleteMany({
-        where: {
-          tenantId,
-          classId: validatedData.classId,
-          subjectId: validatedData.subjectId,
-          date,
-        },
+        where: existingWhere,
       })
     }
 
@@ -123,6 +127,8 @@ export async function POST(req: NextRequest) {
       date,
       status: record.status,
       notes: record.notes || null,
+      startTime: validatedData.startTime || null,
+      endTime: validatedData.endTime || null,
     }))
 
     await db.attendance.createMany({

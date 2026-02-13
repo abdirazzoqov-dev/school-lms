@@ -177,35 +177,14 @@ export default async function AttendancePage({
   )
 
   // NEW: Filter attendances by time slot if specified
-  // We need to check against Schedule records to match time
+  // Now we can filter directly from Attendance table (no Schedule join needed)
   let filteredAttendances = attendances
   
   if (timeSlot) {
-    const [startTime, endTime] = timeSlot.split('-')
+    const [startTime] = timeSlot.split('-')
     
-    // Get schedules matching this time slot
-    const matchingSchedules = await db.schedule.findMany({
-      where: {
-        tenantId,
-        startTime,
-        endTime,
-        type: 'LESSON',
-      },
-      select: {
-        classId: true,
-        subjectId: true,
-        teacherId: true,
-      },
-    })
-    
-    // Filter attendances that match the schedule criteria
-    filteredAttendances = attendances.filter(att => 
-      matchingSchedules.some(sch => 
-        sch.classId === att.classId && 
-        sch.subjectId === att.subjectId &&
-        sch.teacherId === att.teacherId
-      )
-    )
+    // Filter by startTime directly
+    filteredAttendances = attendances.filter(att => att.startTime === startTime)
   }
   
   // Calculate statistics from filtered attendances

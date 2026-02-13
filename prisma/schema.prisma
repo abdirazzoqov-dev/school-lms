@@ -745,11 +745,15 @@ model Attendance {
   date   DateTime         @db.Date
   status AttendanceStatus
   notes  String?
+  
+  // Dars vaqti (constructor'dan)
+  startTime String? // "08:00"
+  endTime   String? // "08:55"
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([studentId, classId, subjectId, date])
+  @@unique([studentId, classId, subjectId, date, startTime])
   @@index([tenantId])
   @@index([studentId])
   @@index([classId])
@@ -759,6 +763,7 @@ model Attendance {
   @@index([status])
   @@index([classId, date])
   @@index([studentId, date])
+  @@index([startTime])
 }
 
 // GRADE - Baholar
