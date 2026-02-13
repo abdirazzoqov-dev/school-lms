@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/setup-env.js && prisma db push --accept-data-loss && prisma generate && next build",
+    "build": "prisma db push --accept-data-loss && prisma generate && next build",
     "vercel-build": "node scripts/vercel-build.js",
     "netlify-build": "node scripts/vercel-build.js",
     "start": "next start",
@@ -16,7 +16,7 @@
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
     "db:seed": "tsx prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "node scripts/setup-env.js && prisma generate"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
