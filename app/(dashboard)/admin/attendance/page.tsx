@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ClipboardCheck, Plus, TrendingUp, Users, UserCheck, UserX, Clock, FileText } from 'lucide-react'
+import { ClipboardCheck, Plus, TrendingUp, Users, UserCheck, UserX, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { AttendanceFilters } from './attendance-filters'
@@ -233,20 +233,12 @@ export default async function AttendancePage({
             O'quvchilar davomati va statistika
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/admin/attendance/mark">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Davomat Belgilash
-            </Button>
-          </Link>
-          <Link href="/admin/attendance/reports">
-            <Button variant="outline" className="gap-2">
-              <FileText className="h-4 w-4" />
-              Hisobotlar
-            </Button>
-          </Link>
-        </div>
+        <Link href="/admin/attendance/mark">
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
+            Davomat Belgilash
+          </Button>
+        </Link>
       </div>
 
       {/* Statistics Cards */}
