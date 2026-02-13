@@ -29,18 +29,25 @@ interface Subject {
   code: string
 }
 
+interface TimeSlot {
+  value: string // e.g., "08:00-08:55"
+  label: string // e.g., "08:00 - 08:55"
+}
+
 interface AttendanceFiltersProps {
   classes: Class[]
   subjects: Subject[]
+  timeSlots: TimeSlot[]
   searchParams: {
     date?: string
     period?: string
     classId?: string
     subjectId?: string
+    timeSlot?: string
   }
 }
 
-export function AttendanceFilters({ classes, subjects, searchParams }: AttendanceFiltersProps) {
+export function AttendanceFilters({ classes, subjects, timeSlots, searchParams }: AttendanceFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
   const urlSearchParams = useSearchParams()
@@ -60,7 +67,7 @@ export function AttendanceFilters({ classes, subjects, searchParams }: Attendanc
     router.push(`${pathname}?date=${today}&period=day`)
   }
 
-  const hasActiveFilters = searchParams.classId || searchParams.subjectId || 
+  const hasActiveFilters = searchParams.classId || searchParams.subjectId || searchParams.timeSlot ||
     (searchParams.period && searchParams.period !== 'day')
 
   return (
@@ -84,7 +91,7 @@ export function AttendanceFilters({ classes, subjects, searchParams }: Attendanc
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {/* Date */}
             <div className="space-y-2">
               <Label className="text-xs">Sana</Label>
@@ -158,6 +165,27 @@ export function AttendanceFilters({ classes, subjects, searchParams }: Attendanc
                 </SelectContent>
               </Select>
             </div>
+
+            {/* NEW: Time Slot Filter */}
+            <div className="space-y-2">
+              <Label className="text-xs">Dars Vaqti</Label>
+              <Select
+                value={searchParams.timeSlot || 'all'}
+                onValueChange={(value) => updateSearchParams('timeSlot', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Barcha darslar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Barcha darslar</SelectItem>
+                  {timeSlots.map((slot, index) => (
+                    <SelectItem key={slot.value} value={slot.value}>
+                      {index + 1}-dars: {slot.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Active Filters Display */}
@@ -177,6 +205,11 @@ export function AttendanceFilters({ classes, subjects, searchParams }: Attendanc
               {searchParams.subjectId && (
                 <Badge variant="secondary">
                   {subjects.find(s => s.id === searchParams.subjectId)?.name}
+                </Badge>
+              )}
+              {searchParams.timeSlot && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                  {timeSlots.findIndex(t => t.value === searchParams.timeSlot) + 1}-dars: {searchParams.timeSlot}
                 </Badge>
               )}
             </div>

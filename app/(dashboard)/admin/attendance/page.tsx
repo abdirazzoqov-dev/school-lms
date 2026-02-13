@@ -15,6 +15,7 @@ interface SearchParams {
   period?: 'day' | 'week' | 'month'
   classId?: string
   subjectId?: string
+  timeSlot?: string // NEW: time slot filter (e.g., "08:00-08:55")
 }
 
 // Optimized caching: Cache for 30 seconds for attendance data ⚡
@@ -39,6 +40,7 @@ export default async function AttendancePage({
   const period = searchParams.period || 'day'
   const classId = searchParams.classId
   const subjectId = searchParams.subjectId
+  const timeSlot = searchParams.timeSlot // NEW: time slot
 
   // Calculate date range based on period
   let startDate: Date
@@ -79,7 +81,7 @@ export default async function AttendancePage({
   }
 
   // Get attendance records
-  const [attendances, classes, subjects, totalStudents] = await Promise.all([
+  const [attendances, classes, subjects, totalStudents, timeSlots] = await Promise.all([
     db.attendance.findMany({
       where: whereClause,
       include: {
@@ -146,19 +148,77 @@ export default async function AttendancePage({
         ...(classId && { classId }),
       },
     }),
+    // NEW: Get unique time slots from schedules
+    db.schedule.findMany({
+      where: {
+        tenantId,
+        type: 'LESSON',
+      },
+      select: {
+        startTime: true,
+        endTime: true,
+      },
+      distinct: ['startTime', 'endTime'],
+      orderBy: {
+        startTime: 'asc',
+      },
+    }),
   ])
 
-  // Calculate statistics
-  const totalRecords = attendances.length
-  const presentCount = attendances.filter((a) => a.status === 'PRESENT').length
-  const absentCount = attendances.filter((a) => a.status === 'ABSENT').length
-  const lateCount = attendances.filter((a) => a.status === 'LATE').length
-  const excusedCount = attendances.filter((a) => a.status === 'EXCUSED').length
+  // NEW: Format time slots for filter dropdown
+  const formattedTimeSlots = timeSlots.map(slot => ({
+    value: `${slot.startTime}-${slot.endTime}`,
+    label: `${slot.startTime} - ${slot.endTime}`,
+  }))
+  
+  // Remove duplicates
+  const uniqueTimeSlots = Array.from(
+    new Map(formattedTimeSlots.map(item => [item.value, item])).values()
+  )
+
+  // NEW: Filter attendances by time slot if specified
+  // We need to check against Schedule records to match time
+  let filteredAttendances = attendances
+  
+  if (timeSlot) {
+    const [startTime, endTime] = timeSlot.split('-')
+    
+    // Get schedules matching this time slot
+    const matchingSchedules = await db.schedule.findMany({
+      where: {
+        tenantId,
+        startTime,
+        endTime,
+        type: 'LESSON',
+      },
+      select: {
+        classId: true,
+        subjectId: true,
+        teacherId: true,
+      },
+    })
+    
+    // Filter attendances that match the schedule criteria
+    filteredAttendances = attendances.filter(att => 
+      matchingSchedules.some(sch => 
+        sch.classId === att.classId && 
+        sch.subjectId === att.subjectId &&
+        sch.teacherId === att.teacherId
+      )
+    )
+  }
+  
+  // Calculate statistics from filtered attendances
+  const totalRecords = filteredAttendances.length
+  const presentCount = filteredAttendances.filter((a) => a.status === 'PRESENT').length
+  const absentCount = filteredAttendances.filter((a) => a.status === 'ABSENT').length
+  const lateCount = filteredAttendances.filter((a) => a.status === 'LATE').length
+  const excusedCount = filteredAttendances.filter((a) => a.status === 'EXCUSED').length
 
   const attendanceRate = totalRecords > 0 ? (presentCount / totalRecords) * 100 : 0
 
   // Get unique dates for day view
-  const uniqueDates = [...new Set(attendances.map((a) => a.date.toISOString().split('T')[0]))]
+  const uniqueDates = [...new Set(filteredAttendances.map((a) => a.date.toISOString().split('T')[0]))]
 
   return (
     <div className="space-y-6">
@@ -273,6 +333,7 @@ export default async function AttendancePage({
       <AttendanceFilters
         classes={classes}
         subjects={subjects}
+        timeSlots={uniqueTimeSlots}
         searchParams={searchParams}
       />
 
@@ -288,7 +349,7 @@ export default async function AttendancePage({
                 {period === 'month' && `Oy: ${startDate.toLocaleDateString('uz-UZ', { month: 'long', year: 'numeric' })}`}
               </CardDescription>
             </div>
-            {attendances.length > 0 && (
+            {filteredAttendances.length > 0 && (
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-green-500" />
@@ -312,7 +373,7 @@ export default async function AttendancePage({
         </CardHeader>
         <CardContent>
           <AttendanceTable
-            attendances={attendances}
+            attendances={filteredAttendances}
             period={period}
             uniqueDates={uniqueDates}
           />
