@@ -48,19 +48,26 @@ interface Teacher {
   } | null
 }
 
+interface TimeSlot {
+  value: string // e.g., "08:00-08:55"
+  label: string // e.g., "08:00 - 08:55"
+}
+
 interface MarkAttendanceFormProps {
   classes: Class[]
   subjects: Subject[]
   teachers: Teacher[]
+  timeSlots: TimeSlot[]
 }
 
-export function MarkAttendanceForm({ classes, subjects, teachers }: MarkAttendanceFormProps) {
+export function MarkAttendanceForm({ classes, subjects, teachers, timeSlots }: MarkAttendanceFormProps) {
   const router = useRouter()
   const { toast } = useToast()
   
   const [selectedClassId, setSelectedClassId] = useState('')
   const [selectedSubjectId, setSelectedSubjectId] = useState('')
   const [selectedTeacherId, setSelectedTeacherId] = useState('')
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState('') // NEW
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -92,11 +99,11 @@ export function MarkAttendanceForm({ classes, subjects, teachers }: MarkAttendan
   }
 
   const handleSubmit = async () => {
-    if (!selectedClassId || !selectedSubjectId || !selectedTeacherId) {
+    if (!selectedClassId || !selectedSubjectId || !selectedTeacherId || !selectedTimeSlot) {
       toast({
         variant: 'destructive',
         title: 'Xato!',
-        description: 'Iltimos, barcha maydonlarni to\'ldiring',
+        description: 'Iltimos, barcha maydonlarni to\'ldiring (sinf, fan, o\'qituvchi, dars vaqti)',
       })
       return
     }
@@ -178,7 +185,7 @@ export function MarkAttendanceForm({ classes, subjects, teachers }: MarkAttendan
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="space-y-2">
               <Label>Sana *</Label>
               <Input
@@ -235,12 +242,29 @@ export function MarkAttendanceForm({ classes, subjects, teachers }: MarkAttendan
                 </SelectContent>
               </Select>
             </div>
+
+            {/* NEW: Time Slot Selector */}
+            <div className="space-y-2">
+              <Label>Dars Vaqti *</Label>
+              <Select value={selectedTimeSlot} onValueChange={setSelectedTimeSlot}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Dars vaqtini tanlang" />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeSlots.map((slot, index) => (
+                    <SelectItem key={slot.value} value={slot.value}>
+                      {index + 1}-dars: {slot.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Students Attendance */}
-      {selectedClass && selectedClass.students.length > 0 && (
+      {selectedClass && selectedClass.students.length > 0 && selectedTimeSlot && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -250,7 +274,7 @@ export function MarkAttendanceForm({ classes, subjects, teachers }: MarkAttendan
                   2. O'quvchilar Davomati ({selectedClass.students.length})
                 </CardTitle>
                 <CardDescription>
-                  Har bir o'quvchi uchun davomatni belgilang
+                  Har bir o'quvchi uchun davomatni belgilang - {selectedTimeSlot.split('-')[0]} - {selectedTimeSlot.split('-')[1]}
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">

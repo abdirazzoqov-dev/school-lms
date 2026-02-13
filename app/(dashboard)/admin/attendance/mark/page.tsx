@@ -70,6 +70,33 @@ export default async function MarkAttendancePage() {
     },
   })
 
+  // Get unique time slots from schedules
+  const timeSlots = await db.schedule.findMany({
+    where: {
+      tenantId,
+      type: 'LESSON',
+    },
+    select: {
+      startTime: true,
+      endTime: true,
+    },
+    distinct: ['startTime', 'endTime'],
+    orderBy: {
+      startTime: 'asc',
+    },
+  })
+
+  // Format time slots
+  const formattedTimeSlots = timeSlots.map(slot => ({
+    value: `${slot.startTime}-${slot.endTime}`,
+    label: `${slot.startTime} - ${slot.endTime}`,
+  }))
+  
+  // Remove duplicates
+  const uniqueTimeSlots = Array.from(
+    new Map(formattedTimeSlots.map(item => [item.value, item])).values()
+  )
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -95,6 +122,7 @@ export default async function MarkAttendancePage() {
         classes={classes}
         subjects={subjects}
         teachers={teachers}
+        timeSlots={uniqueTimeSlots}
       />
     </div>
   )
