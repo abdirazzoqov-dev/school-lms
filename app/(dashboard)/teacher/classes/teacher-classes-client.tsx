@@ -83,7 +83,14 @@ export function TeacherClassesClient({ classes }: Props) {
   const getTimeSlots = () => {
     if (!selectedClass || !selectedSubject) return []
     
-    const slots = selectedClass.schedules
+    type TimeSlot = {
+      startTime: string
+      endTime: string
+      dayOfWeek: number
+      roomNumber: string | null
+    }
+    
+    const slots: TimeSlot[] = selectedClass.schedules
       .filter(s => s.subjectId === selectedSubject.id)
       .map(s => ({
         startTime: s.startTime,
@@ -98,7 +105,7 @@ export function TeacherClassesClient({ classes }: Props) {
           acc.push(slot)
         }
         return acc
-      }, [] as typeof slots)
+      }, [] as TimeSlot[])
       // Sort by start time
       .sort((a, b) => a.startTime.localeCompare(b.startTime))
 
