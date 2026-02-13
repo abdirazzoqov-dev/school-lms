@@ -129,6 +129,7 @@ export default function TeacherClassDetailPage() {
         status,
         date: new Date().toISOString(),
         classId,
+        subjectId: subjectId || undefined, // Add subjectId
       }))
 
       const res = await fetch('/api/teacher/attendance', {
@@ -171,6 +172,7 @@ export default function TeacherClassDetailPage() {
           studentId,
           grade: parseInt(grade),
           classId,
+          subjectId: subjectId || undefined, // Add subjectId
         }))
 
       const res = await fetch('/api/teacher/grades', {
