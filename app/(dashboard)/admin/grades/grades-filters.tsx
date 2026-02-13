@@ -4,6 +4,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -11,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Filter, X } from 'lucide-react'
+import { Filter, X, Calendar } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 interface Class {
@@ -39,17 +40,19 @@ interface GradesFiltersProps {
   subjects: Subject[]
   timeSlots: TimeSlot[]
   searchParams: {
+    date?: string
+    period?: 'day' | 'week' | 'month'
     classId?: string
     subjectId?: string
     quarter?: string
     gradeType?: string
-    academicYear?: string
     timeSlot?: string
   }
-  academicYear: string
+  selectedDate: string
+  period: 'day' | 'week' | 'month'
 }
 
-export function GradesFilters({ classes, subjects, timeSlots, searchParams, academicYear }: GradesFiltersProps) {
+export function GradesFilters({ classes, subjects, timeSlots, searchParams, selectedDate, period }: GradesFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
   const urlSearchParams = useSearchParams()
@@ -65,7 +68,7 @@ export function GradesFilters({ classes, subjects, timeSlots, searchParams, acad
   }
 
   const clearFilters = () => {
-    router.push(`${pathname}?academicYear=${academicYear}`)
+    router.push(`${pathname}?date=${selectedDate}&period=${period}`)
   }
 
   const hasActiveFilters = searchParams.classId || searchParams.subjectId || 
@@ -92,20 +95,34 @@ export function GradesFilters({ classes, subjects, timeSlots, searchParams, acad
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-            {/* Academic Year */}
+            {/* Date */}
             <div className="space-y-2">
-              <Label className="text-xs">O'quv yili</Label>
+              <Label className="text-xs flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                Sana
+              </Label>
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => updateSearchParams('date', e.target.value)}
+                className="w-full"
+              />
+            </div>
+
+            {/* Period */}
+            <div className="space-y-2">
+              <Label className="text-xs">Davr</Label>
               <Select
-                value={searchParams.academicYear || academicYear}
-                onValueChange={(value) => updateSearchParams('academicYear', value)}
+                value={period}
+                onValueChange={(value) => updateSearchParams('period', value)}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="2024-2025">2024-2025</SelectItem>
-                  <SelectItem value="2023-2024">2023-2024</SelectItem>
-                  <SelectItem value="2022-2023">2022-2023</SelectItem>
+                  <SelectItem value="day">Kun</SelectItem>
+                  <SelectItem value="week">Hafta</SelectItem>
+                  <SelectItem value="month">Oy</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -148,26 +165,6 @@ export function GradesFilters({ classes, subjects, timeSlots, searchParams, acad
                       {subject.name}
                     </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Quarter Filter */}
-            <div className="space-y-2">
-              <Label className="text-xs">Chorak</Label>
-              <Select
-                value={searchParams.quarter || 'all'}
-                onValueChange={(value) => updateSearchParams('quarter', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Barcha choraklar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Barcha choraklar</SelectItem>
-                  <SelectItem value="1">1-chorak</SelectItem>
-                  <SelectItem value="2">2-chorak</SelectItem>
-                  <SelectItem value="3">3-chorak</SelectItem>
-                  <SelectItem value="4">4-chorak</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -228,11 +225,6 @@ export function GradesFilters({ classes, subjects, timeSlots, searchParams, acad
               {searchParams.subjectId && (
                 <Badge variant="secondary">
                   {subjects.find(s => s.id === searchParams.subjectId)?.name}
-                </Badge>
-              )}
-              {searchParams.quarter && (
-                <Badge variant="secondary">
-                  {searchParams.quarter}-chorak
                 </Badge>
               )}
               {searchParams.gradeType && (

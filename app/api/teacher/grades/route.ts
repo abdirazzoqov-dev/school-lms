@@ -62,7 +62,16 @@ export async function POST(req: NextRequest) {
 
     // Create grade records
     const today = new Date()
-    const academicYear = `${today.getFullYear()}-${today.getFullYear() + 1}`
+    today.setHours(0, 0, 0, 0) // Normalize to start of day
+    const currentYear = today.getFullYear()
+    const currentMonth = today.getMonth()
+    const academicYear = `${currentMonth >= 8 ? currentYear : currentYear - 1}-${currentMonth >= 8 ? currentYear + 1 : currentYear}`
+    
+    // Get current quarter (1=Sep-Nov, 2=Dec-Feb, 3=Mar-May, 4=Jun-Aug)
+    let quarter = 1
+    if (currentMonth >= 11 || currentMonth <= 1) quarter = 2
+    else if (currentMonth >= 2 && currentMonth <= 4) quarter = 3
+    else if (currentMonth >= 5 && currentMonth <= 7) quarter = 4
     
     const created = await db.grade.createMany({
       data: grades.map((gradeData) => ({
@@ -74,7 +83,7 @@ export async function POST(req: NextRequest) {
         score: gradeData.grade,
         maxScore: 5,
         percentage: (gradeData.grade / 5) * 100,
-        quarter: 1,
+        quarter: quarter,
         academicYear,
         date: today,
       })),

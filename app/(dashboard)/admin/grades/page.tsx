@@ -10,11 +10,12 @@ import { GradesFilters } from './grades-filters'
 import { GradesTable } from './grades-table'
 
 interface SearchParams {
+  date?: string
+  period?: 'day' | 'week' | 'month'
   classId?: string
   subjectId?: string
   quarter?: string
   gradeType?: string
-  academicYear?: string
   timeSlot?: string
 }
 
@@ -36,15 +37,38 @@ export default async function GradesPage({
   const tenantId = session.user.tenantId!
   const timeSlot = searchParams.timeSlot
 
-  // Current academic year
-  const currentYear = new Date().getFullYear()
-  const currentMonth = new Date().getMonth()
-  const academicYear = searchParams.academicYear || `${currentMonth >= 8 ? currentYear : currentYear - 1}-${currentMonth >= 8 ? currentYear + 1 : currentYear}`
+  // Default to today
+  const selectedDate = searchParams.date || new Date().toISOString().split('T')[0]
+  const period = searchParams.period || 'day'
+
+  // Calculate date range based on period
+  let startDate: Date
+  let endDate: Date
+
+  const baseDate = new Date(selectedDate)
+  
+  if (period === 'week') {
+    // Get week start (Monday)
+    const day = baseDate.getDay()
+    const diff = baseDate.getDate() - day + (day === 0 ? -6 : 1)
+    startDate = new Date(baseDate.setDate(diff))
+    endDate = new Date(startDate)
+    endDate.setDate(startDate.getDate() + 6)
+  } else if (period === 'month') {
+    startDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1)
+    endDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0)
+  } else {
+    startDate = baseDate
+    endDate = baseDate
+  }
 
   // Build where clause
   const whereClause: any = {
     tenantId,
-    academicYear,
+    date: {
+      gte: startDate,
+      lte: endDate,
+    },
   }
 
   if (searchParams.classId) {
@@ -63,6 +87,24 @@ export default async function GradesPage({
 
   if (searchParams.gradeType) {
     whereClause.gradeType = searchParams.gradeType
+  }
+
+  // Get unique dates in range for day/week/month view
+  const uniqueDates: string[] = []
+  if (period === 'day') {
+    uniqueDates.push(selectedDate)
+  } else if (period === 'week') {
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startDate)
+      date.setDate(startDate.getDate() + i)
+      uniqueDates.push(date.toISOString().split('T')[0])
+    }
+  } else {
+    const daysInMonth = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0).getDate()
+    for (let i = 1; i <= daysInMonth; i++) {
+      const date = new Date(baseDate.getFullYear(), baseDate.getMonth(), i)
+      uniqueDates.push(date.toISOString().split('T')[0])
+    }
   }
 
   // Get grades
@@ -203,7 +245,7 @@ export default async function GradesPage({
           <CardContent>
             <div className="text-3xl font-bold text-blue-700">{totalGrades}</div>
             <p className="text-xs text-blue-600 mt-1">
-              {academicYear}
+              {period === 'day' ? selectedDate : period === 'week' ? 'Haftalik' : 'Oylik'}
             </p>
           </CardContent>
         </Card>
@@ -277,7 +319,8 @@ export default async function GradesPage({
         subjects={subjects}
         timeSlots={uniqueTimeSlots}
         searchParams={searchParams}
-        academicYear={academicYear}
+        selectedDate={selectedDate}
+        period={period}
       />
 
       {/* Grades Table */}
