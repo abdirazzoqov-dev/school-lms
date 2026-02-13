@@ -28,20 +28,28 @@ interface Subject {
   code: string
 }
 
+interface TimeSlot {
+  label: string
+  value: string
+  lessonNumber: number
+}
+
 interface GradesFiltersProps {
   classes: Class[]
   subjects: Subject[]
+  timeSlots: TimeSlot[]
   searchParams: {
     classId?: string
     subjectId?: string
     quarter?: string
     gradeType?: string
     academicYear?: string
+    timeSlot?: string
   }
   academicYear: string
 }
 
-export function GradesFilters({ classes, subjects, searchParams, academicYear }: GradesFiltersProps) {
+export function GradesFilters({ classes, subjects, timeSlots, searchParams, academicYear }: GradesFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
   const urlSearchParams = useSearchParams()
@@ -61,7 +69,7 @@ export function GradesFilters({ classes, subjects, searchParams, academicYear }:
   }
 
   const hasActiveFilters = searchParams.classId || searchParams.subjectId || 
-    searchParams.quarter || searchParams.gradeType
+    searchParams.quarter || searchParams.gradeType || searchParams.timeSlot
 
   return (
     <Card>
@@ -83,7 +91,7 @@ export function GradesFilters({ classes, subjects, searchParams, academicYear }:
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             {/* Academic Year */}
             <div className="space-y-2">
               <Label className="text-xs">O'quv yili</Label>
@@ -185,6 +193,27 @@ export function GradesFilters({ classes, subjects, searchParams, academicYear }:
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Time Slot Filter */}
+            <div className="space-y-2">
+              <Label className="text-xs">Dars Vaqti</Label>
+              <Select
+                value={searchParams.timeSlot || 'all'}
+                onValueChange={(value) => updateSearchParams('timeSlot', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Barcha darslar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Barcha darslar</SelectItem>
+                  {timeSlots.map((slot) => (
+                    <SelectItem key={slot.value} value={slot.value}>
+                      {slot.lessonNumber}-dars: {slot.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Active Filters Display */}
@@ -209,6 +238,11 @@ export function GradesFilters({ classes, subjects, searchParams, academicYear }:
               {searchParams.gradeType && (
                 <Badge variant="secondary">
                   {searchParams.gradeType}
+                </Badge>
+              )}
+              {searchParams.timeSlot && (
+                <Badge variant="secondary">
+                  {timeSlots.find(s => s.value === searchParams.timeSlot)?.lessonNumber}-dars: {timeSlots.find(s => s.value === searchParams.timeSlot)?.label}
                 </Badge>
               )}
             </div>

@@ -9,6 +9,8 @@ const bulkGradesSchema = z.object({
   subjectId: z.string(),
   teacherId: z.string(),
   date: z.string(),
+  startTime: z.string(),
+  endTime: z.string(),
   gradeType: z.enum(['ORAL', 'WRITTEN', 'TEST', 'EXAM', 'QUARTER', 'FINAL']),
   maxScore: z.number().min(1),
   quarter: z.number().min(1).max(4).optional().nullable(),
@@ -109,6 +111,8 @@ export async function POST(req: NextRequest) {
       quarter: validatedData.quarter,
       academicYear: validatedData.academicYear,
       date,
+      startTime: validatedData.startTime,
+      endTime: validatedData.endTime,
       notes: record.notes || null,
     }))
 

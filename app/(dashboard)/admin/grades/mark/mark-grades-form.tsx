@@ -47,19 +47,27 @@ interface Teacher {
   } | null
 }
 
+interface TimeSlot {
+  label: string
+  value: string
+  lessonNumber: number
+}
+
 interface MarkGradesFormProps {
   classes: Class[]
   subjects: Subject[]
   teachers: Teacher[]
+  timeSlots: TimeSlot[]
 }
 
-export function MarkGradesForm({ classes, subjects, teachers }: MarkGradesFormProps) {
+export function MarkGradesForm({ classes, subjects, teachers, timeSlots }: MarkGradesFormProps) {
   const router = useRouter()
   const { toast } = useToast()
   
   const [selectedClassId, setSelectedClassId] = useState('')
   const [selectedSubjectId, setSelectedSubjectId] = useState('')
   const [selectedTeacherId, setSelectedTeacherId] = useState('')
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState('')
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [gradeType, setGradeType] = useState<'ORAL' | 'WRITTEN' | 'TEST' | 'EXAM' | 'QUARTER' | 'FINAL'>('ORAL')
   const [quarter, setQuarter] = useState('1')
@@ -72,6 +80,7 @@ export function MarkGradesForm({ classes, subjects, teachers }: MarkGradesFormPr
   }>>({})
 
   const selectedClass = classes.find(c => c.id === selectedClassId)
+  const selectedSlot = timeSlots.find(slot => slot.value === selectedTimeSlot)
 
   const handleScoreChange = (studentId: string, score: number) => {
     setGradeRecords(prev => ({
@@ -105,11 +114,11 @@ export function MarkGradesForm({ classes, subjects, teachers }: MarkGradesFormPr
   }
 
   const handleSubmit = async () => {
-    if (!selectedClassId || !selectedSubjectId || !selectedTeacherId) {
+    if (!selectedClassId || !selectedSubjectId || !selectedTeacherId || !selectedTimeSlot) {
       toast({
         variant: 'destructive',
         title: 'Xato!',
-        description: 'Iltimos, barcha maydonlarni to\'ldiring',
+        description: 'Iltimos, barcha maydonlarni to\'ldiring (sinf, fan, o\'qituvchi, dars vaqti)',
       })
       return
     }
@@ -149,6 +158,8 @@ export function MarkGradesForm({ classes, subjects, teachers }: MarkGradesFormPr
       const currentMonth = new Date().getMonth()
       const academicYear = `${currentMonth >= 8 ? currentYear : currentYear - 1}-${currentMonth >= 8 ? currentYear + 1 : currentYear}`
 
+      const [startTime, endTime] = selectedTimeSlot.split('-')
+
       const response = await fetch('/api/grades/bulk', {
         method: 'POST',
         headers: {
@@ -159,6 +170,8 @@ export function MarkGradesForm({ classes, subjects, teachers }: MarkGradesFormPr
           subjectId: selectedSubjectId,
           teacherId: selectedTeacherId,
           date: selectedDate,
+          startTime,
+          endTime,
           gradeType,
           maxScore,
           quarter: ['QUARTER', 'FINAL'].includes(gradeType) ? parseInt(quarter) : null,
@@ -205,7 +218,7 @@ export function MarkGradesForm({ classes, subjects, teachers }: MarkGradesFormPr
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label>Sana *</Label>
               <Input
@@ -257,6 +270,22 @@ export function MarkGradesForm({ classes, subjects, teachers }: MarkGradesFormPr
                   {teachers.map((teacher) => (
                     <SelectItem key={teacher.id} value={teacher.id}>
                       {teacher.user?.fullName || 'N/A'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Dars Vaqti *</Label>
+              <Select value={selectedTimeSlot} onValueChange={setSelectedTimeSlot}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Dars vaqtini tanlang" />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeSlots.map((slot) => (
+                    <SelectItem key={slot.value} value={slot.value}>
+                      {slot.lessonNumber}-dars: {slot.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -332,7 +361,7 @@ export function MarkGradesForm({ classes, subjects, teachers }: MarkGradesFormPr
                   2. O'quvchilarga Baho Qo'ying ({selectedClass.students.length})
                 </CardTitle>
                 <CardDescription>
-                  Ball kiriting (0 dan {maxScore} gacha)
+                  Ball kiriting (0 dan {maxScore} gacha) {selectedSlot && `- ${selectedSlot.label}`}
                 </CardDescription>
               </div>
               <div className="text-sm space-y-1 text-right">
@@ -471,7 +500,7 @@ export function MarkGradesForm({ classes, subjects, teachers }: MarkGradesFormPr
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isSubmitting || !selectedClassId || !selectedSubjectId || !selectedTeacherId}
+            disabled={isSubmitting || !selectedClassId || !selectedSubjectId || !selectedTeacherId || !selectedTimeSlot}
             className="gap-2 bg-yellow-500 hover:bg-yellow-600"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}

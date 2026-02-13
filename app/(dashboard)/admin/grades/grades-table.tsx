@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Eye, Edit, MoreHorizontal, Award } from 'lucide-react'
+import { Eye, Edit, MoreHorizontal, Award, Download } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import Link from 'next/link'
+import * as XLSX from 'xlsx'
 
 interface Grade {
   id: string
@@ -30,6 +31,8 @@ interface Grade {
   quarter: number | null
   date: Date
   notes: string | null
+  startTime: string | null
+  endTime: string | null
   student: {
     studentCode: string
     user: {
@@ -86,6 +89,68 @@ export function GradesTable({ grades }: GradesTableProps) {
     }
   }
 
+  const exportToExcel = () => {
+    const ws_data: any[][] = []
+    const filename = `baholar_${new Date().toLocaleDateString('uz-UZ')}.xlsx`
+
+    // Header row
+    ws_data.push([
+      '#', 'O\'quvchi', 'O\'quvchi Kodi', 'Sinf', 'Fan', 'Fan Kodi',
+      'Baho Turi', 'Ball', 'Maksimal Ball', 'Foiz', 'Baho', 
+      'Chorak', 'Sana', 'Dars Vaqti', 'O\'qituvchi', 'Izoh'
+    ])
+
+    // Data rows
+    grades.forEach((grade, index) => {
+      const percentage = Number(grade.percentage || 0)
+      const gradeLevel = percentage >= 90 ? '5 (A\'lo)' : 
+                         percentage >= 70 ? '4 (Yaxshi)' : 
+                         percentage >= 60 ? '3 (Qoniqarli)' : 
+                         '2 (Qoniqarsiz)'
+      
+      const gradeTypeMap: Record<string, string> = {
+        ORAL: 'Og\'zaki',
+        WRITTEN: 'Yozma',
+        TEST: 'Test',
+        EXAM: 'Imtihon',
+        QUARTER: 'Chorak',
+        FINAL: 'Yillik'
+      }
+
+      ws_data.push([
+        index + 1,
+        grade.student.user?.fullName || 'N/A',
+        grade.student.studentCode,
+        grade.student.class?.name || 'N/A',
+        grade.subject.name,
+        grade.subject.code,
+        gradeTypeMap[grade.gradeType] || grade.gradeType,
+        Number(grade.score),
+        Number(grade.maxScore),
+        percentage.toFixed(1) + '%',
+        gradeLevel,
+        grade.quarter ? `${grade.quarter}-chorak` : '-',
+        new Date(grade.date).toLocaleDateString('uz-UZ'),
+        grade.startTime && grade.endTime ? `${grade.startTime}-${grade.endTime}` : '-',
+        grade.teacher.user?.fullName || 'N/A',
+        grade.notes || '-'
+      ])
+    })
+
+    const ws = XLSX.utils.aoa_to_sheet(ws_data)
+    
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 5 }, { wch: 25 }, { wch: 15 }, { wch: 10 }, { wch: 20 }, { wch: 10 },
+      { wch: 12 }, { wch: 8 }, { wch: 12 }, { wch: 8 }, { wch: 15 },
+      { wch: 10 }, { wch: 12 }, { wch: 15 }, { wch: 25 }, { wch: 30 }
+    ]
+
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Baholar')
+    XLSX.writeFile(wb, filename)
+  }
+
   if (grades.length === 0) {
     return (
       <div className="text-center py-12 border rounded-lg">
@@ -106,6 +171,12 @@ export function GradesTable({ grades }: GradesTableProps) {
 
   return (
     <div className="border rounded-lg overflow-hidden">
+      <div className="flex justify-end p-4 border-b bg-muted/30">
+        <Button onClick={exportToExcel} className="gap-2" variant="outline">
+          <Download className="h-4 w-4" />
+          Excel yuklab olish
+        </Button>
+      </div>
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">

@@ -70,6 +70,28 @@ export default async function MarkGradesPage() {
     },
   })
 
+  // Get unique time slots from schedules
+  const timeSlots = await db.schedule.findMany({
+    where: {
+      tenantId,
+      type: 'LESSON',
+    },
+    select: {
+      startTime: true,
+      endTime: true,
+    },
+    distinct: ['startTime', 'endTime'],
+    orderBy: {
+      startTime: 'asc',
+    },
+  })
+
+  const formattedTimeSlots = timeSlots.map((slot, index) => ({
+    label: `${slot.startTime} - ${slot.endTime}`,
+    value: `${slot.startTime}-${slot.endTime}`,
+    lessonNumber: index + 1,
+  }))
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -95,6 +117,7 @@ export default async function MarkGradesPage() {
         classes={classes}
         subjects={subjects}
         teachers={teachers}
+        timeSlots={formattedTimeSlots}
       />
     </div>
   )

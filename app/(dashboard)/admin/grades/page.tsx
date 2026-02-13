@@ -15,6 +15,7 @@ interface SearchParams {
   quarter?: string
   gradeType?: string
   academicYear?: string
+  timeSlot?: string
 }
 
 // Optimized caching: Cache for 30 seconds for grades data ⚡
@@ -33,6 +34,7 @@ export default async function GradesPage({
   }
 
   const tenantId = session.user.tenantId!
+  const timeSlot = searchParams.timeSlot
 
   // Current academic year
   const currentYear = new Date().getFullYear()
@@ -64,7 +66,7 @@ export default async function GradesPage({
   }
 
   // Get grades
-  const [grades, classes, subjects] = await Promise.all([
+  const [grades, classes, subjects, schedules] = await Promise.all([
     db.grade.findMany({
       where: whereClause,
       include: {
@@ -123,18 +125,42 @@ export default async function GradesPage({
       },
       orderBy: { name: 'asc' },
     }),
+    db.schedule.findMany({
+      where: { tenantId, type: 'LESSON' },
+      select: { id: true, startTime: true, endTime: true },
+      distinct: ['startTime', 'endTime'],
+      orderBy: { startTime: 'asc' },
+    }),
   ])
 
+  // Process time slots from schedules
+  const uniqueTimeSlots = Array.from(new Set(schedules.map(s => `${s.startTime}-${s.endTime}`)))
+    .sort()
+    .map((slot, index) => ({
+      label: slot,
+      value: slot,
+      lessonNumber: index + 1,
+    }))
+
+  // Filter grades by time slot if selected
+  let filteredGrades = grades
+  if (timeSlot) {
+    const [startTime, endTime] = timeSlot.split('-')
+    filteredGrades = grades.filter(grade => 
+      grade.startTime === startTime && grade.endTime === endTime
+    )
+  }
+
   // Calculate statistics
-  const totalGrades = grades.length
+  const totalGrades = filteredGrades.length
   const averageScore = totalGrades > 0
-    ? grades.reduce((sum, g) => sum + Number(g.score), 0) / totalGrades
+    ? filteredGrades.reduce((sum, g) => sum + Number(g.score), 0) / totalGrades
     : 0
   
-  const excellentGrades = grades.filter(g => Number(g.percentage) >= 90).length
-  const goodGrades = grades.filter(g => Number(g.percentage) >= 70 && Number(g.percentage) < 90).length
-  const satisfactoryGrades = grades.filter(g => Number(g.percentage) >= 60 && Number(g.percentage) < 70).length
-  const failingGrades = grades.filter(g => Number(g.percentage) < 60).length
+  const excellentGrades = filteredGrades.filter(g => Number(g.percentage) >= 90).length
+  const goodGrades = filteredGrades.filter(g => Number(g.percentage) >= 70 && Number(g.percentage) < 90).length
+  const satisfactoryGrades = filteredGrades.filter(g => Number(g.percentage) >= 60 && Number(g.percentage) < 70).length
+  const failingGrades = filteredGrades.filter(g => Number(g.percentage) < 60).length
 
   return (
     <div className="space-y-6">
@@ -249,6 +275,7 @@ export default async function GradesPage({
       <GradesFilters
         classes={classes}
         subjects={subjects}
+        timeSlots={uniqueTimeSlots}
         searchParams={searchParams}
         academicYear={academicYear}
       />
@@ -286,7 +313,7 @@ export default async function GradesPage({
           </div>
         </CardHeader>
         <CardContent>
-          <GradesTable grades={grades} />
+          <GradesTable grades={filteredGrades} />
         </CardContent>
       </Card>
     </div>
