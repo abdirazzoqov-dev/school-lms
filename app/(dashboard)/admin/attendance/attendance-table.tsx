@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Eye, Edit, MoreHorizontal, ClipboardCheck } from 'lucide-react'
+import { Eye, Edit, MoreHorizontal, ClipboardCheck, FileDown } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import Link from 'next/link'
+import * as XLSX from 'xlsx'
 
 interface Attendance {
   id: string
@@ -84,6 +85,84 @@ export function AttendanceTable({ attendances, period, uniqueDates }: Attendance
     }
   }
 
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'PRESENT': return 'Kelgan'
+      case 'ABSENT': return 'Kelmagan'
+      case 'LATE': return 'Kech keldi'
+      case 'EXCUSED': return 'Sababli'
+      default: return status
+    }
+  }
+
+  const exportToExcel = () => {
+    if (period === 'week' || period === 'month') {
+      // Group by student export
+      const groupedByStudent = attendances.reduce((acc, att) => {
+        const key = att.student.studentCode
+        if (!acc[key]) {
+          acc[key] = {
+            student: att.student,
+            class: att.class,
+            records: [],
+          }
+        }
+        acc[key].records.push(att)
+        return acc
+      }, {} as Record<string, { student: any; class: any; records: Attendance[] }>)
+
+      const excelData = Object.values(groupedByStudent).map((item, index) => {
+        const present = item.records.filter(r => r.status === 'PRESENT').length
+        const absent = item.records.filter(r => r.status === 'ABSENT').length
+        const late = item.records.filter(r => r.status === 'LATE').length
+        const excused = item.records.filter(r => r.status === 'EXCUSED').length
+        const total = item.records.length
+        const attendanceRate = total > 0 ? (present / total) * 100 : 0
+
+        return {
+          '#': index + 1,
+          "O'quvchi": item.student.user?.fullName || 'N/A',
+          "O'quvchi Kodi": item.student.studentCode,
+          'Sinf': item.class.name,
+          'Kelgan': present,
+          'Kelmagan': absent,
+          'Kech': late,
+          'Sababli': excused,
+          'Jami': total,
+          'Foiz': `${attendanceRate.toFixed(1)}%`
+        }
+      })
+
+      const worksheet = XLSX.utils.json_to_sheet(excelData)
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Davomat')
+      
+      const fileName = `davomat_${period}_${new Date().toISOString().split('T')[0]}.xlsx`
+      XLSX.writeFile(workbook, fileName)
+    } else {
+      // Day view export
+      const excelData = attendances.map((att, index) => ({
+        '#': index + 1,
+        "O'quvchi": att.student.user?.fullName || 'N/A',
+        "O'quvchi Kodi": att.student.studentCode,
+        'Sinf': att.class.name,
+        'Fan': att.subject.name,
+        'Fan Kodi': att.subject.code,
+        "O'qituvchi": att.teacher.user?.fullName || 'N/A',
+        'Holat': getStatusText(att.status),
+        'Sana': new Date(att.date).toLocaleDateString('uz-UZ'),
+        'Izoh': att.notes || '-'
+      }))
+
+      const worksheet = XLSX.utils.json_to_sheet(excelData)
+      const workbook = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Davomat')
+      
+      const fileName = `davomat_${new Date().toISOString().split('T')[0]}.xlsx`
+      XLSX.writeFile(workbook, fileName)
+    }
+  }
+
   if (attendances.length === 0) {
     return (
       <div className="text-center py-12 border rounded-lg">
@@ -119,20 +198,29 @@ export function AttendanceTable({ attendances, period, uniqueDates }: Attendance
     }, {} as Record<string, { student: any; class: any; records: Attendance[] }>)
 
     return (
-      <div className="border rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="w-[50px]">#</TableHead>
-              <TableHead>O'quvchi</TableHead>
-              <TableHead>Sinf</TableHead>
-              <TableHead>Kelgan</TableHead>
-              <TableHead>Kelmagan</TableHead>
-              <TableHead>Kech</TableHead>
-              <TableHead>Sababli</TableHead>
-              <TableHead>Foiz</TableHead>
-            </TableRow>
-          </TableHeader>
+      <div className="space-y-4">
+        {/* Excel Export Button */}
+        <div className="flex justify-end">
+          <Button onClick={exportToExcel} variant="outline" className="gap-2">
+            <FileDown className="h-4 w-4" />
+            Excel yuklab olish
+          </Button>
+        </div>
+
+        <div className="border rounded-lg overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="w-[50px]">#</TableHead>
+                <TableHead>O'quvchi</TableHead>
+                <TableHead>Sinf</TableHead>
+                <TableHead>Kelgan</TableHead>
+                <TableHead>Kelmagan</TableHead>
+                <TableHead>Kech</TableHead>
+                <TableHead>Sababli</TableHead>
+                <TableHead>Foiz</TableHead>
+              </TableRow>
+            </TableHeader>
           <TableBody>
             {Object.values(groupedByStudent).map((item, index) => {
               const present = item.records.filter(r => r.status === 'PRESENT').length
@@ -197,13 +285,23 @@ export function AttendanceTable({ attendances, period, uniqueDates }: Attendance
           </TableBody>
         </Table>
       </div>
+      </div>
     )
   }
 
   // Day view - detailed records
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <Table>
+    <div className="space-y-4">
+      {/* Excel Export Button */}
+      <div className="flex justify-end">
+        <Button onClick={exportToExcel} variant="outline" className="gap-2">
+          <FileDown className="h-4 w-4" />
+          Excel yuklab olish
+        </Button>
+      </div>
+
+      <div className="border rounded-lg overflow-hidden">
+        <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
             <TableHead className="w-[50px]">#</TableHead>
@@ -294,6 +392,7 @@ export function AttendanceTable({ attendances, period, uniqueDates }: Attendance
           ))}
         </TableBody>
       </Table>
+    </div>
     </div>
   )
 }
