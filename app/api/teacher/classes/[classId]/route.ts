@@ -18,6 +18,10 @@ export async function GET(
 
     const tenantId = session.user.tenantId!
     const classId = params.classId
+    
+    // Get subjectId from query params
+    const { searchParams } = new URL(req.url)
+    const subjectId = searchParams.get('subjectId')
 
     // Get teacher
     const teacher = await db.teacher.findFirst({
@@ -59,16 +63,34 @@ export async function GET(
       return NextResponse.json({ error: 'Class not found' }, { status: 404 })
     }
 
+    // Get subject data if subjectId provided
+    let subjectData = null
+    if (subjectId) {
+      subjectData = await db.subject.findUnique({
+        where: { id: subjectId },
+        select: {
+          id: true,
+          name: true,
+        },
+      })
+    }
+
     // Get today's attendance for this class
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
+    const attendanceWhere: any = {
+      classId,
+      teacherId: teacher.id,
+      date: today,
+    }
+    
+    if (subjectId) {
+      attendanceWhere.subjectId = subjectId
+    }
+
     const todayAttendance = await db.attendance.findMany({
-      where: {
-        classId,
-        teacherId: teacher.id,
-        date: today,
-      },
+      where: attendanceWhere,
       select: {
         studentId: true,
         status: true,
@@ -76,14 +98,20 @@ export async function GET(
     })
 
     // Get today's grades for this class
-    const todayGrades = await db.grade.findMany({
-      where: {
-        teacherId: teacher.id,
-        date: today,
-        student: {
-          classId,
-        },
+    const gradesWhere: any = {
+      teacherId: teacher.id,
+      date: today,
+      student: {
+        classId,
       },
+    }
+    
+    if (subjectId) {
+      gradesWhere.subjectId = subjectId
+    }
+
+    const todayGrades = await db.grade.findMany({
+      where: gradesWhere,
       select: {
         studentId: true,
         score: true,
@@ -92,6 +120,7 @@ export async function GET(
 
     return NextResponse.json({
       class: classData,
+      subject: subjectData,
       todayAttendance,
       todayGrades,
     })

@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ArrowLeft, Save, Check, X, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, Check, X, Loader2, BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import { useToast } from '@/components/ui/use-toast'
 import { Badge } from '@/components/ui/badge'
@@ -25,12 +25,20 @@ interface ClassData {
   students: Student[]
 }
 
+interface SubjectData {
+  id: string
+  name: string
+}
+
 export default function TeacherClassDetailPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const classId = params.classId as string
+  const subjectId = searchParams.get('subjectId')
 
   const [classData, setClassData] = useState<ClassData | null>(null)
+  const [subjectData, setSubjectData] = useState<SubjectData | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -43,12 +51,16 @@ export default function TeacherClassDetailPage() {
   useEffect(() => {
     loadClassData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [classId])
+  }, [classId, subjectId])
 
   const loadClassData = async () => {
     try {
       setLoading(true)
-      const res = await fetch(`/api/teacher/classes/${classId}`, {
+      const url = subjectId 
+        ? `/api/teacher/classes/${classId}?subjectId=${subjectId}`
+        : `/api/teacher/classes/${classId}`
+      
+      const res = await fetch(url, {
         cache: 'no-store',
         credentials: 'include',
       })
@@ -59,6 +71,7 @@ export default function TeacherClassDetailPage() {
 
       const data = await res.json()
       setClassData(data.class)
+      setSubjectData(data.subject || null)
 
       // Initialize attendance - check today's attendance first
       const initialAttendance: Record<string, 'PRESENT' | 'ABSENT' | 'LATE'> = {}
@@ -214,9 +227,17 @@ export default function TeacherClassDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">{classData.name}</h1>
-          <p className="text-muted-foreground">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-2xl md:text-3xl font-bold">{classData.name}</h1>
+            {subjectData && (
+              <Badge variant="secondary" className="text-base px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                <BookOpen className="h-4 w-4 mr-1.5" />
+                {subjectData.name}
+              </Badge>
+            )}
+          </div>
+          <p className="text-muted-foreground mt-1">
             {classData.students.length} ta o'quvchi
           </p>
         </div>
