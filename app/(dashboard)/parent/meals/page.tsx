@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
-import { ParentMealsClient } from './parent-meals-client'
+import { ParentMealsWeekView } from './parent-meals-week-view'
 
 // Disable caching for real-time updates
 export const revalidate = 0
@@ -33,5 +33,16 @@ export default async function ParentMealsPage() {
     ],
   })
 
-  return <ParentMealsClient meals={meals} />
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Ovqatlar Menyusi</h1>
+        <p className="text-muted-foreground">
+          Haftalik ovqatlar menyusi
+        </p>
+      </div>
+
+      <ParentMealsWeekView meals={meals} />
+    </div>
+  )
 }
