@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Users, BookOpen, Clock, MapPin, ArrowRight, CheckCircle2, PlayCircle, Timer, TrendingUp } from 'lucide-react'
+import { Users, BookOpen, Clock, MapPin, ArrowRight, CheckCircle2, PlayCircle } from 'lucide-react'
 import Link from 'next/link'
 
 interface LessonSchedule {
@@ -31,9 +31,14 @@ interface TodayLessonsProps {
 
 type LessonStatus = 'upcoming' | 'current' | 'completed'
 
+interface TimeRemaining {
+  hours: number
+  minutes: number
+  seconds: number
+}
+
 export function TodayLessons({ schedules }: TodayLessonsProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
-  const [nextLessonCountdown, setNextLessonCountdown] = useState<string>('')
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -75,230 +80,200 @@ export function TodayLessons({ schedules }: TodayLessonsProps) {
     return 'completed'
   }
 
-  const getTimeUntilLesson = (startTime: string): string => {
-    const now = currentTime.getHours() * 60 + currentTime.getMinutes()
-    const start = parseTime(startTime)
-    const diff = start - now
-
-    if (diff <= 0) return ''
-
-    const hours = Math.floor(diff / 60)
-    const minutes = diff % 60
-
-    if (hours > 0) {
-      return `${hours}s ${minutes}d`
-    }
-    return `${minutes}d`
-  }
-
-  useEffect(() => {
-    const now = currentTime.getHours() * 60 + currentTime.getMinutes()
+  const getTimeRemaining = (startTime: string): TimeRemaining | null => {
+    const now = currentTime
+    const [hours, minutes] = startTime.split(':').map(Number)
     
-    const upcomingLessons = schedules
-      .filter(s => parseTime(s.startTime) > now)
-      .sort((a, b) => parseTime(a.startTime) - parseTime(b.startTime))
+    const targetTime = new Date()
+    targetTime.setHours(hours, minutes, 0, 0)
 
-    if (upcomingLessons.length > 0) {
-      const nextLesson = upcomingLessons[0]
-      const timeUntil = getTimeUntilLesson(nextLesson.startTime)
-      setNextLessonCountdown(timeUntil)
-    } else {
-      setNextLessonCountdown('')
-    }
-  }, [currentTime, schedules])
+    const diff = targetTime.getTime() - now.getTime()
+    
+    if (diff <= 0) return null
 
-  const getStatusConfig = (status: LessonStatus) => {
-    switch (status) {
-      case 'current':
-        return {
-          badge: (
-            <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-0 shadow-lg shadow-emerald-500/50 animate-pulse">
-              <PlayCircle className="h-3 w-3 mr-1" />
-              Hozir
-            </Badge>
-          ),
-          gradient: 'from-emerald-500 via-green-500 to-teal-500',
-          ringColor: 'ring-emerald-400',
-          glowColor: 'shadow-emerald-500/30'
-        }
-      case 'completed':
-        return {
-          badge: (
-            <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700">
-              <CheckCircle2 className="h-3 w-3 mr-1" />
-              Tugadi
-            </Badge>
-          ),
-          gradient: 'from-slate-400 to-slate-500',
-          ringColor: 'ring-slate-300',
-          glowColor: 'shadow-slate-500/20'
-        }
-      default:
-        return {
-          badge: null,
-          gradient: '',
-          ringColor: '',
-          glowColor: ''
-        }
-    }
-  }
+    const totalSeconds = Math.floor(diff / 1000)
+    const h = Math.floor(totalSeconds / 3600)
+    const m = Math.floor((totalSeconds % 3600) / 60)
+    const s = totalSeconds % 60
 
-  const getCardGradient = (index: number) => {
-    const gradients = [
-      { header: 'from-blue-500 via-indigo-500 to-purple-500', accent: 'bg-blue-500' },
-      { header: 'from-purple-500 via-pink-500 to-rose-500', accent: 'bg-purple-500' },
-      { header: 'from-emerald-500 via-teal-500 to-cyan-500', accent: 'bg-emerald-500' },
-      { header: 'from-orange-500 via-red-500 to-pink-500', accent: 'bg-orange-500' },
-      { header: 'from-cyan-500 via-blue-500 to-indigo-500', accent: 'bg-cyan-500' },
-      { header: 'from-violet-500 via-purple-500 to-fuchsia-500', accent: 'bg-violet-500' },
-    ]
-    return gradients[index % gradients.length]
-  }
-
-  if (schedules.length === 0) {
-    return null
+    return { hours: h, minutes: m, seconds: s }
   }
 
   const now = currentTime.getHours() * 60 + currentTime.getMinutes()
   const nextLessonIndex = schedules.findIndex(s => parseTime(s.startTime) > now)
 
+  if (schedules.length === 0) {
+    return null
+  }
+
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {schedules.map((schedule, index) => {
         const lessonNum = getLessonNumber(schedule.startTime)
         const status = getLessonStatus(schedule.startTime, schedule.endTime)
-        const statusConfig = getStatusConfig(status)
         const isNextLesson = index === nextLessonIndex
-        const timeUntil = status === 'upcoming' ? getTimeUntilLesson(schedule.startTime) : ''
-        const gradient = getCardGradient(index)
+        const timeRemaining = status === 'upcoming' ? getTimeRemaining(schedule.startTime) : null
 
         return (
           <Card 
             key={schedule.id}
-            className={`group relative overflow-hidden transition-all duration-500 hover:shadow-2xl ${
+            className={`group relative overflow-hidden transition-all duration-300 ${
               isNextLesson 
-                ? 'ring-4 ring-orange-400 ring-offset-2 dark:ring-offset-slate-900 scale-105 shadow-2xl shadow-orange-500/50' 
+                ? 'ring-2 ring-blue-500 shadow-xl shadow-blue-500/20' 
                 : status === 'current'
-                ? `ring-2 ${statusConfig.ringColor} shadow-xl ${statusConfig.glowColor}`
-                : 'hover:scale-105 shadow-lg'
-            } ${
-              status === 'completed' ? 'opacity-75' : ''
+                ? 'ring-2 ring-green-500 shadow-xl shadow-green-500/20'
+                : status === 'completed'
+                ? 'opacity-60'
+                : 'hover:shadow-lg'
             }`}
           >
-            {/* Gradient Header with Lesson Number */}
-            <div className={`relative h-32 bg-gradient-to-br ${
-              status === 'completed' 
-                ? statusConfig.gradient 
-                : gradient.header
-            } p-6 overflow-hidden`}>
-              {/* Animated Background Pattern */}
-              <div className="absolute inset-0 opacity-20">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.1),transparent)]" />
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
-              </div>
-
-              <div className="relative z-10 flex items-start justify-between">
-                {/* Lesson Number Badge */}
-                <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-2xl bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-2xl shadow-black/20 ring-2 ring-white/30">
-                    <span className="text-2xl font-black bg-gradient-to-br from-slate-700 to-slate-900 bg-clip-text text-transparent">
-                      {lessonNum}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <Badge className="bg-white/20 backdrop-blur-md text-white border-white/30 hover:bg-white/30 font-semibold text-xs px-3 py-1 shadow-lg">
-                      <Clock className="h-3 w-3 mr-1.5" />
-                      {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
-                    </Badge>
-                    {statusConfig.badge}
-                  </div>
+            {/* Header */}
+            <div className={`h-20 flex items-center justify-between px-6 ${
+              status === 'completed'
+                ? 'bg-gray-100 dark:bg-gray-800'
+                : status === 'current'
+                ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+                : isNextLesson
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-500'
+                : 'bg-gradient-to-r from-purple-500 to-pink-500'
+            }`}>
+              {/* Lesson Number */}
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-2xl ${
+                  status === 'completed'
+                    ? 'bg-gray-300 text-gray-600'
+                    : 'bg-white/20 backdrop-blur-sm text-white'
+                }`}>
+                  {lessonNum}
+                </div>
+                <div>
+                  <Badge variant="secondary" className={`${
+                    status === 'completed'
+                      ? 'bg-gray-200 text-gray-600'
+                      : 'bg-white/20 backdrop-blur-md text-white border-white/30'
+                  }`}>
+                    {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
+                  </Badge>
                 </div>
               </div>
 
-              {/* Decorative Elements */}
-              <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
-              <div className="absolute -top-6 -left-6 w-20 h-20 bg-white/10 rounded-full blur-xl" />
+              {/* Status Badge */}
+              {status === 'current' && (
+                <Badge className="bg-white/20 backdrop-blur-md text-white border-white/30">
+                  <PlayCircle className="h-3 w-3 mr-1 animate-pulse" />
+                  Hozir
+                </Badge>
+              )}
+              {status === 'completed' && (
+                <Badge variant="secondary" className="bg-gray-200 text-gray-600">
+                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                  Tugadi
+                </Badge>
+              )}
             </div>
 
-            <CardContent className="p-6 space-y-4 bg-gradient-to-br from-white to-slate-50/50 dark:from-slate-900 dark:to-slate-800/50">
-              {/* Next Lesson Countdown - Prominent Display */}
-              {isNextLesson && timeUntil && (
-                <div className="relative -mt-3 mb-4">
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl blur-lg opacity-50 animate-pulse" />
-                  <div className="relative bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950/50 dark:to-red-950/50 border-2 border-orange-400 dark:border-orange-600 rounded-xl p-4 shadow-lg">
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="p-2 rounded-lg bg-orange-500 text-white shadow-lg">
-                        <Timer className="h-5 w-5 animate-bounce" />
+            <CardContent className="p-6 space-y-4">
+              {/* Professional Countdown Timer - Next Lesson */}
+              {isNextLesson && timeRemaining && (
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-3 text-center uppercase tracking-wider">
+                    Keyingi Dars Boshlanishiga
+                  </p>
+                  <div className="flex items-center justify-center gap-2">
+                    {/* Hours */}
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-16 rounded-lg bg-blue-500 text-white flex items-center justify-center shadow-lg">
+                        <span className="text-2xl font-bold tabular-nums">
+                          {String(timeRemaining.hours).padStart(2, '0')}
+                        </span>
                       </div>
-                      <div className="text-center">
-                        <p className="text-xs font-medium text-orange-600 dark:text-orange-400 mb-0.5">
-                          Keyingi dars
-                        </p>
-                        <p className="text-2xl font-black text-orange-600 dark:text-orange-400 tracking-tight">
-                          {timeUntil}
-                        </p>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mt-1">
+                        soat
+                      </span>
+                    </div>
+
+                    <span className="text-2xl font-bold text-gray-400 pb-5">:</span>
+
+                    {/* Minutes */}
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-16 rounded-lg bg-blue-500 text-white flex items-center justify-center shadow-lg">
+                        <span className="text-2xl font-bold tabular-nums">
+                          {String(timeRemaining.minutes).padStart(2, '0')}
+                        </span>
                       </div>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mt-1">
+                        daqiqa
+                      </span>
+                    </div>
+
+                    <span className="text-2xl font-bold text-gray-400 pb-5">:</span>
+
+                    {/* Seconds */}
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-16 rounded-lg bg-blue-500 text-white flex items-center justify-center shadow-lg animate-pulse">
+                        <span className="text-2xl font-bold tabular-nums">
+                          {String(timeRemaining.seconds).padStart(2, '0')}
+                        </span>
+                      </div>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mt-1">
+                        soniya
+                      </span>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Regular Countdown for Upcoming Lessons */}
-              {!isNextLesson && status === 'upcoming' && timeUntil && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                  <div className="flex items-center justify-center gap-2">
-                    <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                      {timeUntil} dan keyin
-                    </p>
+              {/* Regular Countdown for Other Upcoming Lessons */}
+              {!isNextLesson && status === 'upcoming' && timeRemaining && timeRemaining.hours < 3 && (
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border border-purple-200 dark:border-purple-800 rounded-lg p-3 mb-4">
+                  <div className="flex items-center justify-center gap-3">
+                    <Clock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                    <span className="text-lg font-bold text-purple-700 dark:text-purple-300 tabular-nums">
+                      {String(timeRemaining.hours).padStart(2, '0')}:
+                      {String(timeRemaining.minutes).padStart(2, '0')}:
+                      {String(timeRemaining.seconds).padStart(2, '0')}
+                    </span>
                   </div>
                 </div>
               )}
 
               {/* Subject */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className={`p-2 rounded-lg ${gradient.accent} bg-opacity-10`}>
-                    <BookOpen className={`h-4 w-4 ${gradient.accent.replace('bg-', 'text-')}`} />
-                  </div>
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <BookOpen className="h-4 w-4 text-indigo-600" />
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     Fan
                   </span>
                 </div>
-                <p className="text-lg font-bold text-slate-900 dark:text-slate-100 line-clamp-1 pl-10">
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                   {schedule.subject?.name || 'Fan nomi yo\'q'}
                 </p>
               </div>
 
-              {/* Class Info */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-lg bg-blue-500 bg-opacity-10">
-                    <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              {/* Class */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Users className="h-4 w-4 text-blue-600" />
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     Sinf
                   </span>
                 </div>
-                <div className="flex items-center justify-between pl-10">
-                  <p className="text-base font-bold text-slate-900 dark:text-slate-100">
+                <div className="flex items-center justify-between">
+                  <p className="text-base font-bold text-gray-900 dark:text-gray-100">
                     {schedule.class?.name || 'Sinf yo\'q'}
                   </p>
-                  <Badge variant="secondary" className="text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
-                    <Users className="h-3 w-3 mr-1" />
-                    {schedule.class?._count.students || 0}
+                  <Badge variant="secondary">
+                    {schedule.class?._count.students || 0} ta
                   </Badge>
                 </div>
               </div>
 
-              {/* Room Number */}
+              {/* Room */}
               {schedule.roomNumber && (
-                <div className="flex items-center gap-2 text-sm bg-slate-100 dark:bg-slate-800 rounded-lg p-3">
-                  <div className="p-1.5 rounded-md bg-orange-500 bg-opacity-10">
-                    <MapPin className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                  </div>
-                  <span className="font-medium text-slate-600 dark:text-slate-300">
-                    Xona: <span className="font-bold text-slate-900 dark:text-slate-100">{schedule.roomNumber}</span>
+                <div className="flex items-center gap-2 text-sm bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
+                  <MapPin className="h-4 w-4 text-orange-600" />
+                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                    Xona: <span className="font-bold">{schedule.roomNumber}</span>
                   </span>
                 </div>
               )}
@@ -306,35 +281,33 @@ export function TodayLessons({ schedules }: TodayLessonsProps) {
               {/* Action Button */}
               <Link 
                 href={`/teacher/classes/${schedule.classId}?subjectId=${schedule.subjectId}&startTime=${schedule.startTime}&endTime=${schedule.endTime}`}
-                className="block mt-4"
               >
                 <Button 
-                  className={`w-full h-12 text-base font-bold shadow-lg group-hover:shadow-xl transition-all duration-300 ${
+                  className={`w-full ${
                     status === 'current' 
-                      ? 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-emerald-500/50' 
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600' 
                       : status === 'completed'
-                      ? 'bg-gradient-to-r from-slate-400 to-slate-500 hover:from-slate-500 hover:to-slate-600 cursor-not-allowed opacity-60'
+                      ? 'bg-gray-400 hover:bg-gray-500 cursor-not-allowed'
                       : isNextLesson
-                      ? 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 shadow-orange-500/50 ring-2 ring-orange-300 ring-offset-2'
-                      : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-purple-500/50'
-                  } text-white`}
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
+                      : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
+                  } text-white shadow-lg`}
                   disabled={status === 'completed'}
                 >
                   {status === 'current' ? (
                     <>
-                      <PlayCircle className="mr-2 h-5 w-5 animate-pulse" />
+                      <PlayCircle className="mr-2 h-4 w-4" />
                       Darsga Kirish
-                      <TrendingUp className="ml-2 h-5 w-5" />
                     </>
                   ) : status === 'completed' ? (
                     <>
-                      <CheckCircle2 className="mr-2 h-5 w-5" />
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
                       Dars Tugadi
                     </>
                   ) : (
                     <>
                       Darsga Kirish
-                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
                 </Button>
