@@ -103,6 +103,11 @@ export default async function TeacherDashboard() {
       return time.slice(0, 5) // "08:00:00" -> "08:00"
     }
 
+    // Filter out schedules with null subject for lesson reminder
+    const validSchedules = todaySchedule.filter((s): s is typeof s & { subject: NonNullable<typeof s.subject>; subjectId: string } => 
+      s.subject !== null && s.subjectId !== null
+    )
+
     return (
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
@@ -116,7 +121,7 @@ export default async function TeacherDashboard() {
         </div>
 
         {/* Lesson Reminder - Show 5-10 minutes before lesson */}
-        <LessonReminder schedules={todaySchedule} />
+        <LessonReminder schedules={validSchedules} />
 
         {/* Quick Stats */}
         <div className="grid gap-4 md:grid-cols-3">
