@@ -9,12 +9,12 @@ export const revalidate = 0
 
 export default async function StaffSalaryOverviewPage() {
   const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'STAFF') redirect('/unauthorized')
+  if (!session) redirect('/unauthorized')
 
   const tenantId = session.user.tenantId!
   const currentYear = new Date().getFullYear()
 
-  // Get staff with details
+  // Get staff by userId - staff don't have a dedicated role, they're identified by the staff table
   const staff = await db.staff.findUnique({
     where: { userId: session.user.id },
     select: {
@@ -31,6 +31,7 @@ export default async function StaffSalaryOverviewPage() {
     }
   })
 
+  // If not a staff member, redirect
   if (!staff) redirect('/unauthorized')
 
   return (
