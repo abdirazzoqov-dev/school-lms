@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
     if (timeSlot) whereClause.startTime = timeSlot
 
     // Fetch attendance data
-    const attendances = await db.attendance.findMany({
+    const attendanceRecords = await db.attendance.findMany({
       where: whereClause,
       include: {
         student: {
@@ -90,6 +90,11 @@ export async function GET(req: NextRequest) {
         { startTime: 'asc' }
       ]
     })
+
+    // Filter out records with null user or class
+    const attendances = attendanceRecords.filter(
+      record => record.student.user !== null && record.student.class !== null
+    )
 
     // Format data for Excel
     const excelData = attendances.map((attendance, index) => {
