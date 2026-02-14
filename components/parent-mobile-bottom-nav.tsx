@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, MessageSquare, Menu, X } from 'lucide-react'
+import { Home, MessageSquare, LayoutGrid, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
@@ -105,7 +105,7 @@ export function ParentMobileBottomNav({ items }: ParentMobileBottomNavProps) {
                 variant="ghost"
                 className="flex flex-col items-center gap-1 h-auto py-2 px-4 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-300"
               >
-                <Menu className="h-5 w-5" />
+                <LayoutGrid className="h-5 w-5" />
                 <span className="text-xs font-medium">Menyu</span>
               </Button>
             </SheetTrigger>
