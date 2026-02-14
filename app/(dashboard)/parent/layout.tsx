@@ -5,6 +5,7 @@ import { DashboardNav } from '@/components/dashboard-nav'
 import { MobileNav } from '@/components/mobile-nav'
 import { UserNav } from '@/components/user-nav'
 import { TenantStatusBanner } from '@/components/tenant-status-banner'
+import { ParentMobileBottomNav } from '@/components/parent-mobile-bottom-nav'
 import { Users } from 'lucide-react'
 import { db } from '@/lib/db'
 
@@ -103,7 +104,9 @@ export default async function ParentLayout({
       <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shadow-sm">
         <div className="container flex h-16 items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-3">
-            <MobileNav items={navItems} />
+            <div className="lg:hidden">
+              <MobileNav items={navItems} />
+            </div>
             <div className="flex items-center gap-3 group">
               <div className="relative">
                 <div className="absolute inset-0 bg-accent/20 rounded-full blur-xl group-hover:bg-accent/30 transition-all duration-300" />
@@ -127,7 +130,7 @@ export default async function ParentLayout({
         <TenantStatusBanner status={session.user.tenant.status} />
       )}
 
-      <div className="container flex-1 px-4 md:px-6">
+      <div className="container flex-1 px-4 md:px-6 pb-20 lg:pb-6">
         <div className="flex gap-6 py-6">
           <aside className="hidden lg:block w-72 shrink-0">
             <div className="sticky top-24">
@@ -139,6 +142,9 @@ export default async function ParentLayout({
           <main className="flex-1 min-w-0 animate-fade-in">{children}</main>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <ParentMobileBottomNav items={navItems} />
     </div>
   )
 }
