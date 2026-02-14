@@ -1,14 +1,16 @@
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import * as xlsx from 'xlsx'
+import { getCurrentAcademicYear } from '@/lib/utils'
 
-export async function POST(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
     if (!session || session.user.role !== 'TEACHER') {
-      return new NextResponse('Unauthorized', { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const tenantId = session.user.tenantId!
@@ -19,16 +21,63 @@ export async function POST(req: Request) {
     })
 
     if (!teacher) {
-      return new NextResponse('Teacher not found', { status: 404 })
+      return NextResponse.json({ error: 'Teacher not found' }, { status: 404 })
     }
 
-    // Get all grades
-    const grades = await db.grade.findMany({
-      where: {
-        teacherId: teacher.id,
-        tenantId,
-      },
-      orderBy: { createdAt: 'desc' },
+    // Parse query parameters
+    const searchParams = req.nextUrl.searchParams
+    const dateParam = searchParams.get('date')
+    const period = searchParams.get('period') || 'day'
+    const classId = searchParams.get('classId')
+    const subjectId = searchParams.get('subjectId')
+    const timeSlot = searchParams.get('timeSlot')
+
+    // Parse date
+    const selectedDate = dateParam ? new Date(dateParam) : new Date()
+    selectedDate.setHours(0, 0, 0, 0)
+
+    // Calculate date range
+    let startDate = new Date(selectedDate)
+    let endDate = new Date(selectedDate)
+
+    if (period === 'week') {
+      const dayOfWeek = startDate.getDay()
+      const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+      startDate.setDate(startDate.getDate() - diff)
+      endDate = new Date(startDate)
+      endDate.setDate(endDate.getDate() + 6)
+    } else if (period === 'month') {
+      startDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
+      endDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0)
+    }
+
+    endDate.setHours(23, 59, 59, 999)
+
+    // Build where clause
+    const whereClause: any = {
+      tenantId,
+      teacherId: teacher.id,
+      date: {
+        gte: startDate,
+        lte: endDate
+      }
+    }
+
+    if (classId && classId !== 'all') {
+      whereClause.student = { classId }
+    }
+    
+    if (subjectId && subjectId !== 'all') {
+      whereClause.subjectId = subjectId
+    }
+    
+    if (timeSlot && timeSlot !== 'all') {
+      whereClause.startTime = timeSlot
+    }
+
+    // Fetch grades data
+    const gradeRecords = await db.grade.findMany({
+      where: whereClause,
       include: {
         student: {
           include: {
@@ -43,37 +92,95 @@ export async function POST(req: Request) {
         subject: {
           select: { name: true }
         }
+      },
+      orderBy: [
+        { date: 'desc' },
+        { startTime: 'asc' }
+      ]
+    })
+
+    // Define type for records with non-null relations
+    type GradeWithRelations = typeof gradeRecords[0] & {
+      student: {
+        user: { fullName: string }
+        class: { name: string }
+      } & typeof gradeRecords[0]['student']
+    }
+
+    // Filter out records with null user or class (with type predicate)
+    const grades = gradeRecords.filter(
+      (record): record is GradeWithRelations => 
+        record.student.user !== null && record.student.class !== null
+    )
+
+    // Format data for Excel
+    const excelData = grades.map((grade, index) => {
+      const getGradeLevel = (percentage: number) => {
+        if (percentage >= 85) return 'A\'lo'
+        if (percentage >= 70) return 'Yaxshi'
+        if (percentage >= 55) return 'Qoniqarli'
+        return 'Qoniqarsiz'
+      }
+
+      return {
+        '#': index + 1,
+        'O\'quvchi': grade.student.user.fullName,
+        'Sinf': grade.student.class.name,
+        'Fan': grade.subject?.name || '—',
+        'Sana': new Date(grade.date).toLocaleDateString('uz-UZ'),
+        'Dars vaqti': grade.startTime && grade.endTime 
+          ? `${grade.startTime} - ${grade.endTime}` 
+          : '—',
+        'Ball': `${Number(grade.score)}/${Number(grade.maxScore)}`,
+        'Foiz': `${Number(grade.percentage)}%`,
+        'Daraja': getGradeLevel(Number(grade.percentage)),
+        'Izoh': grade.comments || '—'
       }
     })
 
-    // Create CSV content
-    const csvRows = [
-      'O\'quvchi,Sinf,Fan,Turi,Ball,Foiz,Sana',
-      ...grades.map(grade =>
-        `${grade.student.user?.fullName || 'N/A'},` +
-        `${grade.student.class?.name || '-'},` +
-        `${grade.subject.name},` +
-        `${grade.gradeType},` +
-        `${Number(grade.score)}/${Number(grade.maxScore)},` +
-        `${Number(grade.percentage).toFixed(0)}%,` +
-        `${new Date(grade.date).toLocaleDateString('uz-UZ')}`
-      )
-    ].join('\n')
+    // Create workbook and worksheet
+    const wb = xlsx.utils.book_new()
+    const ws = xlsx.utils.json_to_sheet(excelData)
 
-    // Add BOM for proper UTF-8 encoding in Excel
-    const bom = '\uFEFF'
-    const csvContent = bom + csvRows
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 5 },  // #
+      { wch: 25 }, // O'quvchi
+      { wch: 10 }, // Sinf
+      { wch: 20 }, // Fan
+      { wch: 12 }, // Sana
+      { wch: 18 }, // Dars vaqti
+      { wch: 10 }, // Ball
+      { wch: 8 },  // Foiz
+      { wch: 12 }, // Daraja
+      { wch: 30 }, // Izoh
+    ]
 
-    return new NextResponse(csvContent, {
-      status: 200,
+    xlsx.utils.book_append_sheet(wb, ws, 'Baholar')
+
+    // Generate buffer
+    const excelBuffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' })
+
+    // Generate filename
+    const periodLabels: Record<string, string> = {
+      day: 'Kun',
+      week: 'Hafta',
+      month: 'Oy'
+    }
+    const filename = `Baholar_${periodLabels[period]}_${startDate.toLocaleDateString('uz-UZ').replace(/\//g, '-')}.xlsx`
+
+    // Return Excel file
+    return new NextResponse(excelBuffer, {
       headers: {
-        'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="baholar-${new Date().toISOString().split('T')[0]}.csv"`
-      }
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+      },
     })
   } catch (error) {
-    console.error('[TEACHER_GRADES_EXPORT]', error)
-    return new NextResponse('Internal Error', { status: 500 })
+    console.error('Error exporting grades:', error)
+    return NextResponse.json(
+      { error: 'Failed to export grades' },
+      { status: 500 }
+    )
   }
 }
-
