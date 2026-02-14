@@ -3,6 +3,8 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { ParentMealsWeekView } from './parent-meals-week-view'
+import { Suspense } from 'react'
+import { MealsLoadingSkeleton } from './meals-loading-skeleton'
 
 // Enable ISR - revalidate every 5 minutes
 export const revalidate = 300
@@ -12,7 +14,7 @@ export const metadata = {
   description: 'Haftalik ovqatlar menyusini ko\'rish',
 }
 
-export default async function ParentMealsPage() {
+async function MealsData() {
   const session = await getServerSession(authOptions)
 
   if (!session || session.user.role !== 'PARENT') {
@@ -55,6 +57,10 @@ export default async function ParentMealsPage() {
       : meal.image
   }))
 
+  return <ParentMealsWeekView meals={mealsData} />
+}
+
+export default function ParentMealsPage() {
   return (
     <div className="space-y-6">
       <div>
@@ -64,7 +70,9 @@ export default async function ParentMealsPage() {
         </p>
       </div>
 
-      <ParentMealsWeekView meals={mealsData} />
+      <Suspense fallback={<MealsLoadingSkeleton />}>
+        <MealsData />
+      </Suspense>
     </div>
   )
 }

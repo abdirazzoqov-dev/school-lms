@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Clock } from 'lucide-react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import { OptimizedMealImage } from './optimized-meal-image'
 
 const DAYS = [
   { value: 0, label: 'Yakshanba' },
@@ -42,6 +43,13 @@ type Meal = {
 export function ParentMealsWeekView({ meals }: { meals: Meal[] }) {
   const today = new Date().getDay()
   const [selectedDay, setSelectedDay] = useState<string>(today.toString())
+  const [isPending, startTransition] = useTransition()
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
+
+  // Optimize first load
+  useEffect(() => {
+    setIsInitialLoad(false)
+  }, [])
 
   const getMealForDayAndNumber = (day: number, mealNumber: number) => {
     return meals.find(m => m.dayOfWeek === day && m.mealNumber === mealNumber)
@@ -51,8 +59,14 @@ export function ParentMealsWeekView({ meals }: { meals: Meal[] }) {
     meals.some(m => m.dayOfWeek === day.value)
   )
 
+  const handleDayChange = (day: string) => {
+    startTransition(() => {
+      setSelectedDay(day)
+    })
+  }
+
   return (
-    <Tabs value={selectedDay} onValueChange={setSelectedDay} className="w-full">
+    <Tabs value={selectedDay} onValueChange={handleDayChange} className="w-full">
       {/* Tabs List - Responsive with horizontal scroll on mobile */}
       <div className="mb-6">
         <TabsList className="w-full h-auto p-1 bg-muted/30 border rounded-lg inline-flex md:grid md:grid-cols-7 gap-1 overflow-x-auto">
@@ -63,7 +77,8 @@ export function ParentMealsWeekView({ meals }: { meals: Meal[] }) {
               className={cn(
                 "flex-shrink-0 px-4 md:px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap",
                 "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm",
-                "data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-muted/50"
+                "data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-muted/50",
+                isPending && "pointer-events-none opacity-70"
               )}
             >
               {day.label}
@@ -90,21 +105,15 @@ export function ParentMealsWeekView({ meals }: { meals: Meal[] }) {
                 >
                   {/* Image Section */}
                   {mealData.image && (
-                    <div className="relative h-36 w-full overflow-hidden bg-muted">
-                      <Image
-                        src={mealData.image}
+                    <>
+                      <OptimizedMealImage 
+                        src={mealData.image} 
                         alt={mealData.mainDish}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                        quality={75}
-                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                       
                       {/* Meal label and time on image */}
-                      <div className="absolute bottom-2 left-2 right-2">
-                        <div className="backdrop-blur-md bg-white/90 dark:bg-black/70 rounded-lg px-3 py-2 border border-white/50">
+                      <div className="absolute top-0 left-0 right-0 z-10">
+                        <div className="m-2 backdrop-blur-md bg-white/90 dark:bg-black/70 rounded-lg px-3 py-2 border border-white/50">
                           <div className="flex items-center justify-between">
                             <p className="text-foreground font-semibold text-sm">{meal.label}</p>
                             <div className="flex items-center gap-1 text-muted-foreground">
@@ -114,7 +123,7 @@ export function ParentMealsWeekView({ meals }: { meals: Meal[] }) {
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </>
                   )}
                   
                   {/* Header for meals without image */}
