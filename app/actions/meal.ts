@@ -15,6 +15,7 @@ export async function createMeal(data: {
   dessert?: string
   drink?: string
   description?: string
+  image?: string
 }) {
   const session = await getServerSession(authOptions)
   
@@ -49,6 +50,7 @@ export async function updateMeal(
     dessert?: string
     drink?: string
     description?: string
+    image?: string
   }
 ) {
   const session = await getServerSession(authOptions)

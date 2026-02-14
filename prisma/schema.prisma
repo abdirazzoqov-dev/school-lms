@@ -930,6 +930,9 @@ model Meal {
   dessert     String? // Shirinlik
   drink       String? // Ichimlik
   description String? @db.Text
+  
+  // Rasm (base64)
+  image       String? @db.Text // Base64 format
 
   isActive Boolean @default(true)
 
