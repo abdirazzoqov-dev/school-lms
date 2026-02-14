@@ -53,13 +53,21 @@ export default async function TeacherAttendancePage({
     distinct: ['classId', 'subjectId']
   })
 
-  // Extract unique classes and subjects
+  // Extract unique classes and subjects (filter out nulls)
   const classes = Array.from(
-    new Map(teacherSchedules.map(s => [s.classId, s.class])).values()
+    new Map(
+      teacherSchedules
+        .filter(s => s.class !== null)
+        .map(s => [s.classId, s.class!])
+    ).values()
   )
 
   const subjects = Array.from(
-    new Map(teacherSchedules.map(s => [s.subjectId, s.subject])).values()
+    new Map(
+      teacherSchedules
+        .filter(s => s.subject !== null)
+        .map(s => [s.subjectId, s.subject!])
+    ).values()
   )
 
   // Get unique time slots from teacher's schedule
