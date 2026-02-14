@@ -965,6 +965,12 @@ model Payment {
   // Keyinchalik student.monthlyTuitionFee o'zgarganda, bu to'lov o'zgarmaydi
   tuitionFeeAtPayment Decimal? @db.Decimal(10, 2) // O'sha vaqtdagi oylik narx
   
+  // ✅ Discount fields - Ertaroq to'lov qilganlar uchun chegirma
+  discountAmount      Decimal? @default(0) @db.Decimal(10, 2) // Chegirma summasi
+  discountPercentage  Decimal? @default(0) @db.Decimal(5, 2)  // Chegirma foizi
+  discountReason      String?  @db.Text                        // Chegirma sababi (masalan: "3 oy oldindan to'lov")
+  originalAmount      Decimal? @db.Decimal(10, 2)             // Chegirmadan oldingi asl summa
+  
   paymentType     PaymentType
   paymentMethod   PaymentMethod @default(CASH)
   status          PaymentStatus @default(PENDING)

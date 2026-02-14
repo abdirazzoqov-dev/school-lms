@@ -113,6 +113,11 @@ export async function createPayment(data: PaymentFormData) {
         receivedById: isPaid ? session.user.id : null,
         receiptNumber: validatedData.receiptNumber || null,
         notes: validatedData.notes || null,
+        // ✅ Discount fields
+        discountAmount: validatedData.discountAmount ? new Decimal(validatedData.discountAmount) : null,
+        discountPercentage: validatedData.discountPercentage ? new Decimal(validatedData.discountPercentage) : null,
+        discountReason: validatedData.discountReason || null,
+        originalAmount: validatedData.originalAmount ? new Decimal(validatedData.originalAmount) : null,
       }
     })
 

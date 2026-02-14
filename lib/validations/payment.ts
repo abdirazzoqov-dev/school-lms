@@ -9,6 +9,11 @@ export const paymentSchema = z.object({
   paidDate: z.string().optional(),
   receiptNumber: z.string().optional(),
   notes: z.string().optional(),
+  // ✅ Discount fields
+  discountAmount: z.number().optional(),
+  discountPercentage: z.number().optional(),
+  discountReason: z.string().optional(),
+  originalAmount: z.number().optional(),
 })
 
 export type PaymentFormData = z.infer<typeof paymentSchema>

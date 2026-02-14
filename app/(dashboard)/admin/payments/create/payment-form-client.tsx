@@ -61,6 +61,7 @@ export function PaymentFormClient({
   const [selectedClass, setSelectedClass] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [acceptPayment, setAcceptPayment] = useState(true)
+  const [hasDiscount, setHasDiscount] = useState(false) // ✅ Chegirma flag
   
   const [formData, setFormData] = useState({
     studentId: preSelectedStudentId || '', // ✅ Pre-fill
@@ -75,6 +76,10 @@ export function PaymentFormClient({
     notes: preSelectedMonth && preSelectedYear
       ? `${preSelectedYear}-${String(preSelectedMonth).padStart(2, '0')} oyi uchun to'lov` // ✅ Pre-fill notes
       : '',
+    discountAmount: 0,        // ✅ Chegirma summasi
+    discountPercentage: 0,    // ✅ Chegirma foizi
+    discountReason: '',       // ✅ Chegirma sababi
+    originalAmount: 0         // ✅ Chegirmadan oldingi asl summa
   })
 
   // Filter students by class and search
@@ -404,6 +409,137 @@ export function PaymentFormClient({
                 Generatsiya
               </Button>
             </div>
+          </div>
+
+          {/* ✅ DISCOUNT SECTION */}
+          <div className="space-y-4 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="hasDiscount"
+                checked={hasDiscount}
+                onCheckedChange={(checked) => {
+                  setHasDiscount(checked as boolean)
+                  if (!checked) {
+                    // Reset discount fields
+                    setFormData(prev => ({
+                      ...prev,
+                      discountAmount: 0,
+                      discountPercentage: 0,
+                      discountReason: '',
+                      originalAmount: 0
+                    }))
+                  } else {
+                    // Set original amount when enabling discount
+                    setFormData(prev => ({
+                      ...prev,
+                      originalAmount: prev.amount
+                    }))
+                  }
+                }}
+              />
+              <div className="flex-1">
+                <label
+                  htmlFor="hasDiscount"
+                  className="text-sm font-medium leading-none cursor-pointer"
+                >
+                  💰 Chegirma berish (erta to'lov uchun)
+                </label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  O'quvchi muddatidan erta to'lov qilgani uchun chegirma qo'llash
+                </p>
+              </div>
+            </div>
+
+            {hasDiscount && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-amber-300">
+                <div className="space-y-2">
+                  <Label htmlFor="originalAmount">Asl summa (chegirmasiz) *</Label>
+                  <Input
+                    id="originalAmount"
+                    type="number"
+                    value={formData.originalAmount}
+                    readOnly
+                    disabled
+                    className="bg-amber-100 cursor-not-allowed font-semibold"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    📊 Chegirma berilmasdan oldingi summa
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="discountPercentage">Chegirma foizi (%) *</Label>
+                  <Input
+                    id="discountPercentage"
+                    type="number"
+                    value={formData.discountPercentage}
+                    onChange={(e) => {
+                      const percentage = Number(e.target.value)
+                      const discountAmount = (formData.originalAmount * percentage) / 100
+                      const finalAmount = formData.originalAmount - discountAmount
+                      
+                      setFormData(prev => ({
+                        ...prev,
+                        discountPercentage: percentage,
+                        discountAmount: discountAmount,
+                        amount: finalAmount
+                      }))
+                    }}
+                    min="0"
+                    max="100"
+                    step="0.1"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    📉 Foiz kiriting (masalan: 10 = 10%)
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="discountAmount">Chegirma summasi *</Label>
+                  <Input
+                    id="discountAmount"
+                    type="number"
+                    value={formData.discountAmount}
+                    readOnly
+                    disabled
+                    className="bg-amber-100 cursor-not-allowed font-semibold text-red-600"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    💸 Avtomatik hisoblangan chegirma
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="finalAmount">To'lash kerak bo'lgan summa *</Label>
+                  <Input
+                    id="finalAmount"
+                    type="number"
+                    value={formData.amount}
+                    readOnly
+                    disabled
+                    className="bg-green-100 cursor-not-allowed font-bold text-green-700 text-lg"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    ✅ Chegirma qo'llanganidan keyingi summa
+                  </p>
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="discountReason">Chegirma sababi *</Label>
+                  <Textarea
+                    id="discountReason"
+                    placeholder="Masalan: 3 oy oldindan to'lov qilgani uchun 10% chegirma..."
+                    value={formData.discountReason}
+                    onChange={(e) => setFormData(prev => ({ ...prev, discountReason: e.target.value }))}
+                    rows={2}
+                    required={hasDiscount}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    📝 Chegirma berilishiga sabab yozing
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Notes */}

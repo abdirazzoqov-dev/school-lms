@@ -63,7 +63,10 @@ export async function calculateMonthlyPaymentProgress(
       status: true,
       paymentMonth: true,
       paymentYear: true,
-      tuitionFeeAtPayment: true // ✅ Snapshot field
+      tuitionFeeAtPayment: true, // ✅ Snapshot field
+      discountAmount: true,      // ✅ Chegirma summasi
+      discountPercentage: true,  // ✅ Chegirma foizi
+      originalAmount: true       // ✅ Chegirmadan oldingi asl summa
     }
   })
 
@@ -90,12 +93,26 @@ export async function calculateMonthlyPaymentProgress(
 
   // ✅ CRITICAL: Use tuitionFeeAtPayment (snapshot) if available, fallback to current monthlyTuitionFee
   // This ensures completed payments are calculated against their original amount
-  const requiredAmount = payments.length > 0 && payments[0].tuitionFeeAtPayment
+  let requiredAmount = payments.length > 0 && payments[0].tuitionFeeAtPayment
     ? Number(payments[0].tuitionFeeAtPayment)
     : Number(student.monthlyTuitionFee)
   
+  // ✅ DISCOUNT LOGIC: Agar chegirma berilgan bo'lsa, requiredAmount'ni kamaytirish
+  // Bu yerda originalAmount to'lov yaratilgandagi asl summa (chegirmasiz)
+  // amount esa chegirmadan keyin qolgan summa (to'lash kerak bo'lgan)
+  const hasDiscount = payments.some(p => Number(p.discountAmount || 0) > 0)
+  if (hasDiscount) {
+    // Chegirmali to'lovlar uchun amount ishlatamiz (chegirmadan keyin qolgan summa)
+    const discountedPayment = payments.find(p => Number(p.discountAmount || 0) > 0)
+    if (discountedPayment) {
+      requiredAmount = Number(discountedPayment.amount) // Bu chegirma qo'llanganidan keyingi summa
+    }
+  }
+  
   const remainingAmount = Math.max(0, requiredAmount - totalPaid)
   const percentagePaid = requiredAmount > 0 ? (totalPaid / requiredAmount) * 100 : 0
+  
+  // ✅ DISCOUNT AWARE: Agar to'langan summa requiredAmount'ga teng yoki katta bo'lsa, 100% to'langan
   const isFullyPaid = totalPaid >= requiredAmount
 
   // To'lov muddati (paymentDueDay)
