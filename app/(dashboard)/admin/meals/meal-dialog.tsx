@@ -10,6 +10,7 @@ import { createMeal, updateMeal } from '@/app/actions/meal'
 import { toast } from 'sonner'
 import { Upload, X, Image as ImageIcon } from 'lucide-react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 
 const DAYS = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
 
@@ -36,6 +37,7 @@ type MealDialogProps = {
 }
 
 export function MealDialog({ open, onOpenChange, dayOfWeek, mealNumber, meal }: MealDialogProps) {
+  const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [formData, setFormData] = useState({
@@ -143,7 +145,7 @@ export function MealDialog({ open, onOpenChange, dayOfWeek, mealNumber, meal }: 
       }
       
       onOpenChange(false)
-      window.location.reload()
+      router.refresh() // Refresh the page to show updates
     } catch (error) {
       toast.error('Xatolik yuz berdi')
     } finally {

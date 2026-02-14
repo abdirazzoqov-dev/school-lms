@@ -8,6 +8,10 @@ import { Clock, UtensilsCrossed } from 'lucide-react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
+// Disable caching for real-time updates
+export const revalidate = 0
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Ovqatlar Menyusi',
   description: 'Haftalik ovqatlar menyusini ko\'rish',

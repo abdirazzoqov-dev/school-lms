@@ -4,6 +4,10 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { MealsWeekView } from './meals-week-view'
 
+// Disable caching for real-time updates
+export const revalidate = 0
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Ovqatlar Menyusi',
   description: 'Haftalik ovqatlar menyusini boshqarish',

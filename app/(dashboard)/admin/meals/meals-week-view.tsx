@@ -9,6 +9,7 @@ import { deleteMeal } from '@/app/actions/meal'
 import { toast } from 'sonner'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import { useRouter } from 'next/navigation'
 
 const DAYS = [
   { value: 0, label: 'Yakshanba' },
@@ -44,6 +45,7 @@ type Meal = {
 }
 
 export function MealsWeekView({ meals }: { meals: Meal[] }) {
+  const router = useRouter()
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [selectedMeal, setSelectedMeal] = useState<number | null>(null)
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null)
@@ -77,7 +79,7 @@ export function MealsWeekView({ meals }: { meals: Meal[] }) {
     try {
       await deleteMeal(mealId)
       toast.success('Ovqat muvaffaqiyatli o\'chirildi')
-      window.location.reload()
+      router.refresh() // Refresh the page to show updates
     } catch (error) {
       toast.error('Xatolik yuz berdi')
     } finally {
