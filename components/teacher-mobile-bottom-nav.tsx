@@ -37,7 +37,7 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
 
   const getIcon = (iconName: string) => {
     const Icon = LucideIcons[iconName as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>
-    return Icon ? <Icon className="h-5 w-5" /> : null
+    return Icon ? <Icon className="h-7 w-7" /> : null
   }
 
   return (
@@ -102,33 +102,35 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
                   </Button>
                 </div>
               </SheetHeader>
-              <div className="space-y-3 overflow-y-auto max-h-[calc(80vh-120px)] pb-6 px-1">
-                {menuItems.map((item) => {
-                  const active = isActive(item.href)
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setOpen(false)}
-                      className={cn(
-                        "flex items-center gap-4 rounded-2xl px-5 py-4 text-base font-medium transition-all duration-300 shadow-sm",
-                        active
-                          ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                          : "bg-muted/50 text-foreground hover:bg-muted hover:shadow-md"
-                      )}
-                    >
-                      <div className={cn(
-                        "flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300",
-                        active 
-                          ? "bg-primary-foreground/20" 
-                          : "bg-background"
-                      )}>
-                        {getIcon(item.icon)}
-                      </div>
-                      <span className="flex-1">{item.title}</span>
-                    </Link>
-                  )
-                })}
+              <div className="overflow-y-auto max-h-[calc(80vh-120px)] pb-6 px-2">
+                <div className="grid grid-cols-3 gap-4">
+                  {menuItems.map((item) => {
+                    const active = isActive(item.href)
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setOpen(false)}
+                        className={cn(
+                          "flex flex-col items-center gap-3 rounded-2xl p-4 transition-all duration-300",
+                          active
+                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                            : "bg-muted/50 text-foreground hover:bg-muted hover:shadow-md"
+                        )}
+                      >
+                        <div className={cn(
+                          "flex items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300",
+                          active 
+                            ? "bg-primary-foreground/20" 
+                            : "bg-background shadow-sm"
+                        )}>
+                          {getIcon(item.icon)}
+                        </div>
+                        <span className="text-xs font-medium text-center leading-tight">{item.title}</span>
+                      </Link>
+                    )
+                  })}
+                </div>
               </div>
             </SheetContent>
           </Sheet>
