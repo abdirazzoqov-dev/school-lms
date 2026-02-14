@@ -91,9 +91,6 @@ export default async function TeacherDashboard() {
           </p>
         </div>
 
-        {/* Lesson Reminder - Show 5-10 minutes before lesson */}
-        <LessonReminder schedules={validSchedules} />
-
         {/* Quick Stats */}
         <div className="grid gap-4 md:grid-cols-3">
           <Card className="border-none shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 card-hover">
@@ -138,6 +135,9 @@ export default async function TeacherDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Lesson Reminder - Show 5-10 minutes before lesson (after Quick Stats) */}
+        <LessonReminder schedules={validSchedules} />
 
         {/* Today's Schedule */}
         <div className="space-y-4">

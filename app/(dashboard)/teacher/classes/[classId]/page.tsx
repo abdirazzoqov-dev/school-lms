@@ -43,12 +43,44 @@ export default function TeacherClassDetailPage() {
   const [subjectData, setSubjectData] = useState<SubjectData | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [isLessonActive, setIsLessonActive] = useState(true) // Check if lesson time is active
 
   // Attendance state
   const [attendance, setAttendance] = useState<Record<string, 'PRESENT' | 'ABSENT' | 'LATE'>>({})
   
   // Grades state
   const [grades, setGrades] = useState<Record<string, string>>({})
+
+  // Check if current time is within lesson time
+  useEffect(() => {
+    if (!startTime || !endTime) {
+      setIsLessonActive(true) // If no time specified, allow access
+      return
+    }
+
+    const checkLessonTime = () => {
+      const now = new Date()
+      const currentMinutes = now.getHours() * 60 + now.getMinutes()
+      
+      const [startHour, startMin] = startTime.split(':').map(Number)
+      const [endHour, endMin] = endTime.split(':').map(Number)
+      
+      const lessonStart = startHour * 60 + startMin
+      const lessonEnd = endHour * 60 + endMin
+      
+      // Lesson is active if current time is within lesson time
+      const active = currentMinutes >= lessonStart && currentMinutes <= lessonEnd
+      setIsLessonActive(active)
+    }
+
+    // Check immediately
+    checkLessonTime()
+
+    // Check every minute
+    const interval = setInterval(checkLessonTime, 60000)
+
+    return () => clearInterval(interval)
+  }, [startTime, endTime])
 
   useEffect(() => {
     loadClassData()
@@ -123,6 +155,15 @@ export default function TeacherClassDetailPage() {
   }
 
   const handleSaveAttendance = async () => {
+    if (!isLessonActive) {
+      toast({
+        variant: 'destructive',
+        title: 'Dars tugadi!',
+        description: 'Dars vaqti tugagandan keyin davomat qilish mumkin emas.',
+      })
+      return
+    }
+
     try {
       setSaving(true)
 
@@ -164,6 +205,15 @@ export default function TeacherClassDetailPage() {
   }
 
   const handleSaveGrades = async () => {
+    if (!isLessonActive) {
+      toast({
+        variant: 'destructive',
+        title: 'Dars tugadi!',
+        description: 'Dars vaqti tugagandan keyin baholash mumkin emas.',
+      })
+      return
+    }
+
     try {
       setSaving(true)
 
@@ -257,6 +307,25 @@ export default function TeacherClassDetailPage() {
         </div>
       </div>
 
+      {/* Lesson Expired Alert */}
+      {!isLessonActive && startTime && endTime && (
+        <Card className="border-2 border-red-500 bg-red-50 dark:bg-red-950/20">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-full bg-red-500 text-white">
+                <Clock className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-red-900 dark:text-red-100">Dars vaqti tugadi</h3>
+                <p className="text-sm text-red-700 dark:text-red-300">
+                  Bu dars {startTime} - {endTime} vaqtida bo'lgan. Dars tugagandan keyin davomat va baholash imkoniyati yo'q.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Tabs */}
       <Tabs defaultValue="attendance" className="space-y-4">
         <TabsList className="grid w-full grid-cols-2 max-w-md">
@@ -298,6 +367,7 @@ export default function TeacherClassDetailPage() {
                             [student.id]: 'PRESENT',
                           }))
                         }
+                        disabled={!isLessonActive}
                       >
                         <Check className="h-4 w-4 mr-1" />
                         Bor
@@ -311,6 +381,7 @@ export default function TeacherClassDetailPage() {
                             [student.id]: 'ABSENT',
                           }))
                         }
+                        disabled={!isLessonActive}
                       >
                         <X className="h-4 w-4 mr-1" />
                         Yo'q
@@ -324,6 +395,7 @@ export default function TeacherClassDetailPage() {
                             [student.id]: 'LATE',
                           }))
                         }
+                        disabled={!isLessonActive}
                       >
                         Kech
                       </Button>
@@ -333,7 +405,11 @@ export default function TeacherClassDetailPage() {
               </div>
 
               <div className="mt-6">
-                <Button onClick={handleSaveAttendance} disabled={saving} className="w-full">
+                <Button 
+                  onClick={handleSaveAttendance} 
+                  disabled={saving || !isLessonActive} 
+                  className="w-full"
+                >
                   {saving ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -412,6 +488,7 @@ export default function TeacherClassDetailPage() {
                               }))
                             }
                             className="text-center"
+                            disabled={!isLessonActive}
                           />
                         )}
                       </div>
@@ -421,7 +498,11 @@ export default function TeacherClassDetailPage() {
               </div>
 
               <div className="mt-6">
-                <Button onClick={handleSaveGrades} disabled={saving} className="w-full">
+                <Button 
+                  onClick={handleSaveGrades} 
+                  disabled={saving || !isLessonActive} 
+                  className="w-full"
+                >
                   {saving ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
