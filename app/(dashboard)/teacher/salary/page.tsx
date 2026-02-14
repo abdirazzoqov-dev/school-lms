@@ -93,6 +93,9 @@ export default async function TeacherSalaryPage({
   // Calculate statistics
   const monthlySalary = teacher.monthlySalary ? Number(teacher.monthlySalary) : 0
   
+  // Check if there's a FULL_SALARY payment (monthly salary was paid)
+  const fullSalaryPayment = salaryPayments.find(p => p.type === 'FULL_SALARY')
+  
   // For percentage calculation: count base salary paid (not including bonus/deduction adjustments)
   const totalBasePaid = salaryPayments.reduce((sum, p) => {
     if (p.type === 'ADVANCE') {
@@ -106,7 +109,14 @@ export default async function TeacherSalaryPage({
   
   const totalPaid = salaryPayments.reduce((sum, p) => sum + Number(p.paidAmount), 0)
   const totalAmount = salaryPayments.reduce((sum, p) => sum + Number(p.amount), 0)
-  const remaining = monthlySalary > 0 ? Math.max(0, monthlySalary - totalBasePaid) : Math.max(0, totalAmount - totalPaid)
+  
+  // ✅ FIXED: Qolgan summa to'g'ri hisoblanadi
+  // Agar FULL_SALARY to'langan bo'lsa va baseSalary >= monthlySalary, qolgan = 0
+  const remaining = fullSalaryPayment && Number(fullSalaryPayment.baseSalary || 0) >= monthlySalary
+    ? 0  // FULL_SALARY to'langan, qolgan yo'q
+    : monthlySalary > 0 
+      ? Math.max(0, monthlySalary - totalBasePaid)  // Oddiy hisoblash
+      : Math.max(0, totalAmount - totalPaid)  // Fallback
   
   const referenceAmount = monthlySalary > 0 ? monthlySalary : totalAmount
   const percentage = referenceAmount > 0 ? Math.min(Math.round((totalBasePaid / referenceAmount) * 100), 100) : 0
