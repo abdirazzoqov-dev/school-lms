@@ -37,20 +37,12 @@ export default async function TeacherDashboard() {
       )
     }
 
-    // Get today's schedule from constructor
-    const today = new Date()
-    const dayOfWeek = today.getDay() || 7 // Sunday = 7
-    
-    // Convert JavaScript day (0-6, Sun-Sat) to database day (1-7, Mon-Sun)
-    const dbDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek
-
-    const todaySchedule = await db.schedule.findMany({
+    // Get ALL teacher's schedules first to debug
+    const allTeacherSchedules = await db.schedule.findMany({
       where: {
         tenantId,
         teacherId: teacher.id,
-        dayOfWeek: dbDayOfWeek,
         academicYear: getCurrentAcademicYear()
-        // ✅ REMOVED type: 'LESSON' filter - it's preventing schedules from showing!
       },
       include: {
         class: {
@@ -65,66 +57,41 @@ export default async function TeacherDashboard() {
       orderBy: { startTime: 'asc' }
     })
 
-    // Debug: Log schedule info
-    console.log('🔍 Teacher Dashboard Debug:')
-    console.log('Teacher ID:', teacher.id)
-    console.log('Day of Week (JS):', dayOfWeek)
-    console.log('Day of Week (DB):', dbDayOfWeek)
-    console.log('Academic Year:', getCurrentAcademicYear())
-    console.log('Today Schedule Count:', todaySchedule.length)
-    if (todaySchedule.length > 0) {
-      console.log('First Schedule:', {
-        subject: todaySchedule[0].subject?.name,
-        class: todaySchedule[0].class?.name,
-        time: `${todaySchedule[0].startTime}-${todaySchedule[0].endTime}`
-      })
-    }
+    // Get today's schedule from constructor
+    const today = new Date()
+    const dayOfWeek = today.getDay() // 0-6, Sunday-Saturday
+    
+    // Convert JavaScript day (0-6, Sun-Sat) to database day (1-7, Mon-Sun)
+    const dbDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek
+
+    const todaySchedule = allTeacherSchedules.filter(s => s.dayOfWeek === dbDayOfWeek)
 
     // Get quick stats - fetch all schedules to count unique classes and subjects
-    const allSchedules = await db.schedule.findMany({
-      where: {
-        tenantId,
-        teacherId: teacher.id,
-        academicYear: getCurrentAcademicYear()
-        // ✅ REMOVED type: 'LESSON' filter
-      },
-      select: {
-        classId: true,
-        subjectId: true
-      }
-    })
-
-    const totalClasses = new Set(allSchedules.map(s => s.classId)).size
-    const totalSubjects = new Set(allSchedules.map(s => s.subjectId)).size
+    const totalClasses = new Set(allTeacherSchedules.map(s => s.classId)).size
+    const totalSubjects = new Set(allTeacherSchedules.map(s => s.subjectId)).size
 
     // Days of week
     const daysOfWeek = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
-    const todayName = daysOfWeek[dayOfWeek === 7 ? 0 : dayOfWeek]
-
-    // Get lesson number for each schedule
-    const getLessonNumber = (startTime: string) => {
-      const timeslots = [
-        { start: '08:00', end: '08:45', num: 1 },
-        { start: '09:00', end: '09:45', num: 2 },
-        { start: '10:00', end: '10:45', num: 3 },
-        { start: '11:00', end: '11:45', num: 4 },
-        { start: '12:00', end: '12:45', num: 5 },
-        { start: '13:00', end: '13:45', num: 6 },
-        { start: '14:00', end: '14:45', num: 7 },
-        { start: '15:00', end: '15:45', num: 8 },
-      ]
-      const slot = timeslots.find(t => t.start === startTime)
-      return slot ? slot.num : 0
-    }
-
-    const formatTime = (time: string) => {
-      return time.slice(0, 5) // "08:00:00" -> "08:00"
-    }
+    const todayName = daysOfWeek[dayOfWeek]
 
     // Filter out schedules with null subject for lesson reminder
     const validSchedules = todaySchedule.filter((s): s is typeof s & { subject: NonNullable<typeof s.subject>; subjectId: string } => 
       s.subject !== null && s.subjectId !== null
     )
+
+    // Debug info to show on page
+    const debugInfo = {
+      teacherId: teacher.id,
+      dayOfWeek: dayOfWeek,
+      dbDayOfWeek: dbDayOfWeek,
+      todayName: todayName,
+      academicYear: getCurrentAcademicYear(),
+      totalSchedules: allTeacherSchedules.length,
+      todayScheduleCount: todaySchedule.length,
+      scheduleDays: [...new Set(allTeacherSchedules.map(s => s.dayOfWeek))].sort()
+    }
+
+    console.log('🔍 Teacher Dashboard Debug:', debugInfo)
 
     return (
       <div className="space-y-6 animate-fade-in">
@@ -137,6 +104,28 @@ export default async function TeacherDashboard() {
             Salom, <span className="font-semibold text-foreground">{session.user.fullName}</span>! 👋
           </p>
         </div>
+
+        {/* Debug Info Card - TEMPORARY */}
+        <Card className="border-2 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
+          <CardContent className="pt-6">
+            <h3 className="font-bold text-lg mb-2">🔍 Debug Ma'lumotlari:</h3>
+            <div className="space-y-1 text-sm font-mono">
+              <p>Bugun: <strong>{todayName}</strong> (JS: {dayOfWeek}, DB: {dbDayOfWeek})</p>
+              <p>O'quv yili: <strong>{debugInfo.academicYear}</strong></p>
+              <p>Jami darslar: <strong>{debugInfo.totalSchedules}</strong></p>
+              <p>Bugungi darslar: <strong>{debugInfo.todayScheduleCount}</strong></p>
+              <p>Mavjud kunlar: <strong>{debugInfo.scheduleDays.join(', ')}</strong></p>
+              {todaySchedule.length > 0 && (
+                <div className="mt-2 pt-2 border-t">
+                  <p className="font-bold">Birinchi dars:</p>
+                  <p>Fan: {todaySchedule[0].subject?.name}</p>
+                  <p>Sinf: {todaySchedule[0].class?.name}</p>
+                  <p>Vaqt: {todaySchedule[0].startTime} - {todaySchedule[0].endTime}</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Lesson Reminder - Show 5-10 minutes before lesson */}
         <LessonReminder schedules={validSchedules} />
