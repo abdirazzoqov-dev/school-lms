@@ -2,13 +2,25 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { CalendarCheck, Users, Download, FileSpreadsheet } from 'lucide-react'
-import Link from 'next/link'
-import { AttendanceTable } from '@/components/teacher/attendance-table'
+import { Card, CardContent } from '@/components/ui/card'
+import { CalendarCheck, Users, Clock, TrendingUp } from 'lucide-react'
+import { TeacherAttendanceFilters } from './teacher-attendance-filters'
+import { TeacherAttendanceTable } from './teacher-attendance-table'
+import { getCurrentAcademicYear } from '@/lib/utils'
 
-export default async function TeacherAttendancePage() {
+type SearchParams = {
+  date?: string
+  period?: 'day' | 'week' | 'month'
+  classId?: string
+  subjectId?: string
+  timeSlot?: string
+}
+
+export default async function TeacherAttendancePage({
+  searchParams,
+}: {
+  searchParams: SearchParams
+}) {
   const session = await getServerSession(authOptions)
 
   if (!session || session.user.role !== 'TEACHER') {
@@ -26,138 +38,205 @@ export default async function TeacherAttendancePage() {
     redirect('/unauthorized')
   }
 
-  // Get today's date
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  // Get today's attendance for teacher's classes
-  const todayAttendance = await db.attendance.findMany({
+  // Get teacher's classes and subjects from Schedule (constructor-based)
+  const teacherSchedules = await db.schedule.findMany({
     where: {
+      tenantId,
       teacherId: teacher.id,
-      date: today,
+      academicYear: getCurrentAcademicYear(),
+      type: 'LESSON'
     },
+    include: {
+      class: true,
+      subject: true
+    },
+    distinct: ['classId', 'subjectId']
+  })
+
+  // Extract unique classes and subjects
+  const classes = Array.from(
+    new Map(teacherSchedules.map(s => [s.classId, s.class])).values()
+  )
+
+  const subjects = Array.from(
+    new Map(teacherSchedules.map(s => [s.subjectId, s.subject])).values()
+  )
+
+  // Get unique time slots from teacher's schedule
+  const timeSlots = await db.schedule.findMany({
+    where: {
+      tenantId,
+      teacherId: teacher.id,
+      academicYear: getCurrentAcademicYear(),
+      type: 'LESSON'
+    },
+    select: {
+      startTime: true,
+      endTime: true
+    },
+    distinct: ['startTime', 'endTime'],
+    orderBy: { startTime: 'asc' }
+  })
+
+  // Parse filters
+  const period = searchParams.period || 'day'
+  const selectedDate = searchParams.date ? new Date(searchParams.date) : new Date()
+  selectedDate.setHours(0, 0, 0, 0)
+
+  // Calculate date range based on period
+  let startDate = new Date(selectedDate)
+  let endDate = new Date(selectedDate)
+
+  if (period === 'week') {
+    const dayOfWeek = startDate.getDay()
+    const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+    startDate.setDate(startDate.getDate() - diff)
+    endDate = new Date(startDate)
+    endDate.setDate(endDate.getDate() + 6)
+  } else if (period === 'month') {
+    startDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
+    endDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0)
+  }
+
+  endDate.setHours(23, 59, 59, 999)
+
+  // Build where clause for attendance
+  const whereClause: any = {
+    tenantId,
+    teacherId: teacher.id,
+    date: {
+      gte: startDate,
+      lte: endDate
+    }
+  }
+
+  if (searchParams.classId) {
+    whereClause.classId = searchParams.classId
+  }
+
+  if (searchParams.subjectId) {
+    whereClause.subjectId = searchParams.subjectId
+  }
+
+  if (searchParams.timeSlot) {
+    whereClause.startTime = searchParams.timeSlot
+  }
+
+  // Get attendance records
+  const attendances = await db.attendance.findMany({
+    where: whereClause,
     include: {
       student: {
         include: {
           user: {
-            select: { fullName: true }
+            select: { fullName: true, avatar: true }
           },
           class: {
             select: { name: true }
           }
         }
+      },
+      subject: {
+        select: { name: true }
       }
     },
-    orderBy: {
-      createdAt: 'asc'
-    }
+    orderBy: [
+      { date: 'desc' },
+      { startTime: 'asc' }
+    ]
   })
 
-  const presentCount = todayAttendance.filter(a => a.status === 'PRESENT').length
-  const absentCount = todayAttendance.filter(a => a.status === 'ABSENT').length
-  const lateCount = todayAttendance.filter(a => a.status === 'LATE').length
+  // Calculate statistics
+  const totalRecords = attendances.length
+  const presentCount = attendances.filter(a => a.status === 'PRESENT').length
+  const absentCount = attendances.filter(a => a.status === 'ABSENT').length
+  const lateCount = attendances.filter(a => a.status === 'LATE').length
+  const attendanceRate = totalRecords > 0 ? ((presentCount / totalRecords) * 100).toFixed(1) : '0'
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Davomat</h1>
-          <p className="text-muted-foreground">
-            O'quvchilar davomatini boshqaring
-          </p>
-        </div>
-        
-        {/* Export Buttons */}
-        {todayAttendance.length > 0 && (
-          <div className="flex gap-2">
-            <form action="/api/teacher/attendance/export" method="POST">
-              <input type="hidden" name="format" value="excel" />
-              <input type="hidden" name="date" value={today.toISOString()} />
-              <Button variant="outline" type="submit">
-                <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Excel
-              </Button>
-            </form>
-          </div>
-        )}
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col gap-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          Davomat
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          O'quvchilar davomatini boshqaring va hisobot oling
+        </p>
       </div>
 
-      {/* Stats */}
+      {/* Filters */}
+      <TeacherAttendanceFilters 
+        classes={classes}
+        subjects={subjects}
+        timeSlots={timeSlots}
+      />
+
+      {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card className="border-none shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 card-hover">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="h-6 w-6 text-blue-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
+                <Users className="h-6 w-6" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{todayAttendance.length}</div>
-                <p className="text-sm text-muted-foreground">Bugun belgilangan</p>
+                <div className="text-3xl font-bold text-blue-600">{totalRecords}</div>
+                <p className="text-sm text-muted-foreground font-medium">Jami yozuvlar</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-none shadow-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 card-hover">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CalendarCheck className="h-6 w-6 text-green-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
+                <CalendarCheck className="h-6 w-6" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{presentCount}</div>
-                <p className="text-sm text-muted-foreground">Kelgan</p>
+                <div className="text-3xl font-bold text-green-600">{presentCount}</div>
+                <p className="text-sm text-muted-foreground font-medium">Kelgan</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-none shadow-lg bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/20 card-hover">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <CalendarCheck className="h-6 w-6 text-red-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-lg">
+                <Clock className="h-6 w-6" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{absentCount}</div>
-                <p className="text-sm text-muted-foreground">Kelmagan</p>
+                <div className="text-3xl font-bold text-red-600">{absentCount}</div>
+                <p className="text-sm text-muted-foreground font-medium">Kelmagan</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-none shadow-lg bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 card-hover">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <CalendarCheck className="h-6 w-6 text-orange-600" />
+              <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow-lg">
+                <TrendingUp className="h-6 w-6" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{lateCount}</div>
-                <p className="text-sm text-muted-foreground">Kech kelgan</p>
+                <div className="text-3xl font-bold text-orange-600">{attendanceRate}%</div>
+                <p className="text-sm text-muted-foreground font-medium">Davomat %</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Attendance Table with Filters */}
-      {todayAttendance.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Bugungi davomat</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AttendanceTable attendances={todayAttendance} />
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            Bugun hali davomat belgilanmagan
-          </CardContent>
-        </Card>
-      )}
+      {/* Attendance Table */}
+      <TeacherAttendanceTable 
+        attendances={attendances}
+        startDate={startDate}
+        endDate={endDate}
+      />
     </div>
   )
 }

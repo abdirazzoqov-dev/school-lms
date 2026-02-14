@@ -1,11 +1,11 @@
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { NextRequest, NextResponse } from 'next/server'
+import * as xlsx from 'xlsx'
+import { getCurrentAcademicYear } from '@/lib/utils'
 
-export const dynamic = 'force-dynamic'
-
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
@@ -17,24 +17,59 @@ export async function POST(req: NextRequest) {
 
     // Get teacher
     const teacher = await db.teacher.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: session.user.id }
     })
 
     if (!teacher) {
       return NextResponse.json({ error: 'Teacher not found' }, { status: 404 })
     }
 
-    const formData = await req.formData()
-    const dateStr = formData.get('date') as string
-    const date = new Date(dateStr)
-    date.setHours(0, 0, 0, 0)
+    // Parse query parameters
+    const searchParams = req.nextUrl.searchParams
+    const dateParam = searchParams.get('date')
+    const period = searchParams.get('period') || 'day'
+    const classId = searchParams.get('classId')
+    const subjectId = searchParams.get('subjectId')
+    const timeSlot = searchParams.get('timeSlot')
 
-    // Get attendance for the date
-    const attendanceRecords = await db.attendance.findMany({
-      where: {
-        teacherId: teacher.id,
-        date,
-      },
+    // Parse date
+    const selectedDate = dateParam ? new Date(dateParam) : new Date()
+    selectedDate.setHours(0, 0, 0, 0)
+
+    // Calculate date range
+    let startDate = new Date(selectedDate)
+    let endDate = new Date(selectedDate)
+
+    if (period === 'week') {
+      const dayOfWeek = startDate.getDay()
+      const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+      startDate.setDate(startDate.getDate() - diff)
+      endDate = new Date(startDate)
+      endDate.setDate(endDate.getDate() + 6)
+    } else if (period === 'month') {
+      startDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
+      endDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0)
+    }
+
+    endDate.setHours(23, 59, 59, 999)
+
+    // Build where clause
+    const whereClause: any = {
+      tenantId,
+      teacherId: teacher.id,
+      date: {
+        gte: startDate,
+        lte: endDate
+      }
+    }
+
+    if (classId) whereClause.classId = classId
+    if (subjectId) whereClause.subjectId = subjectId
+    if (timeSlot) whereClause.startTime = timeSlot
+
+    // Fetch attendance data
+    const attendances = await db.attendance.findMany({
+      where: whereClause,
       include: {
         student: {
           include: {
@@ -45,38 +80,79 @@ export async function POST(req: NextRequest) {
               select: { name: true }
             }
           }
+        },
+        subject: {
+          select: { name: true }
         }
       },
-      orderBy: {
-        createdAt: 'asc'
+      orderBy: [
+        { date: 'desc' },
+        { startTime: 'asc' }
+      ]
+    })
+
+    // Format data for Excel
+    const excelData = attendances.map((attendance, index) => {
+      const statusMap: Record<string, string> = {
+        PRESENT: 'Kelgan',
+        ABSENT: 'Kelmagan',
+        LATE: 'Kech kelgan',
+        EXCUSED: 'Sababli'
+      }
+
+      return {
+        '#': index + 1,
+        'O\'quvchi': attendance.student.user.fullName,
+        'Sinf': attendance.student.class.name,
+        'Fan': attendance.subject?.name || '—',
+        'Sana': new Date(attendance.date).toLocaleDateString('uz-UZ'),
+        'Dars vaqti': attendance.startTime && attendance.endTime 
+          ? `${attendance.startTime} - ${attendance.endTime}` 
+          : '—',
+        'Status': statusMap[attendance.status] || attendance.status
       }
     })
 
-    // Generate CSV content (Excel can open CSV files)
-    const csvRows = [
-      ['O\'quvchi', 'Sinf', 'Status', 'Vaqt'].join(','),
-      ...attendanceRecords.map(att => [
-        att.student.user?.fullName || 'N/A',
-        att.student.class?.name || '',
-        att.status === 'PRESENT' ? 'Kelgan' : att.status === 'ABSENT' ? 'Kelmagan' : 'Kech kelgan',
-        new Date(att.createdAt).toLocaleTimeString('uz-UZ', { timeZone: 'Asia/Tashkent' })
-      ].join(','))
+    // Create workbook and worksheet
+    const wb = xlsx.utils.book_new()
+    const ws = xlsx.utils.json_to_sheet(excelData)
+
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 5 },  // #
+      { wch: 25 }, // O'quvchi
+      { wch: 10 }, // Sinf
+      { wch: 20 }, // Fan
+      { wch: 12 }, // Sana
+      { wch: 18 }, // Dars vaqti
+      { wch: 12 }, // Status
     ]
 
-    const csvContent = csvRows.join('\n')
-    
-    return new NextResponse(csvContent, {
+    xlsx.utils.book_append_sheet(wb, ws, 'Davomat')
+
+    // Generate buffer
+    const excelBuffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' })
+
+    // Generate filename
+    const periodLabels: Record<string, string> = {
+      day: 'Kun',
+      week: 'Hafta',
+      month: 'Oy'
+    }
+    const filename = `Davomat_${periodLabels[period]}_${startDate.toLocaleDateString('uz-UZ').replace(/\//g, '-')}.xlsx`
+
+    // Return Excel file
+    return new NextResponse(excelBuffer, {
       headers: {
-        'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="davomat-${date.toLocaleDateString('uz-UZ')}.csv"`,
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="${filename}"`,
       },
     })
   } catch (error) {
     console.error('Error exporting attendance:', error)
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Failed to export attendance' },
       { status: 500 }
     )
   }
 }
-
