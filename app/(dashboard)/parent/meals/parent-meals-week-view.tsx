@@ -1,6 +1,8 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Clock } from 'lucide-react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
@@ -39,125 +41,146 @@ type Meal = {
 }
 
 export function ParentMealsWeekView({ meals }: { meals: Meal[] }) {
+  const today = new Date().getDay()
+  const [selectedDay, setSelectedDay] = useState<string>(today.toString())
+
   const getMealForDayAndNumber = (day: number, mealNumber: number) => {
     return meals.find(m => m.dayOfWeek === day && m.mealNumber === mealNumber)
   }
 
+  const daysWithMeals = DAYS.filter(day => 
+    meals.some(m => m.dayOfWeek === day.value)
+  )
+
   return (
-    <div className="grid gap-4">
-      {DAYS.map((day) => (
-        <Card key={day.value}>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-xl">{day.label}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-5">
-              {MEALS.map((meal) => {
-                const mealData = getMealForDayAndNumber(day.value, meal.number)
-                
-                return (
-                  <Card key={meal.number} className="overflow-hidden group hover:shadow-lg transition-all duration-300">
-                    {/* Rasm - Restaurant Style */}
-                    {mealData?.image && (
-                      <div className="relative h-32 w-full overflow-hidden">
-                        <Image
-                          src={mealData.image}
-                          alt={mealData.mainDish}
-                          fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                        
-                        {/* Meal label on image */}
-                        <div className="absolute bottom-2 left-2">
-                          <div className="backdrop-blur-md bg-white/20 rounded-lg px-3 py-1.5 border border-white/30">
-                            <p className="text-white font-semibold text-sm">{meal.label}</p>
-                            <div className="flex items-center gap-1.5 text-white/90 text-xs">
+    <Tabs value={selectedDay} onValueChange={setSelectedDay} className="w-full">
+      {/* Tabs List - Minimalist LMS Style */}
+      <TabsList className="w-full h-auto p-1 bg-muted/30 border rounded-lg mb-6 grid grid-cols-7 gap-1">
+        {daysWithMeals.map((day) => (
+          <TabsTrigger
+            key={day.value}
+            value={day.value.toString()}
+            className={cn(
+              "px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200",
+              "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm",
+              "data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-muted/50"
+            )}
+          >
+            {day.label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+
+      {/* Tab Content for each day */}
+      {daysWithMeals.map((day) => (
+        <TabsContent key={day.value} value={day.value.toString()} className="mt-6">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {MEALS.map((meal) => {
+              const mealData = getMealForDayAndNumber(day.value, meal.number)
+              
+              if (!mealData) {
+                return null
+              }
+
+              return (
+                <Card 
+                  key={meal.number} 
+                  className="overflow-hidden group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20"
+                >
+                  {/* Image Section */}
+                  {mealData.image && (
+                    <div className="relative h-36 w-full overflow-hidden bg-muted">
+                      <Image
+                        src={mealData.image}
+                        alt={mealData.mainDish}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      
+                      {/* Meal label and time on image */}
+                      <div className="absolute bottom-2 left-2 right-2">
+                        <div className="backdrop-blur-md bg-white/90 dark:bg-black/70 rounded-lg px-3 py-2 border border-white/50">
+                          <div className="flex items-center justify-between">
+                            <p className="text-foreground font-semibold text-sm">{meal.label}</p>
+                            <div className="flex items-center gap-1 text-muted-foreground">
                               <Clock className="h-3 w-3" />
-                              <span>{mealData.mealTime}</span>
+                              <span className="text-xs font-medium">{mealData.mealTime}</span>
                             </div>
                           </div>
                         </div>
                       </div>
-                    )}
+                    </div>
+                  )}
+                  
+                  {/* Header for meals without image */}
+                  {!mealData.image && (
+                    <div className="p-3 pb-2 bg-muted/30 border-b">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-sm font-semibold">{meal.label}</p>
+                      </div>
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        <span className="text-xs">{mealData.mealTime}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Content */}
+                  <CardContent className="p-3 space-y-2">
+                    {/* Main dish */}
+                    <div>
+                      <h3 className="font-bold text-base leading-tight line-clamp-2">
+                        {mealData.mainDish}
+                      </h3>
+                    </div>
                     
-                    {/* Header for meals without image */}
-                    {!mealData?.image && (
-                      <CardHeader className={cn(
-                        "p-3 pb-2",
-                        mealData ? "bg-gradient-to-br from-primary/10 to-primary/5" : "bg-muted/50"
-                      )}>
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-sm font-medium">
-                            {meal.label}
-                          </CardTitle>
-                        </div>
-                      </CardHeader>
-                    )}
-                    
-                    <CardContent className="p-3">
-                      {mealData ? (
-                        <div className="space-y-2 text-sm">
-                          {/* Show time only if no image */}
-                          {!mealData.image && (
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                              <Clock className="h-3 w-3" />
-                              <span>{mealData.mealTime}</span>
-                            </div>
-                          )}
-                          
-                          <div>
-                            <p className="font-semibold text-base mb-1">{mealData.mainDish}</p>
-                          </div>
-                          
-                          {mealData.sideDish && (
-                            <div className="flex items-start gap-2">
-                              <span className="text-xs text-muted-foreground min-w-[60px]">Garnitir:</span>
-                              <span className="text-sm">{mealData.sideDish}</span>
-                            </div>
-                          )}
-                          
-                          {mealData.salad && (
-                            <div className="flex items-start gap-2">
-                              <span className="text-xs text-muted-foreground min-w-[60px]">Salat:</span>
-                              <span className="text-sm">{mealData.salad}</span>
-                            </div>
-                          )}
-                          
-                          {mealData.dessert && (
-                            <div className="flex items-start gap-2">
-                              <span className="text-xs text-muted-foreground min-w-[60px]">Shirinlik:</span>
-                              <span className="text-sm">{mealData.dessert}</span>
-                            </div>
-                          )}
-                          
-                          {mealData.drink && (
-                            <div className="flex items-start gap-2">
-                              <span className="text-xs text-muted-foreground min-w-[60px]">Ichimlik:</span>
-                              <span className="text-sm">{mealData.drink}</span>
-                            </div>
-                          )}
-                          
-                          {mealData.description && (
-                            <div className="pt-2 mt-2 border-t">
-                              <p className="text-xs text-muted-foreground italic">{mealData.description}</p>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8 text-muted-foreground text-sm">
-                          Ma'lumot yo'q
+                    {/* Details */}
+                    <div className="space-y-1.5 text-sm">
+                      {mealData.sideDish && (
+                        <div className="flex items-start gap-2 text-muted-foreground">
+                          <span className="text-xs min-w-[55px] font-medium">Garnitir:</span>
+                          <span className="text-xs text-foreground font-medium">{mealData.sideDish}</span>
                         </div>
                       )}
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
+                      
+                      {mealData.salad && (
+                        <div className="flex items-start gap-2 text-muted-foreground">
+                          <span className="text-xs min-w-[55px] font-medium">Salat:</span>
+                          <span className="text-xs text-foreground font-medium">{mealData.salad}</span>
+                        </div>
+                      )}
+                      
+                      {mealData.dessert && (
+                        <div className="flex items-start gap-2 text-muted-foreground">
+                          <span className="text-xs min-w-[55px] font-medium">Shirinlik:</span>
+                          <span className="text-xs text-foreground font-medium">{mealData.dessert}</span>
+                        </div>
+                      )}
+                      
+                      {mealData.drink && (
+                        <div className="flex items-start gap-2 text-muted-foreground">
+                          <span className="text-xs min-w-[55px] font-medium">Ichimlik:</span>
+                          <span className="text-xs text-foreground font-medium">{mealData.drink}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Description */}
+                    {mealData.description && (
+                      <div className="pt-2 mt-2 border-t">
+                        <p className="text-xs text-muted-foreground italic line-clamp-2 leading-relaxed">
+                          {mealData.description}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        </TabsContent>
       ))}
-    </div>
+    </Tabs>
   )
 }
-
