@@ -108,13 +108,15 @@ export async function GET(req: NextRequest) {
     }
 
     // Filter out records with null user or class (with type predicate)
-    const grades = gradeRecords.filter(
+    const gradesFiltered = gradeRecords.filter(
       (record): record is GradeWithRelations => 
         record.student.user !== null && record.student.class !== null
     )
 
     // Format data for Excel
-    const excelData = grades.map((grade, index) => {
+    const excelData = gradesFiltered.map((grade, index) => {
+      const baseGrade = grade as any // Type assertion to access all fields
+      
       const getGradeLevel = (percentage: number) => {
         if (percentage >= 85) return 'A\'lo'
         if (percentage >= 70) return 'Yaxshi'
@@ -134,7 +136,7 @@ export async function GET(req: NextRequest) {
         'Ball': `${Number(grade.score)}/${Number(grade.maxScore)}`,
         'Foiz': `${Number(grade.percentage)}%`,
         'Daraja': getGradeLevel(Number(grade.percentage)),
-        'Izoh': grade.comments || '—'
+        'Izoh': baseGrade.comments || '—'
       }
     })
 
