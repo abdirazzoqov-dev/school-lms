@@ -61,26 +61,22 @@ export default async function TeacherDashboard() {
       orderBy: { startTime: 'asc' }
     })
 
-    // Get quick stats
-    const totalClasses = await db.schedule.count({
+    // Get quick stats - fetch all schedules to count unique classes and subjects
+    const allSchedules = await db.schedule.findMany({
       where: {
         tenantId,
         teacherId: teacher.id,
         academicYear: getCurrentAcademicYear(),
         type: 'LESSON'
       },
-      distinct: ['classId']
+      select: {
+        classId: true,
+        subjectId: true
+      }
     })
 
-    const totalSubjects = await db.schedule.count({
-      where: {
-        tenantId,
-        teacherId: teacher.id,
-        academicYear: getCurrentAcademicYear(),
-        type: 'LESSON'
-      },
-      distinct: ['subjectId']
-    })
+    const totalClasses = new Set(allSchedules.map(s => s.classId)).size
+    const totalSubjects = new Set(allSchedules.map(s => s.subjectId)).size
 
     // Days of week
     const daysOfWeek = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
