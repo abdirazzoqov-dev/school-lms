@@ -174,7 +174,9 @@ export default async function TeacherGradesPage({
     ...grade,
     score: Number(grade.score),
     maxScore: Number(grade.maxScore),
-    percentage: Number(grade.percentage)
+    percentage: Number(grade.percentage),
+    type: grade.type || 'ORAL',
+    comments: grade.comments || null
   }))
 
   // Calculate statistics
