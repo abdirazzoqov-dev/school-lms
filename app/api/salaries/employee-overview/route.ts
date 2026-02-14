@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   try {
     session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -20,6 +20,28 @@ export async function GET(request: Request) {
 
     if (!employeeId || !employeeType) {
       return NextResponse.json({ success: false, error: 'Missing parameters' }, { status: 400 })
+    }
+
+    // ✅ Authorization check: Admin can view anyone, teachers/staff can only view themselves
+    if (session.user.role !== 'ADMIN') {
+      // Check if user is viewing their own data
+      if (employeeType === 'teacher') {
+        const teacher = await db.teacher.findUnique({
+          where: { id: employeeId, tenantId },
+          select: { userId: true }
+        })
+        if (!teacher || teacher.userId !== session.user.id) {
+          return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+        }
+      } else {
+        const staff = await db.staff.findUnique({
+          where: { id: employeeId, tenantId },
+          select: { userId: true }
+        })
+        if (!staff || staff.userId !== session.user.id) {
+          return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+        }
+      }
     }
 
     // Get employee and monthly salary
