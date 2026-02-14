@@ -7,6 +7,8 @@ import { Plus, Edit, Trash2, Clock, UtensilsCrossed } from 'lucide-react'
 import { MealDialog } from './meal-dialog'
 import { deleteMeal } from '@/app/actions/meal'
 import { toast } from 'sonner'
+import Image from 'next/image'
+import { cn } from '@/lib/utils'
 
 const DAYS = [
   { value: 0, label: 'Yakshanba' },
@@ -97,74 +99,145 @@ export function MealsWeekView({ meals }: { meals: Meal[] }) {
                   const mealData = getMealForDayAndNumber(day.value, meal.number)
                   
                   return (
-                    <Card key={meal.number} className="overflow-hidden">
-                      <CardHeader className="p-3 pb-2 bg-muted/50">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-sm font-medium">
-                            {meal.label}
-                          </CardTitle>
-                          {mealData && (
-                            <div className="flex gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 w-7 p-0"
-                                onClick={() => handleEditMeal(mealData)}
-                              >
-                                <Edit className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 w-7 p-0 text-destructive"
-                                onClick={() => handleDeleteMeal(mealData.id)}
-                                disabled={isDeleting}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
+                    <Card key={meal.number} className="overflow-hidden group hover:shadow-lg transition-all duration-300">
+                      {/* Rasm - Restaurant Style */}
+                      {mealData?.image && (
+                        <div className="relative h-40 w-full overflow-hidden">
+                          <Image
+                            src={mealData.image}
+                            alt={mealData.mainDish}
+                            fill
+                            className="object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                          
+                          {/* Action buttons on image */}
+                          <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="h-8 w-8 p-0 rounded-full backdrop-blur-sm bg-white/90 hover:bg-white"
+                              onClick={() => handleEditMeal(mealData)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="h-8 w-8 p-0 rounded-full backdrop-blur-sm bg-white/90 hover:bg-destructive hover:text-destructive-foreground"
+                              onClick={() => handleDeleteMeal(mealData.id)}
+                              disabled={isDeleting}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          
+                          {/* Meal label on image */}
+                          <div className="absolute bottom-2 left-2">
+                            <div className="backdrop-blur-md bg-white/20 rounded-lg px-3 py-1.5 border border-white/30">
+                              <p className="text-white font-semibold text-sm">{meal.label}</p>
+                              <div className="flex items-center gap-1.5 text-white/90 text-xs">
+                                <Clock className="h-3 w-3" />
+                                <span>{mealData.mealTime}</span>
+                              </div>
                             </div>
-                          )}
+                          </div>
                         </div>
-                      </CardHeader>
+                      )}
+                      
+                      {/* Header for meals without image */}
+                      {!mealData?.image && (
+                        <CardHeader className={cn(
+                          "p-3 pb-2",
+                          mealData ? "bg-gradient-to-br from-primary/10 to-primary/5" : "bg-muted/50"
+                        )}>
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm font-medium">
+                              {meal.label}
+                            </CardTitle>
+                            {mealData && (
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  onClick={() => handleEditMeal(mealData)}
+                                >
+                                  <Edit className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0 text-destructive"
+                                  onClick={() => handleDeleteMeal(mealData.id)}
+                                  disabled={isDeleting}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </CardHeader>
+                      )}
+                      
                       <CardContent className="p-3">
                         {mealData ? (
                           <div className="space-y-2 text-sm">
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                              <Clock className="h-3 w-3" />
-                              <span>{mealData.mealTime}</span>
-                            </div>
+                            {/* Show time only if no image */}
+                            {!mealData.image && (
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <Clock className="h-3 w-3" />
+                                <span>{mealData.mealTime}</span>
+                              </div>
+                            )}
+                            
                             <div>
-                              <p className="font-medium text-xs text-muted-foreground mb-1">Asosiy:</p>
-                              <p className="text-sm">{mealData.mainDish}</p>
+                              <p className="font-semibold text-base mb-1">{mealData.mainDish}</p>
                             </div>
+                            
                             {mealData.sideDish && (
-                              <div>
-                                <p className="font-medium text-xs text-muted-foreground mb-1">Garnitir:</p>
-                                <p className="text-sm">{mealData.sideDish}</p>
+                              <div className="flex items-start gap-2">
+                                <span className="text-xs text-muted-foreground min-w-[60px]">Garnitir:</span>
+                                <span className="text-sm">{mealData.sideDish}</span>
                               </div>
                             )}
+                            
                             {mealData.salad && (
-                              <div>
-                                <p className="font-medium text-xs text-muted-foreground mb-1">Salat:</p>
-                                <p className="text-sm">{mealData.salad}</p>
+                              <div className="flex items-start gap-2">
+                                <span className="text-xs text-muted-foreground min-w-[60px]">Salat:</span>
+                                <span className="text-sm">{mealData.salad}</span>
                               </div>
                             )}
+                            
+                            {mealData.dessert && (
+                              <div className="flex items-start gap-2">
+                                <span className="text-xs text-muted-foreground min-w-[60px]">Shirinlik:</span>
+                                <span className="text-sm">{mealData.dessert}</span>
+                              </div>
+                            )}
+                            
                             {mealData.drink && (
-                              <div>
-                                <p className="font-medium text-xs text-muted-foreground mb-1">Ichimlik:</p>
-                                <p className="text-sm">{mealData.drink}</p>
+                              <div className="flex items-start gap-2">
+                                <span className="text-xs text-muted-foreground min-w-[60px]">Ichimlik:</span>
+                                <span className="text-sm">{mealData.drink}</span>
+                              </div>
+                            )}
+                            
+                            {mealData.description && (
+                              <div className="pt-2 mt-2 border-t">
+                                <p className="text-xs text-muted-foreground italic">{mealData.description}</p>
                               </div>
                             )}
                           </div>
                         ) : (
                           <Button
                             variant="outline"
-                            className="w-full h-24"
+                            className="w-full h-32 hover:bg-primary/5 hover:border-primary/50 transition-colors"
                             onClick={() => handleAddMeal(day.value, meal.number)}
                           >
                             <div className="flex flex-col items-center gap-2">
-                              <Plus className="h-5 w-5" />
-                              <span className="text-xs">Ovqat qo'shish</span>
+                              <Plus className="h-6 w-6 text-muted-foreground" />
+                              <span className="text-sm font-medium">Ovqat qo'shish</span>
                             </div>
                           </Button>
                         )}

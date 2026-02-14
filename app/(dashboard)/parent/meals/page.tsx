@@ -5,6 +5,8 @@ import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Clock, UtensilsCrossed } from 'lucide-react'
+import Image from 'next/image'
+import { cn } from '@/lib/utils'
 
 export const metadata = {
   title: 'Ovqatlar Menyusi',
@@ -88,38 +90,89 @@ export default async function ParentMealsPage() {
                     }
 
                     return (
-                      <Card key={meal.number} className="overflow-hidden hover:shadow-lg transition-shadow">
-                        <CardHeader className="p-4 bg-gradient-to-br from-muted/50 to-muted/30">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="text-2xl">{meal.icon}</span>
-                              <CardTitle className="text-base md:text-lg">
-                                {meal.label}
-                              </CardTitle>
+                      <Card key={meal.number} className="overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group border-2 border-transparent hover:border-primary/20">
+                        {/* Restaurant Style Image */}
+                        {mealData.image && (
+                          <div className="relative h-52 w-full overflow-hidden">
+                            <Image
+                              src={mealData.image}
+                              alt={mealData.mainDish}
+                              fill
+                              className="object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                            {/* Gradient overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                            
+                            {/* Floating badge */}
+                            <div className="absolute top-3 left-3">
+                              <div className="backdrop-blur-lg bg-white/25 rounded-full px-4 py-2 border border-white/40 shadow-xl">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-2xl">{meal.icon}</span>
+                                  <span className="text-white font-bold text-sm">{meal.label}</span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Time badge */}
+                            <div className="absolute bottom-3 right-3">
+                              <div className="backdrop-blur-lg bg-green-500/90 rounded-full px-3 py-1.5 border border-white/30 shadow-lg">
+                                <div className="flex items-center gap-1.5">
+                                  <Clock className="h-3.5 w-3.5 text-white" />
+                                  <span className="text-white font-semibold text-xs">{mealData.mealTime}</span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Main dish title on image */}
+                            <div className="absolute bottom-3 left-3 right-3">
+                              <div className="backdrop-blur-md bg-black/40 rounded-lg px-4 py-2 border border-white/20">
+                                <h3 className="text-white font-bold text-lg line-clamp-2">{mealData.mainDish}</h3>
+                              </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1.5 text-xs md:text-sm text-muted-foreground mt-2">
-                            <Clock className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                            <span className="font-medium">{mealData.mealTime}</span>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="p-4 space-y-3">
-                          <div className="space-y-2">
-                            <div className="flex items-start gap-2">
-                              <Badge variant="default" className="shrink-0 text-xs">
-                                Asosiy
-                              </Badge>
-                              <p className="text-sm md:text-base font-medium">
-                                {mealData.mainDish}
-                              </p>
+                        )}
+                        
+                        {/* Header for meals without image */}
+                        {!mealData.image && (
+                          <CardHeader className="p-4 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-2xl">{meal.icon}</span>
+                                <CardTitle className="text-base md:text-lg">
+                                  {meal.label}
+                                </CardTitle>
+                              </div>
                             </div>
+                            <div className="flex items-center gap-1.5 text-xs md:text-sm text-muted-foreground mt-2">
+                              <Clock className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                              <span className="font-medium">{mealData.mealTime}</span>
+                            </div>
+                          </CardHeader>
+                        )}
+                        
+                        <CardContent className={cn(
+                          "space-y-3",
+                          mealData.image ? "p-4 pt-5" : "p-4"
+                        )}>
+                          <div className="space-y-2.5">
+                            {/* Main dish - only show if no image */}
+                            {!mealData.image && (
+                              <div className="flex items-start gap-2">
+                                <Badge variant="default" className="shrink-0 text-xs shadow-sm">
+                                  Asosiy
+                                </Badge>
+                                <p className="text-sm md:text-base font-semibold">
+                                  {mealData.mainDish}
+                                </p>
+                              </div>
+                            )}
 
                             {mealData.sideDish && (
                               <div className="flex items-start gap-2">
-                                <Badge variant="secondary" className="shrink-0 text-xs">
+                                <Badge variant="secondary" className="shrink-0 text-xs shadow-sm">
                                   Garnitir
                                 </Badge>
-                                <p className="text-sm md:text-base">
+                                <p className="text-sm md:text-base font-medium">
                                   {mealData.sideDish}
                                 </p>
                               </div>
@@ -127,8 +180,8 @@ export default async function ParentMealsPage() {
 
                             {mealData.salad && (
                               <div className="flex items-start gap-2">
-                                <Badge variant="outline" className="shrink-0 text-xs">
-                                  Salat
+                                <Badge className="shrink-0 text-xs bg-green-100 text-green-800 hover:bg-green-100 shadow-sm">
+                                  🥗 Salat
                                 </Badge>
                                 <p className="text-sm md:text-base">
                                   {mealData.salad}
@@ -138,8 +191,8 @@ export default async function ParentMealsPage() {
 
                             {mealData.dessert && (
                               <div className="flex items-start gap-2">
-                                <Badge variant="outline" className="shrink-0 text-xs">
-                                  Shirinlik
+                                <Badge className="shrink-0 text-xs bg-pink-100 text-pink-800 hover:bg-pink-100 shadow-sm">
+                                  🍰 Shirinlik
                                 </Badge>
                                 <p className="text-sm md:text-base">
                                   {mealData.dessert}
@@ -149,8 +202,8 @@ export default async function ParentMealsPage() {
 
                             {mealData.drink && (
                               <div className="flex items-start gap-2">
-                                <Badge variant="outline" className="shrink-0 text-xs">
-                                  Ichimlik
+                                <Badge className="shrink-0 text-xs bg-blue-100 text-blue-800 hover:bg-blue-100 shadow-sm">
+                                  🥤 Ichimlik
                                 </Badge>
                                 <p className="text-sm md:text-base">
                                   {mealData.drink}
@@ -160,9 +213,9 @@ export default async function ParentMealsPage() {
                           </div>
 
                           {mealData.description && (
-                            <div className="pt-2 border-t">
-                              <p className="text-xs md:text-sm text-muted-foreground italic">
-                                {mealData.description}
+                            <div className="pt-3 mt-3 border-t border-dashed">
+                              <p className="text-xs md:text-sm text-muted-foreground italic leading-relaxed">
+                                💬 {mealData.description}
                               </p>
                             </div>
                           )}
