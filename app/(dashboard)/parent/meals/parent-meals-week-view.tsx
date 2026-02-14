@@ -54,22 +54,24 @@ export function ParentMealsWeekView({ meals }: { meals: Meal[] }) {
 
   return (
     <Tabs value={selectedDay} onValueChange={setSelectedDay} className="w-full">
-      {/* Tabs List - Minimalist LMS Style */}
-      <TabsList className="w-full h-auto p-1 bg-muted/30 border rounded-lg mb-6 grid grid-cols-7 gap-1">
-        {daysWithMeals.map((day) => (
-          <TabsTrigger
-            key={day.value}
-            value={day.value.toString()}
-            className={cn(
-              "px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200",
-              "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm",
-              "data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-muted/50"
-            )}
-          >
-            {day.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
+      {/* Tabs List - Responsive with horizontal scroll on mobile */}
+      <div className="mb-6">
+        <TabsList className="w-full h-auto p-1 bg-muted/30 border rounded-lg inline-flex md:grid md:grid-cols-7 gap-1 overflow-x-auto">
+          {daysWithMeals.map((day) => (
+            <TabsTrigger
+              key={day.value}
+              value={day.value.toString()}
+              className={cn(
+                "flex-shrink-0 px-4 md:px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap",
+                "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm",
+                "data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=inactive]:hover:bg-muted/50"
+              )}
+            >
+              {day.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </div>
 
       {/* Tab Content for each day */}
       {daysWithMeals.map((day) => (
