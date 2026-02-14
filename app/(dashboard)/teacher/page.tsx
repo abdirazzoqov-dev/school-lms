@@ -79,20 +79,6 @@ export default async function TeacherDashboard() {
       s.subject !== null && s.subjectId !== null
     )
 
-    // Debug info to show on page
-    const debugInfo = {
-      teacherId: teacher.id,
-      dayOfWeek: dayOfWeek,
-      dbDayOfWeek: dbDayOfWeek,
-      todayName: todayName,
-      academicYear: getCurrentAcademicYear(),
-      totalSchedules: allTeacherSchedules.length,
-      todayScheduleCount: todaySchedule.length,
-      scheduleDays: [...new Set(allTeacherSchedules.map(s => s.dayOfWeek))].sort()
-    }
-
-    console.log('🔍 Teacher Dashboard Debug:', debugInfo)
-
     return (
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
@@ -104,28 +90,6 @@ export default async function TeacherDashboard() {
             Salom, <span className="font-semibold text-foreground">{session.user.fullName}</span>! 👋
           </p>
         </div>
-
-        {/* Debug Info Card - TEMPORARY */}
-        <Card className="border-2 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
-          <CardContent className="pt-6">
-            <h3 className="font-bold text-lg mb-2">🔍 Debug Ma'lumotlari:</h3>
-            <div className="space-y-1 text-sm font-mono">
-              <p>Bugun: <strong>{todayName}</strong> (JS: {dayOfWeek}, DB: {dbDayOfWeek})</p>
-              <p>O'quv yili: <strong>{debugInfo.academicYear}</strong></p>
-              <p>Jami darslar: <strong>{debugInfo.totalSchedules}</strong></p>
-              <p>Bugungi darslar: <strong>{debugInfo.todayScheduleCount}</strong></p>
-              <p>Mavjud kunlar: <strong>{debugInfo.scheduleDays.join(', ')}</strong></p>
-              {todaySchedule.length > 0 && (
-                <div className="mt-2 pt-2 border-t">
-                  <p className="font-bold">Birinchi dars:</p>
-                  <p>Fan: {todaySchedule[0].subject?.name}</p>
-                  <p>Sinf: {todaySchedule[0].class?.name}</p>
-                  <p>Vaqt: {todaySchedule[0].startTime} - {todaySchedule[0].endTime}</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Lesson Reminder - Show 5-10 minutes before lesson */}
         <LessonReminder schedules={validSchedules} />
