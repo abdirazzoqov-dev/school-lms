@@ -37,6 +37,7 @@ type Meal = {
   dessert: string | null
   drink: string | null
   description: string | null
+  image: string | null
   isActive: boolean
 }
 
