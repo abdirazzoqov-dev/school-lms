@@ -131,7 +131,7 @@ export default async function TeacherAttendancePage({
   }
 
   // Get attendance records
-  const attendances = await db.attendance.findMany({
+  const attendanceRecords = await db.attendance.findMany({
     where: whereClause,
     include: {
       student: {
@@ -153,6 +153,19 @@ export default async function TeacherAttendancePage({
       { startTime: 'asc' }
     ]
   })
+
+  // Filter out records with null user or class (safety check)
+  type AttendanceWithRelations = typeof attendanceRecords[0] & {
+    student: {
+      user: { fullName: string; avatar: string | null }
+      class: { name: string }
+    } & typeof attendanceRecords[0]['student']
+  }
+
+  const attendances = attendanceRecords.filter(
+    (record): record is AttendanceWithRelations => 
+      record.student.user !== null && record.student.class !== null
+  )
 
   // Calculate statistics
   const totalRecords = attendances.length
