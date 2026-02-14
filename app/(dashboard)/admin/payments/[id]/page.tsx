@@ -231,6 +231,42 @@ export default async function PaymentDetailPage({ params }: { params: { id: stri
                 {formatNumber(Number(payment.amount))} so'm
               </p>
             </div>
+            
+            {/* ✅ Discount Information */}
+            {payment.discountAmount && Number(payment.discountAmount) > 0 && (
+              <div className="p-4 bg-amber-50 border-2 border-amber-200 rounded-lg space-y-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge className="bg-amber-500">💰 Chegirma Qo'llangan</Badge>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Asl summa</p>
+                    <p className="font-semibold text-gray-700">
+                      {payment.originalAmount ? formatNumber(Number(payment.originalAmount)) : '—'} so'm
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Chegirma</p>
+                    <p className="font-semibold text-red-600">
+                      -{formatNumber(Number(payment.discountAmount))} so'm
+                      {payment.discountPercentage && (
+                        <span className="ml-1 text-xs">
+                          ({Number(payment.discountPercentage)}%)
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+                
+                {payment.discountReason && (
+                  <div className="pt-2 border-t border-amber-300">
+                    <p className="text-xs text-muted-foreground">Chegirma sababi:</p>
+                    <p className="text-sm font-medium text-amber-900">{payment.discountReason}</p>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
