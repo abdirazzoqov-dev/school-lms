@@ -29,13 +29,13 @@ export function TeacherAttendanceFilters({ classes, subjects, timeSlots }: Props
 
   const [date, setDate] = useState(searchParams.get('date') || new Date().toISOString().split('T')[0])
   const [period, setPeriod] = useState(searchParams.get('period') || 'day')
-  const [classId, setClassId] = useState(searchParams.get('classId') || '')
-  const [subjectId, setSubjectId] = useState(searchParams.get('subjectId') || '')
-  const [timeSlot, setTimeSlot] = useState(searchParams.get('timeSlot') || '')
+  const [classId, setClassId] = useState(searchParams.get('classId') || 'all')
+  const [subjectId, setSubjectId] = useState(searchParams.get('subjectId') || 'all')
+  const [timeSlot, setTimeSlot] = useState(searchParams.get('timeSlot') || 'all')
 
   const updateSearchParams = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString())
-    if (value) {
+    if (value && value !== 'all') {
       params.set(key, value)
     } else {
       params.delete(key)
@@ -71,9 +71,9 @@ export function TeacherAttendanceFilters({ classes, subjects, timeSlots }: Props
   const clearFilters = () => {
     setDate(new Date().toISOString().split('T')[0])
     setPeriod('day')
-    setClassId('')
-    setSubjectId('')
-    setTimeSlot('')
+    setClassId('all')
+    setSubjectId('all')
+    setTimeSlot('all')
     router.push(pathname)
   }
 
@@ -88,7 +88,7 @@ export function TeacherAttendanceFilters({ classes, subjects, timeSlots }: Props
     window.location.href = `/api/teacher/attendance/export?${params.toString()}`
   }
 
-  const hasActiveFilters = classId || subjectId || timeSlot || period !== 'day'
+  const hasActiveFilters = (classId && classId !== 'all') || (subjectId && subjectId !== 'all') || (timeSlot && timeSlot !== 'all') || period !== 'day'
 
   // Get label for period
   const periodLabels: Record<string, string> = {
@@ -183,7 +183,7 @@ export function TeacherAttendanceFilters({ classes, subjects, timeSlots }: Props
                   <SelectValue placeholder="Barcha sinflar" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Barcha sinflar</SelectItem>
+                  <SelectItem value="all">Barcha sinflar</SelectItem>
                   {classes.map((cls) => (
                     <SelectItem key={cls.id} value={cls.id}>
                       {cls.name}
@@ -204,7 +204,7 @@ export function TeacherAttendanceFilters({ classes, subjects, timeSlots }: Props
                   <SelectValue placeholder="Barcha fanlar" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Barcha fanlar</SelectItem>
+                  <SelectItem value="all">Barcha fanlar</SelectItem>
                   {subjects.map((subject) => (
                     <SelectItem key={subject.id} value={subject.id}>
                       {subject.name}
@@ -225,7 +225,7 @@ export function TeacherAttendanceFilters({ classes, subjects, timeSlots }: Props
                   <SelectValue placeholder="Barcha vaqtlar" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Barcha vaqtlar</SelectItem>
+                  <SelectItem value="all">Barcha vaqtlar</SelectItem>
                   {timeSlots.map((slot, index) => (
                     <SelectItem key={`${slot.startTime}-${slot.endTime}`} value={slot.startTime}>
                       {index + 1}-dars: {slot.startTime} - {slot.endTime}
@@ -252,33 +252,33 @@ export function TeacherAttendanceFilters({ classes, subjects, timeSlots }: Props
                     </button>
                   </Badge>
                 )}
-                {classId && (
+                {classId && classId !== 'all' && (
                   <Badge variant="secondary" className="gap-1">
                     Sinf: {classes.find(c => c.id === classId)?.name}
                     <button
-                      onClick={() => handleClassChange('')}
+                      onClick={() => handleClassChange('all')}
                       className="ml-1 hover:bg-secondary-foreground/20 rounded-full"
                     >
                       <X className="h-3 w-3" />
                     </button>
                   </Badge>
                 )}
-                {subjectId && (
+                {subjectId && subjectId !== 'all' && (
                   <Badge variant="secondary" className="gap-1">
                     Fan: {subjects.find(s => s.id === subjectId)?.name}
                     <button
-                      onClick={() => handleSubjectChange('')}
+                      onClick={() => handleSubjectChange('all')}
                       className="ml-1 hover:bg-secondary-foreground/20 rounded-full"
                     >
                       <X className="h-3 w-3" />
                     </button>
                   </Badge>
                 )}
-                {timeSlot && (
+                {timeSlot && timeSlot !== 'all' && (
                   <Badge variant="secondary" className="gap-1">
                     Vaqt: {timeSlot}
                     <button
-                      onClick={() => handleTimeSlotChange('')}
+                      onClick={() => handleTimeSlotChange('all')}
                       className="ml-1 hover:bg-secondary-foreground/20 rounded-full"
                     >
                       <X className="h-3 w-3" />
