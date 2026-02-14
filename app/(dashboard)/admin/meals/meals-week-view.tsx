@@ -261,8 +261,8 @@ export function MealsWeekView({ meals }: { meals: Meal[] }) {
       <MealDialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        dayOfWeek={selectedDay!}
-        mealNumber={selectedMeal!}
+        dayOfWeek={selectedDay ?? 0}
+        mealNumber={selectedMeal ?? 1}
         meal={editingMeal}
       />
     </>
