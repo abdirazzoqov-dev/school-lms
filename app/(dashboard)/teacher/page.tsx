@@ -10,9 +10,9 @@ import Link from 'next/link'
 import { LessonReminder } from '@/components/teacher/lesson-reminder'
 import { TodayLessons } from '@/components/teacher/today-lessons'
 
-// Smart caching: Revalidate every 60 seconds ⚡
-export const revalidate = 60
-export const dynamic = 'auto'
+// Real-time updates: Always fetch fresh data for schedule changes ⚡
+export const revalidate = 0 // No caching - always fresh data
+export const dynamic = 'force-dynamic' // Force dynamic rendering
 
 export default async function TeacherDashboard() {
   try {
