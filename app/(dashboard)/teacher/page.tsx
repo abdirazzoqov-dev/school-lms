@@ -62,6 +62,14 @@ export default async function TeacherDashboard() {
       orderBy: { startTime: 'asc' }
     })
 
+    // Debug: Log schedule info
+    console.log('🔍 Teacher Dashboard Debug:')
+    console.log('Teacher ID:', teacher.id)
+    console.log('Day of Week:', dayOfWeek)
+    console.log('Academic Year:', getCurrentAcademicYear())
+    console.log('Today Schedule Count:', todaySchedule.length)
+    console.log('Today Schedule:', JSON.stringify(todaySchedule, null, 2))
+
     // Get quick stats - fetch all schedules to count unique classes and subjects
     const allSchedules = await db.schedule.findMany({
       where: {
