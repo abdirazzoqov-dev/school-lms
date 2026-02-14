@@ -170,14 +170,15 @@ export default async function TeacherGradesPage({
   )
 
   // Convert Decimal to number for client component
-  const grades = gradesFiltered.map(grade => ({
-    ...grade,
-    score: Number(grade.score),
-    maxScore: Number(grade.maxScore),
-    percentage: Number(grade.percentage),
-    type: grade.type || 'ORAL',
-    comments: grade.comments || null
-  }))
+  const grades = gradesFiltered.map(grade => {
+    const baseGrade = grade as any // Type assertion to access all fields
+    return {
+      ...baseGrade,
+      score: Number(grade.score),
+      maxScore: Number(grade.maxScore),
+      percentage: Number(grade.percentage)
+    }
+  })
 
   // Calculate statistics
   const totalRecords = grades.length
