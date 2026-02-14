@@ -74,17 +74,24 @@ export default async function TeacherLayout({
   ]
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 md:h-16 items-center justify-between px-4 md:px-6">
-          <div className="flex items-center gap-2 md:gap-3">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-background via-background to-secondary/5">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shadow-sm">
+        <div className="container flex h-16 items-center justify-between px-4 md:px-6">
+          <div className="flex items-center gap-3">
             <MobileNav items={navItems} />
-            <BookOpen className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-            <div className="flex items-center gap-1.5 md:gap-2">
-              <span className="text-base md:text-xl font-bold truncate max-w-[120px] sm:max-w-none">{platformName}</span>
-              <span className="rounded-md bg-purple-500 px-1.5 py-0.5 md:px-2 md:py-1 text-[10px] md:text-xs font-semibold text-white">
-                O'QITUVCHI
-              </span>
+            <div className="flex items-center gap-3 group">
+              <div className="relative">
+                <div className="absolute inset-0 bg-secondary/20 rounded-full blur-xl group-hover:bg-secondary/30 transition-all duration-300" />
+                <BookOpen className="relative h-7 w-7 text-secondary group-hover:scale-110 transition-transform duration-300" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-bold bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">
+                  {platformName}
+                </span>
+                <span className="hidden sm:inline-flex rounded-full bg-gradient-to-r from-purple-500 to-purple-600 px-3 py-1 text-xs font-semibold text-white shadow-lg shadow-purple-500/30 animate-scale-in">
+                  O'QITUVCHI
+                </span>
+              </div>
             </div>
           </div>
           <UserNav user={session.user} />
@@ -96,13 +103,15 @@ export default async function TeacherLayout({
       )}
 
       <div className="container flex-1 px-4 md:px-6">
-        <div className="flex gap-4 lg:gap-6 py-4 md:py-6">
-          <aside className="hidden lg:block w-64 shrink-0">
-            <div className="sticky top-20">
-              <DashboardNav items={navItems} />
+        <div className="flex gap-6 py-6">
+          <aside className="hidden lg:block w-72 shrink-0">
+            <div className="sticky top-24">
+              <div className="rounded-2xl border bg-card/50 backdrop-blur-sm shadow-xl p-3 animate-slide-in">
+                <DashboardNav items={navItems} />
+              </div>
             </div>
           </aside>
-          <main className="flex-1 min-w-0">{children}</main>
+          <main className="flex-1 min-w-0 animate-fade-in">{children}</main>
         </div>
       </div>
     </div>

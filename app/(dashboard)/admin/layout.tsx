@@ -156,17 +156,24 @@ export default async function AdminLayout({
   ]
 
     return (
-      <div className="flex min-h-screen flex-col">
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container flex h-14 md:h-16 items-center justify-between px-4 md:px-6">
-            <div className="flex items-center gap-2 md:gap-3">
+      <div className="flex min-h-screen flex-col bg-gradient-to-br from-background via-background to-muted/30">
+        <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shadow-sm">
+          <div className="container flex h-16 items-center justify-between px-4 md:px-6">
+            <div className="flex items-center gap-3">
               <MobileNav items={navItems} />
-              <GraduationCap className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-              <div className="flex items-center gap-1.5 md:gap-2">
-                <span className="text-base md:text-xl font-bold truncate max-w-[120px] sm:max-w-none">{platformName}</span>
-                <span className="rounded-md bg-blue-500 px-1.5 py-0.5 md:px-2 md:py-1 text-[10px] md:text-xs font-semibold text-white">
-                  ADMIN
-                </span>
+              <div className="flex items-center gap-3 group">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl group-hover:bg-primary/30 transition-all duration-300" />
+                  <GraduationCap className="relative h-7 w-7 text-primary group-hover:scale-110 transition-transform duration-300" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                    {platformName}
+                  </span>
+                  <span className="hidden sm:inline-flex rounded-full bg-gradient-to-r from-blue-500 to-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-lg shadow-blue-500/30 animate-scale-in">
+                    ADMIN
+                  </span>
+                </div>
               </div>
             </div>
             <UserNav user={session.user} />
@@ -179,15 +186,17 @@ export default async function AdminLayout({
         )}
 
         <div className="container flex-1 px-4 md:px-6">
-          <div className="flex gap-4 lg:gap-6 py-4 md:py-6">
+          <div className="flex gap-6 py-6">
             {/* Desktop Sidebar */}
-            <aside className="hidden lg:block w-64 shrink-0">
-              <div className="sticky top-20">
-                <DashboardNav items={navItems} />
+            <aside className="hidden lg:block w-72 shrink-0">
+              <div className="sticky top-24">
+                <div className="rounded-2xl border bg-card/50 backdrop-blur-sm shadow-xl p-3 animate-slide-in">
+                  <DashboardNav items={navItems} />
+                </div>
               </div>
             </aside>
             {/* Main Content */}
-            <main className="flex-1 min-w-0">{children}</main>
+            <main className="flex-1 min-w-0 animate-fade-in">{children}</main>
           </div>
         </div>
       </div>

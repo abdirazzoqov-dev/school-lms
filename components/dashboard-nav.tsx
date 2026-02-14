@@ -25,7 +25,7 @@ interface DashboardNavProps {
 export function DashboardNav({ items }: DashboardNavProps) {
   const pathname = usePathname()
 
-  const renderNavItem = (item: NavItem) => {
+  const renderNavItem = (item: NavItem, index: number) => {
     const Icon = Icons[item.icon as keyof typeof Icons] as any
     
     // If item has children, render as accordion
@@ -40,22 +40,35 @@ export function DashboardNav({ items }: DashboardNavProps) {
       })
 
       return (
-        <Accordion key={item.title} type="single" collapsible className="w-full">
+        <Accordion 
+          key={item.title} 
+          type="single" 
+          collapsible 
+          className="w-full"
+          style={{ animationDelay: `${index * 50}ms` }}
+        >
           <AccordionItem value={item.title} className="border-none">
             <AccordionTrigger
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:no-underline',
+                'group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 hover:no-underline',
                 hasActiveChild
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/30'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground hover:shadow-sm'
               )}
             >
-              {Icon && <Icon className="h-4 w-4" />}
+              <div className={cn(
+                "p-2 rounded-lg transition-all duration-300",
+                hasActiveChild 
+                  ? "bg-white/20" 
+                  : "bg-muted group-hover:bg-background"
+              )}>
+                {Icon && <Icon className="h-4 w-4" />}
+              </div>
               <span className="flex-1 text-left">{item.title}</span>
             </AccordionTrigger>
-            <AccordionContent className="pt-1 pb-0">
-              <div className="ml-4 space-y-1 border-l-2 border-border pl-4">
-                {item.children.map((child) => {
+            <AccordionContent className="pt-2 pb-1">
+              <div className="ml-3 space-y-1 border-l-2 border-primary/20 pl-6">
+                {item.children.map((child, childIndex) => {
                   const ChildIcon = Icons[child.icon as keyof typeof Icons] as any
                   const isDashboard = child.href === '/admin' || child.href === '/super-admin' || child.href === '/teacher' || child.href === '/parent'
                   const isActive = child.href && (isDashboard 
@@ -68,13 +81,19 @@ export function DashboardNav({ items }: DashboardNavProps) {
                       href={child.href || '#'}
                       prefetch={true}
                       className={cn(
-                        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                        'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-300 animate-fade-in',
                         isActive
-                          ? 'bg-primary text-primary-foreground'
-                          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                          ? 'bg-primary/10 text-primary border-l-2 border-primary -ml-px'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground hover:translate-x-1'
                       )}
+                      style={{ animationDelay: `${childIndex * 30}ms` }}
                     >
-                      {ChildIcon && <ChildIcon className="h-4 w-4" />}
+                      {ChildIcon && (
+                        <ChildIcon className={cn(
+                          "h-3.5 w-3.5 transition-transform duration-300",
+                          isActive ? "text-primary" : "group-hover:scale-110"
+                        )} />
+                      )}
                       {child.title}
                     </Link>
                   )
@@ -104,21 +123,32 @@ export function DashboardNav({ items }: DashboardNavProps) {
         href={item.href}
         prefetch={true}
         className={cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+          'group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 animate-slide-in',
           isActive
-            ? 'bg-primary text-primary-foreground'
-            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+            ? 'bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/30 scale-[1.02]'
+            : 'text-muted-foreground hover:bg-muted hover:text-foreground hover:shadow-sm hover:scale-[1.02]'
         )}
+        style={{ animationDelay: `${index * 50}ms` }}
       >
-        {Icon && <Icon className="h-4 w-4" />}
-        {item.title}
+        <div className={cn(
+          "p-2 rounded-lg transition-all duration-300",
+          isActive 
+            ? "bg-white/20" 
+            : "bg-muted group-hover:bg-background"
+        )}>
+          {Icon && <Icon className="h-4 w-4" />}
+        </div>
+        <span className="flex-1">{item.title}</span>
+        {isActive && (
+          <div className="h-2 w-2 rounded-full bg-white animate-pulse-slow" />
+        )}
       </Link>
     )
   }
 
   return (
-    <nav className="space-y-1">
-      {items.map((item) => renderNavItem(item))}
+    <nav className="space-y-2 p-2">
+      {items.map((item, index) => renderNavItem(item, index))}
     </nav>
   )
 }
