@@ -553,6 +553,16 @@ async function getDashboardStats(
     _sum: { amount: true }
   })
 
+  // ✅ Oshxona xarajatlarining to'lov usullari
+  const kitchenExpensesByPaymentMethod = await db.kitchenExpense.groupBy({
+    by: ['paymentMethod'],
+    where: {
+      tenantId,
+      date: { gte: thisMonthStart }
+    },
+    _sum: { amount: true }
+  })
+
   // ✅ Kategoriyalar
   const expenseCategories = await db.expenseCategory.findMany({
     where: { tenantId },
@@ -568,6 +578,16 @@ async function getDashboardStats(
       color: cat?.color || '#ef4444'
     }
   })
+
+  // ✅ Oshxona xarajatlarini qo'shish
+  const kitchenExpenseAmount = Number(kitchenExpenses._sum.amount || 0)
+  if (kitchenExpenseAmount > 0) {
+    generalExpenseBreakdown.push({
+      name: 'Oshxona',
+      amount: kitchenExpenseAmount,
+      color: '#10b981' // Green color for kitchen
+    })
+  }
 
   const allExpenses = generalExpenseBreakdown.sort((a, b) => b.amount - a.amount)
 
@@ -590,6 +610,19 @@ async function getDashboardStats(
     method: e.paymentMethod, 
     amount: Number(e._sum.amount || 0) 
   }))
+
+  // ✅ Oshxona xarajatlarini to'lov usullariga qo'shish
+  kitchenExpensesByPaymentMethod.forEach(ke => {
+    const existing = allExpensesByMethod.find(e => e.method === ke.paymentMethod)
+    if (existing) {
+      existing.amount += Number(ke._sum.amount || 0)
+    } else {
+      allExpensesByMethod.push({
+        method: ke.paymentMethod,
+        amount: Number(ke._sum.amount || 0)
+      })
+    }
+  })
   
   const expenseCashAmount = allExpensesByMethod
     .filter(pm => pm.method === 'CASH')
@@ -614,13 +647,13 @@ async function getDashboardStats(
     pendingPaymentsAmount: pendingPaymentsAmount, // ✅ TOPSHIRIQ 1: Kutilayotgan qolgan summa (PENDING + PARTIALLY_PAID)
     generalExpenses: Number(generalExpenses._sum.amount || 0),
     kitchenExpenses: Number(kitchenExpenses._sum.amount || 0),
-    totalExpenses: Number(generalExpenses._sum.amount || 0), // ✅ TOPSHIRIQ 3: Faqat Expense (kitchen yo'q)
-    expenseCategories: allExpenses, // ✅ TOPSHIRIQ 3: Faqat Expense kategoriyalari
+    totalExpenses: Number(generalExpenses._sum.amount || 0) + Number(kitchenExpenses._sum.amount || 0), // ✅ Umumiy + Oshxona
+    expenseCategories: allExpenses, // ✅ TOPSHIRIQ 3: Barcha xarajat kategoriyalari (Umumiy + Oshxona)
     paymentMethods: paymentMethodsBreakdown,
     cashIncome: cashAmount,
     cardIncome: cardAmount,
-    expensePaymentMethods: allExpensesByMethod, // ✅ TOPSHIRIQ 3: Faqat Expense to'lov usullari
-    expenseCash: expenseCashAmount, // ✅ TOPSHIRIQ 3: Faqat Expense naqd
-    expenseCard: expenseCardAmount // ✅ TOPSHIRIQ 3: Faqat Expense plastik
+    expensePaymentMethods: allExpensesByMethod, // ✅ Barcha xarajat to'lov usullari (Umumiy + Oshxona)
+    expenseCash: expenseCashAmount, // ✅ Barcha xarajat naqd (Umumiy + Oshxona)
+    expenseCard: expenseCardAmount // ✅ Barcha xarajat plastik (Umumiy + Oshxona)
   }
 }
