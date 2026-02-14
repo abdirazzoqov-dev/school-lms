@@ -40,14 +40,17 @@ export default async function TeacherDashboard() {
     // Get today's schedule from constructor
     const today = new Date()
     const dayOfWeek = today.getDay() || 7 // Sunday = 7
+    
+    // Convert JavaScript day (0-6, Sun-Sat) to database day (1-7, Mon-Sun)
+    const dbDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek
 
     const todaySchedule = await db.schedule.findMany({
       where: {
         tenantId,
         teacherId: teacher.id,
-        dayOfWeek: dayOfWeek,
-        academicYear: getCurrentAcademicYear(),
-        type: 'LESSON'
+        dayOfWeek: dbDayOfWeek,
+        academicYear: getCurrentAcademicYear()
+        // ✅ REMOVED type: 'LESSON' filter - it's preventing schedules from showing!
       },
       include: {
         class: {
@@ -65,18 +68,25 @@ export default async function TeacherDashboard() {
     // Debug: Log schedule info
     console.log('🔍 Teacher Dashboard Debug:')
     console.log('Teacher ID:', teacher.id)
-    console.log('Day of Week:', dayOfWeek)
+    console.log('Day of Week (JS):', dayOfWeek)
+    console.log('Day of Week (DB):', dbDayOfWeek)
     console.log('Academic Year:', getCurrentAcademicYear())
     console.log('Today Schedule Count:', todaySchedule.length)
-    console.log('Today Schedule:', JSON.stringify(todaySchedule, null, 2))
+    if (todaySchedule.length > 0) {
+      console.log('First Schedule:', {
+        subject: todaySchedule[0].subject?.name,
+        class: todaySchedule[0].class?.name,
+        time: `${todaySchedule[0].startTime}-${todaySchedule[0].endTime}`
+      })
+    }
 
     // Get quick stats - fetch all schedules to count unique classes and subjects
     const allSchedules = await db.schedule.findMany({
       where: {
         tenantId,
         teacherId: teacher.id,
-        academicYear: getCurrentAcademicYear(),
-        type: 'LESSON'
+        academicYear: getCurrentAcademicYear()
+        // ✅ REMOVED type: 'LESSON' filter
       },
       select: {
         classId: true,
