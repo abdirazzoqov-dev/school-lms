@@ -3,25 +3,25 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { TeacherSalaryPanoramaClient } from './teacher-salary-panorama-client'
+import { StaffSalaryPanoramaClient } from './staff-salary-panorama-client'
 
 export const revalidate = 0
 
-export default async function TeacherSalaryOverviewPage() {
+export default async function StaffSalaryOverviewPage() {
   const session = await getServerSession(authOptions)
-  if (!session || session.user.role !== 'TEACHER') redirect('/unauthorized')
+  if (!session || session.user.role !== 'STAFF') redirect('/unauthorized')
 
   const tenantId = session.user.tenantId!
   const currentYear = new Date().getFullYear()
 
-  // Get teacher with details
-  const teacher = await db.teacher.findUnique({
+  // Get staff with details
+  const staff = await db.staff.findUnique({
     where: { userId: session.user.id },
     select: {
       id: true,
-      teacherCode: true,
+      staffCode: true,
       monthlySalary: true,
-      specialization: true,
+      position: true,
       user: {
         select: {
           fullName: true,
@@ -31,7 +31,7 @@ export default async function TeacherSalaryOverviewPage() {
     }
   })
 
-  if (!teacher) redirect('/unauthorized')
+  if (!staff) redirect('/unauthorized')
 
   return (
     <div className="space-y-6">
@@ -43,8 +43,8 @@ export default async function TeacherSalaryOverviewPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <TeacherSalaryPanoramaClient 
-            teacher={teacher}
+          <StaffSalaryPanoramaClient 
+            staff={staff}
             currentYear={currentYear}
             tenantId={tenantId}
           />
@@ -53,3 +53,4 @@ export default async function TeacherSalaryOverviewPage() {
     </div>
   )
 }
+
