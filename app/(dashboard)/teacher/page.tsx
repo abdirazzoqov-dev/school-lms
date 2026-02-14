@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Users, BookOpen, Clock, Calendar, MapPin, ArrowRight } from 'lucide-react'
 import { getCurrentAcademicYear } from '@/lib/utils'
 import Link from 'next/link'
+import { LessonReminder } from '@/components/teacher/lesson-reminder'
 
 // Smart caching: Revalidate every 60 seconds ⚡
 export const revalidate = 60
@@ -113,6 +114,9 @@ export default async function TeacherDashboard() {
             Salom, <span className="font-semibold text-foreground">{session.user.fullName}</span>! 👋
           </p>
         </div>
+
+        {/* Lesson Reminder - Show 5-10 minutes before lesson */}
+        <LessonReminder schedules={todaySchedule} />
 
         {/* Quick Stats */}
         <div className="grid gap-4 md:grid-cols-3">
