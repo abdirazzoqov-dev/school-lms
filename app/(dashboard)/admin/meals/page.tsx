@@ -4,9 +4,8 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { MealsWeekView } from './meals-week-view'
 
-// Disable caching for real-time updates
-export const revalidate = 0
-export const dynamic = 'force-dynamic'
+// Enable ISR - revalidate every 2 minutes for admin
+export const revalidate = 120
 
 export const metadata = {
   title: 'Ovqatlar Menyusi',
@@ -22,8 +21,23 @@ export default async function MealsPage() {
 
   const tenantId = session.user.tenantId!
 
+  // Optimize query - select only needed fields
   const meals = await db.meal.findMany({
     where: { tenantId },
+    select: {
+      id: true,
+      dayOfWeek: true,
+      mealNumber: true,
+      mealTime: true,
+      mainDish: true,
+      sideDish: true,
+      salad: true,
+      dessert: true,
+      drink: true,
+      description: true,
+      image: true,
+      isActive: true,
+    },
     orderBy: [
       { dayOfWeek: 'asc' },
       { mealNumber: 'asc' },

@@ -4,9 +4,8 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { ParentMealsWeekView } from './parent-meals-week-view'
 
-// Disable caching for real-time updates
-export const revalidate = 0
-export const dynamic = 'force-dynamic'
+// Enable ISR - revalidate every 5 minutes
+export const revalidate = 300
 
 export const metadata = {
   title: 'Ovqatlar Menyusi',
@@ -22,16 +21,39 @@ export default async function ParentMealsPage() {
 
   const tenantId = session.user.tenantId!
 
+  // Optimize query - select only needed fields
   const meals = await db.meal.findMany({
     where: { 
       tenantId,
       isActive: true,
+    },
+    select: {
+      id: true,
+      dayOfWeek: true,
+      mealNumber: true,
+      mealTime: true,
+      mainDish: true,
+      sideDish: true,
+      salad: true,
+      dessert: true,
+      drink: true,
+      description: true,
+      image: true,
     },
     orderBy: [
       { dayOfWeek: 'asc' },
       { mealNumber: 'asc' },
     ],
   })
+
+  // Convert to plain objects for better serialization
+  const mealsData = meals.map(meal => ({
+    ...meal,
+    // Truncate base64 if too large (> 500KB)
+    image: meal.image && meal.image.length > 500000 
+      ? null 
+      : meal.image
+  }))
 
   return (
     <div className="space-y-6">
@@ -42,7 +64,7 @@ export default async function ParentMealsPage() {
         </p>
       </div>
 
-      <ParentMealsWeekView meals={meals} />
+      <ParentMealsWeekView meals={mealsData} />
     </div>
   )
 }
