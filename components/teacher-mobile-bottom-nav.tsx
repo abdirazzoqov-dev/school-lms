@@ -88,21 +88,21 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
                 <span className="text-xs font-medium">Menyu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl">
-              <SheetHeader className="border-b pb-4">
+            <SheetContent side="bottom" className="h-[80vh] rounded-t-3xl" hideClose>
+              <SheetHeader className="border-b pb-4 mb-6">
                 <div className="flex items-center justify-between">
                   <SheetTitle className="text-xl font-bold">Menyu</SheetTitle>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setOpen(false)}
-                    className="rounded-full"
+                    className="rounded-full h-8 w-8 -mr-2"
                   >
                     <X className="h-5 w-5" />
                   </Button>
                 </div>
               </SheetHeader>
-              <div className="mt-6 space-y-2 overflow-y-auto max-h-[calc(80vh-100px)] pb-6">
+              <div className="space-y-3 overflow-y-auto max-h-[calc(80vh-120px)] pb-6 px-1">
                 {menuItems.map((item) => {
                   const active = isActive(item.href)
                   return (
@@ -111,21 +111,21 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
                       href={item.href}
                       onClick={() => setOpen(false)}
                       className={cn(
-                        "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300",
+                        "flex items-center gap-4 rounded-2xl px-5 py-4 text-base font-medium transition-all duration-300 shadow-sm",
                         active
                           ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          : "bg-muted/50 text-foreground hover:bg-muted hover:shadow-md"
                       )}
                     >
                       <div className={cn(
-                        "flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-300",
+                        "flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300",
                         active 
                           ? "bg-primary-foreground/20" 
-                          : "bg-muted"
+                          : "bg-background"
                       )}>
                         {getIcon(item.icon)}
                       </div>
-                      <span>{item.title}</span>
+                      <span className="flex-1">{item.title}</span>
                     </Link>
                   )
                 })}
