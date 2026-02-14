@@ -91,9 +91,18 @@ export async function GET(req: NextRequest) {
       ]
     })
 
-    // Filter out records with null user or class
+    // Define type for records with non-null relations
+    type AttendanceWithRelations = typeof attendanceRecords[0] & {
+      student: {
+        user: { fullName: string }
+        class: { name: string }
+      } & typeof attendanceRecords[0]['student']
+    }
+
+    // Filter out records with null user or class (with type predicate)
     const attendances = attendanceRecords.filter(
-      record => record.student.user !== null && record.student.class !== null
+      (record): record is AttendanceWithRelations => 
+        record.student.user !== null && record.student.class !== null
     )
 
     // Format data for Excel
