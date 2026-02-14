@@ -122,6 +122,7 @@ export function MealDialog({ open, onOpenChange, dayOfWeek, mealNumber, meal }: 
     }
 
     setIsSubmitting(true)
+    
     try {
       const data = {
         dayOfWeek,
@@ -136,18 +137,25 @@ export function MealDialog({ open, onOpenChange, dayOfWeek, mealNumber, meal }: 
         image: formData.image || undefined,
       }
 
+      // Close dialog immediately for better UX
+      onOpenChange(false)
+      
+      // Show loading toast
+      const loadingToast = toast.loading(meal ? 'Yangilanmoqda...' : 'Saqlanmoqda...')
+
       if (meal) {
         await updateMeal(meal.id, data)
-        toast.success('Ovqat muvaffaqiyatli yangilandi')
+        toast.success('Ovqat muvaffaqiyatli yangilandi', { id: loadingToast })
       } else {
         await createMeal(data)
-        toast.success('Ovqat muvaffaqiyatli qo\'shildi')
+        toast.success('Ovqat muvaffaqiyatli qo\'shildi', { id: loadingToast })
       }
       
-      onOpenChange(false)
-      router.refresh() // Refresh the page to show updates
+      // Refresh in background
+      router.refresh()
     } catch (error) {
       toast.error('Xatolik yuz berdi')
+      console.error('Error saving meal:', error)
     } finally {
       setIsSubmitting(false)
     }
@@ -304,11 +312,23 @@ export function MealDialog({ open, onOpenChange, dayOfWeek, mealNumber, meal }: 
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+            >
               Bekor qilish
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saqlanmoqda...' : meal ? 'Yangilash' : 'Qo\'shish'}
+              {isSubmitting ? (
+                <>
+                  <span className="mr-2">⏳</span>
+                  {meal ? 'Yangilanmoqda...' : 'Saqlanmoqda...'}
+                </>
+              ) : (
+                meal ? 'Yangilash' : 'Qo\'shish'
+              )}
             </Button>
           </div>
         </form>

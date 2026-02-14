@@ -75,13 +75,18 @@ export function MealsWeekView({ meals }: { meals: Meal[] }) {
       return
     }
 
+    // Show loading toast immediately
+    const loadingToast = toast.loading('O\'chirilmoqda...')
     setIsDeleting(true)
+    
     try {
       await deleteMeal(mealId)
-      toast.success('Ovqat muvaffaqiyatli o\'chirildi')
-      router.refresh() // Refresh the page to show updates
+      toast.success('Ovqat muvaffaqiyatli o\'chirildi', { id: loadingToast })
+      // Refresh in background
+      router.refresh()
     } catch (error) {
-      toast.error('Xatolik yuz berdi')
+      toast.error('Xatolik yuz berdi', { id: loadingToast })
+      console.error('Error deleting meal:', error)
     } finally {
       setIsDeleting(false)
     }
