@@ -3,12 +3,12 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Users, BookOpen, Clock, Calendar, MapPin, ArrowRight } from 'lucide-react'
+import { Users, BookOpen, Calendar } from 'lucide-react'
 import { getCurrentAcademicYear } from '@/lib/utils'
 import Link from 'next/link'
 import { LessonReminder } from '@/components/teacher/lesson-reminder'
+import { TodayLessons } from '@/components/teacher/today-lessons'
 
 // Smart caching: Revalidate every 60 seconds ⚡
 export const revalidate = 60
@@ -185,103 +185,8 @@ export default async function TeacherDashboard() {
             </Link>
           </div>
 
-          {todaySchedule.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {todaySchedule.map((schedule, index) => {
-                const lessonNum = getLessonNumber(schedule.startTime)
-                const gradients = [
-                  'from-blue-500 to-indigo-600',
-                  'from-purple-500 to-pink-600',
-                  'from-green-500 to-emerald-600',
-                  'from-orange-500 to-red-600',
-                  'from-cyan-500 to-blue-600',
-                  'from-violet-500 to-purple-600',
-                ]
-                const gradient = gradients[index % gradients.length]
-
-                return (
-                  <Card 
-                    key={schedule.id}
-                    className="group relative overflow-hidden border-none shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
-                  >
-                    {/* Gradient Header */}
-                    <div className={`h-24 bg-gradient-to-br ${gradient} p-4 relative`}>
-                      <div className="absolute inset-0 bg-black/10" />
-                      <div className="relative z-10 flex items-center justify-between h-full">
-                        <div className="flex items-center gap-3">
-                          <div className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30">
-                            <span className="text-2xl font-bold text-white">{lessonNum}</span>
-                          </div>
-                          <div>
-                            <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30 mb-1">
-                              {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                      {/* Decorative circle */}
-                      <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full" />
-                    </div>
-
-                    <CardContent className="p-5 space-y-4">
-                      {/* Subject */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <div className="p-1.5 rounded-md bg-indigo-100 dark:bg-indigo-900/20">
-                            <BookOpen className="h-3.5 w-3.5 text-indigo-600" />
-                          </div>
-                          <span className="text-xs text-muted-foreground font-medium">Fan</span>
-                        </div>
-                        <p className="text-lg font-bold text-foreground line-clamp-1">
-                          {schedule.subject?.name || 'Fan nomi yo\'q'}
-                        </p>
-                      </div>
-
-                      {/* Class */}
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/20">
-                            <Users className="h-3.5 w-3.5 text-blue-600" />
-                          </div>
-                          <span className="text-xs text-muted-foreground font-medium">Sinf</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <p className="text-base font-semibold text-foreground">
-                            {schedule.class?.name || 'Sinf nomi yo\'q'}
-                          </p>
-                          <Badge variant="secondary" className="text-xs">
-                            {schedule.class?._count.students || 0} ta o'quvchi
-                          </Badge>
-                        </div>
-                      </div>
-
-                      {/* Room */}
-                      {schedule.roomNumber && (
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <div className="p-1.5 rounded-md bg-orange-100 dark:bg-orange-900/20">
-                            <MapPin className="h-3.5 w-3.5 text-orange-600" />
-                          </div>
-                          <span>Xona: {schedule.roomNumber}</span>
-                        </div>
-                      )}
-
-                      {/* Action Button */}
-                      <Link 
-                        href={`/teacher/classes/${schedule.classId}?subjectId=${schedule.subjectId}&startTime=${schedule.startTime}&endTime=${schedule.endTime}`}
-                      >
-                        <Button 
-                          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg group-hover:shadow-xl transition-all"
-                          size="sm"
-                        >
-                          Darsga kirish
-                          <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
+          {validSchedules.length > 0 ? (
+            <TodayLessons schedules={validSchedules} />
           ) : (
             <Card className="border-dashed border-2">
               <CardContent className="flex flex-col items-center justify-center py-16 text-center">
