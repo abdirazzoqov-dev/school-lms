@@ -7,14 +7,29 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { toast } from 'sonner'
 import { sendMessage, replyToMessage as replyToMessageAction } from '@/app/actions/message'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Check, ChevronsUpDown } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
 interface ComposeMessageFormProps {
-  parents: Array<{ id: string; name: string; students: Array<{ id: string; name: string }> }>
-  students: Array<{ id: string; name: string }>
+  parents: Array<{ 
+    id: string
+    name: string
+    students: Array<{ 
+      id: string
+      name: string
+      className: string 
+    }> 
+  }>
+  students: Array<{ 
+    id: string
+    name: string
+    className: string 
+  }>
   replyToMessage?: any
   preselectedParentId?: string
   preselectedStudentId?: string
@@ -29,6 +44,7 @@ export function ComposeMessageForm({
 }: ComposeMessageFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [openParent, setOpenParent] = useState(false)
   
   const [formData, setFormData] = useState({
     recipientId: preselectedParentId || (replyToMessage?.sender.id || ''),
@@ -112,22 +128,64 @@ export function ComposeMessageForm({
         <>
           <div>
             <Label htmlFor="recipientId">Qabul qiluvchi (Ota-ona) *</Label>
-            <Select
-              value={formData.recipientId}
-              onValueChange={(value) => setFormData({ ...formData, recipientId: value })}
-              required
-            >
-              <SelectTrigger id="recipientId">
-                <SelectValue placeholder="Ota-onani tanlang" />
-              </SelectTrigger>
-              <SelectContent>
-                {parents.map((parent) => (
-                  <SelectItem key={parent.id} value={parent.id}>
-                    {parent.name} ({parent.students.map(s => s.name).join(', ')})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={openParent} onOpenChange={setOpenParent}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openParent}
+                  className="w-full justify-between"
+                >
+                  {formData.recipientId
+                    ? (() => {
+                        const parent = parents.find(p => p.id === formData.recipientId)
+                        return parent 
+                          ? `${parent.name} (${parent.students.map(s => `${s.name} - ${s.className}`).join(', ')})`
+                          : "Ota-onani tanlang"
+                      })()
+                    : "Ota-onani tanlang"}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Ota-ona yoki o'quvchi nomini kiriting..." />
+                  <CommandList>
+                    <CommandEmpty>Hech narsa topilmadi.</CommandEmpty>
+                    <CommandGroup>
+                      {parents.map((parent) => (
+                        <CommandItem
+                          key={parent.id}
+                          value={`${parent.name} ${parent.students.map(s => `${s.name} ${s.className}`).join(' ')}`}
+                          onSelect={() => {
+                            setFormData({ ...formData, recipientId: parent.id })
+                            setOpenParent(false)
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              formData.recipientId === parent.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-medium">{parent.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {parent.students.map(s => `${s.name} (${s.className})`).join(', ')}
+                            </span>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            {formData.recipientId && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Agar xabar ma'lum o'quvchi haqida bo'lsa, quyida o'quvchini tanlang
+              </p>
+            )}
           </div>
 
           <div>
@@ -143,7 +201,7 @@ export function ComposeMessageForm({
                 <SelectItem value="none">Tanlanmagan</SelectItem>
                 {availableStudents.map((student) => (
                   <SelectItem key={student.id} value={student.id}>
-                    {student.name}
+                    {student.name} ({student.className})
                   </SelectItem>
                 ))}
               </SelectContent>

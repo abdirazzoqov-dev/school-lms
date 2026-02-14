@@ -30,16 +30,23 @@ export default async function ComposeMessagePage({
     redirect('/unauthorized')
   }
 
-  // Get teacher's students' parents
-  const classes = await db.classSubject.findMany({
-    where: { teacherId: teacher.id },
-    include: {
+  // Get teacher's students' parents from Schedule (constructor-based)
+  const schedules = await db.schedule.findMany({
+    where: { 
+      teacherId: teacher.id,
+      type: 'LESSON'
+    },
+    select: {
+      classId: true,
       class: {
         include: {
           students: {
             include: {
               user: {
                 select: { fullName: true }
+              },
+              class: {
+                select: { name: true }
               },
               parents: {
                 include: {
@@ -59,15 +66,16 @@ export default async function ComposeMessagePage({
     }
   })
 
-  // Build list of unique parents with their students
+  // Build list of unique parents with their students (including class info for search)
   const parentsMap = new Map()
   const studentsMap = new Map()
 
-  classes.forEach(cls => {
-    cls.class.students.forEach(student => {
+  schedules.forEach(schedule => {
+    schedule.class?.students.forEach(student => {
       studentsMap.set(student.id, {
         id: student.id,
-        name: student.user?.fullName || 'Unknown'
+        name: student.user?.fullName || 'Unknown',
+        className: student.class?.name || ''
       })
 
       student.parents.forEach(sp => {
@@ -86,7 +94,8 @@ export default async function ComposeMessagePage({
         if (!parentData.students.find((s: any) => s.id === student.id)) {
           parentData.students.push({
             id: student.id,
-            name: student.user?.fullName || 'Unknown'
+            name: student.user?.fullName || 'Unknown',
+            className: student.class?.name || ''
           })
         }
       })
