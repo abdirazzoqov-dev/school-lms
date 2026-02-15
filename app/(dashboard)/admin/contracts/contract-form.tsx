@@ -265,14 +265,14 @@ export function ContractForm({ teachers, staff, parents }: ContractFormProps) {
             <div className="ml-6 space-y-2">
               <Label htmlFor="teacherId">Maxsus O'qituvchi (ixtiyoriy)</Label>
               <Select
-                value={formData.teacherId}
-                onValueChange={(value) => setFormData({ ...formData, teacherId: value })}
+                value={formData.teacherId || undefined}
+                onValueChange={(value) => setFormData({ ...formData, teacherId: value === 'all' ? '' : value })}
               >
                 <SelectTrigger id="teacherId">
-                  <SelectValue placeholder="Tanlang..." />
+                  <SelectValue placeholder="Barcha o'qituvchilar" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Barcha o'qituvchilar</SelectItem>
+                  <SelectItem value="all">Barcha o'qituvchilar</SelectItem>
                   {teachers.map((teacher) => (
                     <SelectItem key={teacher.id} value={teacher.id}>
                       {teacher.user.fullName} ({teacher.teacherCode})
@@ -300,14 +300,14 @@ export function ContractForm({ teachers, staff, parents }: ContractFormProps) {
             <div className="ml-6 space-y-2">
               <Label htmlFor="staffId">Maxsus Xodim (ixtiyoriy)</Label>
               <Select
-                value={formData.staffId}
-                onValueChange={(value) => setFormData({ ...formData, staffId: value })}
+                value={formData.staffId || undefined}
+                onValueChange={(value) => setFormData({ ...formData, staffId: value === 'all' ? '' : value })}
               >
                 <SelectTrigger id="staffId">
-                  <SelectValue placeholder="Tanlang..." />
+                  <SelectValue placeholder="Barcha xodimlar" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Barcha xodimlar</SelectItem>
+                  <SelectItem value="all">Barcha xodimlar</SelectItem>
                   {staff.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.user.fullName} ({s.staffCode})
@@ -335,14 +335,14 @@ export function ContractForm({ teachers, staff, parents }: ContractFormProps) {
             <div className="ml-6 space-y-2">
               <Label htmlFor="parentId">Maxsus Ota-ona (ixtiyoriy)</Label>
               <Select
-                value={formData.parentId}
-                onValueChange={(value) => setFormData({ ...formData, parentId: value })}
+                value={formData.parentId || undefined}
+                onValueChange={(value) => setFormData({ ...formData, parentId: value === 'all' ? '' : value })}
               >
                 <SelectTrigger id="parentId">
-                  <SelectValue placeholder="Tanlang..." />
+                  <SelectValue placeholder="Barcha ota-onalar" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Barcha ota-onalar</SelectItem>
+                  <SelectItem value="all">Barcha ota-onalar</SelectItem>
                   {parents.map((parent) => (
                     <SelectItem key={parent.id} value={parent.id}>
                       {parent.user.fullName}
