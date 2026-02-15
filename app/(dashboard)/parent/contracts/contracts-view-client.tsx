@@ -24,6 +24,29 @@ interface ContractsViewClientProps {
 }
 
 export function ContractsViewClient({ contracts }: ContractsViewClientProps) {
+  const handleDownload = async (contractId: string, fileName: string) => {
+    try {
+      const response = await fetch(`/api/contracts/${contractId}/download`)
+      
+      if (!response.ok) {
+        throw new Error('Faylni yuklashda xatolik')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Download error:', error)
+      alert('Faylni yuklashda xatolik yuz berdi')
+    }
+  }
+
   const getFileIcon = (fileType: string) => {
     if (fileType.includes('pdf')) return '📄'
     if (fileType.includes('word') || fileType.includes('document')) return '📝'
@@ -92,18 +115,13 @@ export function ContractsViewClient({ contracts }: ContractsViewClientProps) {
             </div>
 
             {/* Download Button */}
-            <a 
-              href={contract.fileUrl} 
-              download={contract.fileName}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block"
+            <Button 
+              className="w-full gap-2"
+              onClick={() => handleDownload(contract.id, contract.fileName)}
             >
-              <Button className="w-full gap-2">
-                <Download className="h-4 w-4" />
-                Yuklab olish
-              </Button>
-            </a>
+              <Download className="h-4 w-4" />
+              Yuklab olish
+            </Button>
           </CardContent>
         </Card>
       ))}

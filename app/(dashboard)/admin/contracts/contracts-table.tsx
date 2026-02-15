@@ -63,6 +63,33 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  const handleDownload = async (contractId: string, fileName: string) => {
+    try {
+      const response = await fetch(`/api/contracts/${contractId}/download`)
+      
+      if (!response.ok) {
+        throw new Error('Faylni yuklashda xatolik')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Download error:', error)
+      toast({
+        title: 'Xato!',
+        description: 'Faylni yuklashda xatolik yuz berdi',
+        variant: 'destructive',
+      })
+    }
+  }
+
   const handleDelete = async () => {
     if (!deleteId) return
 
@@ -204,18 +231,15 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
 
               {/* Actions */}
               <div className="flex gap-2">
-                <a
-                  href={contract.fileUrl}
-                  download={contract.fileName}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 gap-1"
+                  onClick={() => handleDownload(contract.id, contract.fileName)}
                 >
-                  <Button variant="outline" size="sm" className="w-full gap-1">
-                    <Download className="h-3 w-3" />
-                    Yuklab olish
-                  </Button>
-                </a>
+                  <Download className="h-3 w-3" />
+                  Yuklab olish
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
