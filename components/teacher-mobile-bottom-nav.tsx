@@ -7,6 +7,7 @@ import { Home, MessageSquare, LayoutGrid, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
+import { Icon3D } from '@/components/icon-3d'
 import * as LucideIcons from 'lucide-react'
 
 interface NavItem {
@@ -40,6 +41,22 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
     return Icon ? <Icon className="h-7 w-7" /> : null
   }
 
+  // Map icon names to 3D icon file names
+  const get3DIconName = (iconName: string): string => {
+    const iconMap: Record<string, string> = {
+      'LayoutDashboard': 'dashboard',
+      'Calendar': 'calendar',
+      'Users': 'users',
+      'ClipboardCheck': 'clipboard-check',
+      'Award': 'award',
+      'DollarSign': 'dollar',
+      'FileText': 'file-text',
+      'BookOpen': 'book',
+      'MessageSquare': 'message',
+    }
+    return iconMap[iconName] || 'dashboard'
+  }
+
   return (
     <>
       {/* Bottom Navigation - Mobile Only */}
@@ -56,7 +73,7 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               )}
             >
-              <Home className="h-5 w-5" />
+              <Icon3D name="dashboard" size={24} />
               <span className="text-xs font-medium">Dashboard</span>
             </Button>
           </Link>
@@ -72,7 +89,7 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               )}
             >
-              <MessageSquare className="h-5 w-5" />
+              <Icon3D name="message" size={24} />
               <span className="text-xs font-medium">Xabarlar</span>
             </Button>
           </Link>
@@ -124,7 +141,7 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
                             ? "bg-primary-foreground/20" 
                             : "bg-background shadow-sm"
                         )}>
-                          {getIcon(item.icon)}
+                          <Icon3D name={get3DIconName(item.icon)} size={40} />
                         </div>
                         <span className="text-xs font-medium text-center leading-tight">{item.title}</span>
                       </Link>
