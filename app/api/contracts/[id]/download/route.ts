@@ -8,7 +8,7 @@ import { existsSync } from 'fs'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -21,7 +21,7 @@ export async function GET(
     }
 
     const tenantId = session.user.tenantId!
-    const contractId = params.id
+    const { id: contractId } = await params
 
     // Get contract from database
     const contract = await db.contract.findFirst({
