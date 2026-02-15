@@ -28,6 +28,17 @@ export interface ContractFormData {
  */
 export async function createContract(data: ContractFormData) {
   try {
+    console.log('Creating contract with data:', JSON.stringify({
+      title: data.title,
+      forTeachers: data.forTeachers,
+      forStaff: data.forStaff,
+      forParents: data.forParents,
+      teacherId: data.teacherId,
+      staffId: data.staffId,
+      parentId: data.parentId,
+      hasFile: !!data.fileData
+    }, null, 2))
+    
     const session = await getServerSession(authOptions)
     
     if (!session || session.user.role !== 'ADMIN') {
@@ -71,7 +82,7 @@ export async function createContract(data: ContractFormData) {
       data: {
         tenantId,
         title: data.title,
-        description: data.description,
+        description: data.description || null,
         fileName: data.fileName,
         fileUrl,
         fileType: data.fileType || 'application/pdf',
@@ -79,9 +90,9 @@ export async function createContract(data: ContractFormData) {
         forTeachers: data.forTeachers,
         forStaff: data.forStaff,
         forParents: data.forParents,
-        teacherId: data.teacherId || null,
-        staffId: data.staffId || null,
-        parentId: data.parentId || null,
+        teacherId: data.teacherId && data.teacherId !== '' ? data.teacherId : null,
+        staffId: data.staffId && data.staffId !== '' ? data.staffId : null,
+        parentId: data.parentId && data.parentId !== '' ? data.parentId : null,
         uploadedById: session.user.id,
         isActive: true,
       },
@@ -124,13 +135,13 @@ export async function updateContract(contractId: string, data: Partial<ContractF
     const updateData: any = {}
 
     if (data.title) updateData.title = data.title
-    if (data.description !== undefined) updateData.description = data.description
+    if (data.description !== undefined) updateData.description = data.description || null
     if (data.forTeachers !== undefined) updateData.forTeachers = data.forTeachers
     if (data.forStaff !== undefined) updateData.forStaff = data.forStaff
     if (data.forParents !== undefined) updateData.forParents = data.forParents
-    if (data.teacherId !== undefined) updateData.teacherId = data.teacherId || null
-    if (data.staffId !== undefined) updateData.staffId = data.staffId || null
-    if (data.parentId !== undefined) updateData.parentId = data.parentId || null
+    if (data.teacherId !== undefined) updateData.teacherId = data.teacherId && data.teacherId !== '' ? data.teacherId : null
+    if (data.staffId !== undefined) updateData.staffId = data.staffId && data.staffId !== '' ? data.staffId : null
+    if (data.parentId !== undefined) updateData.parentId = data.parentId && data.parentId !== '' ? data.parentId : null
 
     // If new file is uploaded
     if (data.fileData && data.fileName) {
