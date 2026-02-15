@@ -134,6 +134,11 @@ export default async function AdminLayout({
       icon: 'Home',
     },
     {
+      title: 'Shartnomalar',
+      href: '/admin/contracts',
+      icon: 'FileText',
+    },
+    {
       title: 'Xabarlar',
       href: '/admin/messages',
       icon: 'MessageSquare',

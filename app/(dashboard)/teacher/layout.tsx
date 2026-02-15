@@ -63,6 +63,11 @@ export default async function TeacherLayout({
       icon: 'DollarSign',
     },
     {
+      title: 'Shartnomalar',
+      href: '/teacher/contracts',
+      icon: 'FileText',
+    },
+    {
       title: 'Dars Materiallari',
       href: '/teacher/materials',
       icon: 'BookOpen',

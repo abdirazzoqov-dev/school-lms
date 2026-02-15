@@ -172,6 +172,7 @@ model Tenant {
   salaryPayments           SalaryPayment[]
   meals                    Meal[]
   contactPersons           ContactPerson[]
+  contracts                Contract[] // ✅ Shartnomalar
 
   @@map("tenants")  // PostgreSQL standard: lowercase, plural
   @@index([slug])
@@ -300,6 +301,7 @@ model User {
   dormitoryAssignmentsCreated DormitoryAssignment[]
   permissions                 Permission[] // Moderator permissions
   paidSalaries                SalaryPayment[]       @relation("SalaryPaidBy")
+  uploadedContracts           Contract[]            @relation("ContractUploadedBy") // ✅ Yuklangan shartnomalar
 
   @@map("users")  // PostgreSQL standard: lowercase, plural
   @@index([email])
@@ -421,8 +423,9 @@ model Parent {
   updatedAt DateTime @updatedAt
 
   // Relations
-  students StudentParent[]
-  payments Payment[]
+  students  StudentParent[]
+  payments  Payment[]
+  contracts Contract[] // ✅ Ota-ona uchun shartnomalar
 
   @@index([tenantId])
   @@index([userId])
@@ -478,6 +481,7 @@ model Teacher {
   assignments    Assignment[]
   materials      Material[]
   salaryPayments SalaryPayment[]
+  contracts      Contract[] // ✅ O'qituvchi uchun shartnomalar
 
   @@unique([tenantId, teacherCode])
   @@index([tenantId])
@@ -507,6 +511,7 @@ model Staff {
 
   // Relations
   salaryPayments SalaryPayment[]
+  contracts      Contract[] // ✅ Xodim uchun shartnomalar
 
   @@unique([tenantId, staffCode])
   @@index([tenantId])
@@ -1574,4 +1579,56 @@ model SalaryPayment {
   @@index([tenantId, month, year])
   @@index([paymentDate])
   @@index([tenantId, type])
+}
+
+// CONTRACT - Shartnomalar (Admin yuklaydi, xodim/o'qituvchi/ota-ona ko'radi)
+model Contract {
+  id       String @id @default(cuid())
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+
+  // Shartnoma nomi
+  title       String
+  description String? @db.Text
+
+  // Fayl ma'lumotlari
+  fileName     String
+  fileUrl      String  @db.Text // File path or URL
+  fileType     String // pdf, docx, xlsx
+  fileSize     Int? // Bytes
+  
+  // Kim uchun (multiple recipients)
+  forTeachers Boolean @default(false) // O'qituvchilar uchun
+  forStaff    Boolean @default(false) // Xodimlar uchun
+  forParents  Boolean @default(false) // Ota-onalar uchun
+  
+  // Specific recipients (optional - for targeted contracts)
+  teacherId String?
+  teacher   Teacher? @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  
+  staffId String?
+  staff   Staff?   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  
+  parentId String?
+  parent   Parent?  @relation(fields: [parentId], references: [id], onDelete: Cascade)
+
+  // Status
+  isActive Boolean @default(true)
+  
+  // Metadata
+  uploadedBy   User   @relation("ContractUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  uploadedById String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([tenantId, isActive])
+  @@index([forTeachers])
+  @@index([forStaff])
+  @@index([forParents])
+  @@index([teacherId])
+  @@index([staffId])
+  @@index([parentId])
+  @@index([createdAt])
 }

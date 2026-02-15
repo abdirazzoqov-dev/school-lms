@@ -73,6 +73,11 @@ export default async function ParentLayout({
       icon: 'UtensilsCrossed',
     },
     {
+      title: 'Shartnomalar',
+      href: '/parent/contracts',
+      icon: 'FileText',
+    },
+    {
       title: 'Xabarlar',
       href: '/parent/messages',
       icon: 'MessageSquare',
