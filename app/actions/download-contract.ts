@@ -1,27 +1,21 @@
+'use server'
+
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function downloadContract(contractId: string) {
   try {
     const session = await getServerSession(authOptions)
 
     if (!session) {
-      return NextResponse.json(
-        { error: 'Ruxsat berilmagan' },
-        { status: 401 }
-      )
+      return { success: false, error: 'Ruxsat berilmagan' }
     }
 
     const tenantId = session.user.tenantId!
-    const { id: contractId } = await params
 
     // Get contract from database
     const contract = await db.contract.findFirst({
@@ -33,48 +27,37 @@ export async function GET(
     })
 
     if (!contract) {
-      return NextResponse.json(
-        { error: 'Shartnoma topilmadi' },
-        { status: 404 }
-      )
+      return { success: false, error: 'Shartnoma topilmadi' }
     }
 
     // Check if user has access to this contract
     const hasAccess = await checkContractAccess(contract, session)
     if (!hasAccess) {
-      return NextResponse.json(
-        { error: 'Sizda bu shartnomani ko\'rish huquqi yo\'q' },
-        { status: 403 }
-      )
+      return { success: false, error: 'Sizda bu shartnomani ko\'rish huquqi yo\'q' }
     }
 
     // Get file path
     const filePath = join(process.cwd(), 'public', contract.fileUrl)
 
     if (!existsSync(filePath)) {
-      return NextResponse.json(
-        { error: 'Fayl topilmadi' },
-        { status: 404 }
-      )
+      return { success: false, error: 'Fayl topilmadi' }
     }
 
-    // Read file
+    // Read file as base64
     const fileBuffer = await readFile(filePath)
+    const base64 = fileBuffer.toString('base64')
 
-    // Return file with proper headers
-    return new NextResponse(fileBuffer, {
-      headers: {
-        'Content-Type': contract.fileType || 'application/octet-stream',
-        'Content-Disposition': `attachment; filename="${encodeURIComponent(contract.fileName)}"`,
-        'Content-Length': fileBuffer.length.toString(),
+    return {
+      success: true,
+      data: {
+        base64,
+        fileName: contract.fileName,
+        fileType: contract.fileType,
       },
-    })
+    }
   } catch (error) {
     console.error('Contract download error:', error)
-    return NextResponse.json(
-      { error: 'Faylni yuklashda xatolik' },
-      { status: 500 }
-    )
+    return { success: false, error: 'Faylni yuklashda xatolik' }
   }
 }
 

@@ -4,6 +4,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Download, FileText } from 'lucide-react'
+import { downloadContract } from '@/app/actions/download-contract'
+import { useToast } from '@/components/ui/use-toast'
+import { useState } from 'react'
 
 interface Contract {
   id: string
@@ -24,26 +27,51 @@ interface ContractsViewClientProps {
 }
 
 export function ContractsViewClient({ contracts }: ContractsViewClientProps) {
+  const { toast } = useToast()
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
+
   const handleDownload = async (contractId: string, fileName: string) => {
     try {
-      const response = await fetch(`/api/contracts/${contractId}/download`)
+      setDownloadingId(contractId)
       
-      if (!response.ok) {
-        throw new Error('Faylni yuklashda xatolik')
+      const result = await downloadContract(contractId)
+      
+      if (!result.success || !result.data) {
+        throw new Error(result.error || 'Faylni yuklashda xatolik')
       }
 
-      const blob = await response.blob()
+      // Convert base64 to blob
+      const byteCharacters = atob(result.data.base64)
+      const byteNumbers = new Array(byteCharacters.length)
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i)
+      }
+      const byteArray = new Uint8Array(byteNumbers)
+      const blob = new Blob([byteArray], { type: result.data.fileType })
+
+      // Create download link
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = fileName
+      a.download = result.data.fileName
       document.body.appendChild(a)
       a.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
-    } catch (error) {
+
+      toast({
+        title: 'Muvaffaqiyatli!',
+        description: 'Fayl yuklandi',
+      })
+    } catch (error: any) {
       console.error('Download error:', error)
-      alert('Faylni yuklashda xatolik yuz berdi')
+      toast({
+        title: 'Xato!',
+        description: error.message || 'Faylni yuklashda xatolik yuz berdi',
+        variant: 'destructive',
+      })
+    } finally {
+      setDownloadingId(null)
     }
   }
 
@@ -118,9 +146,10 @@ export function ContractsViewClient({ contracts }: ContractsViewClientProps) {
             <Button 
               className="w-full gap-2"
               onClick={() => handleDownload(contract.id, contract.fileName)}
+              disabled={downloadingId === contract.id}
             >
               <Download className="h-4 w-4" />
-              Yuklab olish
+              {downloadingId === contract.id ? 'Yuklanmoqda...' : 'Yuklab olish'}
             </Button>
           </CardContent>
         </Card>
