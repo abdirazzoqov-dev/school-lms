@@ -2,7 +2,6 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { DashboardNav } from '@/components/dashboard-nav'
-import { MobileNav } from '@/components/mobile-nav'
 import { UserNav } from '@/components/user-nav'
 import { TenantStatusBanner } from '@/components/tenant-status-banner'
 import { TeacherMobileBottomNav } from '@/components/teacher-mobile-bottom-nav'
@@ -84,9 +83,6 @@ export default async function TeacherLayout({
       <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shadow-sm">
         <div className="container flex h-16 items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-3">
-            <div className="lg:hidden">
-              <MobileNav items={navItems} />
-            </div>
             <div className="flex items-center gap-3 group">
               <div className="relative">
                 <div className="absolute inset-0 bg-secondary/20 rounded-full blur-xl group-hover:bg-secondary/30 transition-all duration-300" />
