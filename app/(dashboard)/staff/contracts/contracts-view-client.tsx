@@ -92,7 +92,13 @@ export function ContractsViewClient({ contracts }: ContractsViewClientProps) {
             </div>
 
             {/* Download Button */}
-            <a href={contract.fileUrl} download className="block">
+            <a 
+              href={contract.fileUrl} 
+              download={contract.fileName}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block"
+            >
               <Button className="w-full gap-2">
                 <Download className="h-4 w-4" />
                 Yuklab olish

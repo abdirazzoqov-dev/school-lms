@@ -206,7 +206,9 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
               <div className="flex gap-2">
                 <a
                   href={contract.fileUrl}
-                  download
+                  download={contract.fileName}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex-1"
                 >
                   <Button variant="outline" size="sm" className="w-full gap-1">
