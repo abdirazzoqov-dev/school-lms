@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import * as Icons from 'lucide-react'
+import { Icon3D } from '@/components/icon-3d'
 import {
   Accordion,
   AccordionContent,
@@ -24,6 +25,23 @@ interface DashboardNavProps {
 
 export function DashboardNav({ items }: DashboardNavProps) {
   const pathname = usePathname()
+
+  // Map icon names to 3D icon file names
+  const get3DIconName = (iconName: string): string => {
+    const iconMap: Record<string, string> = {
+      'Home': 'home',
+      'LayoutDashboard': 'dashboard',
+      'Calendar': 'calendar',
+      'Users': 'users',
+      'ClipboardCheck': 'clipboard-check',
+      'Award': 'award',
+      'DollarSign': 'dollar',
+      'FileText': 'file-text',
+      'BookOpen': 'book',
+      'MessageSquare': 'message',
+    }
+    return iconMap[iconName] || 'home'
+  }
 
   const renderNavItem = (item: NavItem, index: number) => {
     const Icon = Icons[item.icon as keyof typeof Icons] as any
@@ -57,12 +75,12 @@ export function DashboardNav({ items }: DashboardNavProps) {
               )}
             >
               <div className={cn(
-                "p-2 rounded-lg transition-all duration-300",
+                "flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300",
                 hasActiveChild 
-                  ? "bg-white/20" 
-                  : "bg-muted group-hover:bg-background"
+                  ? "bg-white/10" 
+                  : "bg-muted/50 group-hover:bg-background"
               )}>
-                {Icon && <Icon className="h-4 w-4" />}
+                <Icon3D name={get3DIconName(item.icon)} size={24} />
               </div>
               <span className="flex-1 text-left">{item.title}</span>
             </AccordionTrigger>
@@ -131,12 +149,12 @@ export function DashboardNav({ items }: DashboardNavProps) {
         style={{ animationDelay: `${index * 50}ms` }}
       >
         <div className={cn(
-          "p-2 rounded-lg transition-all duration-300",
+          "flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300",
           isActive 
-            ? "bg-white/20" 
-            : "bg-muted group-hover:bg-background"
+            ? "bg-white/10" 
+            : "bg-muted/50 group-hover:bg-background"
         )}>
-          {Icon && <Icon className="h-4 w-4" />}
+          <Icon3D name={get3DIconName(item.icon)} size={24} />
         </div>
         <span className="flex-1">{item.title}</span>
         {isActive && (

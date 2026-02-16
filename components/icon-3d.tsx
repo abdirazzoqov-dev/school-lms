@@ -11,17 +11,17 @@ interface Icon3DProps {
 }
 
 /**
- * 3D Icon component for 3dicons.co integration
+ * 3D Colorful Icon component
  * 
  * Usage: 
- * <Icon3D name="dashboard" size={48} />
+ * <Icon3D name="home" size={48} />
  * 
- * Currently using Lucide icons as fallback.
- * To enable 3D icons, place PNG files in: public/icons/3d/{name}.png
+ * Icons are rendered with vibrant gradients and 3D effects
  */
 export function Icon3D({ name, size = 40, className }: Icon3DProps) {
   // Map 3D icon names to Lucide icon names
   const iconMap: Record<string, keyof typeof LucideIcons> = {
+    'home': 'Home',
     'dashboard': 'LayoutDashboard',
     'calendar': 'Calendar',
     'users': 'Users',
@@ -31,23 +31,58 @@ export function Icon3D({ name, size = 40, className }: Icon3DProps) {
     'file-text': 'FileText',
     'book': 'BookOpen',
     'message': 'MessageSquare',
+    'menu': 'LayoutGrid',
+  }
+
+  // Colorful gradients for each icon type
+  const iconColors: Record<string, string> = {
+    'home': 'from-emerald-400 via-teal-500 to-cyan-600',
+    'dashboard': 'from-blue-400 via-indigo-500 to-purple-600',
+    'calendar': 'from-orange-400 via-red-500 to-pink-600',
+    'users': 'from-violet-400 via-purple-500 to-fuchsia-600',
+    'clipboard-check': 'from-green-400 via-emerald-500 to-teal-600',
+    'award': 'from-yellow-400 via-amber-500 to-orange-600',
+    'dollar': 'from-lime-400 via-green-500 to-emerald-600',
+    'file-text': 'from-sky-400 via-blue-500 to-indigo-600',
+    'book': 'from-pink-400 via-rose-500 to-red-600',
+    'message': 'from-cyan-400 via-sky-500 to-blue-600',
+    'menu': 'from-purple-400 via-violet-500 to-indigo-600',
   }
 
   const IconComponent = LucideIcons[iconMap[name] || 'Circle'] as React.ComponentType<{ 
     className?: string
     size?: number 
+    strokeWidth?: number
   }>
 
-  // Use Lucide icon with 3D-like styling
+  const gradient = iconColors[name] || 'from-gray-400 via-gray-500 to-gray-600'
+
   return (
     <div className={cn('relative flex items-center justify-center', className)}>
       <div className="relative">
-        {/* Glow effect for 3D look */}
-        <div className="absolute inset-0 bg-current opacity-20 blur-xl rounded-full scale-150" />
-        <IconComponent 
-          size={size} 
-          className="relative drop-shadow-lg hover:scale-110 transition-transform duration-300" 
-        />
+        {/* Outer glow effect */}
+        <div className={cn(
+          'absolute inset-0 rounded-full blur-2xl opacity-40 scale-150 animate-pulse',
+          `bg-gradient-to-br ${gradient}`
+        )} />
+        
+        {/* Middle glow layer */}
+        <div className={cn(
+          'absolute inset-0 rounded-full blur-xl opacity-50 scale-125',
+          `bg-gradient-to-br ${gradient}`
+        )} />
+        
+        {/* Icon with gradient */}
+        <div className={cn(
+          'relative rounded-xl p-1.5 shadow-2xl',
+          `bg-gradient-to-br ${gradient}`
+        )}>
+          <IconComponent 
+            size={size * 0.7} 
+            strokeWidth={2.5}
+            className="relative text-white drop-shadow-lg hover:scale-110 transition-transform duration-300" 
+          />
+        </div>
       </div>
     </div>
   )

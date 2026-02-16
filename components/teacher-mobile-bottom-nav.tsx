@@ -44,6 +44,7 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
   // Map icon names to 3D icon file names
   const get3DIconName = (iconName: string): string => {
     const iconMap: Record<string, string> = {
+      'Home': 'home',
       'LayoutDashboard': 'dashboard',
       'Calendar': 'calendar',
       'Users': 'users',
@@ -54,7 +55,7 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
       'BookOpen': 'book',
       'MessageSquare': 'message',
     }
-    return iconMap[iconName] || 'dashboard'
+    return iconMap[iconName] || 'home'
   }
 
   return (
@@ -62,7 +63,7 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
       {/* Bottom Navigation - Mobile Only */}
       <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/80 shadow-2xl">
         <div className="flex items-center justify-around h-16 px-2">
-          {/* Dashboard */}
+          {/* Home */}
           <Link href="/teacher">
             <Button
               variant="ghost"
@@ -73,8 +74,8 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               )}
             >
-              <Icon3D name="dashboard" size={24} />
-              <span className="text-xs font-medium">Dashboard</span>
+              <Icon3D name="home" size={28} />
+              <span className="text-xs font-medium">Bosh sahifa</span>
             </Button>
           </Link>
 
@@ -89,7 +90,7 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               )}
             >
-              <Icon3D name="message" size={24} />
+              <Icon3D name="message" size={28} />
               <span className="text-xs font-medium">Xabarlar</span>
             </Button>
           </Link>
@@ -101,7 +102,7 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
                 variant="ghost"
                 className="flex flex-col items-center gap-1 h-auto py-2 px-4 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-300"
               >
-                <LayoutGrid className="h-5 w-5" />
+                <Icon3D name="menu" size={28} />
                 <span className="text-xs font-medium">Menyu</span>
               </Button>
             </SheetTrigger>
@@ -139,9 +140,9 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
                           "flex items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300",
                           active 
                             ? "bg-primary-foreground/20" 
-                            : "bg-background shadow-sm"
+                            : "bg-background/50 shadow-sm"
                         )}>
-                          <Icon3D name={get3DIconName(item.icon)} size={40} />
+                          <Icon3D name={get3DIconName(item.icon)} size={48} />
                         </div>
                         <span className="text-xs font-medium text-center leading-tight">{item.title}</span>
                       </Link>

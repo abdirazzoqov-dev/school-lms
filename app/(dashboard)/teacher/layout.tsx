@@ -32,9 +32,9 @@ export default async function TeacherLayout({
 
   const navItems = [
     {
-      title: 'Dashboard',
+      title: 'Bosh sahifa',
       href: '/teacher',
-      icon: 'LayoutDashboard',
+      icon: 'Home',
     },
     {
       title: 'Dars Jadvali',
