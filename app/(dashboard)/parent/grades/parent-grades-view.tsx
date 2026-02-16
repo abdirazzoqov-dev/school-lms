@@ -23,7 +23,7 @@ interface Grade {
   score: number
   maxScore: number
   percentage: number | null
-  gradeType: 'ORAL' | 'WRITTEN' | 'TEST' | 'EXAM' | 'QUARTER'
+  gradeType: 'ORAL' | 'WRITTEN' | 'TEST' | 'EXAM' | 'QUARTER' | 'FINAL'
   date: Date
   notes: string | null
   quarter: number | null
@@ -142,7 +142,8 @@ export function ParentGradesView({ students }: Props) {
       'WRITTEN': 'Yozma',
       'TEST': 'Test',
       'EXAM': 'Imtihon',
-      'QUARTER': 'Chorak'
+      'QUARTER': 'Chorak',
+      'FINAL': 'Yillik'
     }
     return labels[type] || type
   }
@@ -153,7 +154,8 @@ export function ParentGradesView({ students }: Props) {
       'WRITTEN': 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
       'TEST': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
       'EXAM': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      'QUARTER': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+      'QUARTER': 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+      'FINAL': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400'
     }
     return colors[type] || 'bg-gray-100 text-gray-700'
   }
