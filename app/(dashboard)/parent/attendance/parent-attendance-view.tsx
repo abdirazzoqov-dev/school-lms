@@ -193,7 +193,7 @@ export function ParentAttendanceView({
   const formatShortDate = (date: Date) => {
     return new Date(date).toLocaleDateString('uz-UZ', {
       day: '2-digit',
-      month: 'short'
+      month: 'long'
     })
   }
 
