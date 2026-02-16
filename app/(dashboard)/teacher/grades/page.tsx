@@ -200,70 +200,77 @@ export default async function TeacherGradesPage({
         </p>
       </div>
 
-      {/* Filters */}
-      <TeacherGradesFilters 
-        classes={classes}
-        subjects={subjects}
-        timeSlots={timeSlots}
-      />
+      {/* Container with flex for mobile reordering */}
+      <div className="flex flex-col">
+        {/* Filters - order-2 on mobile (below stats), order-1 on desktop (above stats) */}
+        <div className="order-2 lg:order-1 mb-6">
+          <TeacherGradesFilters 
+            classes={classes}
+            subjects={subjects}
+            timeSlots={timeSlots}
+          />
+        </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="border-none shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 card-hover">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
-                <BookOpen className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-blue-600">{totalRecords}</div>
-                <p className="text-sm text-muted-foreground font-medium">Jami baholar</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Stats Cards - order-1 on mobile (above filters), order-2 on desktop (below filters) */}
+        <div className="order-1 lg:order-2 mb-6">
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card className="border-none shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 card-hover">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
+                    <BookOpen className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-blue-600">{totalRecords}</div>
+                    <p className="text-sm text-muted-foreground font-medium">Jami baholar</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="border-none shadow-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 card-hover">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
-                <Award className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-green-600">{excellentCount}</div>
-                <p className="text-sm text-muted-foreground font-medium">A'lo (85%+)</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            <Card className="border-none shadow-lg bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 card-hover">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
+                    <Award className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-green-600">{excellentCount}</div>
+                    <p className="text-sm text-muted-foreground font-medium">A'lo (85%+)</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="border-none shadow-lg bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 card-hover">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-600 text-white shadow-lg">
-                <Users className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-yellow-600">{goodCount}</div>
-                <p className="text-sm text-muted-foreground font-medium">Yaxshi (70-84%)</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            <Card className="border-none shadow-lg bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 card-hover">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-600 text-white shadow-lg">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-yellow-600">{goodCount}</div>
+                    <p className="text-sm text-muted-foreground font-medium">Yaxshi (70-84%)</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="border-none shadow-lg bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 card-hover">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-lg">
-                <TrendingUp className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="text-3xl font-bold text-purple-600">{averageScore}%</div>
-                <p className="text-sm text-muted-foreground font-medium">O'rtacha</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            <Card className="border-none shadow-lg bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 card-hover">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-lg">
+                    <TrendingUp className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold text-purple-600">{averageScore}%</div>
+                    <p className="text-sm text-muted-foreground font-medium">O'rtacha</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
 
       {/* Grades Table */}
