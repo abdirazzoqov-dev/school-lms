@@ -82,8 +82,9 @@ export default async function ParentComposeMessagePage({
       })
 
       schedules.forEach(schedule => {
-        if (schedule.teacher && schedule.subject) {
+        if (schedule.teacher && schedule.subject && schedule.teacher.user && schedule.subject.name) {
           const teacherKey = schedule.teacher.user.id
+          const subjectName = schedule.subject.name
           
           if (!teachersMap.has(teacherKey)) {
             teachersMap.set(teacherKey, {
@@ -97,8 +98,8 @@ export default async function ParentComposeMessagePage({
           const teacherData = teachersMap.get(teacherKey)
           
           // Add subject if not exists
-          if (!teacherData.subjects.find((s: string) => s === schedule.subject.name)) {
-            teacherData.subjects.push(schedule.subject.name)
+          if (!teacherData.subjects.find((s: string) => s === subjectName)) {
+            teacherData.subjects.push(subjectName)
           }
           
           // Add student if not exists
