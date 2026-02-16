@@ -2,11 +2,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
-import Link from 'next/link'
 import { ComposeMessageForm } from './compose-message-form'
+import { getCurrentAcademicYear } from '@/lib/utils'
 
 export default async function ParentComposeMessagePage({
   searchParams,
@@ -21,7 +18,6 @@ export default async function ParentComposeMessagePage({
 
   const tenantId = session.user.tenantId!
 
-  // Get parent
   const parent = await db.parent.findFirst({
     where: { userId: session.user.id }
   })
@@ -30,7 +26,7 @@ export default async function ParentComposeMessagePage({
     redirect('/unauthorized')
   }
 
-  // Get parent's children with their teachers
+  // Get parent's children with their teachers FROM SCHEDULE
   const children = await db.studentParent.findMany({
     where: { parentId: parent.id },
     include: {
@@ -40,30 +36,9 @@ export default async function ParentComposeMessagePage({
             select: { fullName: true }
           },
           class: {
-            include: {
-              // Include class teacher (Sinf rahbari)
-              classTeacher: {
-                include: {
-                  user: {
-                    select: { id: true, fullName: true }
-                  }
-                }
-              },
-              // Include subject teachers
-              classSubjects: {
-                include: {
-                  teacher: {
-                    include: {
-                      user: {
-                        select: { id: true, fullName: true }
-                      }
-                    }
-                  },
-                  subject: {
-                    select: { name: true }
-                  }
-                }
-              }
+            select: {
+              name: true,
+              id: true
             }
           }
         }
@@ -71,51 +46,73 @@ export default async function ParentComposeMessagePage({
     }
   })
 
-  // Build list of unique teachers
+  // Get teachers who teach these students from Schedule
   const teachersMap = new Map()
   const studentsMap = new Map()
 
-  children.forEach(({ student }) => {
+  for (const { student } of children) {
     studentsMap.set(student.id, {
       id: student.id,
-      name: student.user?.fullName || 'Unknown'
+      name: student.user?.fullName || 'Unknown',
+      className: student.class?.name || 'Unknown'
     })
 
-    // Add class teacher (Sinf rahbari) - FIRST PRIORITY
-    if (student.class?.classTeacher) {
-      const classTeacher = student.class.classTeacher
-      const teacherKey = classTeacher.user.id
-      
-      if (!teachersMap.has(teacherKey)) {
-        teachersMap.set(teacherKey, {
-          id: classTeacher.user.id,
-          name: classTeacher.user.fullName,
-          subjects: ['Sinf rahbari'],
-          isClassTeacher: true
-        })
-      }
+    if (student.classId) {
+      // Get all schedules for this class
+      const schedules = await db.schedule.findMany({
+        where: {
+          classId: student.classId,
+          tenantId,
+          academicYear: getCurrentAcademicYear(),
+          type: 'LESSON'
+        },
+        include: {
+          teacher: {
+            include: {
+              user: {
+                select: { id: true, fullName: true }
+              }
+            }
+          },
+          subject: {
+            select: { name: true }
+          }
+        },
+        distinct: ['teacherId', 'subjectId']
+      })
+
+      schedules.forEach(schedule => {
+        if (schedule.teacher && schedule.subject) {
+          const teacherKey = schedule.teacher.user.id
+          
+          if (!teachersMap.has(teacherKey)) {
+            teachersMap.set(teacherKey, {
+              id: schedule.teacher.user.id,
+              name: schedule.teacher.user.fullName,
+              subjects: [],
+              students: []
+            })
+          }
+          
+          const teacherData = teachersMap.get(teacherKey)
+          
+          // Add subject if not exists
+          if (!teacherData.subjects.find((s: string) => s === schedule.subject.name)) {
+            teacherData.subjects.push(schedule.subject.name)
+          }
+          
+          // Add student if not exists
+          if (!teacherData.students.find((s: any) => s.id === student.id)) {
+            teacherData.students.push({
+              id: student.id,
+              name: student.user?.fullName || 'Unknown',
+              className: student.class?.name || 'Unknown'
+            })
+          }
+        }
+      })
     }
-
-    // Add subject teachers
-    student.class?.classSubjects.forEach(cs => {
-      const teacher = cs.teacher
-      const teacherKey = teacher.user.id
-      
-      if (!teachersMap.has(teacherKey)) {
-        teachersMap.set(teacherKey, {
-          id: teacher.user.id,
-          name: teacher.user.fullName,
-          subjects: [],
-          isClassTeacher: false
-        })
-      }
-      
-      const teacherData = teachersMap.get(teacherKey)
-      if (!teacherData.subjects.find((s: any) => s === cs.subject.name)) {
-        teacherData.subjects.push(cs.subject.name)
-      }
-    })
-  })
+  }
 
   const teachers = Array.from(teachersMap.values())
   const students = Array.from(studentsMap.values())
@@ -137,38 +134,5 @@ export default async function ParentComposeMessagePage({
     })
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/parent/messages">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Orqaga
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold">
-            {replyToMessage ? 'Javob Yozish' : 'Yangi Xabar'}
-          </h1>
-          <p className="text-muted-foreground">
-            O'qituvchiga xabar yuboring
-          </p>
-        </div>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Xabar Tafsilotlari</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ComposeMessageForm
-            teachers={teachers}
-            students={students}
-            replyToMessage={replyToMessage}
-          />
-        </CardContent>
-      </Card>
-    </div>
-  )
+  return <ComposeMessageForm teachers={teachers} students={students} replyToMessage={replyToMessage} />
 }
-
