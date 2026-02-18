@@ -24,32 +24,38 @@ interface DashboardNavProps {
   items: NavItem[]
 }
 
-// ── Polls /api/unread-count every 10s, pauses when tab hidden ──────────────
-function useUnreadCount() {
+// ── Polls /api/unread-count every 10s; resets immediately on messages page ──
+function useUnreadCount(pathname: string) {
   const [count, setCount] = useState(0)
 
+  const fetch_ = () => {
+    fetch('/api/unread-count', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(d => setCount(d.count ?? 0))
+      .catch(() => {})
+  }
+
+  // Re-fetch whenever pathname changes (e.g. leaving messages page)
+  useEffect(() => { fetch_() }, [pathname])
+
   useEffect(() => {
-    const fetch_ = () => {
-      fetch('/api/unread-count', { cache: 'no-store' })
-        .then(r => r.json())
-        .then(d => setCount(d.count ?? 0))
-        .catch(() => {})
-    }
-    fetch_()
     const timer = setInterval(() => {
       if (document.visibilityState === 'visible') fetch_()
     }, 10_000)
     const onVisibility = () => { if (document.visibilityState === 'visible') fetch_() }
     document.addEventListener('visibilitychange', onVisibility)
     return () => { clearInterval(timer); document.removeEventListener('visibilitychange', onVisibility) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // While user is already on a messages page — badge is not needed
+  if (pathname.includes('/messages')) return 0
   return count
 }
 
 export function DashboardNav({ items }: DashboardNavProps) {
   const pathname = usePathname()
-  const unreadCount = useUnreadCount()
+  const unreadCount = useUnreadCount(pathname)
 
   const renderNavItem = (item: NavItem, index: number) => {
     // If item has children, render as accordion

@@ -36,32 +36,38 @@ const iconColorMap: Record<string, { bg: string; icon: string; shadow: string }>
 }
 
 // ── Unread count hook (polls /api/unread-count every 10s) ────────────────────
-function useUnreadCount() {
+function useUnreadCount(pathname: string) {
   const [count, setCount] = useState(0)
 
+  const fetch_ = () => {
+    fetch('/api/unread-count', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(d => setCount(d.count ?? 0))
+      .catch(() => {})
+  }
+
+  // Re-fetch on every navigation (pathname change)
+  useEffect(() => { fetch_() }, [pathname])
+
   useEffect(() => {
-    const fetch_ = () => {
-      fetch('/api/unread-count', { cache: 'no-store' })
-        .then(r => r.json())
-        .then(d => setCount(d.count ?? 0))
-        .catch(() => {})
-    }
-    fetch_() // immediate first call
     const timer = setInterval(() => {
       if (document.visibilityState === 'visible') fetch_()
     }, 10_000)
     const onVisibility = () => { if (document.visibilityState === 'visible') fetch_() }
     document.addEventListener('visibilitychange', onVisibility)
     return () => { clearInterval(timer); document.removeEventListener('visibilitychange', onVisibility) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Hide badge when user is already on messages page
+  if (pathname.includes('/messages')) return 0
   return count
 }
 
 export function ParentMobileBottomNav({ items }: ParentMobileBottomNavProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
-  const unreadCount = useUnreadCount()
+  const unreadCount = useUnreadCount(pathname)
 
   // All items except Dashboard and Messages go into the sheet menu
   const menuItems = items.filter(
