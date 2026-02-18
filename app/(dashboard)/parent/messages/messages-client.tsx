@@ -284,6 +284,7 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
     : false
 
   return (
+    <>
     <div className="flex flex-col gap-4">
 
       {/* ── Stats ── */}
@@ -678,5 +679,6 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   )
 }
