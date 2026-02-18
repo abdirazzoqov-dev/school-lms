@@ -314,8 +314,6 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendReply() }
   }
 
-  // Always show reply input when a conversation is open
-  const canReplyInline = activeConv !== null
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -663,46 +661,33 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
 
               {/* Reply Input */}
               <div className="px-3 py-3 bg-white dark:bg-[#17212b] border-t border-border/50">
-                {canReplyInline ? (
-                  <>
-                    <div className="flex items-end gap-2 bg-muted dark:bg-[#242f3d] rounded-2xl px-3.5 py-2">
-                      <Textarea
-                        value={replyText}
-                        onChange={e => setReplyText(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Xabar yozing..."
-                        rows={1}
-                        className="flex-1 bg-transparent border-none resize-none text-sm py-0.5 min-h-[30px] max-h-[100px] focus-visible:ring-0 shadow-none p-0 placeholder:text-muted-foreground/60"
-                      />
-                      <button
-                        onClick={handleSendReply}
-                        disabled={!replyText.trim() || isSending}
-                        className={cn(
-                          'w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all',
-                          replyText.trim()
-                            ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-md hover:scale-105'
-                            : 'bg-muted text-muted-foreground',
-                        )}
-                      >
-                        {isSending
-                          ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                          : <Send className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground/60 mt-1.5 px-1">
-                      Enter — yuborish · Shift+Enter — yangi qator
-                    </p>
-                  </>
-                ) : (
-                  <div className="flex items-center justify-between gap-3 px-2 py-1">
-                    <p className="text-xs text-muted-foreground">Yangi mavzu bilan xabar yuboring</p>
-                    <Link href="/parent/messages/compose">
-                      <Button size="sm" className="gap-1.5 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-                        <Pencil className="w-3.5 h-3.5" /> Xabar yozish
-                      </Button>
-                    </Link>
-                  </div>
-                )}
+                <div className="flex items-end gap-2 bg-muted dark:bg-[#242f3d] rounded-2xl px-3.5 py-2">
+                  <Textarea
+                    value={replyText}
+                    onChange={e => setReplyText(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Xabar yozing..."
+                    rows={1}
+                    className="flex-1 bg-transparent border-none resize-none text-sm py-0.5 min-h-[30px] max-h-[100px] focus-visible:ring-0 shadow-none p-0 placeholder:text-muted-foreground/60"
+                  />
+                  <button
+                    onClick={handleSendReply}
+                    disabled={!replyText.trim() || isSending}
+                    className={cn(
+                      'w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all',
+                      replyText.trim()
+                        ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-md hover:scale-105'
+                        : 'bg-muted text-muted-foreground',
+                    )}
+                  >
+                    {isSending
+                      ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      : <Send className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-[10px] text-muted-foreground/60 mt-1.5 px-1">
+                  Enter — yuborish · Shift+Enter — yangi qator
+                </p>
               </div>
             </>
           )}
