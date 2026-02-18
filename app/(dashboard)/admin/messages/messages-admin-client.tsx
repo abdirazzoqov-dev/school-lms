@@ -74,8 +74,14 @@ function msgTime(d: Date | string): string {
   return new Date(d).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
 }
 
+const UZ_MONTHS = [
+  'Yanvar','Fevral','Mart','Aprel','May','Iyun',
+  'Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr',
+]
+
 function dateLabel(d: Date | string): string {
-  return new Date(d).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'long', year: 'numeric' })
+  const date = new Date(d)
+  return `${date.getFullYear()} Yil, ${date.getDate()}-${UZ_MONTHS[date.getMonth()]}`
 }
 
 function sameDay(a: Date | string, b: Date | string): boolean {
