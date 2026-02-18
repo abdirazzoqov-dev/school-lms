@@ -18,6 +18,7 @@ interface NavItem {
 
 interface ParentMobileBottomNavProps {
   items: NavItem[]
+  initialUnreadCount?: number
 }
 
 // Icon color mapping for 3D colorful icons
@@ -36,8 +37,8 @@ const iconColorMap: Record<string, { bg: string; icon: string; shadow: string }>
 }
 
 // ── Unread count hook (polls /api/unread-count every 10s) ────────────────────
-function useUnreadCount(pathname: string) {
-  const [count, setCount] = useState(0)
+function useUnreadCount(pathname: string, initial: number) {
+  const [count, setCount] = useState(initial) // ← instant from SSR prop
 
   const fetch_ = () => {
     fetch('/api/unread-count', { cache: 'no-store' })
@@ -64,10 +65,10 @@ function useUnreadCount(pathname: string) {
   return count
 }
 
-export function ParentMobileBottomNav({ items }: ParentMobileBottomNavProps) {
+export function ParentMobileBottomNav({ items, initialUnreadCount = 0 }: ParentMobileBottomNavProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
-  const unreadCount = useUnreadCount(pathname)
+  const unreadCount = useUnreadCount(pathname, initialUnreadCount)
 
   // All items except Dashboard and Messages go into the sheet menu
   const menuItems = items.filter(

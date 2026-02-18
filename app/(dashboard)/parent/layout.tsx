@@ -40,6 +40,14 @@ export default async function ParentLayout({
     currentAvatar = userData?.avatar ?? null
   } catch (e) { /* ignore */ }
 
+  // Fetch initial unread message count for instant badge display
+  let initialUnreadCount = 0
+  try {
+    initialUnreadCount = await db.message.count({
+      where: { receiverId: session.user.id, tenantId, readAt: null },
+    })
+  } catch (e) { /* ignore */ }
+
   const navItems = [
     {
       title: 'Dashboard',
@@ -146,7 +154,7 @@ export default async function ParentLayout({
           <aside className="hidden lg:block w-72 shrink-0">
             <div className="sticky top-24">
               <div className="rounded-2xl border bg-card/50 backdrop-blur-sm shadow-xl p-3 animate-slide-in">
-                <DashboardNav items={navItems} />
+                <DashboardNav items={navItems} initialUnreadCount={initialUnreadCount} />
               </div>
             </div>
           </aside>
@@ -155,7 +163,7 @@ export default async function ParentLayout({
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <ParentMobileBottomNav items={navItems} />
+      <ParentMobileBottomNav items={navItems} initialUnreadCount={initialUnreadCount} />
     </div>
   )
 }

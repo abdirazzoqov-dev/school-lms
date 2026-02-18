@@ -22,11 +22,12 @@ interface NavItem {
 
 interface DashboardNavProps {
   items: NavItem[]
+  initialUnreadCount?: number
 }
 
-// ── Polls /api/unread-count every 10s; resets immediately on messages page ──
-function useUnreadCount(pathname: string) {
-  const [count, setCount] = useState(0)
+// ── Polls /api/unread-count every 10s; initial value from server (no delay) ──
+function useUnreadCount(pathname: string, initial: number) {
+  const [count, setCount] = useState(initial) // ← instant from SSR prop
 
   const fetch_ = () => {
     fetch('/api/unread-count', { cache: 'no-store' })
@@ -35,7 +36,7 @@ function useUnreadCount(pathname: string) {
       .catch(() => {})
   }
 
-  // Re-fetch whenever pathname changes (e.g. leaving messages page)
+  // Re-fetch whenever pathname changes (clears stale count on navigation)
   useEffect(() => { fetch_() }, [pathname])
 
   useEffect(() => {
@@ -48,14 +49,14 @@ function useUnreadCount(pathname: string) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // While user is already on a messages page — badge is not needed
+  // Hide badge while user is on messages page
   if (pathname.includes('/messages')) return 0
   return count
 }
 
-export function DashboardNav({ items }: DashboardNavProps) {
+export function DashboardNav({ items, initialUnreadCount = 0 }: DashboardNavProps) {
   const pathname = usePathname()
-  const unreadCount = useUnreadCount(pathname)
+  const unreadCount = useUnreadCount(pathname, initialUnreadCount)
 
   const renderNavItem = (item: NavItem, index: number) => {
     // If item has children, render as accordion
