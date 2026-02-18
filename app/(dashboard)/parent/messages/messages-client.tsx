@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { deleteMessage, deleteConversation, markMessageAsRead, replyToMessage } from '@/app/actions/message'
+import { deleteMessage, markMessageAsRead, replyToMessage, editMessage } from '@/app/actions/message'
 import {
   Dialog,
   DialogContent,
@@ -105,14 +105,18 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
 
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
 
-  // ── Delete modal state ──────────────────────────────────────────────────────
+  // ── Delete modal state ─────────────────────────────────────────────────────
   const [deleteModal, setDeleteModal] = useState<{
     open: boolean
-    type: 'message' | 'conversation'
     messageId?: string
-    partnerId?: string
-    canDeleteForEveryone?: boolean   // only sender may delete for both sides
-  }>({ open: false, type: 'message' })
+    canDeleteForEveryone?: boolean
+  }>({ open: false })
+
+  // ── Edit state ─────────────────────────────────────────────────────────────
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editText, setEditText] = useState('')
+  const [isSavingEdit, setIsSavingEdit] = useState(false)
+
   const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(null)
   const [mobileView, setMobileView] = useState<'list' | 'chat'>('list')
   const [search, setSearch] = useState('')
@@ -121,25 +125,21 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // ── Auto-polling: immediate refresh on mount, then every 3s ─────────────────
+  // ── Auto-polling ──────────────────────────────────────────────────────────
   useEffect(() => {
     const INTERVAL = 3_000
     let timer: ReturnType<typeof setInterval> | null = null
 
     const start = () => {
-      router.refresh() // ← immediate refresh (no delay on first load)
+      router.refresh()
       timer = setInterval(() => {
         if (document.visibilityState === 'visible') router.refresh()
       }, INTERVAL)
     }
     const stop = () => { if (timer) { clearInterval(timer); timer = null } }
     const onVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        router.refresh() // ← immediate refresh when tab becomes visible
-        start()
-      } else {
-        stop()
-      }
+      if (document.visibilityState === 'visible') { router.refresh(); start() }
+      else stop()
     }
 
     start()
@@ -207,50 +207,73 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [activeConv?.partnerId, allMessages.length])
 
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
   const selectConversation = (id: string) => {
     setSelectedPartnerId(id)
     setReplyText('')
+    setEditingId(null)
     setMobileView('chat')
   }
 
+  // Only own message trash opens modal
   const handleDelete = (messageId: string) => {
     const msg = allMessages.find(m => m.id === messageId)
     const canDeleteForEveryone = msg?.sender.id === currentUserId
-    setDeleteModal({ open: true, type: 'message', messageId, canDeleteForEveryone })
-  }
-
-  const handleDeleteConversation = (partnerId: string) => {
-    const conv = conversations.find(c => c.partnerId === partnerId)
-    const canDeleteForEveryone = conv?.messages.some(m => m.sender.id === currentUserId) ?? false
-    setDeleteModal({ open: true, type: 'conversation', partnerId, canDeleteForEveryone })
+    setDeleteModal({ open: true, messageId, canDeleteForEveryone })
   }
 
   const confirmDelete = async (forEveryone: boolean) => {
     setDeleteModal(m => ({ ...m, open: false }))
+    if (!deleteModal.messageId) return
 
-    if (deleteModal.type === 'message' && deleteModal.messageId) {
-      const id = deleteModal.messageId
-      setDeletedIds(prev => new Set([...prev, id]))
-      const result = await deleteMessage(id, forEveryone)
-      if (result.success) {
-        toast.success(forEveryone ? "Xabar ikki tarafdan o'chirildi" : "Xabar faqat sizda o'chirildi")
-        router.refresh()
-      } else {
-        setDeletedIds(prev => { const s = new Set(prev); s.delete(id); return s })
-        toast.error(result.error || 'Xatolik yuz berdi')
-      }
-    } else if (deleteModal.type === 'conversation' && deleteModal.partnerId) {
-      const pid = deleteModal.partnerId
-      const result = await deleteConversation(pid, forEveryone)
-      if (result.success) {
-        toast.success(forEveryone ? "Suhbat ikki tarafdan o'chirildi" : "Suhbat faqat sizda o'chirildi")
-        setSelectedPartnerId(null)
-        setMobileView('list')
-        router.refresh()
-      } else {
-        toast.error(result.error || 'Xatolik yuz berdi')
-      }
+    const id = deleteModal.messageId
+    setDeletedIds(prev => new Set([...prev, id]))
+    const result = await deleteMessage(id, forEveryone)
+    if (result.success) {
+      toast.success(forEveryone ? "Xabar ikki tarafdan o'chirildi" : "Xabar faqat sizda o'chirildi")
+      router.refresh()
+    } else {
+      setDeletedIds(prev => { const s = new Set(prev); s.delete(id); return s })
+      toast.error(result.error || 'Xatolik yuz berdi')
     }
+  }
+
+  // ── Edit handlers ─────────────────────────────────────────────────────────
+
+  const startEdit = (msg: Message) => {
+    setEditingId(msg.id)
+    setEditText(msg.content)
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setEditText('')
+  }
+
+  const saveEdit = async () => {
+    if (!editingId || !editText.trim()) return
+    setIsSavingEdit(true)
+    try {
+      const result = await editMessage(editingId, editText.trim())
+      if (result.success) {
+        toast.success('Xabar tahrirlandi')
+        setEditingId(null)
+        setEditText('')
+        router.refresh()
+      } else {
+        toast.error(result.error || 'Xatolik yuz berdi')
+      }
+    } catch {
+      toast.error('Xatolik yuz berdi')
+    } finally {
+      setIsSavingEdit(false)
+    }
+  }
+
+  const handleEditKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEdit() }
+    if (e.key === 'Escape') cancelEdit()
   }
 
   const handleSendReply = async () => {
@@ -278,15 +301,14 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSendReply()
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendReply() }
   }
 
   const canReplyInline = activeConv
     ? activeConv.messages.some(m => m.receiver.id === currentUserId)
     : false
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <>
@@ -460,7 +482,7 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
             </div>
           ) : (
             <>
-              {/* Header */}
+              {/* Chat header */}
               <div className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-[#17212b] border-b border-border/50 shadow-sm">
                 <button
                   onClick={() => setMobileView('list')}
@@ -479,19 +501,10 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm leading-tight truncate">{activeConv.partnerName}</p>
                   <p className="text-xs text-muted-foreground">
-                    {activeConv.partnerRole === 'TEACHER' ? 'O\'qituvchi' : activeConv.partnerRole}
+                    {activeConv.partnerRole === 'TEACHER' ? "O'qituvchi" : activeConv.partnerRole}
                     {' · '}{activeConv.messages.length} ta xabar
                   </p>
                 </div>
-
-                {/* Delete conversation button */}
-                <button
-                  onClick={() => handleDeleteConversation(activeConv.partnerId)}
-                  className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-muted-foreground hover:text-red-500 transition-colors"
-                  title="Suhbatni o'chirish"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
               </div>
 
               {/* Messages */}
@@ -501,6 +514,7 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
                   const prev = activeConv.messages[idx - 1]
                   const showDate = !prev || !sameDay(msg.createdAt, prev.createdAt)
                   const prevSameSender = prev && prev.sender.id === msg.sender.id && !showDate
+                  const isEditing = editingId === msg.id
 
                   return (
                     <div key={msg.id}>
@@ -528,56 +542,109 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
                         )}
                         {isMine && <div className="w-7" />}
 
-                        <div className={cn('max-w-[72%] flex flex-col', isMine ? 'items-end' : 'items-start')}>
-                          <div className={cn(
-                            'relative px-3.5 py-2 rounded-2xl shadow-sm text-sm',
-                            isMine
-                              ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-[4px]'
-                              : 'bg-white dark:bg-[#1e2533] text-foreground rounded-bl-[4px]',
-                          )}>
-                            {msg.subject && (
-                              <p className={cn(
-                                'text-xs font-semibold mb-1 pb-1 border-b',
-                                isMine ? 'text-blue-100 border-blue-400/30' : 'text-primary border-primary/20',
-                              )}>
-                                {msg.subject}
-                              </p>
-                            )}
+                        {/* Hover action buttons (only own messages) */}
+                        {isMine && !isEditing && (
+                          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity self-end mb-1">
+                            {/* Edit button */}
+                            <button
+                              onClick={() => startEdit(msg)}
+                              className="p-1.5 rounded-full hover:bg-white/80 dark:hover:bg-white/10 text-muted-foreground hover:text-blue-500 transition-colors"
+                              title="Tahrirlash"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            {/* Delete button */}
+                            <button
+                              onClick={() => handleDelete(msg.id)}
+                              className="p-1.5 rounded-full hover:bg-white/80 dark:hover:bg-white/10 text-muted-foreground hover:text-red-500 transition-colors"
+                              title="O'chirish"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
 
-                            {msg.student && (
-                              <div className={cn(
-                                'flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] mb-2 px-2 py-1.5 rounded-lg',
-                                isMine
-                                  ? 'bg-white/10 text-blue-100'
-                                  : 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200/60',
-                              )}>
-                                <GraduationCap className="w-3 h-3" />
-                                <span>{msg.student.user?.fullName || "Noma'lum"}</span>
-                                {msg.student.class && (
-                                  <>
-                                    <span className="opacity-40">·</span>
-                                    <School className="w-3 h-3" />
-                                    <span>{msg.student.class.name}</span>
-                                  </>
+                        <div className={cn('max-w-[72%] flex flex-col', isMine ? 'items-end' : 'items-start')}>
+                          {isEditing ? (
+                            /* ── Inline edit ── */
+                            <div className="w-full min-w-[220px] max-w-sm bg-white dark:bg-[#1e2533] rounded-2xl shadow-md px-3 py-2 flex flex-col gap-2">
+                              <Textarea
+                                value={editText}
+                                onChange={e => setEditText(e.target.value)}
+                                onKeyDown={handleEditKeyDown}
+                                rows={2}
+                                autoFocus
+                                className="resize-none text-sm border-none bg-transparent p-0 focus-visible:ring-0 shadow-none"
+                              />
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={cancelEdit}
+                                  className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded-lg hover:bg-muted transition-colors"
+                                >
+                                  Bekor
+                                </button>
+                                <button
+                                  onClick={saveEdit}
+                                  disabled={isSavingEdit || !editText.trim()}
+                                  className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1"
+                                >
+                                  {isSavingEdit
+                                    ? <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                                    : <Check className="w-3 h-3" />}
+                                  Saqlash
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className={cn(
+                              'relative px-3.5 py-2 rounded-2xl shadow-sm text-sm',
+                              isMine
+                                ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-[4px]'
+                                : 'bg-white dark:bg-[#1e2533] text-foreground rounded-bl-[4px]',
+                            )}>
+                              {msg.subject && (
+                                <p className={cn(
+                                  'text-xs font-semibold mb-1 pb-1 border-b',
+                                  isMine ? 'text-blue-100 border-blue-400/30' : 'text-primary border-primary/20',
+                                )}>
+                                  {msg.subject}
+                                </p>
+                              )}
+
+                              {msg.student && (
+                                <div className={cn(
+                                  'flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] mb-2 px-2 py-1.5 rounded-lg',
+                                  isMine
+                                    ? 'bg-white/10 text-blue-100'
+                                    : 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200/60',
+                                )}>
+                                  <GraduationCap className="w-3 h-3" />
+                                  <span>{msg.student.user?.fullName || "Noma'lum"}</span>
+                                  {msg.student.class && (
+                                    <>
+                                      <span className="opacity-40">·</span>
+                                      <School className="w-3 h-3" />
+                                      <span>{msg.student.class.name}</span>
+                                    </>
+                                  )}
+                                </div>
+                              )}
+
+                              <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+
+                              <div className="flex items-center gap-0.5 mt-1 justify-end">
+                                <span className={cn('text-[10px]', isMine ? 'text-blue-100/80' : 'text-muted-foreground')}>
+                                  {msgTime(msg.createdAt)}
+                                </span>
+                                {isMine && (
+                                  msg.readAt
+                                    ? <CheckCheck className="w-3.5 h-3.5 text-blue-100" />
+                                    : <Check className="w-3.5 h-3.5 text-blue-200/60" />
                                 )}
                               </div>
-                            )}
-
-                            <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-
-                            <div className="flex items-center gap-0.5 mt-1 justify-end">
-                              <span className={cn('text-[10px]', isMine ? 'text-blue-100/80' : 'text-muted-foreground')}>
-                                {msgTime(msg.createdAt)}
-                              </span>
-                              {isMine && (
-                                msg.readAt
-                                  ? <CheckCheck className="w-3.5 h-3.5 text-blue-100" />
-                                  : <Check className="w-3.5 h-3.5 text-blue-200/60" />
-                              )}
                             </div>
-                          </div>
+                          )}
                         </div>
-
                       </div>
                     </div>
                   )
@@ -640,18 +707,14 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">
             <Trash2 className="w-5 h-5" />
-            {deleteModal.type === 'conversation' ? "Suhbatni o'chirish" : "Xabarni o'chirish"}
+            Xabarni o'chirish
           </DialogTitle>
           <DialogDescription>
-            {deleteModal.type === 'conversation'
-              ? "Bu suhbatdagi barcha xabarlar o'chiriladi."
-              : "Bu xabar o'chiriladi."}
-            {' '}Qayerdan o'chirilsin?
+            Bu xabar o'chiriladi. Qayerdan o'chirilsin?
           </DialogDescription>
         </DialogHeader>
 
         <DialogFooter className="flex-col gap-2 sm:flex-col">
-          {/* Only the sender may delete for everyone */}
           {deleteModal.canDeleteForEveryone && (
             <Button
               variant="destructive"

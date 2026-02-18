@@ -271,6 +271,49 @@ export async function deleteConversation(partnerId: string, deleteForEveryone = 
   }
 }
 
+/**
+ * Edit a message's content. Only the original sender can edit their own message.
+ */
+export async function editMessage(messageId: string, newContent: string) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session) {
+      return { success: false, error: 'Ruxsat berilmagan' }
+    }
+
+    const tenantId = session.user.tenantId!
+    const userId = session.user.id
+
+    if (!newContent.trim()) {
+      return { success: false, error: 'Xabar matni bo\'sh bo\'lishi mumkin emas' }
+    }
+
+    // Only sender can edit their own message
+    const message = await db.message.findFirst({
+      where: { id: messageId, tenantId, senderId: userId },
+    })
+
+    if (!message) {
+      return { success: false, error: 'Xabar topilmadi yoki tahrirlash huquqi yo\'q' }
+    }
+
+    await db.message.update({
+      where: { id: messageId },
+      data: { content: newContent.trim() },
+    })
+
+    revalidatePath('/teacher/messages')
+    revalidatePath('/parent/messages')
+    revalidatePath('/admin/messages')
+
+    return { success: true }
+  } catch (error: any) {
+    console.error('Edit message error:', error)
+    return { success: false, error: error.message || 'Xatolik yuz berdi' }
+  }
+}
+
 export async function getUnreadCount() {
   try {
     const session = await getServerSession(authOptions)
