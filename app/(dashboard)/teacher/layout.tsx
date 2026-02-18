@@ -44,7 +44,7 @@ export default async function TeacherLayout({
   let initialUnreadCount = 0
   try {
     initialUnreadCount = await db.message.count({
-      where: { receiverId: session.user.id, tenantId, readAt: null },
+      where: { receiverId: session.user.id, tenantId: session.user.tenantId!, readAt: null },
     })
   } catch (e) { /* ignore */ }
 
