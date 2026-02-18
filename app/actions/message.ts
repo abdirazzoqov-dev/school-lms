@@ -237,16 +237,16 @@ export async function deleteConversation(partnerId: string, deleteForEveryone = 
     const userId = session.user.id
 
     if (deleteForEveryone) {
-      // Mark all messages between these two users as deleted for both
+      // Only mark YOUR OWN sent messages as deleted for both sides
+      // (receiver cannot delete sender's messages from sender's inbox)
       await db.message.updateMany({
-        where: {
-          tenantId,
-          OR: [
-            { senderId: userId,   receiverId: partnerId },
-            { senderId: partnerId, receiverId: userId   },
-          ],
-        },
+        where: { tenantId, senderId: userId, receiverId: partnerId },
         data: { deletedBySender: true, deletedByReceiver: true },
+      })
+      // Received messages: only delete from your side (deletedByReceiver)
+      await db.message.updateMany({
+        where: { tenantId, senderId: partnerId, receiverId: userId },
+        data: { deletedByReceiver: true },
       })
     } else {
       // Sent messages — mark deletedBySender

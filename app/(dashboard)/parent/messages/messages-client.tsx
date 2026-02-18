@@ -111,6 +111,7 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
     type: 'message' | 'conversation'
     messageId?: string
     partnerId?: string
+    canDeleteForEveryone?: boolean   // only sender may delete for both sides
   }>({ open: false, type: 'message' })
   const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(null)
   const [mobileView, setMobileView] = useState<'list' | 'chat'>('list')
@@ -213,11 +214,15 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
   }
 
   const handleDelete = (messageId: string) => {
-    setDeleteModal({ open: true, type: 'message', messageId })
+    const msg = allMessages.find(m => m.id === messageId)
+    const canDeleteForEveryone = msg?.sender.id === currentUserId
+    setDeleteModal({ open: true, type: 'message', messageId, canDeleteForEveryone })
   }
 
   const handleDeleteConversation = (partnerId: string) => {
-    setDeleteModal({ open: true, type: 'conversation', partnerId })
+    const conv = conversations.find(c => c.partnerId === partnerId)
+    const canDeleteForEveryone = conv?.messages.some(m => m.sender.id === currentUserId) ?? false
+    setDeleteModal({ open: true, type: 'conversation', partnerId, canDeleteForEveryone })
   }
 
   const confirmDelete = async (forEveryone: boolean) => {
@@ -573,13 +578,6 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
                           </div>
                         </div>
 
-                        <button
-                          onClick={() => handleDelete(msg.id)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-950/40 text-muted-foreground hover:text-red-500"
-                          title="O'chirish"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
                       </div>
                     </div>
                   )
@@ -653,20 +651,23 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
         </DialogHeader>
 
         <DialogFooter className="flex-col gap-2 sm:flex-col">
+          {/* Only the sender may delete for everyone */}
+          {deleteModal.canDeleteForEveryone && (
+            <Button
+              variant="destructive"
+              className="w-full gap-2"
+              onClick={() => confirmDelete(true)}
+            >
+              <Trash2 className="w-4 h-4" />
+              Ikki tarafdan o'chirish
+            </Button>
+          )}
           <Button
-            variant="destructive"
-            className="w-full gap-2"
-            onClick={() => confirmDelete(true)}
-          >
-            <Trash2 className="w-4 h-4" />
-            Ikki tarafdan o'chirish
-          </Button>
-          <Button
-            variant="outline"
+            variant={deleteModal.canDeleteForEveryone ? 'outline' : 'destructive'}
             className="w-full gap-2"
             onClick={() => confirmDelete(false)}
           >
-            <Trash2 className="w-4 h-4 text-muted-foreground" />
+            <Trash2 className="w-4 h-4" />
             Faqat menda o'chirish
           </Button>
           <Button
