@@ -35,6 +35,16 @@ export default async function AdminLayout({
       }
     }
 
+    // Fetch current user avatar from DB (not from JWT cookie to avoid 431 errors)
+    let currentAvatar: string | null = null
+    try {
+      const userData = await db.user.findUnique({
+        where: { id: session.user.id },
+        select: { avatar: true }
+      })
+      currentAvatar = userData?.avatar ?? null
+    } catch (e) { /* ignore */ }
+
   const navItems = [
     {
       title: 'Dashboard',
@@ -181,7 +191,7 @@ export default async function AdminLayout({
                 </div>
               </div>
             </div>
-            <UserNav user={session.user} />
+            <UserNav user={{ ...session.user, avatar: currentAvatar }} />
           </div>
         </header>
         

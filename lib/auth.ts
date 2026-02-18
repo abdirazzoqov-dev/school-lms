@@ -164,7 +164,9 @@ export const authOptions: NextAuthOptions = {
         token.tenantId = user.tenantId
         token.tenant = user.tenant
         token.fullName = user.fullName
-        token.avatar = user.avatar
+        // NOTE: avatar is NOT stored in JWT to keep cookie size small
+        // (base64 images can be 50-100KB which causes HTTP 431 errors)
+        // Avatar is fetched from DB in each layout server component instead
       }
       return token
     },
@@ -175,7 +177,7 @@ export const authOptions: NextAuthOptions = {
         session.user.tenantId = token.tenantId as string | null
         session.user.tenant = token.tenant as any
         session.user.fullName = token.fullName as string
-        session.user.avatar = token.avatar as string | null
+        // avatar is intentionally omitted from session/JWT
       }
       return session
     },

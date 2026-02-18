@@ -5,6 +5,7 @@ import { DashboardNav } from '@/components/dashboard-nav'
 import { MobileNav } from '@/components/mobile-nav'
 import { UserNav } from '@/components/user-nav'
 import { BookOpen } from 'lucide-react'
+import { db } from '@/lib/db'
 
 export default async function StudentLayout({
   children,
@@ -16,6 +17,16 @@ export default async function StudentLayout({
   if (!session || session.user.role !== 'STUDENT') {
     redirect('/unauthorized')
   }
+
+  // Fetch avatar from DB (not from JWT to avoid 431 cookie size errors)
+  let currentAvatar: string | null = null
+  try {
+    const userData = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { avatar: true }
+    })
+    currentAvatar = userData?.avatar ?? null
+  } catch (e) { /* ignore */ }
 
   const navItems = [
     {
@@ -64,7 +75,7 @@ export default async function StudentLayout({
               </span>
             </div>
           </div>
-          <UserNav user={session.user} />
+          <UserNav user={{ ...session.user, avatar: currentAvatar }} />
         </div>
       </header>
 

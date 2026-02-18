@@ -16,11 +16,20 @@ export default function ProfileEditPage() {
   const router = useRouter()
   const { data: session, update } = useSession()
   const [isLoading, setIsLoading] = useState(false)
+  const [currentAvatar, setCurrentAvatar] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     phone: '',
   })
+
+  // Fetch current avatar from API (not from session since we removed it from JWT)
+  useEffect(() => {
+    fetch('/api/user/profile')
+      .then(r => r.json())
+      .then(data => { if (data.user?.avatar) setCurrentAvatar(data.user.avatar) })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (session?.user) {
@@ -118,19 +127,12 @@ export default function ProfileEditPage() {
             <div className="flex justify-center pb-6 pt-2">
               <ProfilePhotoUpload
                 userId={session.user.id}
-                currentAvatar={session.user.avatar}
+                currentAvatar={currentAvatar}
                 name={session.user.fullName || ''}
                 size={110}
                 gradient="from-violet-500 to-purple-600"
-                onUploadSuccess={async (avatarUrl) => {
-                  // Update session to show new avatar immediately
-                  await update({
-                    ...session,
-                    user: {
-                      ...session?.user,
-                      avatar: avatarUrl,
-                    }
-                  })
+                onUploadSuccess={(avatarUrl) => {
+                  setCurrentAvatar(avatarUrl)
                   toast.success('Profil rasmi yangilandi')
                 }}
               />

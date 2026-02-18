@@ -1,6 +1,6 @@
 'use client'
 
-import { signOut, useSession } from 'next-auth/react'
+import { signOut } from 'next-auth/react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,11 +24,11 @@ interface UserNavProps {
 }
 
 export function UserNav({ user }: UserNavProps) {
-  // Use live session to get the latest avatar (updates after profile photo upload)
-  const { data: session } = useSession()
-  const avatarSrc = session?.user?.avatar || user.avatar
-  const displayName = session?.user?.fullName || user.fullName
-  const displayEmail = session?.user?.email || user.email
+  // Avatar is passed as prop from server layout (fetched from DB, not JWT cookie)
+  // This prevents HTTP 431 errors caused by large base64 images in JWT cookies
+  const avatarSrc = user.avatar
+  const displayName = user.fullName
+  const displayEmail = user.email
 
   return (
     <DropdownMenu>

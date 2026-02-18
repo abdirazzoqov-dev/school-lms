@@ -30,6 +30,16 @@ export default async function CookLayout({
     console.error('Error loading global settings:', error)
   }
 
+  // Fetch avatar from DB (not from JWT to avoid 431 cookie size errors)
+  let currentAvatar: string | null = null
+  try {
+    const userData = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { avatar: true }
+    })
+    currentAvatar = userData?.avatar ?? null
+  } catch (e) { /* ignore */ }
+
   const navItems = [
     {
       title: 'Dashboard',
@@ -67,7 +77,7 @@ export default async function CookLayout({
               </span>
             </div>
           </div>
-          <UserNav user={session.user} />
+          <UserNav user={{ ...session.user, avatar: currentAvatar }} />
         </div>
       </header>
       
