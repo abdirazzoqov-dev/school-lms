@@ -95,7 +95,7 @@ export async function replyToMessage(messageId: string, data: MessageReplyData) 
         tenantId,
         senderId: session.user.id,
         receiverId: receiverId,
-        subject: `Re: ${originalMessage.subject}`,
+        subject: originalMessage.subject ? `Re: ${originalMessage.subject}` : null,
         content: validatedData.content,
         parentMessageId: messageId,
         status: 'SENT',

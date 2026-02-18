@@ -54,7 +54,6 @@ export function ComposeMessageForm({
   
   const [formData, setFormData] = useState({
     recipientId: replyToMessage?.sender.id || '',
-    subject: replyToMessage ? `Re: ${replyToMessage.subject}` : '',
     content: '',
     studentId: replyToMessage?.student?.id || '',
   })
@@ -76,7 +75,6 @@ export function ComposeMessageForm({
         result = await sendMessage({
           recipientId: formData.recipientId,
           studentId: formData.studentId || undefined,
-          subject: formData.subject,
           content: formData.content,
         })
       }
@@ -262,28 +260,6 @@ export function ComposeMessageForm({
               </CardContent>
             </Card>
 
-            {/* Subject */}
-            <Card className="border-none shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
-                  Mavzu
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <Label htmlFor="subject" className="text-base font-semibold mb-3 block">
-                  Xabar mavzusi *
-                </Label>
-                <Input
-                  id="subject"
-                  value={formData.subject}
-                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                  placeholder="Masalan: Savol bor edi"
-                  className="h-12 text-base"
-                  required
-                />
-              </CardContent>
-            </Card>
           </>
         )}
 
@@ -326,7 +302,7 @@ export function ComposeMessageForm({
               </Link>
               <Button 
                 type="submit" 
-                disabled={isLoading || !formData.recipientId || !formData.subject || !formData.content}
+                disabled={isLoading || !formData.recipientId || !formData.content}
                 size="lg"
                 className="gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
               >

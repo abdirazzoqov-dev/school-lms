@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const messageSchema = z.object({
   recipientId: z.string().min(1, 'Qabul qiluvchi tanlanishi shart'),
   studentId: z.string().optional(), // Which student the message is about (for context)
-  subject: z.string().min(1, 'Mavzu kiritilishi shart').max(200),
+  subject: z.string().max(200).optional(),
   content: z.string().min(1, 'Xabar matni kiritilishi shart').max(5000),
 })
 

@@ -48,7 +48,6 @@ export function ComposeMessageForm({
   
   const [formData, setFormData] = useState({
     recipientId: preselectedParentId || (replyToMessage?.sender.id || ''),
-    subject: replyToMessage ? `Re: ${replyToMessage.subject}` : '',
     content: '',
     studentId: preselectedStudentId || (replyToMessage?.student?.id || ''),
   })
@@ -91,7 +90,6 @@ export function ComposeMessageForm({
         result = await sendMessage({
           recipientId: formData.recipientId,
           studentId: formData.studentId || undefined,
-          subject: formData.subject,
           content: formData.content,
         })
       }
@@ -211,16 +209,6 @@ export function ComposeMessageForm({
             </p>
           </div>
 
-          <div>
-            <Label htmlFor="subject">Mavzu *</Label>
-            <Input
-              id="subject"
-              value={formData.subject}
-              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-              placeholder="Masalan: O'quvchining o'zlashtirishi haqida"
-              required
-            />
-          </div>
         </>
       )}
 
