@@ -464,13 +464,6 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
                   </p>
                 </div>
 
-                {/* Compose to same parent */}
-                <Link href={`/teacher/messages/compose?parentId=${activeConv.partnerId}`}>
-                  <Button variant="ghost" size="sm" className="gap-1 text-xs rounded-lg shrink-0">
-                    <Pencil className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Yangi mavzu</span>
-                  </Button>
-                </Link>
               </div>
 
               {/* ── Messages ── */}
