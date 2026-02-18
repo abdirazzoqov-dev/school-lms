@@ -8,9 +8,42 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { createMeal, updateMeal } from '@/app/actions/meal'
 import { toast } from 'sonner'
-import { Upload, X, Image as ImageIcon } from 'lucide-react'
-import Image from 'next/image'
+import { Upload, X, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+
+// Compress image using canvas - max 800x600px, JPEG quality 0.82
+// Result is typically 30-120KB, perfect for meal photos
+async function compressMealImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const MAX_W = 800
+        const MAX_H = 600
+        let { width, height } = img
+
+        // Maintain aspect ratio
+        if (width > MAX_W || height > MAX_H) {
+          const ratio = Math.min(MAX_W / width, MAX_H / height)
+          width = Math.round(width * ratio)
+          height = Math.round(height * ratio)
+        }
+
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')!
+        ctx.drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL('image/jpeg', 0.82))
+      }
+      img.onerror = reject
+      img.src = e.target?.result as string
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
 
 const DAYS = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
 
@@ -39,6 +72,7 @@ type MealDialogProps = {
 export function MealDialog({ open, onOpenChange, dayOfWeek, mealNumber, meal }: MealDialogProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isCompressing, setIsCompressing] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     mealTime: '',
@@ -79,15 +113,9 @@ export function MealDialog({ open, onOpenChange, dayOfWeek, mealNumber, meal }: 
     }
   }, [meal, open])
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
-    // Check file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Rasm hajmi 2MB dan oshmasligi kerak')
-      return
-    }
 
     // Check file type
     if (!file.type.startsWith('image/')) {
@@ -95,17 +123,25 @@ export function MealDialog({ open, onOpenChange, dayOfWeek, mealNumber, meal }: 
       return
     }
 
-    // Convert to base64
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const base64String = reader.result as string
-      setFormData(prev => ({ ...prev, image: base64String }))
-      setImagePreview(base64String)
+    // Check original file size (max 10MB before compression)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Rasm hajmi 10MB dan oshmasligi kerak')
+      return
     }
-    reader.onerror = () => {
-      toast.error('Rasm yuklashda xatolik')
+
+    try {
+      setIsCompressing(true)
+      // Compress image: max 800x600px, JPEG 82% quality → typically 30-120KB
+      const compressed = await compressMealImage(file)
+      setFormData(prev => ({ ...prev, image: compressed }))
+      setImagePreview(compressed)
+    } catch (err) {
+      toast.error('Rasmni qayta ishlashda xatolik')
+    } finally {
+      setIsCompressing(false)
+      // Reset input so same file can be re-selected
+      e.target.value = ''
     }
-    reader.readAsDataURL(file)
   }
 
   const handleRemoveImage = () => {
@@ -178,18 +214,35 @@ export function MealDialog({ open, onOpenChange, dayOfWeek, mealNumber, meal }: 
           <div className="space-y-2">
             <Label>
               Ovqat rasmi
-              <span className="text-xs text-muted-foreground ml-2">(Maks: 2MB)</span>
+              <span className="text-xs text-muted-foreground ml-2">(Siqilgan holda saqlanadi)</span>
             </Label>
             
+            {/* Hidden file input always rendered */}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+              id="meal-image"
+              disabled={isCompressing}
+            />
+
             {imagePreview ? (
               <div className="relative w-full h-64 rounded-lg overflow-hidden border-2 border-primary/20 group">
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={imagePreview}
                   alt="Ovqat rasmi"
-                  fill
-                  className="object-cover"
+                  className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <label
+                    htmlFor="meal-image"
+                    className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 bg-white text-gray-900 hover:bg-gray-100 transition-colors"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Almashtirish
+                  </label>
                   <Button
                     type="button"
                     variant="destructive"
@@ -202,29 +255,29 @@ export function MealDialog({ open, onOpenChange, dayOfWeek, mealNumber, meal }: 
                 </div>
               </div>
             ) : (
-              <div className="relative">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                  id="meal-image"
-                />
-                <label
-                  htmlFor="meal-image"
-                  className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-muted-foreground/25 rounded-lg cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-all"
-                >
-                  <div className="text-center">
-                    <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-sm font-medium text-foreground mb-1">
-                      Rasmni yuklash uchun bosing
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      PNG, JPG, WEBP (maks 2MB)
-                    </p>
-                  </div>
-                </label>
-              </div>
+              <label
+                htmlFor="meal-image"
+                className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-muted-foreground/25 rounded-lg cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-all"
+              >
+                <div className="text-center">
+                  {isCompressing ? (
+                    <>
+                      <Loader2 className="h-10 w-10 text-primary mx-auto mb-3 animate-spin" />
+                      <p className="text-sm font-medium text-foreground">Rasm qayta ishlanmoqda...</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                      <p className="text-sm font-medium text-foreground mb-1">
+                        Rasmni yuklash uchun bosing
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        PNG, JPG, WEBP • Avtomatik siqiladi
+                      </p>
+                    </>
+                  )}
+                </div>
+              </label>
             )}
           </div>
 
@@ -320,10 +373,10 @@ export function MealDialog({ open, onOpenChange, dayOfWeek, mealNumber, meal }: 
             >
               Bekor qilish
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || isCompressing}>
               {isSubmitting ? (
                 <>
-                  <span className="mr-2">⏳</span>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   {meal ? 'Yangilanmoqda...' : 'Saqlanmoqda...'}
                 </>
               ) : (

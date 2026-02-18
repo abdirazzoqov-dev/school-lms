@@ -48,16 +48,7 @@ async function MealsData() {
     ],
   })
 
-  // Convert to plain objects for better serialization
-  const mealsData = meals.map(meal => ({
-    ...meal,
-    // Truncate base64 if too large (> 500KB)
-    image: meal.image && meal.image.length > 500000 
-      ? null 
-      : meal.image
-  }))
-
-  return <ParentMealsWeekView meals={mealsData} />
+  return <ParentMealsWeekView meals={meals} />
 }
 
 export default function ParentMealsPage() {

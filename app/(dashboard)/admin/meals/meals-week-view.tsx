@@ -7,7 +7,6 @@ import { Plus, Edit, Trash2, Clock, UtensilsCrossed } from 'lucide-react'
 import { MealDialog } from './meal-dialog'
 import { deleteMeal } from '@/app/actions/meal'
 import { toast } from 'sonner'
-import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 
@@ -110,14 +109,12 @@ export function MealsWeekView({ meals }: { meals: Meal[] }) {
                       {/* Rasm - Restaurant Style */}
                       {mealData?.image && (
                         <div className="relative h-40 w-full overflow-hidden">
-                          <Image
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
                             src={mealData.image}
                             alt={mealData.mainDish}
-                            fill
-                            className="object-cover group-hover:scale-110 transition-transform duration-300"
                             loading="lazy"
-                            quality={75}
-                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                           
