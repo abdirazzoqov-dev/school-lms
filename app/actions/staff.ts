@@ -83,7 +83,9 @@ export async function createStaff(data: StaffFormData) {
     revalidatePath('/admin')
 
     return { 
-      success: true, 
+      success: true,
+      userId: user.id,      // plain string - safe to serialize across server action boundary
+      staffId: staff.id,    // plain string
       staff,
       message: `${validatedData.fullName} muvaffaqiyatli qo'shildi`
     }

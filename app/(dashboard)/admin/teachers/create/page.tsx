@@ -91,9 +91,9 @@ export default function CreateTeacherPage() {
       const result = await createTeacher(formData)
 
       if (result.success) {
-        // Upload avatar if selected
-        if (avatarBase64 && result.teacher?.userId) {
-          await uploadAvatar(result.teacher.userId, avatarBase64, avatarFileName || 'avatar.jpg')
+        // Upload avatar if selected — use result.userId (plain string, safe across server action boundary)
+        if (avatarBase64 && result.userId) {
+          await uploadAvatar(result.userId, avatarBase64, avatarFileName || 'avatar.jpg')
         }
         toast({
           title: 'Muvaffaqiyatli!',

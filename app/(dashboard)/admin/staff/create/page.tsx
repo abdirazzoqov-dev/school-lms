@@ -89,9 +89,9 @@ export default function CreateStaffPage() {
       const result = await createStaff(formData)
 
       if (result.success) {
-        // Upload avatar if selected
-        if (avatarBase64 && result.staff?.userId) {
-          await uploadAvatar(result.staff.userId, avatarBase64, avatarFileName || 'avatar.jpg')
+        // Upload avatar if selected — use result.userId (plain string, safe across server action boundary)
+        if (avatarBase64 && result.userId) {
+          await uploadAvatar(result.userId, avatarBase64, avatarFileName || 'avatar.jpg')
         }
         toast({
           title: 'Muvaffaqiyatli!',

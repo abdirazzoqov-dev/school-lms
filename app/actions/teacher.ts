@@ -88,7 +88,9 @@ export async function createTeacher(data: TeacherFormData) {
     revalidatePath('/admin') // Dashboard: totalTeachers
     
     return { 
-      success: true, 
+      success: true,
+      userId: user.id,        // plain string - safe to serialize across server action boundary
+      teacherId: teacher.id,  // plain string
       teacher,
       credentials: {
         email: validatedData.email,
