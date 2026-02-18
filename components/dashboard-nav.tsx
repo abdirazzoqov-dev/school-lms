@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import * as Icons from 'lucide-react'
 import { Icon3D } from '@/components/icon-3d'
@@ -23,8 +24,32 @@ interface DashboardNavProps {
   items: NavItem[]
 }
 
+// ── Polls /api/unread-count every 10s, pauses when tab hidden ──────────────
+function useUnreadCount() {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    const fetch_ = () => {
+      fetch('/api/unread-count', { cache: 'no-store' })
+        .then(r => r.json())
+        .then(d => setCount(d.count ?? 0))
+        .catch(() => {})
+    }
+    fetch_()
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') fetch_()
+    }, 10_000)
+    const onVisibility = () => { if (document.visibilityState === 'visible') fetch_() }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', onVisibility) }
+  }, [])
+
+  return count
+}
+
 export function DashboardNav({ items }: DashboardNavProps) {
   const pathname = usePathname()
+  const unreadCount = useUnreadCount()
 
   const renderNavItem = (item: NavItem, index: number) => {
     // If item has children, render as accordion
@@ -130,7 +155,20 @@ export function DashboardNav({ items }: DashboardNavProps) {
           <Icon3D name={item.icon} size={24} />
         </div>
         <span className="flex-1">{item.title}</span>
-        {isActive && (
+        {/* Unread badge — only for message routes of teacher/parent */}
+        {item.href && item.href.endsWith('/messages') &&
+          !item.href.startsWith('/admin') &&
+          unreadCount > 0 && (
+          <span className={cn(
+            'min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center',
+            isActive
+              ? 'bg-white text-primary'
+              : 'bg-red-500 text-white shadow-sm',
+          )}>
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
+        {isActive && unreadCount === 0 && (
           <div className="h-2 w-2 rounded-full bg-white animate-pulse-slow" />
         )}
       </Link>

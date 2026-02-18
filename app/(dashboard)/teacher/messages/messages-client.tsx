@@ -108,7 +108,7 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
 
   // ── Auto-polling: refresh server data every 5s (pauses when tab is hidden) ──
   useEffect(() => {
-    const INTERVAL = 5_000
+    const INTERVAL = 3_000
     let timer: ReturnType<typeof setInterval> | null = null
 
     const start = () => {
