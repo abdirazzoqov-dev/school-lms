@@ -79,12 +79,12 @@ export default async function AdminLayout({
     {
       title: 'Guruhlar',
       href: '/admin/groups',
-      icon: 'Users',
+      icon: 'UsersRound',
     },
     {
       title: 'Fanlar',
       href: '/admin/subjects',
-      icon: 'Book',
+      icon: 'Atom',
     },
     {
       title: 'Dars jadvali',
@@ -134,7 +134,7 @@ export default async function AdminLayout({
         {
           title: 'Xarajatlar',
           href: '/admin/kitchen',
-          icon: 'TrendingDown',
+          icon: 'Receipt',
         },
       ],
     },
@@ -146,7 +146,7 @@ export default async function AdminLayout({
     {
       title: 'Shartnomalar',
       href: '/admin/contracts',
-      icon: 'FileText',
+      icon: 'FileSignature',
     },
     {
       title: 'Xabarlar',
@@ -161,7 +161,7 @@ export default async function AdminLayout({
     {
       title: 'Ma\'sul Xodimlar',
       href: '/admin/contacts',
-      icon: 'Users',
+      icon: 'UserCog',
     },
     {
       title: 'Sozlamalar',
