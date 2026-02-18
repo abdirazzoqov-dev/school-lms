@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, MessageSquare, LayoutGrid, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
@@ -20,28 +20,45 @@ interface TeacherMobileBottomNavProps {
   items: NavItem[]
 }
 
+// ── Unread count hook (polls /api/unread-count every 10s) ────────────────────
+function useUnreadCount() {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    const fetch_ = () => {
+      fetch('/api/unread-count', { cache: 'no-store' })
+        .then(r => r.json())
+        .then(d => setCount(d.count ?? 0))
+        .catch(() => {})
+    }
+    fetch_() // immediate
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') fetch_()
+    }, 10_000)
+    const onVisibility = () => { if (document.visibilityState === 'visible') fetch_() }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', onVisibility) }
+  }, [])
+
+  return count
+}
+
 export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const unreadCount = useUnreadCount()
 
-  // Filter out Dashboard and Messages for the full menu
+  // All items except Dashboard and Messages go into the sheet menu
   const menuItems = items.filter(
     item => item.href !== '/teacher' && item.href !== '/teacher/messages'
   )
 
   const isActive = (href: string) => {
-    if (href === '/teacher') {
-      return pathname === '/teacher'
-    }
+    if (href === '/teacher') return pathname === '/teacher'
     return pathname.startsWith(href)
   }
 
-  const getIcon = (iconName: string) => {
-    const Icon = LucideIcons[iconName as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>
-    return Icon ? <Icon className="h-7 w-7" /> : null
-  }
-
-  // Map icon names to 3D icon file names
+  // map3D: simplified icon name for Icon3D component
   const get3DIconName = (iconName: string): string => {
     const iconMap: Record<string, string> = {
       'Home': 'home',
@@ -60,18 +77,19 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
 
   return (
     <>
-      {/* Bottom Navigation - Mobile Only */}
+      {/* Bottom Navigation — Mobile Only */}
       <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/80 shadow-2xl">
         <div className="flex items-center justify-around h-16 px-2">
+
           {/* Home */}
           <Link href="/teacher">
             <Button
               variant="ghost"
               className={cn(
-                "flex flex-col items-center gap-1 h-auto py-2 px-4 rounded-xl transition-all duration-300",
+                'flex flex-col items-center gap-1 h-auto py-2 px-4 rounded-xl transition-all duration-300',
                 isActive('/teacher') && pathname === '/teacher'
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted',
               )}
             >
               <Icon3D name="home" size={28} />
@@ -79,18 +97,25 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
             </Button>
           </Link>
 
-          {/* Messages */}
+          {/* Messages — with unread badge */}
           <Link href="/teacher/messages">
             <Button
               variant="ghost"
               className={cn(
-                "flex flex-col items-center gap-1 h-auto py-2 px-4 rounded-xl transition-all duration-300 relative",
+                'flex flex-col items-center gap-1 h-auto py-2 px-4 rounded-xl transition-all duration-300 relative',
                 isActive('/teacher/messages')
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted',
               )}
             >
-              <Icon3D name="message" size={28} />
+              <div className="relative">
+                <Icon3D name="message" size={28} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shadow-lg shadow-red-500/40 animate-bounce-slow">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </div>
               <span className="text-xs font-medium">Xabarlar</span>
             </Button>
           </Link>
@@ -130,17 +155,17 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
                         href={item.href}
                         onClick={() => setOpen(false)}
                         className={cn(
-                          "flex flex-col items-center gap-3 rounded-2xl p-4 transition-all duration-300",
+                          'flex flex-col items-center gap-3 rounded-2xl p-4 transition-all duration-300',
                           active
-                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                            : "bg-muted/50 text-foreground hover:bg-muted hover:shadow-md"
+                            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                            : 'bg-muted/50 text-foreground hover:bg-muted hover:shadow-md',
                         )}
                       >
                         <div className={cn(
-                          "flex items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300",
-                          active 
-                            ? "bg-primary-foreground/20" 
-                            : "bg-background/50 shadow-sm"
+                          'flex items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300',
+                          active
+                            ? 'bg-primary-foreground/20'
+                            : 'bg-background/50 shadow-sm',
                         )}>
                           <Icon3D name={get3DIconName(item.icon)} size={48} />
                         </div>
@@ -155,9 +180,8 @@ export function TeacherMobileBottomNav({ items }: TeacherMobileBottomNavProps) {
         </div>
       </div>
 
-      {/* Spacer to prevent content from being hidden under bottom nav */}
+      {/* Spacer */}
       <div className="h-16 lg:hidden" />
     </>
   )
 }
-

@@ -104,6 +104,24 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  // ── Auto-polling: refresh server data every 5s (pauses when tab is hidden) ──
+  useEffect(() => {
+    const INTERVAL = 5_000
+    let timer: ReturnType<typeof setInterval> | null = null
+
+    const start = () => {
+      timer = setInterval(() => {
+        if (document.visibilityState === 'visible') router.refresh()
+      }, INTERVAL)
+    }
+    const stop = () => { if (timer) { clearInterval(timer); timer = null } }
+    const onVisibility = () => document.visibilityState === 'visible' ? start() : stop()
+
+    start()
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => { stop(); document.removeEventListener('visibilitychange', onVisibility) }
+  }, [router])
+
   const allMessages = useMemo(() => {
     return [...receivedMessages, ...sentMessages].filter(m => !deletedIds.has(m.id))
   }, [receivedMessages, sentMessages, deletedIds])

@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, MessageSquare, LayoutGrid, X } from 'lucide-react'
+import { Home, LayoutGrid, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import * as LucideIcons from 'lucide-react'
+import { MessageSquare } from 'lucide-react'
 
 interface NavItem {
   title: string
@@ -34,19 +35,41 @@ const iconColorMap: Record<string, { bg: string; icon: string; shadow: string }>
   Settings: { bg: 'bg-gray-100', icon: 'text-gray-600', shadow: 'shadow-gray-200' },
 }
 
+// ── Unread count hook (polls /api/unread-count every 10s) ────────────────────
+function useUnreadCount() {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    const fetch_ = () => {
+      fetch('/api/unread-count', { cache: 'no-store' })
+        .then(r => r.json())
+        .then(d => setCount(d.count ?? 0))
+        .catch(() => {})
+    }
+    fetch_() // immediate first call
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') fetch_()
+    }, 10_000)
+    const onVisibility = () => { if (document.visibilityState === 'visible') fetch_() }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', onVisibility) }
+  }, [])
+
+  return count
+}
+
 export function ParentMobileBottomNav({ items }: ParentMobileBottomNavProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const unreadCount = useUnreadCount()
 
-  // Filter out Dashboard and Messages for the full menu
+  // All items except Dashboard and Messages go into the sheet menu
   const menuItems = items.filter(
     item => item.href !== '/parent' && item.href !== '/parent/messages'
   )
 
   const isActive = (href: string) => {
-    if (href === '/parent') {
-      return pathname === '/parent'
-    }
+    if (href === '/parent') return pathname === '/parent'
     return pathname.startsWith(href)
   }
 
@@ -63,18 +86,19 @@ export function ParentMobileBottomNav({ items }: ParentMobileBottomNavProps) {
 
   return (
     <>
-      {/* Bottom Navigation - Mobile Only */}
+      {/* Bottom Navigation — Mobile Only */}
       <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden border-t bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/80 shadow-2xl">
         <div className="flex items-center justify-around h-16 px-2">
+
           {/* Dashboard */}
           <Link href="/parent">
             <Button
               variant="ghost"
               className={cn(
-                "flex flex-col items-center gap-1 h-auto py-2 px-4 rounded-xl transition-all duration-300",
+                'flex flex-col items-center gap-1 h-auto py-2 px-4 rounded-xl transition-all duration-300',
                 isActive('/parent') && pathname === '/parent'
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted',
               )}
             >
               <Home className="h-5 w-5" />
@@ -82,18 +106,25 @@ export function ParentMobileBottomNav({ items }: ParentMobileBottomNavProps) {
             </Button>
           </Link>
 
-          {/* Messages */}
+          {/* Messages — with unread badge */}
           <Link href="/parent/messages">
             <Button
               variant="ghost"
               className={cn(
-                "flex flex-col items-center gap-1 h-auto py-2 px-4 rounded-xl transition-all duration-300 relative",
+                'flex flex-col items-center gap-1 h-auto py-2 px-4 rounded-xl transition-all duration-300 relative',
                 isActive('/parent/messages')
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted',
               )}
             >
-              <MessageSquare className="h-5 w-5" />
+              <div className="relative">
+                <MessageSquare className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shadow-lg shadow-red-500/40 animate-bounce-slow">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </div>
               <span className="text-xs font-medium">Xabarlar</span>
             </Button>
           </Link>
@@ -134,17 +165,17 @@ export function ParentMobileBottomNav({ items }: ParentMobileBottomNavProps) {
                         href={item.href}
                         onClick={() => setOpen(false)}
                         className={cn(
-                          "flex flex-col items-center gap-3 rounded-2xl p-4 transition-all duration-300",
+                          'flex flex-col items-center gap-3 rounded-2xl p-4 transition-all duration-300',
                           active
-                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                            : "bg-gradient-to-br from-muted/50 to-muted/30 text-foreground hover:shadow-lg hover:scale-105"
+                            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                            : 'bg-gradient-to-br from-muted/50 to-muted/30 text-foreground hover:shadow-lg hover:scale-105',
                         )}
                       >
                         <div className={cn(
-                          "flex items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300 shadow-md",
-                          active 
-                            ? "bg-primary-foreground/20" 
-                            : cn(colors.bg, colors.shadow, "shadow-inner")
+                          'flex items-center justify-center w-16 h-16 rounded-2xl transition-all duration-300 shadow-md',
+                          active
+                            ? 'bg-primary-foreground/20'
+                            : cn(colors.bg, colors.shadow, 'shadow-inner'),
                         )}>
                           {getIcon(item.icon, true)}
                         </div>
@@ -159,9 +190,8 @@ export function ParentMobileBottomNav({ items }: ParentMobileBottomNavProps) {
         </div>
       </div>
 
-      {/* Spacer to prevent content from being hidden under bottom nav */}
+      {/* Spacer */}
       <div className="h-16 lg:hidden" />
     </>
   )
 }
-
