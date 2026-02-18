@@ -1092,6 +1092,10 @@ model Message {
   status MessageStatus @default(SENT)
   readAt DateTime?
 
+  // Soft-delete: admin always sees messages; users only see non-deleted ones
+  deletedBySender   Boolean @default(false)
+  deletedByReceiver Boolean @default(false)
+
   parentMessage   Message?  @relation("MessageThread", fields: [parentMessageId], references: [id], onDelete: SetNull)
   parentMessageId String?
   replies         Message[] @relation("MessageThread")

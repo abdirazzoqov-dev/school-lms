@@ -17,6 +17,8 @@ interface Message {
   content: string
   createdAt: Date | string
   readAt: Date | string | null
+  deletedBySender: boolean
+  deletedByReceiver: boolean
   sender: { id: string; fullName: string; role?: string }
   receiver: { id: string; fullName: string; role?: string }
 }
@@ -431,6 +433,22 @@ export function AdminMessagesClient({
                             )}
 
                             <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+
+                            {/* Deletion status badges (visible only in admin panel) */}
+                            {(msg.deletedBySender || msg.deletedByReceiver) && (
+                              <div className="flex gap-1 mt-1 flex-wrap">
+                                {msg.deletedBySender && (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-100 text-red-600 font-medium">
+                                    Yuboruvchi o'chirdi
+                                  </span>
+                                )}
+                                {msg.deletedByReceiver && (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-orange-100 text-orange-600 font-medium">
+                                    Qabul qiluvchi o'chirdi
+                                  </span>
+                                )}
+                              </div>
+                            )}
 
                             <div className="flex items-center gap-0.5 mt-1 justify-end">
                               <span className={cn('text-[10px]', isRight ? 'text-emerald-100/80' : 'text-muted-foreground')}>

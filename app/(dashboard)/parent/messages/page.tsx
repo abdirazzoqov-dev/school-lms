@@ -22,11 +22,12 @@ export default async function ParentMessagesPage() {
     redirect('/unauthorized')
   }
 
-  // Get received messages
+  // Get received messages (exclude soft-deleted by receiver)
   const receivedMessages = await db.message.findMany({
     where: {
       tenantId,
       receiverId: session.user.id,
+      deletedByReceiver: false,
     },
     include: {
       sender: {
@@ -55,11 +56,12 @@ export default async function ParentMessagesPage() {
     orderBy: { createdAt: 'desc' }
   })
 
-  // Get sent messages
+  // Get sent messages (exclude soft-deleted by sender)
   const sentMessages = await db.message.findMany({
     where: {
       tenantId,
       senderId: session.user.id,
+      deletedBySender: false,
     },
     include: {
       sender: {

@@ -3,7 +3,15 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { deleteMessage, markMessageAsRead, replyToMessage } from '@/app/actions/message'
+import { deleteMessage, deleteConversation, markMessageAsRead, replyToMessage } from '@/app/actions/message'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -98,6 +106,14 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
 
   // Local deleted ids (optimistic)
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
+
+  // ── Delete modal state ──────────────────────────────────────────────────────
+  const [deleteModal, setDeleteModal] = useState<{
+    open: boolean
+    type: 'message' | 'conversation'
+    messageId?: string
+    partnerId?: string
+  }>({ open: false, type: 'message' })
   const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(null)
   const [mobileView, setMobileView] = useState<'list' | 'chat'>('list')
   const [search, setSearch] = useState('')
@@ -207,14 +223,42 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
     setMobileView('chat')
   }
 
-  const handleDelete = async (messageId: string) => {
-    if (!confirm("Xabarni o'chirmoqchimisiz?")) return
-    const result = await deleteMessage(messageId)
-    if (result.success) {
-      setDeletedIds(prev => new Set([...prev, messageId]))
-      toast.success("Xabar o'chirildi")
-    } else {
-      toast.error(result.error || 'Xatolik yuz berdi')
+  // Open delete modal for a single message
+  const handleDelete = (messageId: string) => {
+    setDeleteModal({ open: true, type: 'message', messageId })
+  }
+
+  // Open delete modal for an entire conversation
+  const handleDeleteConversation = (partnerId: string) => {
+    setDeleteModal({ open: true, type: 'conversation', partnerId })
+  }
+
+  // Confirm deletion after user chooses scope
+  const confirmDelete = async (forEveryone: boolean) => {
+    setDeleteModal(m => ({ ...m, open: false }))
+
+    if (deleteModal.type === 'message' && deleteModal.messageId) {
+      const id = deleteModal.messageId
+      setDeletedIds(prev => new Set([...prev, id]))
+      const result = await deleteMessage(id, forEveryone)
+      if (result.success) {
+        toast.success(forEveryone ? "Xabar ikki tarafdan o'chirildi" : "Xabar faqat sizda o'chirildi")
+        router.refresh()
+      } else {
+        setDeletedIds(prev => { const s = new Set(prev); s.delete(id); return s })
+        toast.error(result.error || 'Xatolik yuz berdi')
+      }
+    } else if (deleteModal.type === 'conversation' && deleteModal.partnerId) {
+      const pid = deleteModal.partnerId
+      const result = await deleteConversation(pid, forEveryone)
+      if (result.success) {
+        toast.success(forEveryone ? "Suhbat ikki tarafdan o'chirildi" : "Suhbat faqat sizda o'chirildi")
+        setSelectedPartnerId(null)
+        setMobileView('list')
+        router.refresh()
+      } else {
+        toast.error(result.error || 'Xatolik yuz berdi')
+      }
     }
   }
 
@@ -464,6 +508,14 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
                   </p>
                 </div>
 
+                {/* Delete conversation button */}
+                <button
+                  onClick={() => handleDeleteConversation(activeConv.partnerId)}
+                  className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-muted-foreground hover:text-red-500 transition-colors"
+                  title="Suhbatni o'chirish"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
 
               {/* ── Messages ── */}
@@ -637,5 +689,49 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
         </div>
       </div>
     </div>
+
+    {/* ── Delete confirmation modal ─────────────────────────────────────── */}
+    <Dialog open={deleteModal.open} onOpenChange={open => setDeleteModal(m => ({ ...m, open }))}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-red-600">
+            <Trash2 className="w-5 h-5" />
+            {deleteModal.type === 'conversation' ? "Suhbatni o'chirish" : "Xabarni o'chirish"}
+          </DialogTitle>
+          <DialogDescription>
+            {deleteModal.type === 'conversation'
+              ? "Bu suhbatdagi barcha xabarlar o'chiriladi."
+              : "Bu xabar o'chiriladi."}
+            {' '}Qayerdan o'chirilsin?
+          </DialogDescription>
+        </DialogHeader>
+
+        <DialogFooter className="flex-col gap-2 sm:flex-col">
+          <Button
+            variant="destructive"
+            className="w-full gap-2"
+            onClick={() => confirmDelete(true)}
+          >
+            <Trash2 className="w-4 h-4" />
+            Ikki tarafdan o'chirish
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full gap-2"
+            onClick={() => confirmDelete(false)}
+          >
+            <Trash2 className="w-4 h-4 text-muted-foreground" />
+            Faqat menda o'chirish
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full"
+            onClick={() => setDeleteModal(m => ({ ...m, open: false }))}
+          >
+            Bekor qilish
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

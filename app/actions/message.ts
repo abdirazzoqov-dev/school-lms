@@ -162,43 +162,111 @@ export async function markMessageAsRead(messageId: string) {
   }
 }
 
-export async function deleteMessage(messageId: string) {
+/**
+ * Soft-delete a message.
+ * - deleteForEveryone: false → mark deleted only for the current user
+ * - deleteForEveryone: true  → mark deleted for both sender and receiver
+ * Admin panel always sees all messages regardless of deletion flags.
+ */
+export async function deleteMessage(messageId: string, deleteForEveryone = false) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
     const tenantId = session.user.tenantId!
+    const userId = session.user.id
 
-    // Check if user is sender or recipient
+    // Find the message and verify the caller is a participant
     const message = await db.message.findFirst({
-      where: { 
+      where: {
         id: messageId,
         tenantId,
-        OR: [
-          { senderId: session.user.id },
-          { receiverId: session.user.id }
-        ]
-      }
+        OR: [{ senderId: userId }, { receiverId: userId }],
+      },
     })
 
     if (!message) {
       return { success: false, error: 'Xabar topilmadi' }
     }
 
-    // Delete message
-    await db.message.delete({
-      where: { id: messageId }
-    })
+    const isSender   = message.senderId   === userId
+    const isReceiver = message.receiverId === userId
+
+    if (deleteForEveryone) {
+      // Mark deleted for both sides
+      await db.message.update({
+        where: { id: messageId },
+        data: { deletedBySender: true, deletedByReceiver: true },
+      })
+    } else {
+      // Mark deleted only for this user
+      await db.message.update({
+        where: { id: messageId },
+        data: {
+          ...(isSender   ? { deletedBySender:   true } : {}),
+          ...(isReceiver ? { deletedByReceiver: true } : {}),
+        },
+      })
+    }
 
     revalidatePath('/teacher/messages')
     revalidatePath('/parent/messages')
-    
+
     return { success: true }
   } catch (error: any) {
     console.error('Delete message error:', error)
+    return { success: false, error: error.message || 'Xatolik yuz berdi' }
+  }
+}
+
+/**
+ * Soft-delete ALL messages in a conversation (with a partner) for the current user.
+ */
+export async function deleteConversation(partnerId: string, deleteForEveryone = false) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session) {
+      return { success: false, error: 'Ruxsat berilmagan' }
+    }
+
+    const tenantId = session.user.tenantId!
+    const userId = session.user.id
+
+    if (deleteForEveryone) {
+      // Mark all messages between these two users as deleted for both
+      await db.message.updateMany({
+        where: {
+          tenantId,
+          OR: [
+            { senderId: userId,   receiverId: partnerId },
+            { senderId: partnerId, receiverId: userId   },
+          ],
+        },
+        data: { deletedBySender: true, deletedByReceiver: true },
+      })
+    } else {
+      // Sent messages — mark deletedBySender
+      await db.message.updateMany({
+        where: { tenantId, senderId: userId, receiverId: partnerId },
+        data: { deletedBySender: true },
+      })
+      // Received messages — mark deletedByReceiver
+      await db.message.updateMany({
+        where: { tenantId, senderId: partnerId, receiverId: userId },
+        data: { deletedByReceiver: true },
+      })
+    }
+
+    revalidatePath('/teacher/messages')
+    revalidatePath('/parent/messages')
+
+    return { success: true }
+  } catch (error: any) {
+    console.error('Delete conversation error:', error)
     return { success: false, error: error.message || 'Xatolik yuz berdi' }
   }
 }
@@ -231,29 +299,29 @@ export async function getUnreadCount() {
 export async function bulkDeleteMessages(messageIds: string[]) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
     const tenantId = session.user.tenantId!
+    const userId = session.user.id
 
-    // Delete messages
-    const result = await db.message.deleteMany({
-      where: { 
-        id: { in: messageIds },
-        tenantId,
-        OR: [
-          { senderId: session.user.id },
-          { receiverId: session.user.id }
-        ]
-      }
+    // Soft-delete sent messages
+    await db.message.updateMany({
+      where: { id: { in: messageIds }, tenantId, senderId: userId },
+      data: { deletedBySender: true },
+    })
+    // Soft-delete received messages
+    await db.message.updateMany({
+      where: { id: { in: messageIds }, tenantId, receiverId: userId },
+      data: { deletedByReceiver: true },
     })
 
     revalidatePath('/teacher/messages')
     revalidatePath('/parent/messages')
-    
-    return { success: true, deleted: result.count }
+
+    return { success: true, deleted: messageIds.length }
   } catch (error: any) {
     console.error('Bulk delete messages error:', error)
     return { success: false, error: error.message || 'Xatolik yuz berdi' }
