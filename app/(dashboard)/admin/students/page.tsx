@@ -109,7 +109,8 @@ export default async function StudentsPage({
           select: {
             fullName: true,
             email: true,
-            phone: true
+            phone: true,
+            avatar: true,
           }
         },
         class: true,

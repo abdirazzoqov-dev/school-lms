@@ -15,12 +15,15 @@ import { useToast } from '@/components/ui/use-toast'
 import { ArrowLeft, UserPlus, Loader2, Users, Home, Plus, X, Radio } from 'lucide-react'
 import Link from 'next/link'
 import type { GuardianFormData } from '@/lib/validations/student'
+import { ProfilePhotoUpload } from '@/components/profile-photo-upload'
 
 export default function EditStudentPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [dataLoading, setDataLoading] = useState(true)
+  const [studentUserId, setStudentUserId] = useState<string | null>(null)
+  const [currentAvatar, setCurrentAvatar] = useState<string | null>(null)
   const [classes, setClasses] = useState<any[]>([])
   const [groups, setGroups] = useState<any[]>([])
   const [assignmentType, setAssignmentType] = useState<'class' | 'group' | 'none'>('none')
@@ -68,6 +71,10 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
     ]).then(([studentData, classesData, groupsData]) => {
       if (studentData.student) {
         const student = studentData.student
+
+        // Set userId and avatar for ProfilePhotoUpload
+        if (student.user?.id) setStudentUserId(student.user.id)
+        if (student.user?.avatar) setCurrentAvatar(student.user.avatar)
         
         // Determine assignment type
         let assignmentTypeValue: 'class' | 'group' | 'none' = 'none'
@@ -361,6 +368,17 @@ export default function EditStudentPage({ params }: { params: { id: string } }) 
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Profile Photo - auto-upload in edit mode */}
+            <div className="flex justify-center py-2">
+              <ProfilePhotoUpload
+                userId={studentUserId ?? undefined}
+                currentAvatar={currentAvatar}
+                name={formData.fullName}
+                size={100}
+                gradient="from-blue-500 to-indigo-600"
+                onUploadSuccess={(url) => setCurrentAvatar(url)}
+              />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="fullName">To'liq Ism *</Label>

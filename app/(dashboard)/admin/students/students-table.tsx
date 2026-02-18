@@ -33,6 +33,7 @@ interface Student {
     fullName: string
     email: string | null
     phone: string | null
+    avatar: string | null
   } | null
   class: {
     id: string
@@ -137,8 +138,27 @@ export function StudentsTable({ students }: { students: Student[] }) {
                   </td>
                   <td className="p-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm shadow-lg shrink-0">
-                        {student.user?.fullName?.charAt(0) || '?'}
+                      <div className="w-9 h-9 rounded-full overflow-hidden shadow-lg shrink-0 relative">
+                        {student.user?.avatar ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={student.user.avatar}
+                            alt={student.user.fullName}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                              const fallback = e.currentTarget.parentElement?.querySelector('.fallback-initials') as HTMLElement
+                              if (fallback) fallback.style.display = 'flex'
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className="fallback-initials w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm absolute inset-0"
+                          style={{ display: student.user?.avatar ? 'none' : 'flex' }}
+                        >
+                          {student.user?.fullName?.charAt(0) || '?'}
+                        </div>
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="font-semibold text-sm text-gray-900 dark:text-white truncate">
@@ -313,8 +333,27 @@ export function StudentsTable({ students }: { students: Student[] }) {
                   onCheckedChange={(checked) => handleSelectOne(student.id, checked as boolean)}
                   className="mt-2 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                 />
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shrink-0">
-                  {student.user?.fullName?.charAt(0) || '?'}
+                <div className="w-12 h-12 rounded-full overflow-hidden shadow-lg shrink-0 relative">
+                  {student.user?.avatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={student.user.avatar}
+                      alt={student.user.fullName}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                        const fallback = e.currentTarget.parentElement?.querySelector('.fallback-mobile') as HTMLElement
+                        if (fallback) fallback.style.display = 'flex'
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className="fallback-mobile w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg absolute inset-0"
+                    style={{ display: student.user?.avatar ? 'none' : 'flex' }}
+                  >
+                    {student.user?.fullName?.charAt(0) || '?'}
+                  </div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-base text-gray-900 dark:text-white truncate">

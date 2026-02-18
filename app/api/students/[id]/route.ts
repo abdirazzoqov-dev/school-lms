@@ -24,8 +24,10 @@ export async function GET(
       include: {
         user: {
           select: {
+            id: true,
             fullName: true,
-            email: true
+            email: true,
+            avatar: true,
           }
         },
         class: true,

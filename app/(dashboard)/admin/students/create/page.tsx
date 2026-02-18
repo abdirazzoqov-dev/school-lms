@@ -9,17 +9,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { createStudent } from '@/app/actions/student'
+import { uploadAvatar } from '@/app/actions/upload-avatar'
 import { useToast } from '@/components/ui/use-toast'
 import { ArrowLeft, UserPlus, Loader2, Users, Home, Plus, X, Radio } from 'lucide-react'
 import Link from 'next/link'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import type { GuardianFormData } from '@/lib/validations/student'
+import { ProfilePhotoUpload } from '@/components/profile-photo-upload'
 
 export default function CreateStudentPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [avatarBase64, setAvatarBase64] = useState('')
+  const [avatarFileName, setAvatarFileName] = useState('')
   const [classes, setClasses] = useState<any[]>([])
   const [loadingClasses, setLoadingClasses] = useState(true)
   const [groups, setGroups] = useState<any[]>([])
@@ -307,6 +311,16 @@ export default function CreateStudentPage() {
       })
 
       if (result.success) {
+        // Upload avatar if provided
+        if (avatarBase64 && result.userId) {
+          try {
+            await uploadAvatar(result.userId, avatarBase64, avatarFileName || 'avatar.jpg')
+          } catch (avatarError) {
+            console.error('Avatar upload error:', avatarError)
+            // Don't block success if avatar fails
+          }
+        }
+
         toast({
           title: 'Muvaffaqiyatli!',
           description: result.guardianCredentials 
@@ -360,6 +374,18 @@ export default function CreateStudentPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Profile Photo */}
+            <div className="flex justify-center py-2">
+              <ProfilePhotoUpload
+                name={formData.fullName}
+                size={100}
+                gradient="from-blue-500 to-indigo-600"
+                onAvatarChange={(base64, fileName) => {
+                  setAvatarBase64(base64)
+                  setAvatarFileName(fileName)
+                }}
+              />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="fullName">To'liq Ism *</Label>

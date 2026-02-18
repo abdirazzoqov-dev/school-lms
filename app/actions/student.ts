@@ -443,7 +443,8 @@ export async function createStudent(data: StudentFormData) {
     })
     
     return { 
-      success: true, 
+      success: true,
+      userId: result.student.userId ?? null,   // for avatar upload
       student: result.student,
       guardianCredentials: result.primaryGuardian ? {
         phone: result.primaryGuardian.guardian.user.phone,

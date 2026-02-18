@@ -5,7 +5,7 @@ import { db } from '@/lib/db'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ArrowLeft, UserCircle, Users, BookOpen, Calendar, DollarSign, Edit, GraduationCap, Phone, Radio, Clock } from 'lucide-react'
+import { ArrowLeft, UserCircle, Users, BookOpen, Calendar, DollarSign, Edit, GraduationCap, Phone, Radio, Clock, Camera } from 'lucide-react'
 import Link from 'next/link'
 import { formatNumber } from '@/lib/utils'
 import { ConvertTrialButton } from './convert-trial-button'
@@ -30,8 +30,10 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
     include: {
       user: {
         select: {
+          id: true,
           fullName: true,
           email: true,
+          avatar: true,
         }
       },
       class: {
@@ -129,19 +131,41 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4">
           <Link href="/admin/students">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="mt-1 shrink-0">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-              <UserCircle className="h-8 w-8" />
+          {/* Large avatar */}
+          <div className="relative shrink-0">
+            <div className="w-20 h-20 rounded-full overflow-hidden shadow-xl border-4 border-white dark:border-gray-800 ring-2 ring-blue-500/20">
+              {student.user?.avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={student.user.avatar}
+                  alt={student.user.fullName || 'O\'quvchi'}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-3xl">
+                  {(student.user?.fullName || student.parents[0]?.parent.user.fullName || '?').charAt(0)}
+                </div>
+              )}
+            </div>
+            {student.status === 'ACTIVE' && (
+              <span className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full" />
+            )}
+          </div>
+          <div className="pt-1">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
               {student.user?.fullName || student.parents[0]?.parent.user.fullName || `O'quvchi (${student.studentCode})`}
             </h2>
-            <p className="text-muted-foreground">ID: {student.studentCode}</p>
+            <p className="text-muted-foreground text-sm">ID: {student.studentCode}</p>
+            {student.class && (
+              <p className="text-sm text-blue-600 font-medium mt-0.5">{student.class.name}</p>
+            )}
           </div>
         </div>
         <div className="flex gap-2">
