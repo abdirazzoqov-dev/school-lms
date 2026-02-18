@@ -122,6 +122,14 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
                           alt={teacher.user.fullName}
                           className="w-full h-full object-cover"
                           loading="lazy"
+                          onError={(e) => {
+                            const target = e.currentTarget
+                            target.style.display = 'none'
+                            const parent = target.parentElement
+                            if (parent) {
+                              parent.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-semibold text-sm">${teacher.user.fullName?.charAt(0) || '?'}</div>`
+                            }
+                          }}
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-semibold text-sm">
@@ -291,6 +299,14 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
                       alt={teacher.user.fullName}
                       className="w-full h-full object-cover"
                       loading="lazy"
+                      onError={(e) => {
+                        const target = e.currentTarget
+                        target.style.display = 'none'
+                        const parent = target.parentElement
+                        if (parent) {
+                          parent.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-bold text-lg">${teacher.user.fullName?.charAt(0) || '?'}</div>`
+                        }
+                      }}
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-bold text-lg">

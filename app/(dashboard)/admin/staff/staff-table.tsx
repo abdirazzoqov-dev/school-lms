@@ -105,6 +105,14 @@ export function StaffTable({ staff }: { staff: Staff[] }) {
                           alt={member.user.fullName}
                           className="w-full h-full object-cover"
                           loading="lazy"
+                          onError={(e) => {
+                            const target = e.currentTarget
+                            target.style.display = 'none'
+                            const parent = target.parentElement
+                            if (parent) {
+                              parent.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">${member.user.fullName?.charAt(0) || '?'}</div>`
+                            }
+                          }}
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">
@@ -251,6 +259,14 @@ export function StaffTable({ staff }: { staff: Staff[] }) {
                     alt={member.user.fullName}
                     className="w-full h-full object-cover"
                     loading="lazy"
+                    onError={(e) => {
+                      const target = e.currentTarget
+                      target.style.display = 'none'
+                      const parent = target.parentElement
+                      if (parent) {
+                        parent.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">${member.user.fullName?.charAt(0) || '?'}</div>`
+                      }
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
