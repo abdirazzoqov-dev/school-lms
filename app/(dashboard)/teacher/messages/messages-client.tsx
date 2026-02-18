@@ -303,12 +303,16 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
     if (!replyText.trim() || !activeConv) return
     setIsSending(true)
     try {
+      // Prefer last received message as anchor; fall back to last sent message
       const lastReceived = activeConv.messages.filter(m => m.receiver.id === currentUserId).at(-1)
-      if (!lastReceived) {
-        toast.error('Javob yuborish uchun avval xabar qabul qiling')
+      const lastSent = activeConv.messages.filter(m => m.sender.id === currentUserId).at(-1)
+      const refMsg = lastReceived || lastSent
+
+      if (!refMsg) {
+        toast.error('Xabar yuborish uchun suhbat topilmadi')
         return
       }
-      const result = await replyToMessage(lastReceived.id, { content: replyText.trim() })
+      const result = await replyToMessage(refMsg.id, { content: replyText.trim() })
       if (result.success) {
         setReplyText('')
         toast.success('Xabar yuborildi')
@@ -330,10 +334,8 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
     }
   }
 
-  // Whether inline reply is available (need at least one received message from partner)
-  const canReplyInline = activeConv
-    ? activeConv.messages.some(m => m.receiver.id === currentUserId)
-    : false
+  // Always show reply input when a conversation is open
+  const canReplyInline = activeConv !== null
 
   // ── Render ────────────────────────────────────────────────────────────────
 
