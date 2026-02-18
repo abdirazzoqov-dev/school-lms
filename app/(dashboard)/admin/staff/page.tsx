@@ -74,6 +74,7 @@ export default async function StaffPage({
             email: true,
             phone: true,
             isActive: true,
+            avatar: true,
           }
         },
         salaryPayments: {

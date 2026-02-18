@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { ArrowLeft, User, Save, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { ProfilePhotoUpload } from '@/components/profile-photo-upload'
 
 export default function ProfileEditPage() {
   const router = useRouter()
@@ -112,6 +113,29 @@ export default function ProfileEditPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Avatar Upload */}
+          {session?.user?.id && (
+            <div className="flex justify-center pb-6 pt-2">
+              <ProfilePhotoUpload
+                userId={session.user.id}
+                currentAvatar={session.user.avatar}
+                name={session.user.fullName || ''}
+                size={110}
+                gradient="from-violet-500 to-purple-600"
+                onUploadSuccess={async (avatarUrl) => {
+                  // Update session to show new avatar immediately
+                  await update({
+                    ...session,
+                    user: {
+                      ...session?.user,
+                      avatar: avatarUrl,
+                    }
+                  })
+                  toast.success('Profil rasmi yangilandi')
+                }}
+              />
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="fullName">Ism-familiya *</Label>

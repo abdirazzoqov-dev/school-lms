@@ -1,6 +1,6 @@
 'use client'
 
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { LogOut, User, Settings } from 'lucide-react'
 import { getInitials } from '@/lib/utils'
 
@@ -24,13 +24,26 @@ interface UserNavProps {
 }
 
 export function UserNav({ user }: UserNavProps) {
+  // Use live session to get the latest avatar (updates after profile photo upload)
+  const { data: session } = useSession()
+  const avatarSrc = session?.user?.avatar || user.avatar
+  const displayName = session?.user?.fullName || user.fullName
+  const displayEmail = session?.user?.email || user.email
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-          <Avatar>
-            <AvatarFallback className="bg-primary text-white">
-              {getInitials(user.fullName)}
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
+          <Avatar className="h-10 w-10 ring-2 ring-primary/20 hover:ring-primary/50 transition-all">
+            {avatarSrc && (
+              <AvatarImage
+                src={avatarSrc}
+                alt={displayName}
+                className="object-cover"
+              />
+            )}
+            <AvatarFallback className="bg-gradient-to-br from-violet-500 to-purple-600 text-white font-semibold">
+              {getInitials(displayName)}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -38,9 +51,9 @@ export function UserNav({ user }: UserNavProps) {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.fullName}</p>
+            <p className="text-sm font-medium leading-none">{displayName}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
+              {displayEmail}
             </p>
             <p className="text-xs font-semibold text-primary">{user.role}</p>
           </div>

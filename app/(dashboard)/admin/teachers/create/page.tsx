@@ -8,14 +8,18 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { createTeacher } from '@/app/actions/teacher'
+import { uploadAvatar } from '@/app/actions/upload-avatar'
 import { useToast } from '@/components/ui/use-toast'
 import { ArrowLeft, UserPlus, Loader2, Key } from 'lucide-react'
 import Link from 'next/link'
+import { ProfilePhotoUpload } from '@/components/profile-photo-upload'
 
 export default function CreateTeacherPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [avatarBase64, setAvatarBase64] = useState('')
+  const [avatarFileName, setAvatarFileName] = useState('')
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -87,6 +91,10 @@ export default function CreateTeacherPage() {
       const result = await createTeacher(formData)
 
       if (result.success) {
+        // Upload avatar if selected
+        if (avatarBase64 && result.teacher?.userId) {
+          await uploadAvatar(result.teacher.userId, avatarBase64, avatarFileName || 'avatar.jpg')
+        }
         toast({
           title: 'Muvaffaqiyatli!',
           description: `O'qituvchi qo'shildi. Login: ${result.credentials?.email}`,
@@ -145,7 +153,19 @@ export default function CreateTeacherPage() {
               O'qituvchi haqida asosiy ma'lumotlar
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+            {/* Profile Photo */}
+            <div className="flex justify-center pt-2 pb-2">
+              <ProfilePhotoUpload
+                name={formData.fullName}
+                size={100}
+                gradient="from-purple-500 to-pink-600"
+                onAvatarChange={(base64, fileName) => {
+                  setAvatarBase64(base64)
+                  setAvatarFileName(fileName)
+                }}
+              />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="fullName">To'liq Ism *</Label>

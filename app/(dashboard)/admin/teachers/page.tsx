@@ -89,6 +89,7 @@ export default async function TeachersPage({
             email: true,
             phone: true,
             isActive: true,
+            avatar: true,
           }
         },
         classSubjects: {

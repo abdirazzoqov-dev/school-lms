@@ -29,6 +29,7 @@ interface Staff {
     email: string
     phone: string | null
     isActive: boolean
+    avatar?: string | null
   }
   salaryPayments?: Array<{
     id: string
@@ -96,8 +97,20 @@ export function StaffTable({ staff }: { staff: Staff[] }) {
                 </td>
                 <td className="p-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm shadow-lg shrink-0">
-                      {member.user.fullName?.charAt(0) || '?'}
+                    <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 shadow-lg border-2 border-white">
+                      {member.user.avatar ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={member.user.avatar}
+                          alt={member.user.fullName}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                          {member.user.fullName?.charAt(0) || '?'}
+                        </div>
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-sm text-gray-900 dark:text-white truncate">
@@ -230,8 +243,20 @@ export function StaffTable({ staff }: { staff: Staff[] }) {
                 onCheckedChange={(checked) => handleSelectOne(member.id, checked as boolean)}
                 className="mt-2 data-[state=checked]:bg-cyan-600 data-[state=checked]:border-cyan-600"
               />
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shrink-0">
-                {member.user.fullName?.charAt(0) || '?'}
+              <div className="w-12 h-12 rounded-full overflow-hidden shadow-lg shrink-0 border-2 border-white">
+                {member.user.avatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={member.user.avatar}
+                    alt={member.user.fullName}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                    {member.user.fullName?.charAt(0) || '?'}
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-base text-gray-900 dark:text-white truncate">

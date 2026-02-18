@@ -11,6 +11,7 @@ import { updateTeacher, resetTeacherPassword } from '@/app/actions/teacher'
 import { useToast } from '@/components/ui/use-toast'
 import { ArrowLeft, UserPlus, Loader2, Key, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
+import { ProfilePhotoUpload } from '@/components/profile-photo-upload'
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,8 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [dataLoading, setDataLoading] = useState(true)
+  const [userId, setUserId] = useState<string>('')
+  const [currentAvatar, setCurrentAvatar] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -56,6 +59,8 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
             experienceYears: data.teacher.experienceYears || 0,
             monthlySalary: data.teacher.monthlySalary ? data.teacher.monthlySalary.toString() : '',
           })
+          setUserId(data.teacher.user.id || '')
+          setCurrentAvatar(data.teacher.user.avatar || null)
         }
         setDataLoading(false)
       })
@@ -188,6 +193,19 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Profile photo */}
+          {userId && (
+            <div className="flex justify-center pt-2 pb-6">
+              <ProfilePhotoUpload
+                userId={userId}
+                currentAvatar={currentAvatar}
+                name={formData.fullName}
+                size={100}
+                gradient="from-purple-500 to-pink-600"
+                onUploadSuccess={(url) => setCurrentAvatar(url)}
+              />
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2 md:col-span-2">
