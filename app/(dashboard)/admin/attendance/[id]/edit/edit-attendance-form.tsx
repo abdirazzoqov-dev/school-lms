@@ -30,7 +30,10 @@ interface Attendance {
   }
   class: {
     name: string
-  }
+  } | null
+  group?: {
+    name: string
+  } | null
   subject: {
     name: string
   }
@@ -103,7 +106,7 @@ export function EditAttendanceForm({ attendance }: EditAttendanceFormProps) {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Sinf</p>
-              <Badge variant="outline">{attendance.class.name}</Badge>
+              <Badge variant="outline">{attendance.class?.name || attendance.group?.name || '—'}</Badge>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Fan</p>
