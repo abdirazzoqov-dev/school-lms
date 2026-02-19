@@ -18,6 +18,7 @@ export async function GET() {
         receiverId: session.user.id,
         tenantId: session.user.tenantId!,
         readAt: null,
+        deletedByReceiver: false, // Don't count soft-deleted messages
       },
     })
 

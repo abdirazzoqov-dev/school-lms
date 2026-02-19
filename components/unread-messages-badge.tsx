@@ -11,7 +11,8 @@ export async function UnreadMessagesBadge() {
     where: {
       tenantId: session.user.tenantId!,
       receiverId: session.user.id,
-      readAt: null
+      readAt: null,
+      deletedByReceiver: false, // Don't count soft-deleted messages
     }
   })
 
