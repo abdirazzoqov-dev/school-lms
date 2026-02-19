@@ -74,9 +74,9 @@ export default async function TeacherAttendancePage({
   )
 
   const subjects = Array.from(
-    new Map([
-      ...teacherSchedules.filter(s => s.subject !== null).map(s => [s.subjectId, s.subject!]),
-      ...groupSchedules.filter(s => s.subject !== null).map(s => [s.subjectId, s.subject!]),
+    new Map<string, typeof teacherSchedules[0]['subject'] & {}>([
+      ...teacherSchedules.filter(s => s.subject !== null).map(s => [s.subjectId, s.subject!] as [string, NonNullable<typeof s.subject>]),
+      ...groupSchedules.filter(s => s.subject !== null).map(s => [s.subjectId, s.subject!] as [string, NonNullable<typeof s.subject>]),
     ])
   ).map(([, v]) => v)
 
