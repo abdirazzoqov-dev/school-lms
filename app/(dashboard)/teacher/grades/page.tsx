@@ -136,11 +136,7 @@ export default async function TeacherGradesPage({
   }
 
   if (searchParams.groupId && searchParams.groupId !== 'all') {
-    const groupStudents = await db.student.findMany({
-      where: { tenantId, groupId: searchParams.groupId, status: 'ACTIVE' },
-      select: { id: true },
-    })
-    whereClause.studentId = { in: groupStudents.map((s) => s.id) }
+    whereClause.groupId = searchParams.groupId
   }
 
   if (searchParams.subjectId && searchParams.subjectId !== 'all') {
@@ -167,6 +163,9 @@ export default async function TeacherGradesPage({
       },
       subject: {
         select: { name: true }
+      },
+      group: {
+        select: { name: true }
       }
     },
     orderBy: [
@@ -175,17 +174,18 @@ export default async function TeacherGradesPage({
     ]
   })
 
-  // Filter out records with null user or class (safety check)
+  // Filter out records with null user (safety check) - group grades don't require class
   type GradeWithRelations = typeof gradeRecords[0] & {
     student: {
       user: { fullName: string; avatar: string | null }
-      class: { name: string }
+      class: { name: string } | null
     } & typeof gradeRecords[0]['student']
+    group: { name: string } | null
   }
 
   const gradesFiltered = gradeRecords.filter(
     (record): record is GradeWithRelations => 
-      record.student.user !== null && record.student.class !== null
+      record.student.user !== null
   )
 
   // Convert Decimal to number for client component

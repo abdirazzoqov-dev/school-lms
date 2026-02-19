@@ -51,6 +51,9 @@ interface Grade {
       fullName: string
     } | null
   }
+  group?: {
+    name: string
+  } | null
 }
 
 interface GradesTableProps {
@@ -121,7 +124,7 @@ export function GradesTable({ grades }: GradesTableProps) {
         index + 1,
         grade.student.user?.fullName || 'N/A',
         grade.student.studentCode,
-        grade.student.class?.name || 'N/A',
+        grade.student.class?.name || grade.group?.name || 'N/A',
         grade.subject.name,
         grade.subject.code,
         gradeTypeMap[grade.gradeType] || grade.gradeType,
@@ -182,7 +185,7 @@ export function GradesTable({ grades }: GradesTableProps) {
           <TableRow className="bg-muted/50">
             <TableHead className="w-[50px]">#</TableHead>
             <TableHead>O'quvchi</TableHead>
-            <TableHead>Sinf</TableHead>
+            <TableHead>Sinf/Guruh</TableHead>
             <TableHead>Fan</TableHead>
             <TableHead>Turi</TableHead>
             <TableHead>Ball</TableHead>
@@ -214,8 +217,10 @@ export function GradesTable({ grades }: GradesTableProps) {
                 </TableCell>
 
                 <TableCell>
-                  {grade.student.class && (
-                    <Badge variant="outline">{grade.student.class.name}</Badge>
+                  {(grade.student.class || grade.group) && (
+                    <Badge variant="outline">
+                      {grade.student.class?.name || grade.group?.name}
+                    </Badge>
                   )}
                 </TableCell>
 

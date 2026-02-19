@@ -77,11 +77,7 @@ export default async function GradesPage({
   }
 
   if (searchParams.groupId) {
-    const groupStudents = await db.student.findMany({
-      where: { tenantId, groupId: searchParams.groupId, status: 'ACTIVE' },
-      select: { id: true },
-    })
-    whereClause.studentId = { in: groupStudents.map((s) => s.id) }
+    whereClause.groupId = searchParams.groupId
   }
 
   if (searchParams.subjectId) {
@@ -146,6 +142,11 @@ export default async function GradesPage({
                 fullName: true,
               },
             },
+          },
+        },
+        group: {
+          select: {
+            name: true,
           },
         },
       },

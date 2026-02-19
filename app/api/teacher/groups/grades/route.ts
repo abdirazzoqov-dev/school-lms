@@ -33,8 +33,8 @@ export async function POST(req: NextRequest) {
 
     const groupId = grades[0]?.groupId
     const subjectId = grades[0]?.subjectId
-    const startTime = grades[0]?.startTime
-    const endTime = grades[0]?.endTime
+    const startTime: string | null = grades[0]?.startTime || null
+    const endTime: string | null = grades[0]?.endTime || null
 
     if (!groupId) {
       return NextResponse.json({ error: 'Group ID required' }, { status: 400 })
@@ -82,12 +82,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, count: 0 })
     }
 
-    // Delete existing grades for today (same student + subject + teacher + date)
+    // Delete existing grades for today (same student + subject + group + teacher + date)
     const studentIds = validGrades.map((g: { studentId: string }) => g.studentId)
     await db.grade.deleteMany({
       where: {
         teacherId: teacher.id,
         subjectId,
+        groupId,
         date: today,
         studentId: { in: studentIds },
       },
@@ -95,11 +96,12 @@ export async function POST(req: NextRequest) {
 
     // Create new grade records
     const created = await db.grade.createMany({
-      data: validGrades.map((gradeData: { studentId: string; grade: number }) => ({
+      data: validGrades.map((gradeData: { studentId: string; grade: number; startTime?: string; endTime?: string }) => ({
         tenantId,
         studentId: gradeData.studentId,
         teacherId: teacher.id,
         subjectId,
+        groupId,
         gradeType: 'ORAL',
         score: gradeData.grade,
         maxScore: 5,
@@ -107,6 +109,8 @@ export async function POST(req: NextRequest) {
         quarter,
         academicYear,
         date: today,
+        startTime: gradeData.startTime || startTime || null,
+        endTime: gradeData.endTime || endTime || null,
       })),
     })
 

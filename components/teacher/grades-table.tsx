@@ -26,6 +26,7 @@ type GradeRecord = {
   subject: {
     name: string
   }
+  group?: { name: string } | null
 }
 
 type Props = {
@@ -157,7 +158,7 @@ export function GradesTable({ grades }: Props) {
           <thead className="border-b bg-muted/50">
             <tr>
               <th className="p-4 text-left text-sm font-medium">O'quvchi</th>
-              <th className="p-4 text-left text-sm font-medium">Sinf</th>
+              <th className="p-4 text-left text-sm font-medium">Sinf/Guruh</th>
               <th className="p-4 text-left text-sm font-medium">Fan</th>
               <th className="p-4 text-left text-sm font-medium">Turi</th>
               <th className="p-4 text-left text-sm font-medium">Ball</th>
@@ -177,7 +178,7 @@ export function GradesTable({ grades }: Props) {
                   <td className="p-4">
                     <div className="font-medium">{grade.student.user?.fullName || 'N/A'}</div>
                   </td>
-                  <td className="p-4">{grade.student.class?.name || '-'}</td>
+                  <td className="p-4">{grade.student.class?.name || grade.group?.name || '-'}</td>
                   <td className="p-4">{grade.subject.name}</td>
                   <td className="p-4">
                     <span className="text-xs bg-gray-100 px-2 py-1 rounded">

@@ -584,6 +584,7 @@ model Group {
   groupSubjects GroupSubject[]
   schedules     GroupSchedule[]
   attendances   Attendance[]
+  grades        Grade[]
 
   @@index([tenantId])
   @@index([groupTeacherId])
@@ -785,12 +786,14 @@ model Grade {
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   tenantId String
 
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId String
-  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   subjectId String
-  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   teacherId String
+  group     Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId   String?
 
   gradeType  GradeType
   score      Decimal   @db.Decimal(5, 2)
@@ -811,6 +814,7 @@ model Grade {
   @@index([tenantId])
   @@index([studentId])
   @@index([subjectId])
+  @@index([groupId])
   @@index([academicYear])
   @@index([quarter])
   @@index([startTime])
