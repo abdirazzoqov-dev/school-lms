@@ -7,7 +7,7 @@ import { BulkUpdateForm } from './bulk-update-form'
 export default async function BulkUpdateTuitionPage() {
   const session = await getServerSession(authOptions)
 
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
     redirect('/unauthorized')
   }
 

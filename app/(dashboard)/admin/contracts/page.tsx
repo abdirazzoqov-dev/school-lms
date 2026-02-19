@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
 export default async function ContractsPage() {
   const session = await getServerSession(authOptions)
 
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
     redirect('/unauthorized')
   }
 

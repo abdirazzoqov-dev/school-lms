@@ -18,7 +18,7 @@ export const revalidate = 0
 export default async function ContactsPage() {
   const session = await getServerSession(authOptions)
 
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
     redirect('/unauthorized')
   }
 

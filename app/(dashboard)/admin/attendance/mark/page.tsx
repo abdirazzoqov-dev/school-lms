@@ -10,7 +10,7 @@ import { MarkAttendanceForm } from './mark-attendance-form'
 export default async function MarkAttendancePage() {
   const session = await getServerSession(authOptions)
 
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
     redirect('/unauthorized')
   }
 

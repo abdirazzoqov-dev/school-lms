@@ -12,7 +12,7 @@ import { getCurrentAcademicYear } from '@/lib/utils'
 export default async function CreateSchedulePage() {
   const session = await getServerSession(authOptions)
 
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
     redirect('/unauthorized')
   }
 
