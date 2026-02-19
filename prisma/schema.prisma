@@ -371,6 +371,7 @@ model Student {
   // Payment Info (To'lov ma'lumotlari)
   monthlyTuitionFee Decimal? @db.Decimal(10, 2) // Oylik o'qish to'lovi
   paymentDueDay     Int?     @default(5) // Har oydagi to'lov sanasi (1-31)
+  isFreeStudent     Boolean  @default(false) // Tekin o'quvchi (to'lovlar yaratilmaydi)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -399,6 +400,8 @@ model Student {
   @@index([trialEnabled]) // Sinov muddati filtrlash uchun
   @@index([trialEndDate]) // Sinov muddati tugash sanasiga ko'ra filtrlash
   @@index([tenantId, trialEnabled]) // Tenant va sinov muddati bo'yicha tez qidiruv
+  @@index([isFreeStudent]) // Tekin o'quvchilar filtrlash uchun
+  @@index([tenantId, isFreeStudent]) // Tenant va tekin o'quvchi bo'yicha tez qidiruv
 }
 
 // GUARDIAN - Qarindoshlar (ota-ona va boshqa qarindoshlar)

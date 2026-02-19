@@ -49,7 +49,11 @@ export default async function PaymentsPage({
   const skip = (currentPage - 1) * pageSize
 
   // Build where clause
-  const whereClause: any = { tenantId }
+  // Tekin o'quvchilarning to'lovlari ko'rsatilmaydi (isFreeStudent = true)
+  const whereClause: any = { 
+    tenantId,
+    student: { isFreeStudent: false }
+  }
 
   // Search filter
   if (searchParams.search) {
@@ -75,7 +79,7 @@ export default async function PaymentsPage({
   if (searchParams.classId) {
     whereClause.student = {
       ...whereClause.student,
-      classId: searchParams.classId
+      classId: searchParams.classId,
     }
   }
 
@@ -174,11 +178,12 @@ export default async function PaymentsPage({
     .filter(p => Number(p.paidAmount) > 0)
     .reduce((sum, p) => sum + Number(p.paidAmount), 0)
 
-  // ✅ Barcha PENDING to'lovlar summasi (filter qo'llanmasdan)
+  // ✅ Barcha PENDING to'lovlar summasi (tekin o'quvchilar chiqarilgan)
   const allPendingPayments = await db.payment.findMany({
     where: {
       tenantId,
-      status: 'PENDING'
+      status: 'PENDING',
+      student: { isFreeStudent: false },
     },
     select: {
       remainingAmount: true
@@ -187,11 +192,12 @@ export default async function PaymentsPage({
 
   const pendingAmount = allPendingPayments.reduce((sum, p) => sum + Number(p.remainingAmount), 0)
 
-  // ✅ Barcha COMPLETED to'lovlar soni (filter qo'llanmasdan)
+  // ✅ Barcha COMPLETED to'lovlar soni (tekin o'quvchilar chiqarilgan)
   const totalCompletedPayments = await db.payment.count({
     where: {
       tenantId,
-      status: 'COMPLETED'
+      status: 'COMPLETED',
+      student: { isFreeStudent: false },
     }
   })
 

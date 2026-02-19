@@ -25,6 +25,7 @@ export default async function StudentsPage({
     status?: string
     classId?: string
     trialStatus?: string
+    freeStatus?: string
     page?: string
     pageSize?: string
     sortBy?: string
@@ -76,6 +77,15 @@ export default async function StudentsPage({
     // 'all' case: no filter added
   }
 
+  // Free student filter
+  if (searchParams.freeStatus) {
+    if (searchParams.freeStatus === 'free') {
+      whereClause.isFreeStudent = true
+    } else if (searchParams.freeStatus === 'paid') {
+      whereClause.isFreeStudent = false
+    }
+  }
+
   // Sorting
   const sortBy = searchParams.sortBy || 'createdAt'
   const order = searchParams.order || 'desc'
@@ -104,7 +114,16 @@ export default async function StudentsPage({
       orderBy: getOrderBy(),
       skip,
       take: pageSize,
-      include: {
+      select: {
+        id: true,
+        studentCode: true,
+        dateOfBirth: true,
+        gender: true,
+        address: true,
+        status: true,
+        trialEnabled: true,
+        trialEndDate: true,
+        isFreeStudent: true,
         user: {
           select: {
             fullName: true,
@@ -113,11 +132,13 @@ export default async function StudentsPage({
             avatar: true,
           }
         },
-        class: true,
+        class: {
+          select: { id: true, name: true }
+        },
         parents: {
-          include: {
+          select: {
             parent: {
-              include: {
+              select: {
                 user: {
                   select: {
                     fullName: true,
@@ -149,6 +170,10 @@ export default async function StudentsPage({
   
   const unassignedCount = await db.student.count({ 
     where: { tenantId, classId: null, status: 'ACTIVE' } 
+  }).catch(() => 0)
+
+  const freeStudentCount = await db.student.count({
+    where: { tenantId, isFreeStudent: true }
   }).catch(() => 0)
 
   return (
@@ -291,6 +316,28 @@ export default async function StudentsPage({
             </div>
           </CardContent>
         </Card>
+
+        <Card className="relative overflow-hidden group hover:-translate-y-1 transition-all duration-300 hover:shadow-xl">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-600 opacity-10 group-hover:opacity-20 transition-opacity" />
+          <CardContent className="pt-6 relative">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">
+                  Tekin O'quvchilar
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-3xl font-bold bg-gradient-to-br from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                    {freeStudentCount}
+                  </p>
+                  <span className="text-xs text-emerald-600 font-medium">🎓</span>
+                </div>
+              </div>
+              <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl text-white shadow-lg">
+                <GraduationCap className="h-6 w-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Search and Filter Card with Gradient */}
@@ -326,7 +373,16 @@ export default async function StudentsPage({
                     { label: 'Sinov muddatida', value: 'trial' },
                     { label: 'Asosiy o\'quvchilar', value: 'regular' },
                   ]}
-                  placeholder="Barcha o'quvchilar"
+                  placeholder="Sinov holati"
+                  className="w-full md:w-[200px] bg-white dark:bg-gray-950"
+                />
+                <FilterSelect
+                  paramName="freeStatus"
+                  options={[
+                    { label: '🎓 Tekin o\'quvchilar', value: 'free' },
+                    { label: '💰 To\'lovli o\'quvchilar', value: 'paid' },
+                  ]}
+                  placeholder="To'lov turi"
                   className="w-full md:w-[200px] col-span-2 md:col-span-1 bg-white dark:bg-gray-950"
                 />
                 <ClearFilters className="col-span-2 md:col-span-1" />

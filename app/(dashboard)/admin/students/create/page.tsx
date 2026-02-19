@@ -65,6 +65,8 @@ export default function CreateStudentPage() {
     // Monthly tuition fee
     monthlyTuitionFee: 0,
     paymentDueDay: 5, // Default: har oydagi 5-kun
+    // Tekin o'quvchi
+    isFreeStudent: false,
   })
 
   const generateStudentCode = useCallback(async () => {
@@ -737,7 +739,7 @@ export default function CreateStudentPage() {
         </Card>
 
         {/* Tuition Fee */}
-        <Card>
+        <Card className={formData.isFreeStudent ? 'border-emerald-300 bg-emerald-50/30' : ''}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <span className="text-lg">💰</span>
@@ -748,77 +750,121 @@ export default function CreateStudentPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="monthlyTuitionFee">
-                Oylik O'qish To'lov Summasi (so'm) *
-              </Label>
-              <Input
-                id="monthlyTuitionFee"
-                type="number"
-                inputMode="numeric"
-                min="0"
-                max="200000000"
-                step="1"
-                placeholder="Masalan: 500000 (0 dan 200,000,000 gacha)"
-                value={formData.monthlyTuitionFee || ''}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  monthlyTuitionFee: parseFloat(e.target.value) || 0 
-                }))}
-                required
+            {/* Tekin o'quvchi toggle */}
+            <div className={`flex items-start gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
+              formData.isFreeStudent
+                ? 'border-emerald-400 bg-emerald-50'
+                : 'border-dashed border-gray-300 hover:border-emerald-300 hover:bg-emerald-50/50'
+            }`}
+              onClick={() => {
+                const newVal = !formData.isFreeStudent
+                setFormData(prev => ({
+                  ...prev,
+                  isFreeStudent: newVal,
+                  monthlyTuitionFee: newVal ? 0 : prev.monthlyTuitionFee,
+                  dormitoryMonthlyFee: newVal ? 0 : prev.dormitoryMonthlyFee,
+                }))
+              }}
+            >
+              <Checkbox
+                id="isFreeStudent"
+                checked={formData.isFreeStudent}
+                onCheckedChange={(checked) => {
+                  const newVal = checked as boolean
+                  setFormData(prev => ({
+                    ...prev,
+                    isFreeStudent: newVal,
+                    monthlyTuitionFee: newVal ? 0 : prev.monthlyTuitionFee,
+                    dormitoryMonthlyFee: newVal ? 0 : prev.dormitoryMonthlyFee,
+                  }))
+                }}
+                className="mt-0.5"
               />
-              {formData.monthlyTuitionFee >= 0 && (
-                <p className="text-sm text-muted-foreground">
-                  {formData.monthlyTuitionFee === 0 
-                    ? 'Bepul o\'qish' 
-                    : `${formData.monthlyTuitionFee.toLocaleString('uz-UZ')} so'm/oy`}
+              <div>
+                <Label htmlFor="isFreeStudent" className="text-base font-semibold cursor-pointer text-emerald-800">
+                  🎓 Tekin o'quvchi (Imtiyozli)
+                </Label>
+                <p className="text-sm text-emerald-700 mt-0.5">
+                  Bu o'quvchi uchun hech qanday o'qish to'lovi va yotoqxona to'lovi 
+                  yaratilmaydi. Moliya bo'limida ko'rinmaydi.
                 </p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                0 so'm (bepul) dan 200,000,000 so'm va undan yuqori summa kiritish mumkin
-              </p>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="paymentDueDay">
-                To'lov Muddati (Har oyning qaysi sanasida) *
-              </Label>
-              <Select
-                value={formData.paymentDueDay.toString()}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, paymentDueDay: parseInt(value) }))}
-              >
-                <SelectTrigger id="paymentDueDay">
-                  <SelectValue placeholder="Sanani tanlang" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
-                    <SelectItem key={day} value={day.toString()}>
-                      Har oyning {day}-sanasida
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                O'quvchi har oyning shu sanasigacha to'lovni amalga oshirishi kerak (1-28 kun)
-              </p>
-            </div>
-            {formData.monthlyTuitionFee === 0 ? (
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                <p className="text-sm text-purple-800">
-                  🎓 Bepul o'qish - To'lov talab qilinmaydi
-                </p>
-              </div>
-            ) : formData.trialEnabled ? (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm text-blue-800">
-                  ℹ️ Sinov muddati tugagach ({formData.trialDays} kun), birinchi oylik to'lov ({formData.monthlyTuitionFee.toLocaleString('uz-UZ')} so'm) boshlanadi
-                </p>
-              </div>
-            ) : (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <p className="text-sm text-green-800">
-                  ✓ Oylik to'lov ({formData.monthlyTuitionFee.toLocaleString('uz-UZ')} so'm) birdan boshlanadi
-                </p>
+            {!formData.isFreeStudent && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="monthlyTuitionFee">
+                    Oylik O'qish To'lov Summasi (so'm) *
+                  </Label>
+                  <Input
+                    id="monthlyTuitionFee"
+                    type="number"
+                    inputMode="numeric"
+                    min="0"
+                    max="200000000"
+                    step="1"
+                    placeholder="Masalan: 500000 (0 dan 200,000,000 gacha)"
+                    value={formData.monthlyTuitionFee || ''}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      monthlyTuitionFee: parseFloat(e.target.value) || 0 
+                    }))}
+                    required
+                  />
+                  {formData.monthlyTuitionFee > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      {formData.monthlyTuitionFee.toLocaleString('uz-UZ')} so'm/oy
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="paymentDueDay">
+                    To'lov Muddati (Har oyning qaysi sanasida) *
+                  </Label>
+                  <Select
+                    value={formData.paymentDueDay.toString()}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, paymentDueDay: parseInt(value) }))}
+                  >
+                    <SelectTrigger id="paymentDueDay">
+                      <SelectValue placeholder="Sanani tanlang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                        <SelectItem key={day} value={day.toString()}>
+                          Har oyning {day}-sanasida
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {formData.trialEnabled ? (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-sm text-blue-800">
+                      ℹ️ Sinov muddati tugagach ({formData.trialDays} kun), birinchi oylik to'lov ({formData.monthlyTuitionFee.toLocaleString('uz-UZ')} so'm) boshlanadi
+                    </p>
+                  </div>
+                ) : formData.monthlyTuitionFee > 0 ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <p className="text-sm text-green-800">
+                      ✓ Oylik to'lov ({formData.monthlyTuitionFee.toLocaleString('uz-UZ')} so'm) birdan boshlanadi
+                    </p>
+                  </div>
+                ) : null}
+              </>
+            )}
+
+            {formData.isFreeStudent && (
+              <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4 flex items-center gap-3">
+                <span className="text-2xl">🎓</span>
+                <div>
+                  <p className="font-semibold text-emerald-800">Tekin o'quvchi — 0 so'm</p>
+                  <p className="text-sm text-emerald-700">
+                    Bu o'quvchi uchun hech qanday to'lov yaratilmaydi va moliya hisobotlarida ko'rinmaydi.
+                  </p>
+                </div>
               </div>
             )}
           </CardContent>
@@ -945,7 +991,8 @@ export default function CreateStudentPage() {
                               setSelectedRoom(room)
                               setFormData(prev => ({
                                 ...prev,
-                                dormitoryMonthlyFee: Number(room.pricePerMonth),
+                                // Tekin o'quvchi bo'lsa yotoqxona ham bepul
+                                dormitoryMonthlyFee: prev.isFreeStudent ? 0 : Number(room.pricePerMonth),
                               }))
                             }}
                           >
@@ -1007,7 +1054,7 @@ export default function CreateStudentPage() {
                           ✓ Tanlandi: Xona {selectedRoom?.roomNumber}, Joy #{selectedRoom?.beds.find((b: any) => b.id === formData.dormitoryBedId)?.bedNumber}
                         </p>
                         <p className="text-xs text-indigo-700 mt-1">
-                          Oylik to'lov: {formData.dormitoryMonthlyFee.toLocaleString()} so'm
+                          Oylik to'lov: {formData.isFreeStudent ? '0 (Tekin)' : formData.dormitoryMonthlyFee.toLocaleString()} so'm
                         </p>
                       </div>
                     )}

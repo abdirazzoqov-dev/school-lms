@@ -29,6 +29,7 @@ interface Student {
   status: string
   trialEnabled: boolean
   trialEndDate: Date | null
+  isFreeStudent: boolean
   user: {
     fullName: string
     email: string | null
@@ -234,6 +235,11 @@ export function StudentsTable({ students }: { students: Student[] }) {
                           </Badge>
                         )
                       })()}
+                      {student.isFreeStudent && (
+                        <Badge className="text-[10px] whitespace-nowrap bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          🎓 Tekin
+                        </Badge>
+                      )}
                     </div>
                   </td>
                   <td className="p-3">
@@ -506,6 +512,11 @@ export function StudentsTable({ students }: { students: Student[] }) {
                     </Badge>
                   )
                 })()}
+                {student.isFreeStudent && (
+                  <Badge className="text-xs bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    🎓 Tekin
+                  </Badge>
+                )}
               </div>
             </div>
           </div>

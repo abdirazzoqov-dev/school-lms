@@ -261,8 +261,10 @@ export async function createStudent(data: StudentFormData) {
           trialEndDate,
           trialDays: validatedData.trialDays || null,
           // Payment info
-          monthlyTuitionFee: validatedData.monthlyTuitionFee || 0,
+          monthlyTuitionFee: validatedData.isFreeStudent ? 0 : (validatedData.monthlyTuitionFee || 0),
           paymentDueDay: validatedData.paymentDueDay || 5,
+          // Tekin o'quvchi belgisi
+          isFreeStudent: validatedData.isFreeStudent || false,
         }
       })
 
@@ -278,10 +280,11 @@ export async function createStudent(data: StudentFormData) {
       }
 
       // Create payment based on trial status and monthly fee
+      // Tekin o'quvchi bo'lsa HECH QANDAY to'lov yaratilmaydi
       // Faqat oylik to'lov summasi 0 dan katta bo'lsa to'lov yaratiladi
       const primaryGuardian = guardianResults.find(g => g.hasAccess)
       
-      if (validatedData.monthlyTuitionFee > 0 && validatedData.trialEnabled && trialEndDate) {
+      if (!validatedData.isFreeStudent && validatedData.monthlyTuitionFee > 0 && validatedData.trialEnabled && trialEndDate) {
         // Trial enabled: Create payment after trial ends
         // Calculate first payment due date (trial end date + 1 day)
         const firstPaymentDueDate = new Date(trialEndDate)
@@ -304,8 +307,8 @@ export async function createStudent(data: StudentFormData) {
             notes: `Oylik o'qish to'lovi (Sinov muddati tugagach: ${trialEndDate.toLocaleDateString('uz-UZ', { year: 'numeric', month: '2-digit', day: '2-digit' }) || trialEndDate.toISOString().split('T')[0]})`,
           }
         })
-      } else if (validatedData.monthlyTuitionFee > 0) {
-        // No trial: Create payment immediately (only if fee > 0)
+      } else if (!validatedData.isFreeStudent && validatedData.monthlyTuitionFee > 0) {
+        // No trial: Create payment immediately (only if fee > 0 and not free student)
         const invoiceNumber = `INV-${new Date().getFullYear()}-${generateRandomString(8)}`
         
         // First payment due date is today (enrollment date)
@@ -347,13 +350,14 @@ export async function createStudent(data: StudentFormData) {
         }
 
         // Create dormitory assignment
+        // Tekin o'quvchi bo'lsa yotoqxona ham bepul (0 so'm)
         await tx.dormitoryAssignment.create({
           data: {
             tenantId,
             studentId: student.id,
             roomId: bed.roomId,
             bedId: bed.id,
-            monthlyFee: validatedData.dormitoryMonthlyFee || 0,
+            monthlyFee: validatedData.isFreeStudent ? 0 : (validatedData.dormitoryMonthlyFee || 0),
             status: 'ACTIVE',
             assignedById: session.user.id,
           },

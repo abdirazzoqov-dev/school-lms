@@ -66,6 +66,9 @@ export const studentSchema = z.object({
   // Monthly tuition fee (Oylik o'qish to'lovi) - Majburiy, 0 dan 200M+ gacha
   monthlyTuitionFee: z.number().min(0, 'Oylik to\'lov summasi 0 yoki undan katta bo\'lishi kerak'),
   paymentDueDay: z.number().min(1).max(28).default(5), // Har oydagi to'lov sanasi (1-28)
+  
+  // Tekin o'quvchi (hech qanday to'lov yaratilmaydi)
+  isFreeStudent: z.boolean().default(false),
 }).refine(
   (data) => {
     // Agar trialEnabled true bo'lsa, trialDays majburiy

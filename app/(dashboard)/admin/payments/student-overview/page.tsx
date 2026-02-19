@@ -19,11 +19,13 @@ export default async function StudentPaymentOverviewPage() {
   const currentYear = new Date().getFullYear()
 
   // Fetch active students with their payments
+  // Tekin o'quvchilar (isFreeStudent = true) panoramadan chiqariladi
   const students = await db.student.findMany({
     where: { 
       tenantId,
       status: 'ACTIVE',
-      monthlyTuitionFee: { not: null }
+      monthlyTuitionFee: { not: null },
+      isFreeStudent: false,
     },
     select: {
       id: true,
