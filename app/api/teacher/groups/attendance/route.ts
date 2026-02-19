@@ -58,25 +58,16 @@ export async function POST(req: NextRequest) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    const startTime = attendanceRecords[0]?.startTime
-    const endTime = attendanceRecords[0]?.endTime
+    const startTime = attendanceRecords[0]?.startTime || null
+    const endTime = attendanceRecords[0]?.endTime || null
 
-    // Filter only records where student has a classId (Attendance model requires classId)
-    const validRecords = attendanceRecords.filter((r) => r.classId)
+    const studentIds = attendanceRecords.map((r: any) => r.studentId)
 
-    if (validRecords.length === 0) {
-      return NextResponse.json({
-        success: true,
-        count: 0,
-        message: 'No students with class assigned - attendance skipped',
-      })
-    }
-
-    // Delete existing attendance for today (for these students + subject)
-    const studentIds = validRecords.map((r) => r.studentId)
+    // Delete existing attendance for today (for these students + subject + group)
     const deleteWhere: any = {
       teacherId: teacher.id,
       subjectId,
+      groupId,
       date: today,
       studentId: { in: studentIds },
     }
@@ -85,13 +76,14 @@ export async function POST(req: NextRequest) {
     }
     await db.attendance.deleteMany({ where: deleteWhere })
 
-    // Create new attendance records (each student uses their own classId)
+    // Create new attendance records with groupId (no classId required)
     const created = await db.attendance.createMany({
-      data: validRecords.map((record) => ({
+      data: attendanceRecords.map((record: any) => ({
         tenantId,
         studentId: record.studentId,
         teacherId: teacher.id,
-        classId: record.classId, // student's own class
+        groupId,          // Group davomat uchun groupId ishlatiladi
+        classId: record.classId || null,  // Sinfga ham biriktirilgan bo'lsa qo'shiladi
         subjectId,
         date: today,
         startTime: startTime || null,
@@ -112,4 +104,3 @@ export async function POST(req: NextRequest) {
     )
   }
 }
-

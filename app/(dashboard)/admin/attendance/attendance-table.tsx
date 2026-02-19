@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Eye, Edit, MoreHorizontal, ClipboardCheck, FileDown } from 'lucide-react'
+import { Eye, Edit, MoreHorizontal, ClipboardCheck, FileDown, GraduationCap, Users } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,7 +35,10 @@ interface Attendance {
   }
   class: {
     name: string
-  }
+  } | null
+  group: {
+    name: string
+  } | null
   subject: {
     name: string
     code: string
@@ -104,14 +107,15 @@ export function AttendanceTable({ attendances, period, uniqueDates }: Attendance
           acc[key] = {
             student: att.student,
             class: att.class,
+            group: att.group,
             records: [],
           }
         }
-        acc[key].records.push(att)
-        return acc
-      }, {} as Record<string, { student: any; class: any; records: Attendance[] }>)
+      acc[key].records.push(att)
+      return acc
+    }, {} as Record<string, { student: any; class: any; group: any; records: Attendance[] }>)
 
-      const excelData = Object.values(groupedByStudent).map((item, index) => {
+    const excelData = Object.values(groupedByStudent).map((item, index) => {
         const present = item.records.filter(r => r.status === 'PRESENT').length
         const absent = item.records.filter(r => r.status === 'ABSENT').length
         const late = item.records.filter(r => r.status === 'LATE').length
@@ -123,7 +127,7 @@ export function AttendanceTable({ attendances, period, uniqueDates }: Attendance
           '#': index + 1,
           "O'quvchi": item.student.user?.fullName || 'N/A',
           "O'quvchi Kodi": item.student.studentCode,
-          'Sinf': item.class.name,
+          'Sinf/Guruh': item.class?.name || item.group?.name || '—',
           'Kelgan': present,
           'Kelmagan': absent,
           'Kech': late,
@@ -145,7 +149,7 @@ export function AttendanceTable({ attendances, period, uniqueDates }: Attendance
         '#': index + 1,
         "O'quvchi": att.student.user?.fullName || 'N/A',
         "O'quvchi Kodi": att.student.studentCode,
-        'Sinf': att.class.name,
+        'Sinf/Guruh': att.class?.name || att.group?.name || '—',
         'Fan': att.subject.name,
         'Fan Kodi': att.subject.code,
         "O'qituvchi": att.teacher.user?.fullName || 'N/A',
@@ -213,7 +217,7 @@ export function AttendanceTable({ attendances, period, uniqueDates }: Attendance
               <TableRow className="bg-muted/50">
                 <TableHead className="w-[50px]">#</TableHead>
                 <TableHead>O'quvchi</TableHead>
-                <TableHead>Sinf</TableHead>
+                <TableHead>Sinf / Guruh</TableHead>
                 <TableHead>Kelgan</TableHead>
                 <TableHead>Kelmagan</TableHead>
                 <TableHead>Kech</TableHead>
@@ -246,7 +250,9 @@ export function AttendanceTable({ attendances, period, uniqueDates }: Attendance
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{item.class.name}</Badge>
+                    <Badge variant="outline">
+                      {item.class?.name || item.records[0]?.group?.name || '—'}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <span className="font-semibold text-green-600">{present}</span>
@@ -306,7 +312,7 @@ export function AttendanceTable({ attendances, period, uniqueDates }: Attendance
           <TableRow className="bg-muted/50">
             <TableHead className="w-[50px]">#</TableHead>
             <TableHead>O'quvchi</TableHead>
-            <TableHead>Sinf</TableHead>
+            <TableHead>Sinf / Guruh</TableHead>
             <TableHead>Fan</TableHead>
             <TableHead>O'qituvchi</TableHead>
             <TableHead>Holat</TableHead>
@@ -333,7 +339,19 @@ export function AttendanceTable({ attendances, period, uniqueDates }: Attendance
               </TableCell>
 
               <TableCell>
-                <Badge variant="outline">{attendance.class.name}</Badge>
+                {attendance.class ? (
+                  <Badge variant="outline" className="gap-1">
+                    <GraduationCap className="h-3 w-3" />
+                    {attendance.class.name}
+                  </Badge>
+                ) : attendance.group ? (
+                  <Badge variant="outline" className="gap-1 border-purple-300 text-purple-700">
+                    <Users className="h-3 w-3" />
+                    {attendance.group.name}
+                  </Badge>
+                ) : (
+                  <span className="text-muted-foreground text-sm">—</span>
+                )}
               </TableCell>
 
               <TableCell>

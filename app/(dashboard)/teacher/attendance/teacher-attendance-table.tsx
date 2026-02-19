@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { CalendarCheck, Clock, User, BookOpen, GraduationCap } from 'lucide-react'
+import { CalendarCheck, Clock, User, BookOpen, GraduationCap, Users } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 type Attendance = {
@@ -26,8 +26,11 @@ type Attendance = {
     }
     class: {
       name: string
-    }
+    } | null
   }
+  group: {
+    name: string
+  } | null
   subject: {
     name: string
   } | null
@@ -110,7 +113,7 @@ export function TeacherAttendanceTable({ attendances, startDate, endDate }: Prop
                 <TableRow className="bg-muted/50">
                   <TableHead className="w-[50px]">#</TableHead>
                   <TableHead>O'quvchi</TableHead>
-                  <TableHead>Sinf</TableHead>
+                  <TableHead>Sinf / Guruh</TableHead>
                   <TableHead>Fan</TableHead>
                   <TableHead>Sana</TableHead>
                   <TableHead>Vaqt</TableHead>
@@ -140,12 +143,23 @@ export function TeacherAttendanceTable({ attendances, startDate, endDate }: Prop
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/20">
-                          <GraduationCap className="h-3.5 w-3.5 text-blue-600" />
+                      {attendance.student.class ? (
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/20">
+                            <GraduationCap className="h-3.5 w-3.5 text-blue-600" />
+                          </div>
+                          <span className="font-medium">{attendance.student.class.name}</span>
                         </div>
-                        <span className="font-medium">{attendance.student.class.name}</span>
-                      </div>
+                      ) : attendance.group ? (
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 rounded-md bg-purple-100 dark:bg-purple-900/20">
+                            <Users className="h-3.5 w-3.5 text-purple-600" />
+                          </div>
+                          <span className="font-medium">{attendance.group.name}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {attendance.subject ? (

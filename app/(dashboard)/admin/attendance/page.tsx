@@ -82,13 +82,8 @@ export default async function AttendancePage({
     whereClause.subjectId = subjectId
   }
 
-  // If groupId filter, get student IDs from that group first
   if (groupId) {
-    const groupStudents = await db.student.findMany({
-      where: { tenantId, groupId, status: 'ACTIVE' },
-      select: { id: true },
-    })
-    whereClause.studentId = { in: groupStudents.map((s) => s.id) }
+    whereClause.groupId = groupId
   }
 
   // Get attendance records
@@ -106,6 +101,11 @@ export default async function AttendancePage({
           },
         },
         class: {
+          select: {
+            name: true,
+          },
+        },
+        group: {
           select: {
             name: true,
           },
@@ -128,7 +128,6 @@ export default async function AttendancePage({
       },
       orderBy: [
         { date: 'desc' },
-        { class: { name: 'asc' } },
         { student: { user: { fullName: 'asc' } } },
       ],
     }),

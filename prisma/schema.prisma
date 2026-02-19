@@ -583,6 +583,7 @@ model Group {
   students      Student[]
   groupSubjects GroupSubject[]
   schedules     GroupSchedule[]
+  attendances   Attendance[]
 
   @@index([tenantId])
   @@index([groupTeacherId])
@@ -741,13 +742,15 @@ model Attendance {
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   tenantId String
 
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId String
-  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
-  classId   String
-  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  class     Class?   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId   String?
+  group     Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId   String?
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   subjectId String
-  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   teacherId String
 
   date   DateTime         @db.Date
@@ -761,15 +764,17 @@ model Attendance {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([studentId, classId, subjectId, date, startTime])
+  @@unique([studentId, subjectId, date, startTime, groupId])
   @@index([tenantId])
   @@index([studentId])
   @@index([classId])
+  @@index([groupId])
   @@index([subjectId])
   @@index([teacherId])
   @@index([date])
   @@index([status])
   @@index([classId, date])
+  @@index([groupId, date])
   @@index([studentId, date])
   @@index([startTime])
 }
