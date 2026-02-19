@@ -23,7 +23,7 @@ type Attendance = {
     user: {
       fullName: string
       avatar: string | null
-    }
+    } | null
     class: {
       name: string
     } | null
@@ -132,13 +132,13 @@ export function TeacherAttendanceTable({ attendances, startDate, endDate }: Prop
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9 border-2 border-purple-200">
-                          <AvatarImage src={attendance.student.user.avatar || ''} />
+                          <AvatarImage src={attendance.student.user?.avatar || ''} />
                           <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-600 text-white text-xs">
-                            {getInitials(attendance.student.user.fullName)}
+                            {getInitials(attendance.student.user?.fullName || '?')}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{attendance.student.user.fullName}</p>
+                          <p className="font-medium">{attendance.student.user?.fullName || '—'}</p>
                         </div>
                       </div>
                     </TableCell>
