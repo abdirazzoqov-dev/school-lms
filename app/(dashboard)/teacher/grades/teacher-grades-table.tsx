@@ -30,9 +30,12 @@ type Grade = {
     }
     class: {
       name: string
-    }
+    } | null
   }
   subject: {
+    name: string
+  } | null
+  group?: {
     name: string
   } | null
 }
@@ -102,7 +105,7 @@ export function TeacherGradesTable({ grades, startDate, endDate }: Props) {
                 <TableRow className="bg-muted/50">
                   <TableHead className="w-[50px]">#</TableHead>
                   <TableHead>O'quvchi</TableHead>
-                  <TableHead>Sinf</TableHead>
+                  <TableHead>Sinf/Guruh</TableHead>
                   <TableHead>Fan</TableHead>
                   <TableHead>Sana</TableHead>
                   <TableHead>Vaqt</TableHead>
@@ -138,7 +141,9 @@ export function TeacherGradesTable({ grades, startDate, endDate }: Props) {
                         <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900/20">
                           <GraduationCap className="h-3.5 w-3.5 text-blue-600" />
                         </div>
-                        <span className="font-medium">{grade.student.class.name}</span>
+                        <span className="font-medium">
+                          {grade.student.class?.name || grade.group?.name || '—'}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>
