@@ -44,6 +44,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import Link from 'next/link'
 import { deleteParent } from '@/app/actions/parent'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 import { useToast } from '@/components/ui/use-toast'
 import {
   AlertDialog,
@@ -101,6 +102,9 @@ export function ParentsTable({ parents, classes, searchParams }: ParentsTablePro
   const pathname = usePathname()
   const urlSearchParams = useSearchParams()
   const { toast } = useToast()
+  const { can } = useAdminPermissions()
+  const canUpdate = can('parents', 'UPDATE')
+  const canDelete = can('parents', 'DELETE')
 
   const [search, setSearch] = useState(searchParams.search || '')
   const [showFilters, setShowFilters] = useState(false)
@@ -412,23 +416,29 @@ export function ParentsTable({ parents, classes, searchParams }: ParentsTablePro
                             Ko'rish
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/admin/parents/${parent.id}/edit`}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Tahrirlash
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="text-red-600 cursor-pointer"
-                          onSelect={(e) => {
-                            e.preventDefault()
-                            setDeleteDialog({ open: true, parent })
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          O'chirish
-                        </DropdownMenuItem>
+                        {canUpdate && (
+                          <DropdownMenuItem asChild>
+                            <Link href={`/admin/parents/${parent.id}/edit`}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Tahrirlash
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
+                        {canDelete && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="text-red-600 cursor-pointer"
+                              onSelect={(e) => {
+                                e.preventDefault()
+                                setDeleteDialog({ open: true, parent })
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              O'chirish
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

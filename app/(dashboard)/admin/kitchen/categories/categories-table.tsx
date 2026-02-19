@@ -40,6 +40,7 @@ import {
 import { deleteKitchenExpenseCategory } from '@/app/actions/cook'
 import { formatNumber } from '@/lib/utils'
 import Link from 'next/link'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 
 interface Category {
   id: string
@@ -72,6 +73,9 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
   const { toast } = useToast()
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const { can } = useAdminPermissions()
+  const canUpdate = can('kitchen', 'UPDATE')
+  const canDelete = can('kitchen', 'DELETE')
 
   const handleDelete = async () => {
     if (!selectedCategory) return
@@ -200,20 +204,26 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem asChild>
-                        <Link href={`/admin/kitchen/categories/${category.id}/edit`}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Tahrirlash
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => setSelectedCategory(category)}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        O'chirish
-                      </DropdownMenuItem>
+                      {canUpdate && (
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/kitchen/categories/${category.id}/edit`}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Tahrirlash
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {canDelete && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => setSelectedCategory(category)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            O'chirish
+                          </DropdownMenuItem>
+                        </>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

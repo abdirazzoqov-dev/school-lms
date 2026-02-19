@@ -11,6 +11,7 @@ import { SearchBar } from '@/components/search-bar'
 import { ClearFilters } from '@/components/clear-filters'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 export const revalidate = 60
 export const dynamic = 'force-dynamic'
@@ -81,12 +82,14 @@ export default async function GroupsPage({
               {academicYear} o'quv yili • {totalGroups} ta guruh
             </p>
           </div>
-          <Button asChild className="w-full md:w-auto">
-            <Link href="/admin/groups/create">
-              <Plus className="mr-2 h-4 w-4" />
-              Yangi Guruh
-            </Link>
-          </Button>
+          <PermissionGate resource="groups" action="CREATE">
+            <Button asChild className="w-full md:w-auto">
+              <Link href="/admin/groups/create">
+                <Plus className="mr-2 h-4 w-4" />
+                Yangi Guruh
+              </Link>
+            </Button>
+          </PermissionGate>
         </div>
 
         {/* Search */}
@@ -224,12 +227,14 @@ export default async function GroupsPage({
               {searchParams.search ? (
                 <ClearFilters />
               ) : (
-                <Button asChild>
-                  <Link href="/admin/groups/create">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Birinchi guruhni yarating
-                  </Link>
-                </Button>
+                <PermissionGate resource="groups" action="CREATE">
+                  <Button asChild>
+                    <Link href="/admin/groups/create">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Birinchi guruhni yarating
+                    </Link>
+                  </Button>
+                </PermissionGate>
               )}
             </CardContent>
           </Card>

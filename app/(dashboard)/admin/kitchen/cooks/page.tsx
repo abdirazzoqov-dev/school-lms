@@ -16,6 +16,7 @@ import {
   Calendar
 } from 'lucide-react'
 import Link from 'next/link'
+import { PermissionGate } from '@/components/admin/permission-gate'
 import { formatNumber, formatDate } from '@/lib/utils'
 import { CooksTable } from './cooks-table'
 
@@ -64,12 +65,14 @@ export default async function CooksPage() {
             Oshxona xodimlarini boshqaring
           </p>
         </div>
-        <Link href="/admin/kitchen/cooks/create">
-          <Button className="bg-orange-500 hover:bg-orange-600">
-            <Plus className="mr-2 h-4 w-4" />
-            Yangi Oshpaz
-          </Button>
-        </Link>
+        <PermissionGate resource="kitchen" action="CREATE">
+          <Link href="/admin/kitchen/cooks/create">
+            <Button className="bg-orange-500 hover:bg-orange-600">
+              <Plus className="mr-2 h-4 w-4" />
+              Yangi Oshpaz
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       {/* Stats */}

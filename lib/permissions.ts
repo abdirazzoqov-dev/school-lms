@@ -22,11 +22,12 @@ export const ADMIN_RESOURCES = [
   { key: 'meals',      label: 'Ovqatlar Menyusi',    href: '/admin/meals',     icon: 'UtensilsCrossed' },
   { key: 'kitchen',    label: 'Oshxona Xarajatlar',  href: '/admin/kitchen',   icon: 'Receipt' },
   { key: 'dormitory',  label: 'Yotoqxona',           href: '/admin/dormitory', icon: 'Home' },
-  { key: 'contracts',  label: 'Shartnomalar',        href: '/admin/contracts', icon: 'FileSignature' },
-  { key: 'messages',   label: 'Xabarlar',            href: '/admin/messages',  icon: 'MessageSquare' },
-  { key: 'reports',    label: 'Hisobotlar',          href: '/admin/reports',   icon: 'BarChart3' },
-  { key: 'contacts',   label: "Ma'sul Xodimlar",     href: '/admin/contacts',  icon: 'UserCog' },
-  { key: 'settings',   label: 'Sozlamalar',          href: '/admin/settings',  icon: 'Settings' },
+  { key: 'contracts',      label: 'Shartnomalar',        href: '/admin/contracts',      icon: 'FileSignature' },
+  { key: 'messages',       label: 'Xabarlar',            href: '/admin/messages',       icon: 'MessageSquare' },
+  { key: 'announcements',  label: "E'lonlar",            href: '/admin/announcements',  icon: 'Megaphone' },
+  { key: 'reports',        label: 'Hisobotlar',          href: '/admin/reports',        icon: 'BarChart3' },
+  { key: 'contacts',       label: "Ma'sul Xodimlar",     href: '/admin/contacts',       icon: 'UserCog' },
+  { key: 'settings',       label: 'Sozlamalar',          href: '/admin/settings',       icon: 'Settings' },
 ] as const
 
 export type ResourceKey = typeof ADMIN_RESOURCES[number]['key']

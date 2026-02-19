@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Trash2, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { deleteSubject } from '@/app/actions/subject'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,8 +35,11 @@ export function DeleteSubjectButton({
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
   const [open, setOpen] = useState(false)
+  const { can } = useAdminPermissions()
 
-  const canDelete = !hasSchedules && !hasClassSubjects
+  const canDelete = can('subjects', 'DELETE') && !hasSchedules && !hasClassSubjects
+
+  if (!can('subjects', 'DELETE')) return null
 
   const handleDelete = async () => {
     setIsDeleting(true)

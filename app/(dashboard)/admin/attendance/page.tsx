@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { AttendanceFilters } from './attendance-filters'
 import { AttendanceTable } from './attendance-table'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 interface SearchParams {
   date?: string
@@ -229,12 +230,14 @@ export default async function AttendancePage({
             O'quvchilar davomati va statistika
           </p>
         </div>
-        <Link href="/admin/attendance/mark">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Davomat Belgilash
-          </Button>
-        </Link>
+        <PermissionGate resource="attendance" action="CREATE">
+          <Link href="/admin/attendance/mark">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Davomat Belgilash
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       {/* Statistics Cards */}

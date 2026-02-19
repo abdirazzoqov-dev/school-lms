@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { ContactsTable } from './contacts-table'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 export const metadata = {
   title: 'Ma\'sul Xodimlar',
@@ -41,12 +42,14 @@ export default async function ContactsPage() {
             Tezkor bog'lanish uchun ma'sul xodimlar ro'yxati
           </p>
         </div>
-        <Button asChild>
-          <Link href="/admin/contacts/create">
-            <Plus className="mr-2 h-4 w-4" />
-            Xodim qo'shish
-          </Link>
-        </Button>
+        <PermissionGate resource="contacts" action="CREATE">
+          <Button asChild>
+            <Link href="/admin/contacts/create">
+              <Plus className="mr-2 h-4 w-4" />
+              Xodim qo'shish
+            </Link>
+          </Button>
+        </PermissionGate>
       </div>
 
       <Card>

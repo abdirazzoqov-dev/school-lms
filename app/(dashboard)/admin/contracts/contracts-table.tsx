@@ -9,6 +9,7 @@ import { Download, Eye, Pencil, Trash2, FileText, Users, GraduationCap, Briefcas
 import { deleteContract, toggleContractStatus } from '@/app/actions/contract'
 import { downloadContract } from '@/app/actions/download-contract'
 import { useToast } from '@/components/ui/use-toast'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 import { formatNumber } from '@/lib/utils'
 import {
   AlertDialog,
@@ -63,6 +64,9 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
   const { toast } = useToast()
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const { can } = useAdminPermissions()
+  const canUpdate = can('contracts', 'UPDATE')
+  const canDelete = can('contracts', 'DELETE')
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
   const handleDownload = async (contractId: string, fileName: string) => {
@@ -261,20 +265,24 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
                   <Download className="h-3 w-3" />
                   {downloadingId === contract.id ? 'Yuklanmoqda...' : 'Yuklab olish'}
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleToggleStatus(contract.id)}
-                >
-                  <Eye className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setDeleteId(contract.id)}
-                >
-                  <Trash2 className="h-3 w-3 text-red-600" />
-                </Button>
+                {canUpdate && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleToggleStatus(contract.id)}
+                  >
+                    <Eye className="h-3 w-3" />
+                  </Button>
+                )}
+                {canDelete && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDeleteId(contract.id)}
+                  >
+                    <Trash2 className="h-3 w-3 text-red-600" />
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

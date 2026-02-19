@@ -24,6 +24,7 @@ import { deleteBuilding } from '@/app/actions/dormitory'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/use-toast'
 import { useState } from 'react'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 
 interface Building {
   id: string
@@ -51,6 +52,9 @@ export function BuildingsTable({ buildings }: BuildingsTableProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const { can } = useAdminPermissions()
+  const canUpdate = can('dormitory', 'UPDATE')
+  const canDelete = can('dormitory', 'DELETE')
 
   const handleDelete = async (buildingId: string) => {
     if (!confirm('Binoni o\'chirmoqchimisiz?')) return
@@ -202,21 +206,27 @@ export function BuildingsTable({ buildings }: BuildingsTableProps) {
                           Ko'rish
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href={`/admin/dormitory/buildings/${building.id}/edit`}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Tahrirlash
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        className="text-red-600"
-                        onClick={() => handleDelete(building.id)}
-                        disabled={deletingId === building.id}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        {deletingId === building.id ? 'O\'chirilmoqda...' : 'O\'chirish'}
-                      </DropdownMenuItem>
+                      {canUpdate && (
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/dormitory/buildings/${building.id}/edit`}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Tahrirlash
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {canDelete && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => handleDelete(building.id)}
+                            disabled={deletingId === building.id}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            {deletingId === building.id ? 'O\'chirilmoqda...' : 'O\'chirish'}
+                          </DropdownMenuItem>
+                        </>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Plus, BookOpen, Trash2, Edit } from 'lucide-react'
 import Link from 'next/link'
 import { DeleteSubjectButton } from './delete-subject-button'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 // Optimized caching: Cache for 60 seconds
 export const revalidate = 60
@@ -57,12 +58,14 @@ export default async function SubjectsPage() {
               Tez sozlash
             </Button>
           </Link>
-          <Link href="/admin/subjects/create" className="flex-1 sm:flex-none">
-            <Button className="w-full">
-              <Plus className="mr-2 h-4 w-4" />
-              Yangi fan
-            </Button>
-          </Link>
+          <PermissionGate resource="subjects" action="CREATE">
+            <Link href="/admin/subjects/create" className="flex-1 sm:flex-none">
+              <Button className="w-full">
+                <Plus className="mr-2 h-4 w-4" />
+                Yangi fan
+              </Button>
+            </Link>
+          </PermissionGate>
         </div>
       </div>
 
@@ -115,12 +118,14 @@ export default async function SubjectsPage() {
                   Tez sozlash
                 </Button>
               </Link>
-              <Link href="/admin/subjects/create">
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Yangi fan
-                </Button>
-              </Link>
+              <PermissionGate resource="subjects" action="CREATE">
+                <Link href="/admin/subjects/create">
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Yangi fan
+                  </Button>
+                </Link>
+              </PermissionGate>
             </div>
           </CardContent>
         </Card>
@@ -169,12 +174,14 @@ export default async function SubjectsPage() {
 
                 {/* Actions */}
                 <div className="flex gap-2">
-                  <Link href={`/admin/subjects/${subject.id}/edit`} className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full">
-                      <Edit className="mr-2 h-4 w-4" />
-                      Tahrirlash
-                    </Button>
-                  </Link>
+                  <PermissionGate resource="subjects" action="UPDATE">
+                    <Link href={`/admin/subjects/${subject.id}/edit`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Edit className="mr-2 h-4 w-4" />
+                        Tahrirlash
+                      </Button>
+                    </Link>
+                  </PermissionGate>
                   <DeleteSubjectButton 
                     subjectId={subject.id}
                     subjectName={subject.name}

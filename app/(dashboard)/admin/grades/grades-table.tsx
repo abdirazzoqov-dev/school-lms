@@ -11,6 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Eye, Edit, MoreHorizontal, Award, Download } from 'lucide-react'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,6 +62,9 @@ interface GradesTableProps {
 }
 
 export function GradesTable({ grades }: GradesTableProps) {
+  const { can } = useAdminPermissions()
+  const canUpdate = can('grades', 'UPDATE')
+
   const getGradeTypeBadge = (type: string) => {
     const types: Record<string, { label: string; color: string }> = {
       ORAL: { label: 'Og\'zaki', color: 'bg-blue-100 text-blue-700' },
@@ -162,12 +166,14 @@ export function GradesTable({ grades }: GradesTableProps) {
         <p className="text-muted-foreground mb-4">
           Tanlangan filtrlar uchun baholar mavjud emas
         </p>
-        <Link href="/admin/grades/mark">
-          <Button>
-            <Award className="h-4 w-4 mr-2" />
-            Baho qo'yish
-          </Button>
-        </Link>
+        {can('grades', 'CREATE') && (
+          <Link href="/admin/grades/mark">
+            <Button>
+              <Award className="h-4 w-4 mr-2" />
+              Baho qo'yish
+            </Button>
+          </Link>
+        )}
       </div>
     )
   }
@@ -292,12 +298,14 @@ export function GradesTable({ grades }: GradesTableProps) {
                           Ko'rish
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href={`/admin/grades/${grade.id}/edit`}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Tahrirlash
-                        </Link>
-                      </DropdownMenuItem>
+                      {canUpdate && (
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/grades/${grade.id}/edit`}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Tahrirlash
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

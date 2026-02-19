@@ -49,6 +49,7 @@ import {
 import { deleteKitchenExpense } from '@/app/actions/cook'
 import { formatNumber } from '@/lib/utils'
 import Link from 'next/link'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 
 interface Expense {
   id: string
@@ -96,6 +97,9 @@ export function ExpensesTable({ expenses, categories }: ExpensesTableProps) {
   const { toast } = useToast()
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const { can } = useAdminPermissions()
+  const canUpdate = can('kitchen', 'UPDATE')
+  const canDelete = can('kitchen', 'DELETE')
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
 
@@ -273,20 +277,26 @@ export function ExpensesTable({ expenses, categories }: ExpensesTableProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link href={`/admin/kitchen/expenses/${expense.id}/edit`}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Tahrirlash
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => setSelectedExpense(expense)}
-                      className="text-red-600"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      O'chirish
-                    </DropdownMenuItem>
+                    {canUpdate && (
+                      <DropdownMenuItem asChild>
+                        <Link href={`/admin/kitchen/expenses/${expense.id}/edit`}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Tahrirlash
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {canDelete && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => setSelectedExpense(expense)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          O'chirish
+                        </DropdownMenuItem>
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

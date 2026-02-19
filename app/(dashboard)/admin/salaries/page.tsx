@@ -13,6 +13,7 @@ import Link from 'next/link'
 import { Progress } from '@/components/ui/progress'
 import { currentMonth, currentYear, monthNames } from '@/lib/validations/salary'
 import { SalarySearchFilter } from '@/components/salary-search-filter'
+import { PermissionGate } from '@/components/admin/permission-gate'
 import { SalariesTableClient } from './salaries-table-client'
 import { formatNumber } from '@/lib/utils'
 
@@ -370,16 +371,18 @@ export default async function SalariesPage({
                   Maosh Panoramasi
                 </Link>
               </Button>
-              <Button 
-                asChild 
-                size="lg" 
-                className="bg-white text-green-600 hover:bg-green-50 shadow-lg hover:shadow-xl transition-all"
-              >
-                <Link href="/admin/salaries/create">
-                  <Plus className="mr-2 h-5 w-5" />
-                  Maosh To'lash
-                </Link>
-              </Button>
+              <PermissionGate resource="salaries" action="CREATE">
+                <Button 
+                  asChild 
+                  size="lg" 
+                  className="bg-white text-green-600 hover:bg-green-50 shadow-lg hover:shadow-xl transition-all"
+                >
+                  <Link href="/admin/salaries/create">
+                    <Plus className="mr-2 h-5 w-5" />
+                    Maosh To'lash
+                  </Link>
+                </Button>
+              </PermissionGate>
             </div>
           </div>
         </div>
@@ -578,12 +581,14 @@ export default async function SalariesPage({
               <p className="text-sm text-muted-foreground mb-4">
                 Tanlangan filtrlar bo'yicha hech qanday to'lov topilmadi
               </p>
-              <Button asChild className="bg-green-600 hover:bg-green-700">
-                <Link href="/admin/salaries/create">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Yangi to'lov qo'shish
-                </Link>
-              </Button>
+              <PermissionGate resource="salaries" action="CREATE">
+                <Button asChild className="bg-green-600 hover:bg-green-700">
+                  <Link href="/admin/salaries/create">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Yangi to'lov qo'shish
+                  </Link>
+                </Button>
+              </PermissionGate>
             </div>
           )}
         </CardContent>

@@ -6,6 +6,7 @@ import { Phone, Mail, Edit, Trash2, ArrowUp, ArrowDown } from 'lucide-react'
 import Link from 'next/link'
 import { deleteContactPerson, toggleContactStatus } from '@/app/actions/contact'
 import { toast } from 'sonner'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 
 type Contact = {
   id: string
@@ -19,6 +20,10 @@ type Contact = {
 }
 
 export function ContactsTable({ contacts }: { contacts: Contact[] }) {
+  const { can } = useAdminPermissions()
+  const canUpdate = can('contacts', 'UPDATE')
+  const canDelete = can('contacts', 'DELETE')
+
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`${name} ni o'chirmoqchimisiz?`)) {
       return
@@ -130,30 +135,36 @@ export function ContactsTable({ contacts }: { contacts: Contact[] }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleToggleStatus(contact.id)}
-            >
-              {contact.isActive ? 'Nofaol qilish' : 'Faol qilish'}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-            >
-              <Link href={`/admin/contacts/${contact.id}/edit`}>
-                <Edit className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-destructive hover:text-destructive"
-              onClick={() => handleDelete(contact.id, contact.fullName)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {canUpdate && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleToggleStatus(contact.id)}
+              >
+                {contact.isActive ? 'Nofaol qilish' : 'Faol qilish'}
+              </Button>
+            )}
+            {canUpdate && (
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+              >
+                <Link href={`/admin/contacts/${contact.id}/edit`}>
+                  <Edit className="h-4 w-4" />
+                </Link>
+              </Button>
+            )}
+            {canDelete && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive"
+                onClick={() => handleDelete(contact.id, contact.fullName)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       ))}

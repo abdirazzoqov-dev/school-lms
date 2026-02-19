@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Users, Plus, UserPlus } from 'lucide-react'
 import Link from 'next/link'
 import { ParentsTable } from './parents-table'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 export const revalidate = 30 // Optimized for faster loads
 export const dynamic = 'auto' // Optimized for better caching
@@ -135,12 +136,14 @@ export default async function ParentsPage({
             O'quvchilarning qarindoshlari va ularning farzandlari haqida ma'lumot
           </p>
         </div>
-        <Link href="/admin/parents/create">
-          <Button className="gap-2">
-            <UserPlus className="h-4 w-4" />
-            Yangi Ota-ona
-          </Button>
-        </Link>
+        <PermissionGate resource="parents" action="CREATE">
+          <Link href="/admin/parents/create">
+            <Button className="gap-2">
+              <UserPlus className="h-4 w-4" />
+              Yangi Ota-ona
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       {/* Statistics Cards */}

@@ -43,6 +43,7 @@ import {
 import { deactivateCook, activateCook, deleteCook } from '@/app/actions/cook'
 import { formatNumber } from '@/lib/utils'
 import Link from 'next/link'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 
 interface Cook {
   id: string
@@ -80,6 +81,9 @@ export function CooksTable({ cooks }: CooksTableProps) {
   const [selectedCook, setSelectedCook] = useState<Cook | null>(null)
   const [actionType, setActionType] = useState<'deactivate' | 'activate' | 'delete' | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const { can } = useAdminPermissions()
+  const canUpdate = can('kitchen', 'UPDATE')
+  const canDelete = can('kitchen', 'DELETE')
 
   const handleAction = async () => {
     if (!selectedCook || !actionType) return
@@ -210,46 +214,54 @@ export function CooksTable({ cooks }: CooksTableProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link href={`/admin/kitchen/cooks/${cook.id}/edit`}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Tahrirlash
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    {cook.user.isActive ? (
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedCook(cook)
-                          setActionType('deactivate')
-                        }}
-                        className="text-orange-600"
-                      >
-                        <UserX className="mr-2 h-4 w-4" />
-                        Deaktiv qilish
-                      </DropdownMenuItem>
-                    ) : (
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedCook(cook)
-                          setActionType('activate')
-                        }}
-                        className="text-green-600"
-                      >
-                        <UserCheck className="mr-2 h-4 w-4" />
-                        Faollashtirish
+                    {canUpdate && (
+                      <DropdownMenuItem asChild>
+                        <Link href={`/admin/kitchen/cooks/${cook.id}/edit`}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Tahrirlash
+                        </Link>
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setSelectedCook(cook)
-                        setActionType('delete')
-                      }}
-                      className="text-red-600"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      O'chirish
-                    </DropdownMenuItem>
+                    {canUpdate && (
+                      <>
+                        <DropdownMenuSeparator />
+                        {cook.user.isActive ? (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedCook(cook)
+                              setActionType('deactivate')
+                            }}
+                            className="text-orange-600"
+                          >
+                            <UserX className="mr-2 h-4 w-4" />
+                            Deaktiv qilish
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedCook(cook)
+                              setActionType('activate')
+                            }}
+                            className="text-green-600"
+                          >
+                            <UserCheck className="mr-2 h-4 w-4" />
+                            Faollashtirish
+                          </DropdownMenuItem>
+                        )}
+                      </>
+                    )}
+                    {canDelete && (
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setSelectedCook(cook)
+                          setActionType('delete')
+                        }}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        O'chirish
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

@@ -13,6 +13,7 @@ import {
 import Link from 'next/link'
 import { formatNumber } from '@/lib/utils'
 import { CategoriesTable } from './categories-table'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 export const revalidate = 60
 export const dynamic = 'auto' // Optimized for better caching
@@ -73,12 +74,14 @@ export default async function KitchenCategoriesPage() {
             </p>
           </div>
         </div>
-        <Link href="/admin/kitchen/categories/create">
-          <Button className="bg-blue-500 hover:bg-blue-600">
-            <Plus className="mr-2 h-4 w-4" />
-            Yangi Tur
-          </Button>
-        </Link>
+        <PermissionGate resource="kitchen" action="CREATE">
+          <Link href="/admin/kitchen/categories/create">
+            <Button className="bg-blue-500 hover:bg-blue-600">
+              <Plus className="mr-2 h-4 w-4" />
+              Yangi Tur
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       {/* Categories Table */}

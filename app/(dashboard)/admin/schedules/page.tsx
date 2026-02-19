@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { getCurrentAcademicYear } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 // Optimized caching
 export const revalidate = 30
@@ -229,12 +230,14 @@ export default async function SchedulesPage({
               Constructor
             </Link>
           </Button>
-          <Button asChild>
-            <Link href="/admin/schedules/create">
-              <Plus className="mr-2 h-4 w-4" />
-              Jadval Qo&apos;shish
-            </Link>
-          </Button>
+          <PermissionGate resource="schedules" action="CREATE">
+            <Button asChild>
+              <Link href="/admin/schedules/create">
+                <Plus className="mr-2 h-4 w-4" />
+                Jadval Qo&apos;shish
+              </Link>
+            </Button>
+          </PermissionGate>
         </div>
       </div>
 

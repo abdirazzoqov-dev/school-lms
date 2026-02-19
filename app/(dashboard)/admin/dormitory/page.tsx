@@ -19,6 +19,7 @@ import {
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { FixRoomsButton } from './fix-rooms-button'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 export const revalidate = 60
 export const dynamic = 'auto' // Optimized for better caching
@@ -136,33 +137,37 @@ export default async function DormitoryDashboardPage() {
 
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Link href="/admin/dormitory/buildings/create">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-indigo-300">
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="p-3 rounded-full bg-indigo-100">
-                <Plus className="h-6 w-6 text-indigo-600" />
-              </div>
-              <div>
-                <p className="font-semibold">Bino Qo'shish</p>
-                <p className="text-sm text-muted-foreground">Yangi yotoqxona binosi</p>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+        <PermissionGate resource="dormitory" action="CREATE">
+          <Link href="/admin/dormitory/buildings/create">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-indigo-300">
+              <CardContent className="flex items-center gap-4 p-6">
+                <div className="p-3 rounded-full bg-indigo-100">
+                  <Plus className="h-6 w-6 text-indigo-600" />
+                </div>
+                <div>
+                  <p className="font-semibold">Bino Qo'shish</p>
+                  <p className="text-sm text-muted-foreground">Yangi yotoqxona binosi</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </PermissionGate>
 
-        <Link href="/admin/dormitory/rooms/create">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-blue-300">
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="p-3 rounded-full bg-blue-100">
-                <Plus className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="font-semibold">Xona Qo'shish</p>
-                <p className="text-sm text-muted-foreground">Yangi xona yaratish</p>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+        <PermissionGate resource="dormitory" action="CREATE">
+          <Link href="/admin/dormitory/rooms/create">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-blue-300">
+              <CardContent className="flex items-center gap-4 p-6">
+                <div className="p-3 rounded-full bg-blue-100">
+                  <Plus className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-semibold">Xona Qo'shish</p>
+                  <p className="text-sm text-muted-foreground">Yangi xona yaratish</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </PermissionGate>
 
         <Link href="/admin/dormitory/assign">
           <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-green-300">

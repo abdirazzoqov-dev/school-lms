@@ -10,6 +10,7 @@ import { AnnouncementList } from '@/components/announcement-list'
 import { DeleteButton } from '@/components/delete-button'
 import { deleteAnnouncement, toggleAnnouncementPin } from '@/app/actions/announcement'
 import { AnnouncementsActions } from './announcements-actions'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 // Optimized caching
 export const revalidate = 30
@@ -54,12 +55,14 @@ export default async function AdminAnnouncementsPage() {
             Maktab e'lonlarini boshqaring
           </p>
         </div>
-        <Link href="/admin/announcements/create">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Yangi E'lon
-          </Button>
-        </Link>
+        <PermissionGate resource="announcements" action="CREATE">
+          <Link href="/admin/announcements/create">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Yangi E'lon
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       {/* Statistics */}

@@ -13,6 +13,7 @@ import {
   ShoppingCart
 } from 'lucide-react'
 import Link from 'next/link'
+import { PermissionGate } from '@/components/admin/permission-gate'
 import { formatNumber } from '@/lib/utils'
 import { ExpensesTable } from './expenses-table'
 
@@ -101,12 +102,14 @@ export default async function KitchenExpensesPage() {
             </p>
           </div>
         </div>
-        <Link href="/admin/kitchen/expenses/create">
-          <Button className="bg-green-500 hover:bg-green-600">
-            <Plus className="mr-2 h-4 w-4" />
-            Xarajat Kiritish
-          </Button>
-        </Link>
+        <PermissionGate resource="kitchen" action="CREATE">
+          <Link href="/admin/kitchen/expenses/create">
+            <Button className="bg-green-500 hover:bg-green-600">
+              <Plus className="mr-2 h-4 w-4" />
+              Xarajat Kiritish
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       {/* Stats */}

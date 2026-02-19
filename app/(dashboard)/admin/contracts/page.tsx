@@ -6,6 +6,7 @@ import { FileText, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ContractsTable } from './contracts-table'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 export const revalidate = 0
 export const dynamic = 'force-dynamic'
@@ -73,12 +74,14 @@ export default async function ContractsPage() {
             Xodimlar, o'qituvchilar va ota-onalar uchun shartnomalarni boshqaring
           </p>
         </div>
-        <Link href="/admin/contracts/create">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Yangi Shartnoma
-          </Button>
-        </Link>
+        <PermissionGate resource="contracts" action="CREATE">
+          <Link href="/admin/contracts/create">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Yangi Shartnoma
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       <ContractsTable contracts={contracts} />

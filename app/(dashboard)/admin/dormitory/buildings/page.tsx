@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Building2, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { BuildingsTable } from './buildings-table'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 export const revalidate = 30 // Optimized for faster loads
 export const dynamic = 'auto' // Optimized for better caching
@@ -54,12 +55,14 @@ export default async function BuildingsPage() {
             Barcha yotoqxona binolarini boshqaring
           </p>
         </div>
-        <Link href="/admin/dormitory/buildings/create">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Yangi Bino
-          </Button>
-        </Link>
+        <PermissionGate resource="dormitory" action="CREATE">
+          <Link href="/admin/dormitory/buildings/create">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Yangi Bino
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       {/* Statistics Cards */}

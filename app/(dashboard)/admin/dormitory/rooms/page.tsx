@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { DoorClosed, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { RoomsTable } from './rooms-table'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 export const revalidate = 30 // Optimized for faster loads
 export const dynamic = 'auto' // Optimized for better caching
@@ -123,12 +124,14 @@ export default async function RoomsPage({
             Barcha xonalar va bo'sh joylar haqida ma'lumot
           </p>
         </div>
-        <Link href="/admin/dormitory/rooms/create">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Yangi Xona
-          </Button>
-        </Link>
+        <PermissionGate resource="dormitory" action="CREATE">
+          <Link href="/admin/dormitory/rooms/create">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Yangi Xona
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       {/* Statistics Cards */}

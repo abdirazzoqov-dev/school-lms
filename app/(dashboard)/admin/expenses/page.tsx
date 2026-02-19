@@ -11,6 +11,7 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { DeleteButton } from '@/components/delete-button'
 import { deleteExpense } from '@/app/actions/expense'
 import { ExpenseFilters } from './expense-filters'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 // Cache for 2 minutes
 export const revalidate = 120
@@ -101,12 +102,14 @@ export default async function ExpensesPage({
               <span className="sm:hidden">Turlar</span>
             </Button>
           </Link>
-          <Link href="/admin/expenses/create" className="flex-1 sm:flex-none">
-            <Button className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
-              Yangi Xarajat
-            </Button>
-          </Link>
+          <PermissionGate resource="expenses" action="CREATE">
+            <Link href="/admin/expenses/create" className="flex-1 sm:flex-none">
+              <Button className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                Yangi Xarajat
+              </Button>
+            </Link>
+          </PermissionGate>
         </div>
       </div>
 
@@ -150,12 +153,14 @@ export default async function ExpensesPage({
             <p className="text-muted-foreground mb-6 text-sm">
               Birinchi xarajatni qo'shing
             </p>
-            <Link href="/admin/expenses/create">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Xarajat Qo'shish
-              </Button>
-            </Link>
+            <PermissionGate resource="expenses" action="CREATE">
+              <Link href="/admin/expenses/create">
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Xarajat Qo'shish
+                </Button>
+              </Link>
+            </PermissionGate>
           </CardContent>
         </Card>
       ) : (
@@ -224,14 +229,16 @@ export default async function ExpensesPage({
                         </div>
                       )}
                     </div>
-                    <DeleteButton
-                      itemId={expense.id}
-                      itemName={expense.category.name}
-                      itemType="material"
-                      onDelete={deleteExpense}
-                      variant="ghost"
-                      size="sm"
-                    />
+                    <PermissionGate resource="expenses" action="DELETE">
+                      <DeleteButton
+                        itemId={expense.id}
+                        itemName={expense.category.name}
+                        itemType="material"
+                        onDelete={deleteExpense}
+                        variant="ghost"
+                        size="sm"
+                      />
+                    </PermissionGate>
                   </div>
                 </CardContent>
               </Card>
@@ -320,14 +327,16 @@ export default async function ExpensesPage({
                           )}
                         </td>
                         <td className="p-3 text-center">
-                          <DeleteButton
-                            itemId={expense.id}
-                            itemName={expense.category.name}
-                            itemType="material"
-                            onDelete={deleteExpense}
-                            variant="ghost"
-                            size="sm"
-                          />
+                          <PermissionGate resource="expenses" action="DELETE">
+                            <DeleteButton
+                              itemId={expense.id}
+                              itemName={expense.category.name}
+                              itemType="material"
+                              onDelete={deleteExpense}
+                              variant="ghost"
+                              size="sm"
+                            />
+                          </PermissionGate>
                         </td>
                       </tr>
                     ))}

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { deleteAnnouncement, toggleAnnouncementPin } from '@/app/actions/announcement'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 
 interface AnnouncementsActionsProps {
   announcement: any
@@ -13,6 +14,9 @@ interface AnnouncementsActionsProps {
 
 export function AnnouncementsActions({ announcement }: AnnouncementsActionsProps) {
   const router = useRouter()
+  const { can } = useAdminPermissions()
+  const canUpdate = can('announcements', 'UPDATE')
+  const canDelete = can('announcements', 'DELETE')
 
   const handlePin = async () => {
     const result = await toggleAnnouncementPin(announcement.id)
@@ -38,32 +42,36 @@ export function AnnouncementsActions({ announcement }: AnnouncementsActionsProps
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handlePin}
-        title={announcement.isPinned ? 'Muhimlikdan chiqarish' : 'Muhim deb belgilash'}
-      >
-        {announcement.isPinned ? (
-          <PinOff className="h-4 w-4" />
-        ) : (
-          <Pin className="h-4 w-4" />
-        )}
-      </Button>
-      
-      <Link href={`/admin/announcements/${announcement.id}/edit`}>
-        <Button variant="ghost" size="sm">
-          <Edit className="h-4 w-4" />
+      {canUpdate && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handlePin}
+          title={announcement.isPinned ? 'Muhimlikdan chiqarish' : 'Muhim deb belgilash'}
+        >
+          {announcement.isPinned ? (
+            <PinOff className="h-4 w-4" />
+          ) : (
+            <Pin className="h-4 w-4" />
+          )}
         </Button>
-      </Link>
-      
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleDelete}
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      )}
+      {canUpdate && (
+        <Link href={`/admin/announcements/${announcement.id}/edit`}>
+          <Button variant="ghost" size="sm">
+            <Edit className="h-4 w-4" />
+          </Button>
+        </Link>
+      )}
+      {canDelete && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleDelete}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      )}
     </>
   )
 }

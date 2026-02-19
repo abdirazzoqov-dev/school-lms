@@ -12,6 +12,7 @@ import { FilterSelect } from '@/components/filter-select'
 import { ClearFilters } from '@/components/clear-filters'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 export const revalidate = 60
 export const dynamic = 'force-dynamic'
@@ -76,12 +77,14 @@ export default async function ClassesPage({
             {academicYear} o'quv yili • {classes.length} ta sinf
           </p>
         </div>
-        <Button asChild className="w-full md:w-auto">
-          <Link href="/admin/classes/create">
-            <Plus className="mr-2 h-4 w-4" />
-            Yangi Sinf
-          </Link>
-        </Button>
+        <PermissionGate resource="classes" action="CREATE">
+          <Button asChild className="w-full md:w-auto">
+            <Link href="/admin/classes/create">
+              <Plus className="mr-2 h-4 w-4" />
+              Yangi Sinf
+            </Link>
+          </Button>
+        </PermissionGate>
       </div>
 
       {/* Search and Filter */}
@@ -220,12 +223,14 @@ export default async function ClassesPage({
             {(searchParams.search || searchParams.gradeLevel) ? (
               <ClearFilters />
             ) : (
-              <Button asChild size="lg">
-                <Link href="/admin/classes/create">
-                  <Plus className="mr-2 h-5 w-5" />
-                  Birinchi sinfni yarating
-                </Link>
-              </Button>
+              <PermissionGate resource="classes" action="CREATE">
+                <Button asChild size="lg">
+                  <Link href="/admin/classes/create">
+                    <Plus className="mr-2 h-5 w-5" />
+                    Birinchi sinfni yarating
+                  </Link>
+                </Button>
+              </PermissionGate>
             )}
           </CardContent>
         </Card>
