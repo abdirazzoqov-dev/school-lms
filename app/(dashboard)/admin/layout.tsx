@@ -7,6 +7,7 @@ import { UserNav } from '@/components/user-nav'
 import { TenantStatusBanner } from '@/components/tenant-status-banner'
 import { GraduationCap } from 'lucide-react'
 import { db } from '@/lib/db'
+import { getUserPermissions, filterNavByPermissions } from '@/lib/permissions'
 
 export default async function AdminLayout({
   children,
@@ -16,8 +17,8 @@ export default async function AdminLayout({
   try {
     const session = await getServerSession(authOptions)
 
-    // Allow both ADMIN and SUPER_ADMIN to access admin panel
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    // Allow ADMIN, SUPER_ADMIN and MODERATOR (staff with limited permissions) to access admin panel
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'MODERATOR')) {
       redirect('/unauthorized')
     }
 
@@ -45,7 +46,16 @@ export default async function AdminLayout({
       currentAvatar = userData?.avatar ?? null
     } catch (e) { /* ignore */ }
 
-  const navItems = [
+  // For MODERATOR (staff), fetch their permissions and filter nav
+  let userPermissions: Record<string, string[]> = {}
+  const isModerator = session.user.role === 'MODERATOR'
+  if (isModerator) {
+    try {
+      userPermissions = await getUserPermissions(session.user.id, session.user.tenantId!)
+    } catch (e) { /* ignore */ }
+  }
+
+  const allNavItems = [
     {
       title: 'Dashboard',
       href: '/admin',
@@ -170,6 +180,11 @@ export default async function AdminLayout({
     },
   ]
 
+  // Filter nav for moderators; admins see everything
+  const navItems = isModerator
+    ? filterNavByPermissions(allNavItems, userPermissions)
+    : allNavItems
+
     return (
       <div className="flex min-h-screen flex-col bg-gradient-to-br from-background via-background to-muted/30">
         <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shadow-sm">
@@ -185,9 +200,15 @@ export default async function AdminLayout({
                   <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                     {platformName}
                   </span>
-                  <span className="hidden sm:inline-flex rounded-full bg-gradient-to-r from-blue-500 to-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-lg shadow-blue-500/30 animate-scale-in">
-                    ADMIN
-                  </span>
+                  {isModerator ? (
+                    <span className="hidden sm:inline-flex rounded-full bg-gradient-to-r from-cyan-500 to-teal-600 px-3 py-1 text-xs font-semibold text-white shadow-lg shadow-cyan-500/30 animate-scale-in">
+                      XODIM
+                    </span>
+                  ) : (
+                    <span className="hidden sm:inline-flex rounded-full bg-gradient-to-r from-blue-500 to-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-lg shadow-blue-500/30 animate-scale-in">
+                      ADMIN
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

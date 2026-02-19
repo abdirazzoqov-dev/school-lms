@@ -50,9 +50,9 @@ export default withAuth(
       // Role-based routing
       const role = token?.role as UserRole
 
-      // Admin routes - SUPER_ADMIN ham kirishi mumkin
+      // Admin routes - SUPER_ADMIN va MODERATOR ham kirishi mumkin
       if (path.startsWith('/admin')) {
-        if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+        if (role !== 'ADMIN' && role !== 'SUPER_ADMIN' && role !== 'MODERATOR') {
           return NextResponse.redirect(new URL('/unauthorized', req.url))
         }
       }

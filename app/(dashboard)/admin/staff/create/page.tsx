@@ -8,11 +8,14 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { createStaff } from '@/app/actions/staff'
+import { saveStaffPermissions } from '@/app/actions/staff-permissions'
 import { uploadAvatar } from '@/app/actions/upload-avatar'
 import { useToast } from '@/components/ui/use-toast'
 import { ArrowLeft, UserPlus, Loader2, Key, Briefcase } from 'lucide-react'
 import Link from 'next/link'
 import { ProfilePhotoUpload } from '@/components/profile-photo-upload'
+import { StaffPermissionMatrix, matrixToPermissionInputs } from '@/components/admin/staff-permission-matrix'
+import type { PermissionMatrix } from '@/components/admin/staff-permission-matrix'
 
 export default function CreateStaffPage() {
   const router = useRouter()
@@ -20,6 +23,7 @@ export default function CreateStaffPage() {
   const [loading, setLoading] = useState(false)
   const [avatarBase64, setAvatarBase64] = useState('')
   const [avatarFileName, setAvatarFileName] = useState('')
+  const [permissions, setPermissions] = useState<PermissionMatrix>({})
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -88,11 +92,18 @@ export default function CreateStaffPage() {
     try {
       const result = await createStaff(formData)
 
-      if (result.success) {
-        // Upload avatar if selected — use result.userId (plain string, safe across server action boundary)
-        if (avatarBase64 && result.userId) {
+      if (result.success && result.userId) {
+        // Upload avatar if selected
+        if (avatarBase64) {
           await uploadAvatar(result.userId, avatarBase64, avatarFileName || 'avatar.jpg')
         }
+
+        // Save permissions
+        const permInputs = matrixToPermissionInputs(permissions)
+        if (permInputs.length > 0) {
+          await saveStaffPermissions(result.userId, permInputs)
+        }
+
         toast({
           title: 'Muvaffaqiyatli!',
           description: result.message,
@@ -101,7 +112,7 @@ export default function CreateStaffPage() {
       } else {
         toast({
           title: 'Xato!',
-          description: result.error,
+          description: (result as any).error,
           variant: 'destructive',
         })
       }
@@ -135,20 +146,19 @@ export default function CreateStaffPage() {
         </Link>
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Yangi Xodim</h2>
-          <p className="text-muted-foreground">Yangi xodim qo'shing</p>
+          <p className="text-muted-foreground">Yangi xodim qo'shing va unga ruxsatlar bering</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* ─── Personal Info ─── */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <UserPlus className="h-5 w-5" />
               Shaxsiy Ma'lumotlar
             </CardTitle>
-            <CardDescription>
-              Xodim haqida asosiy ma'lumotlar
-            </CardDescription>
+            <CardDescription>Xodim haqida asosiy ma'lumotlar</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Profile Photo */}
@@ -264,15 +274,14 @@ export default function CreateStaffPage() {
           </CardContent>
         </Card>
 
+        {/* ─── Login Credentials ─── */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Key className="h-5 w-5" />
               Kirish Ma'lumotlari
             </CardTitle>
-            <CardDescription>
-              Tizimga kirish uchun parol yarating
-            </CardDescription>
+            <CardDescription>Tizimga kirish uchun parol yarating</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -298,6 +307,20 @@ export default function CreateStaffPage() {
           </CardContent>
         </Card>
 
+        {/* ─── Permissions Matrix ─── */}
+        <div>
+          <div className="mb-3">
+            <h3 className="text-xl font-semibold flex items-center gap-2">
+              <Briefcase className="h-5 w-5 text-purple-600" />
+              Panel Ruxsatlari
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Xodim tizimga kirganida qaysi sahifalarda qanday amallar bajara olishini belgilang
+            </p>
+          </div>
+          <StaffPermissionMatrix value={permissions} onChange={setPermissions} />
+        </div>
+
         <div className="flex justify-end gap-4">
           <Link href="/admin/staff">
             <Button type="button" variant="outline">
@@ -316,18 +339,10 @@ export default function CreateStaffPage() {
           <CardTitle className="text-sm">📝 Eslatma</CardTitle>
         </CardHeader>
         <CardContent className="text-sm space-y-2">
-          <p>
-            • Xodim email orqali tizimga kiradi
-          </p>
-          <p>
-            • Parolni xodimga xavfsiz kanal orqali yetkazib bering
-          </p>
-          <p>
-            • Xodim kodi har bir maktabda unique bo'lishi kerak
-          </p>
-          <p>
-            • Oylik maoshni kiritmasangiz, keyinroq qo'shishingiz mumkin
-          </p>
+          <p>• Xodim email orqali tizimga kiradi — admin paneli ochiladi</p>
+          <p>• Faqat ruxsat berilgan sahifalar ko'rinadi</p>
+          <p>• Ko'rish (READ) ruxsati yo'q sahifaga xodim kira olmaydi</p>
+          <p>• Ruxsatlarni keyinroq xodim profilidan o'zgartirishingiz mumkin</p>
         </CardContent>
       </Card>
     </div>

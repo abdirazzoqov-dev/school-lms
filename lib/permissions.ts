@@ -1,198 +1,112 @@
 import { db } from './db'
-import { UserRole } from '@prisma/client'
 
-// Resource types in the system
-export type ResourceType =
-  | 'students'
-  | 'teachers'
-  | 'parents'
-  | 'classes'
-  | 'subjects'
-  | 'schedules'
-  | 'attendance'
-  | 'grades'
-  | 'payments'
-  | 'expenses'
-  | 'kitchen'
-  | 'dormitory'
-  | 'messages'
-  | 'announcements'
-  | 'reports'
-  | 'settings'
+// ============================================================
+// ADMIN RESOURCE DEFINITIONS
+// Each resource maps to a nav page in the admin panel
+// ============================================================
+export const ADMIN_RESOURCES = [
+  { key: 'dashboard',  label: 'Dashboard',          href: '/admin',           icon: 'LayoutDashboard' },
+  { key: 'students',   label: "O'quvchilar",         href: '/admin/students',  icon: 'Users' },
+  { key: 'teachers',   label: "O'qituvchilar",        href: '/admin/teachers',  icon: 'GraduationCap' },
+  { key: 'staff',      label: 'Xodimlar',            href: '/admin/staff',     icon: 'Briefcase' },
+  { key: 'parents',    label: 'Ota-onalar',          href: '/admin/parents',   icon: 'UserCheck' },
+  { key: 'classes',    label: 'Sinflar',             href: '/admin/classes',   icon: 'BookOpen' },
+  { key: 'groups',     label: 'Guruhlar',            href: '/admin/groups',    icon: 'UsersRound' },
+  { key: 'subjects',   label: 'Fanlar',              href: '/admin/subjects',  icon: 'Atom' },
+  { key: 'schedules',  label: 'Dars jadvali',        href: '/admin/schedules', icon: 'Calendar' },
+  { key: 'attendance', label: 'Davomat',             href: '/admin/attendance',icon: 'ClipboardCheck' },
+  { key: 'grades',     label: 'Baholar',             href: '/admin/grades',    icon: 'Award' },
+  { key: 'payments',   label: "To'lovlar",           href: '/admin/payments',  icon: 'DollarSign' },
+  { key: 'salaries',   label: 'Maoshlar',            href: '/admin/salaries',  icon: 'Banknote' },
+  { key: 'expenses',   label: 'Xarajatlar',          href: '/admin/expenses',  icon: 'TrendingDown' },
+  { key: 'meals',      label: 'Ovqatlar Menyusi',    href: '/admin/meals',     icon: 'UtensilsCrossed' },
+  { key: 'kitchen',    label: 'Oshxona Xarajatlar',  href: '/admin/kitchen',   icon: 'Receipt' },
+  { key: 'dormitory',  label: 'Yotoqxona',           href: '/admin/dormitory', icon: 'Home' },
+  { key: 'contracts',  label: 'Shartnomalar',        href: '/admin/contracts', icon: 'FileSignature' },
+  { key: 'messages',   label: 'Xabarlar',            href: '/admin/messages',  icon: 'MessageSquare' },
+  { key: 'reports',    label: 'Hisobotlar',          href: '/admin/reports',   icon: 'BarChart3' },
+  { key: 'contacts',   label: "Ma'sul Xodimlar",     href: '/admin/contacts',  icon: 'UserCog' },
+  { key: 'settings',   label: 'Sozlamalar',          href: '/admin/settings',  icon: 'Settings' },
+] as const
 
-// Action types
-export type ActionType = 'CREATE' | 'READ' | 'UPDATE' | 'DELETE'
+export type ResourceKey = typeof ADMIN_RESOURCES[number]['key']
+export type PermissionAction = 'CREATE' | 'READ' | 'UPDATE' | 'DELETE'
 
-/**
- * Check if user has permission for a specific resource and action
- */
-export async function hasPermission(
-  userId: string,
-  tenantId: string | null,
-  resource: ResourceType,
-  action: ActionType
-): Promise<boolean> {
-  // Super admin has all permissions
-  const user = await db.user.findUnique({
-    where: { id: userId },
-    select: { role: true, tenantId: true },
-  })
+// Map href prefix → resource key (for route-based lookups)
+export const HREF_TO_RESOURCE: Record<string, string> = ADMIN_RESOURCES.reduce(
+  (acc, r) => { acc[r.href] = r.key; return acc },
+  {} as Record<string, string>
+)
 
-  if (!user) return false
-
-  // Super admin always has access
-  if (user.role === 'SUPER_ADMIN') return true
-
-  // Admin has all permissions for their tenant
-  if (user.role === 'ADMIN' && user.tenantId === tenantId) return true
-
-  // Moderator needs explicit permission
-  if (user.role === 'MODERATOR' && tenantId) {
-    const permission = await db.permission.findUnique({
-      where: {
-        userId_tenantId_resource_action: {
-          userId,
-          tenantId,
-          resource,
-          action,
-        },
-      },
-    })
-
-    return !!permission
-  }
-
-  // Other roles have no permissions by default
-  return false
+// Given an href, return the resource key
+export function getResourceFromHref(href?: string): string | null {
+  if (!href) return null
+  const match = ADMIN_RESOURCES.find(r => href === r.href || href.startsWith(r.href + '/'))
+  return match ? match.key : null
 }
 
-/**
- * Get all permissions for a moderator
- */
-export async function getModeratorPermissions(
+// ============================================================
+// SERVER-SIDE: fetch user permissions from DB
+// Returns: { students: ['READ','CREATE'], ... }
+// ============================================================
+export async function getUserPermissions(
   userId: string,
   tenantId: string
-): Promise<Array<{ resource: ResourceType; action: ActionType }>> {
-  const permissions = await db.permission.findMany({
-    where: {
-      userId,
-      tenantId,
-    },
-    select: {
-      resource: true,
-      action: true,
-    },
+): Promise<Record<string, string[]>> {
+  const perms = await db.permission.findMany({
+    where: { userId, tenantId },
+    select: { resource: true, action: true },
   })
-
-  return permissions.map((p) => ({
-    resource: p.resource as ResourceType,
-    action: p.action as ActionType,
-  }))
+  return perms.reduce((acc, p) => {
+    if (!acc[p.resource]) acc[p.resource] = []
+    acc[p.resource].push(p.action)
+    return acc
+  }, {} as Record<string, string[]>)
 }
 
-/**
- * Check if user can access a specific route
- * This is a simplified check for route access
- */
-export async function canAccessRoute(
-  userId: string,
-  tenantId: string | null,
-  route: string
-): Promise<boolean> {
-  const user = await db.user.findUnique({
-    where: { id: userId },
-    select: { role: true, tenantId: true },
-  })
+// ============================================================
+// CHECK: does user have permission?
+// ============================================================
+export function hasPermission(
+  permissions: Record<string, string[]>,
+  resource: string,
+  action: PermissionAction
+): boolean {
+  const actions = permissions[resource] || []
+  return actions.includes(action) || actions.includes('ALL')
+}
 
-  if (!user) return false
+// ============================================================
+// FILTER nav items for MODERATOR users
+// navItem format (compatible with admin layout navItems):
+//   { title, href?, icon, children?: [...] }
+// ============================================================
+export function filterNavByPermissions(
+  navItems: any[],
+  permissions: Record<string, string[]>
+): any[] {
+  const filtered: any[] = []
 
-  // Super admin can access everything
-  if (user.role === 'SUPER_ADMIN') return true
-
-  // Admin can access all admin routes
-  if (user.role === 'ADMIN' && user.tenantId === tenantId) {
-    return route.startsWith('/admin') || route.startsWith('/super-admin')
-  }
-
-  // Moderator needs READ permission for the resource
-  if (user.role === 'MODERATOR' && tenantId) {
-    // Map routes to resources
-    const routeToResource: Record<string, ResourceType> = {
-      '/admin/students': 'students',
-      '/admin/teachers': 'teachers',
-      '/admin/parents': 'parents',
-      '/admin/classes': 'classes',
-      '/admin/subjects': 'subjects',
-      '/admin/schedules': 'schedules',
-      '/admin/attendance': 'attendance',
-      '/admin/grades': 'grades',
-      '/admin/payments': 'payments',
-      '/admin/expenses': 'expenses',
-      '/admin/kitchen': 'kitchen',
-      '/admin/dormitory': 'dormitory',
-      '/admin/messages': 'messages',
-      '/admin/announcements': 'announcements',
-      '/admin/reports': 'reports',
-      '/admin/settings': 'settings',
+  for (const item of navItems) {
+    if (item.children) {
+      // Group item: filter children
+      const visibleChildren = item.children.filter((child: any) => {
+        const resource = getResourceFromHref(child.href)
+        if (!resource) return true // keep items without resource mapping
+        return hasPermission(permissions, resource, 'READ')
+      })
+      if (visibleChildren.length > 0) {
+        filtered.push({ ...item, children: visibleChildren })
+      }
+    } else {
+      const resource = getResourceFromHref(item.href)
+      if (!resource) {
+        filtered.push(item) // keep items without resource mapping (e.g., dashboard)
+      } else if (hasPermission(permissions, resource, 'READ')) {
+        filtered.push(item)
+      }
     }
-
-    // Find matching resource
-    const resource = Object.keys(routeToResource).find((r) => route.startsWith(r))
-    if (!resource) return false
-
-    // Check READ permission
-    return hasPermission(userId, tenantId, routeToResource[resource], 'READ')
   }
 
-  // Teacher, Parent, Cook have their own routes
-  if (user.role === 'TEACHER') return route.startsWith('/teacher')
-  if (user.role === 'PARENT') return route.startsWith('/parent')
-  if (user.role === 'COOK') return route.startsWith('/cook')
-
-  return false
+  return filtered
 }
-
-/**
- * Get accessible routes for moderator
- */
-export async function getAccessibleRoutes(
-  userId: string,
-  tenantId: string
-): Promise<string[]> {
-  const permissions = await getModeratorPermissions(userId, tenantId)
-
-  const resourceToRoute: Record<ResourceType, string> = {
-    students: '/admin/students',
-    teachers: '/admin/teachers',
-    parents: '/admin/parents',
-    classes: '/admin/classes',
-    subjects: '/admin/subjects',
-    schedules: '/admin/schedules',
-    attendance: '/admin/attendance',
-    grades: '/admin/grades',
-    payments: '/admin/payments',
-    expenses: '/admin/expenses',
-    kitchen: '/admin/kitchen',
-    dormitory: '/admin/dormitory',
-    messages: '/admin/messages',
-    announcements: '/admin/announcements',
-    reports: '/admin/reports',
-    settings: '/admin/settings',
-  }
-
-  // Get unique routes that user has READ permission for
-  const routes = new Set<string>()
-  permissions.forEach((perm) => {
-    if (perm.action === 'READ' && resourceToRoute[perm.resource]) {
-      routes.add(resourceToRoute[perm.resource])
-    }
-  })
-
-  // Dashboard is always accessible if user has any permission
-  if (routes.size > 0) {
-    routes.add('/admin')
-  }
-
-  return Array.from(routes)
-}
-

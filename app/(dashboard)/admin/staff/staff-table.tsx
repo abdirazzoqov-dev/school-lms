@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Eye, Pencil, MoreVertical, Trash2, UserX, TrendingUp, DollarSign } from 'lucide-react'
+import { Eye, Pencil, MoreVertical, Trash2, UserX, TrendingUp, DollarSign, ShieldCheck } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ResponsiveTableWrapper } from '@/components/responsive-table-wrapper'
 import { deleteStaff } from '@/app/actions/staff'
@@ -211,6 +211,15 @@ export function StaffTable({ staff }: { staff: Staff[] }) {
                           <span>Tahrirlash</span>
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link 
+                          href={`/admin/staff/${member.id}`}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <ShieldCheck className="h-4 w-4 text-purple-600" />
+                          <span>Ruxsatlar</span>
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem 
                         className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
@@ -310,6 +319,15 @@ export function StaffTable({ staff }: { staff: Staff[] }) {
                       >
                         <Pencil className="h-4 w-4 text-indigo-600" />
                         <span>Tahrirlash</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link 
+                        href={`/admin/staff/${member.id}`}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <ShieldCheck className="h-4 w-4 text-purple-600" />
+                        <span>Ruxsatlar</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />

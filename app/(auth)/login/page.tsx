@@ -51,6 +51,9 @@ export default function LoginPage() {
         case 'ADMIN':
           router.replace('/admin')
           break
+        case 'MODERATOR':
+          router.replace('/admin')
+          break
         case 'TEACHER':
           router.replace('/teacher')
           break

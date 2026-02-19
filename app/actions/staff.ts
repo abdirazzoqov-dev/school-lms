@@ -46,14 +46,14 @@ export async function createStaff(data: StaffFormData) {
     // Hash password
     const hashedPassword = await hashPassword(validatedData.password || 'Staff123!')
 
-    // Create user
+    // Create user — role MODERATOR so they access /admin with restricted permissions
     const user = await db.user.create({
       data: {
         email: validatedData.email,
         fullName: validatedData.fullName,
         phone: validatedData.phone,
         passwordHash: hashedPassword,
-        role: 'ADMIN', // Or create new STAFF role if needed
+        role: 'MODERATOR',
         tenantId,
         isActive: true,
       }
