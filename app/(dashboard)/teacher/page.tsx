@@ -37,8 +37,13 @@ export default async function TeacherDashboard() {
       )
     }
 
-    // Get ALL teacher's schedules first to debug
-    const allTeacherSchedules = await db.schedule.findMany({
+    const today = new Date()
+    const dayOfWeek = today.getDay() // 0-6, Sunday-Saturday
+    // Convert JavaScript day (0-6, Sun-Sat) to database day (1-7, Mon-Sun)
+    const dbDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek
+
+    // Get ALL teacher's class schedules
+    const allClassSchedules = await db.schedule.findMany({
       where: {
         tenantId,
         teacherId: teacher.id,
@@ -46,38 +51,60 @@ export default async function TeacherDashboard() {
       },
       include: {
         class: {
-          include: {
-            _count: {
-              select: { students: true }
-            }
-          }
+          include: { _count: { select: { students: true } } }
         },
         subject: true
       },
       orderBy: { startTime: 'asc' }
     })
 
-    // Get today's schedule from constructor
-    const today = new Date()
-    const dayOfWeek = today.getDay() // 0-6, Sunday-Saturday
-    
-    // Convert JavaScript day (0-6, Sun-Sat) to database day (1-7, Mon-Sun)
-    const dbDayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek
+    // Get ALL teacher's group schedules
+    const allGroupSchedules = await db.groupSchedule.findMany({
+      where: {
+        tenantId,
+        teacherId: teacher.id,
+      },
+      include: {
+        group: {
+          include: { _count: { select: { students: true } } }
+        },
+        subject: true
+      },
+      orderBy: { startTime: 'asc' }
+    })
 
-    const todaySchedule = allTeacherSchedules.filter(s => s.dayOfWeek === dbDayOfWeek)
+    // Today's schedules combined
+    const todayClassSchedules = allClassSchedules.filter(s => s.dayOfWeek === dbDayOfWeek)
+    const todayGroupSchedules = allGroupSchedules.filter(s => s.dayOfWeek === dbDayOfWeek)
 
-    // Get quick stats - fetch all schedules to count unique classes and subjects
-    const totalClasses = new Set(allTeacherSchedules.map(s => s.classId)).size
-    const totalSubjects = new Set(allTeacherSchedules.map(s => s.subjectId)).size
+    // Quick stats
+    const totalClasses = new Set(allClassSchedules.map(s => s.classId)).size
+    const totalGroups = new Set(allGroupSchedules.map(s => s.groupId)).size
+    const totalSubjects = new Set([
+      ...allClassSchedules.map(s => s.subjectId),
+      ...allGroupSchedules.map(s => s.subjectId)
+    ]).size
 
-    // Days of week
     const daysOfWeek = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba']
     const todayName = daysOfWeek[dayOfWeek]
 
-    // Filter out schedules with null subject for lesson reminder
-    const validSchedules = todaySchedule.filter((s): s is typeof s & { subject: NonNullable<typeof s.subject>; subjectId: string } => 
-      s.subject !== null && s.subjectId !== null
+    // Filter valid class schedules (with subject) for lesson reminder
+    const validClassSchedules = todayClassSchedules.filter(
+      (s): s is typeof s & { subject: NonNullable<typeof s.subject>; subjectId: string } =>
+        s.subject !== null && s.subjectId !== null
     )
+
+    // Filter valid group schedules (with subject)
+    const validGroupSchedules = todayGroupSchedules.filter(
+      (s): s is typeof s & { subject: NonNullable<typeof s.subject>; subjectId: string } =>
+        s.subject !== null && s.subjectId !== null
+    )
+
+    // Combine all today's schedules with source marker
+    const combinedTodaySchedules = [
+      ...validClassSchedules.map(s => ({ ...s, scheduleSource: 'CLASS' as const })),
+      ...validGroupSchedules.map(s => ({ ...s, scheduleSource: 'GROUP' as const })),
+    ].sort((a, b) => a.startTime.localeCompare(b.startTime))
 
     return (
       <div className="space-y-6 animate-fade-in">
@@ -100,8 +127,13 @@ export default async function TeacherDashboard() {
                   <Users className="h-6 w-6" />
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-blue-600">{totalClasses}</div>
-                  <p className="text-sm text-muted-foreground font-medium">Sinflar</p>
+                  <div className="text-3xl font-bold text-blue-600">{totalClasses + totalGroups}</div>
+                  <p className="text-sm text-muted-foreground font-medium">
+                    Sinflar/Guruhlar
+                    {totalGroups > 0 && (
+                      <span className="ml-1 text-purple-600 text-xs">({totalGroups} guruh)</span>
+                    )}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -128,7 +160,7 @@ export default async function TeacherDashboard() {
                   <Calendar className="h-6 w-6" />
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-green-600">{todaySchedule.length}</div>
+                  <div className="text-3xl font-bold text-green-600">{combinedTodaySchedules.length}</div>
                   <p className="text-sm text-muted-foreground font-medium">Bugungi darslar</p>
                 </div>
               </div>
@@ -136,8 +168,8 @@ export default async function TeacherDashboard() {
           </Card>
         </div>
 
-        {/* Lesson Reminder - Show 5-10 minutes before lesson (after Quick Stats) */}
-        <LessonReminder schedules={validSchedules} />
+        {/* Lesson Reminder - Show 5-10 minutes before lesson */}
+        <LessonReminder schedules={validClassSchedules} />
 
         {/* Today's Schedule */}
         <div className="space-y-4">
@@ -156,8 +188,8 @@ export default async function TeacherDashboard() {
             </Link>
           </div>
 
-          {validSchedules.length > 0 ? (
-            <TodayLessons schedules={validSchedules} />
+          {combinedTodaySchedules.length > 0 ? (
+            <TodayLessons schedules={combinedTodaySchedules} />
           ) : (
             <Card className="border-dashed border-2">
               <CardContent className="flex flex-col items-center justify-center py-16 text-center">

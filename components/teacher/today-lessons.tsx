@@ -7,22 +7,29 @@ import { Button } from '@/components/ui/button'
 import { Users, BookOpen, Clock, MapPin, ArrowRight, CheckCircle2, PlayCircle } from 'lucide-react'
 import Link from 'next/link'
 
+// Unified schedule type - supports both class and group schedules
 interface LessonSchedule {
   id: string
   startTime: string
   endTime: string
-  roomNumber: string | null
-  classId: string
-  subjectId: string
-  class: {
+  roomNumber?: string | null
+  scheduleSource: 'CLASS' | 'GROUP'
+  // Class-specific
+  classId?: string
+  subjectId?: string | null
+  class?: {
     name: string
-    _count: {
-      students: number
-    }
-  }
-  subject: {
+    _count: { students: number }
+  } | null
+  // Group-specific
+  groupId?: string | null
+  group?: {
     name: string
-  }
+    _count: { students: number }
+  } | null
+  subject?: {
+    name: string
+  } | null
 }
 
 interface TodayLessonsProps {
@@ -44,7 +51,6 @@ export function TodayLessons({ schedules }: TodayLessonsProps) {
     const interval = setInterval(() => {
       setCurrentTime(new Date())
     }, 1000)
-
     return () => clearInterval(interval)
   }, [])
 
@@ -83,12 +89,11 @@ export function TodayLessons({ schedules }: TodayLessonsProps) {
   const getTimeRemaining = (startTime: string): TimeRemaining | null => {
     const now = currentTime
     const [hours, minutes] = startTime.split(':').map(Number)
-    
+
     const targetTime = new Date()
     targetTime.setHours(hours, minutes, 0, 0)
 
     const diff = targetTime.getTime() - now.getTime()
-    
     if (diff <= 0) return null
 
     const totalSeconds = Math.floor(diff / 1000)
@@ -102,9 +107,7 @@ export function TodayLessons({ schedules }: TodayLessonsProps) {
   const now = currentTime.getHours() * 60 + currentTime.getMinutes()
   const nextLessonIndex = schedules.findIndex(s => parseTime(s.startTime) > now)
 
-  if (schedules.length === 0) {
-    return null
-  }
+  if (schedules.length === 0) return null
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -114,12 +117,26 @@ export function TodayLessons({ schedules }: TodayLessonsProps) {
         const isNextLesson = index === nextLessonIndex
         const timeRemaining = status === 'upcoming' ? getTimeRemaining(schedule.startTime) : null
 
+        const isGroup = schedule.scheduleSource === 'GROUP'
+        const entityName = isGroup
+          ? (schedule.group?.name || 'Guruh')
+          : (schedule.class?.name || 'Sinf')
+        const studentCount = isGroup
+          ? (schedule.group?._count?.students || 0)
+          : (schedule.class?._count?.students || 0)
+
+        // Build the correct href
+        const entityId = isGroup ? schedule.groupId : schedule.classId
+        const href = entityId
+          ? `${isGroup ? '/teacher/groups' : '/teacher/classes'}/${entityId}?subjectId=${schedule.subjectId || ''}&startTime=${schedule.startTime}&endTime=${schedule.endTime}`
+          : '#'
+
         return (
-          <Card 
+          <Card
             key={schedule.id}
             className={`group relative overflow-hidden transition-all duration-300 ${
-              isNextLesson 
-                ? 'ring-2 ring-blue-500 shadow-xl shadow-blue-500/20' 
+              isNextLesson
+                ? 'ring-2 ring-blue-500 shadow-xl shadow-blue-500/20'
                 : status === 'current'
                 ? 'ring-2 ring-green-500 shadow-xl shadow-green-500/20'
                 : status === 'completed'
@@ -135,9 +152,10 @@ export function TodayLessons({ schedules }: TodayLessonsProps) {
                 ? 'bg-gradient-to-r from-green-500 to-emerald-500'
                 : isNextLesson
                 ? 'bg-gradient-to-r from-blue-500 to-indigo-500'
+                : isGroup
+                ? 'bg-gradient-to-r from-fuchsia-500 to-purple-600'
                 : 'bg-gradient-to-r from-purple-500 to-pink-500'
             }`}>
-              {/* Lesson Number */}
               <div className="flex items-center gap-3">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-2xl ${
                   status === 'completed'
@@ -157,19 +175,25 @@ export function TodayLessons({ schedules }: TodayLessonsProps) {
                 </div>
               </div>
 
-              {/* Status Badge */}
-              {status === 'current' && (
-                <Badge className="bg-white/20 backdrop-blur-md text-white border-white/30">
-                  <PlayCircle className="h-3 w-3 mr-1 animate-pulse" />
-                  Hozir
-                </Badge>
-              )}
-              {status === 'completed' && (
-                <Badge variant="secondary" className="bg-gray-200 text-gray-600">
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                  Tugadi
-                </Badge>
-              )}
+              <div className="flex flex-col items-end gap-1">
+                {status === 'current' && (
+                  <Badge className="bg-white/20 backdrop-blur-md text-white border-white/30">
+                    <PlayCircle className="h-3 w-3 mr-1 animate-pulse" />
+                    Hozir
+                  </Badge>
+                )}
+                {status === 'completed' && (
+                  <Badge variant="secondary" className="bg-gray-200 text-gray-600">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Tugadi
+                  </Badge>
+                )}
+                {isGroup && (
+                  <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 text-[10px]">
+                    Guruh
+                  </Badge>
+                )}
+              </div>
             </div>
 
             <CardContent className="p-6 space-y-4">
@@ -180,44 +204,31 @@ export function TodayLessons({ schedules }: TodayLessonsProps) {
                     Keyingi Dars Boshlanishiga
                   </p>
                   <div className="flex items-center justify-center gap-2">
-                    {/* Hours */}
                     <div className="flex flex-col items-center">
                       <div className="w-16 h-16 rounded-lg bg-blue-500 text-white flex items-center justify-center shadow-lg">
                         <span className="text-2xl font-bold tabular-nums">
                           {String(timeRemaining.hours).padStart(2, '0')}
                         </span>
                       </div>
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mt-1">
-                        soat
-                      </span>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mt-1">soat</span>
                     </div>
-
                     <span className="text-2xl font-bold text-gray-400 pb-5">:</span>
-
-                    {/* Minutes */}
                     <div className="flex flex-col items-center">
                       <div className="w-16 h-16 rounded-lg bg-blue-500 text-white flex items-center justify-center shadow-lg">
                         <span className="text-2xl font-bold tabular-nums">
                           {String(timeRemaining.minutes).padStart(2, '0')}
                         </span>
                       </div>
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mt-1">
-                        daqiqa
-                      </span>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mt-1">daqiqa</span>
                     </div>
-
                     <span className="text-2xl font-bold text-gray-400 pb-5">:</span>
-
-                    {/* Seconds */}
                     <div className="flex flex-col items-center">
                       <div className="w-16 h-16 rounded-lg bg-blue-500 text-white flex items-center justify-center shadow-lg animate-pulse">
                         <span className="text-2xl font-bold tabular-nums">
                           {String(timeRemaining.seconds).padStart(2, '0')}
                         </span>
                       </div>
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mt-1">
-                        soniya
-                      </span>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mt-1">soniya</span>
                     </div>
                   </div>
                 </div>
@@ -241,30 +252,33 @@ export function TodayLessons({ schedules }: TodayLessonsProps) {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <BookOpen className="h-4 w-4 text-indigo-600" />
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Fan
-                  </span>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Fan</span>
                 </div>
                 <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                   {schedule.subject?.name || 'Fan nomi yo\'q'}
                 </p>
               </div>
 
-              {/* Class */}
+              {/* Class / Group */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <Users className="h-4 w-4 text-blue-600" />
                   <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    Sinf
+                    {isGroup ? 'Guruh' : 'Sinf'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <p className="text-base font-bold text-gray-900 dark:text-gray-100">
-                    {schedule.class?.name || 'Sinf yo\'q'}
-                  </p>
-                  <Badge variant="secondary">
-                    {schedule.class?._count.students || 0} ta
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <p className="text-base font-bold text-gray-900 dark:text-gray-100">
+                      {entityName}
+                    </p>
+                    {isGroup && (
+                      <Badge className="bg-purple-100 text-purple-700 text-[10px] px-1.5 py-0">
+                        Guruh
+                      </Badge>
+                    )}
+                  </div>
+                  <Badge variant="secondary">{studentCount} ta</Badge>
                 </div>
               </div>
 
@@ -279,17 +293,17 @@ export function TodayLessons({ schedules }: TodayLessonsProps) {
               )}
 
               {/* Action Button */}
-              <Link 
-                href={`/teacher/classes/${schedule.classId}?subjectId=${schedule.subjectId}&startTime=${schedule.startTime}&endTime=${schedule.endTime}`}
-              >
-                <Button 
+              <Link href={href}>
+                <Button
                   className={`w-full ${
-                    status === 'current' 
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600' 
+                    status === 'current'
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600'
                       : status === 'completed'
                       ? 'bg-gray-400 hover:bg-gray-500 cursor-not-allowed'
                       : isNextLesson
                       ? 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
+                      : isGroup
+                      ? 'bg-gradient-to-r from-fuchsia-500 to-purple-600 hover:from-fuchsia-600 hover:to-purple-700'
                       : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600'
                   } text-white shadow-lg`}
                   disabled={status === 'completed'}

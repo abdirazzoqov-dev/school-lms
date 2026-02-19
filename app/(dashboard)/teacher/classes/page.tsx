@@ -5,6 +5,9 @@ import { db } from '@/lib/db'
 import { getCurrentAcademicYear } from '@/lib/utils'
 import { TeacherClassesClient } from './teacher-classes-client'
 
+export const revalidate = 0
+export const dynamic = 'force-dynamic'
+
 export default async function TeacherClassesPage() {
   const session = await getServerSession(authOptions)
 
@@ -23,8 +26,8 @@ export default async function TeacherClassesPage() {
     return <div>O'qituvchi ma'lumotlari topilmadi</div>
   }
 
-  // Fetch schedules from constructor
-  const schedules = await db.schedule.findMany({
+  // Fetch class schedules from constructor
+  const classSchedules = await db.schedule.findMany({
     where: {
       tenantId,
       teacherId: teacher.id,
@@ -34,26 +37,38 @@ export default async function TeacherClassesPage() {
     include: {
       class: {
         include: {
-          _count: {
-            select: {
-              students: true
-            }
-          }
+          _count: { select: { students: true } }
         }
       },
       subject: true
     },
-    orderBy: [
-      { dayOfWeek: 'asc' },
-      { startTime: 'asc' }
-    ]
+    orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }]
   })
 
-  // Group schedules by class
+  // Fetch group schedules
+  const groupSchedules = await db.groupSchedule.findMany({
+    where: {
+      tenantId,
+      teacherId: teacher.id,
+      type: 'LESSON'
+    },
+    include: {
+      group: {
+        include: {
+          _count: { select: { students: true } }
+        }
+      },
+      subject: true
+    },
+    orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }]
+  })
+
+  // Group class schedules by classId
   const classByIdMap = new Map<string, {
-    classId: string
-    className: string
+    id: string
+    name: string
     studentCount: number
+    type: 'CLASS'
     schedules: Array<{
       id: string
       subjectId: string
@@ -65,18 +80,17 @@ export default async function TeacherClassesPage() {
     }>
   }>()
 
-  schedules.forEach(schedule => {
+  classSchedules.forEach(schedule => {
     const classId = schedule.class.id
-    
     if (!classByIdMap.has(classId)) {
       classByIdMap.set(classId, {
-        classId,
-        className: schedule.class.name,
+        id: classId,
+        name: schedule.class.name,
         studentCount: schedule.class._count.students,
+        type: 'CLASS',
         schedules: []
       })
     }
-
     classByIdMap.get(classId)!.schedules.push({
       id: schedule.id,
       subjectId: schedule.subject?.id || '',
@@ -88,7 +102,48 @@ export default async function TeacherClassesPage() {
     })
   })
 
-  const classes = Array.from(classByIdMap.values())
+  // Group group schedules by groupId
+  const groupByIdMap = new Map<string, {
+    id: string
+    name: string
+    studentCount: number
+    type: 'GROUP'
+    schedules: Array<{
+      id: string
+      subjectId: string
+      subjectName: string
+      dayOfWeek: number
+      startTime: string
+      endTime: string
+      roomNumber: string | null
+    }>
+  }>()
 
-  return <TeacherClassesClient classes={classes} />
+  groupSchedules.forEach(schedule => {
+    if (!schedule.group) return
+    const groupId = schedule.group.id
+    if (!groupByIdMap.has(groupId)) {
+      groupByIdMap.set(groupId, {
+        id: groupId,
+        name: schedule.group.name,
+        studentCount: schedule.group._count.students,
+        type: 'GROUP',
+        schedules: []
+      })
+    }
+    groupByIdMap.get(groupId)!.schedules.push({
+      id: schedule.id,
+      subjectId: schedule.subject?.id || '',
+      subjectName: schedule.subject?.name || 'Fan nomi yo\'q',
+      dayOfWeek: schedule.dayOfWeek,
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
+      roomNumber: schedule.roomNumber
+    })
+  })
+
+  const classes = Array.from(classByIdMap.values())
+  const groups = Array.from(groupByIdMap.values())
+
+  return <TeacherClassesClient classes={classes} groups={groups} />
 }

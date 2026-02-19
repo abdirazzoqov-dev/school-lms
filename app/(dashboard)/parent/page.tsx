@@ -32,7 +32,8 @@ export default async function ParentDashboard() {
                   fullName: true
                 }
               },
-              class: true
+              class: true,
+              group: { select: { id: true, name: true } }
             }
           }
         }
@@ -180,7 +181,11 @@ export default async function ParentDashboard() {
                       {student.user?.fullName}
                     </CardTitle>
                     <p className="text-sm font-medium text-muted-foreground mt-1">
-                      {student.class?.name || 'Sinf biriktirilmagan'}
+                      {student.class?.name
+                        ? student.group?.name
+                          ? `${student.class.name} • ${student.group.name}`
+                          : student.class.name
+                        : student.group?.name || 'Sinf biriktirilmagan'}
                     </p>
                   </div>
                   <div className="p-2 rounded-full bg-green-100 group-hover:bg-green-200 transition-colors">
