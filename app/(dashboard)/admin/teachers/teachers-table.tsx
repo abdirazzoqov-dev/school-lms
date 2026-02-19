@@ -46,9 +46,11 @@ interface Teacher {
 export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const { can } = useAdminPermissions()
+  const canRead = can('teachers', 'READ')
   const canCreate = can('teachers', 'CREATE')
   const canUpdate = can('teachers', 'UPDATE')
   const canDelete = can('teachers', 'DELETE')
+  const canBulkAction = canRead || canUpdate || canDelete
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -88,13 +90,15 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
         <table className="w-full min-w-max table-fixed">
           <thead className="border-b-2 bg-gradient-to-r from-purple-50 via-pink-50 to-red-50 dark:from-purple-950/30 dark:via-pink-950/30 dark:to-red-950/30">
             <tr>
-              <th className="p-3 text-left w-12">
-                <Checkbox
-                  checked={selectedIds.length === teachers.length && teachers.length > 0}
-                  onCheckedChange={handleSelectAll}
-                  className="data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
-                />
-              </th>
+              {canBulkAction && (
+                <th className="p-3 text-left w-12">
+                  <Checkbox
+                    checked={selectedIds.length === teachers.length && teachers.length > 0}
+                    onCheckedChange={handleSelectAll}
+                    className="data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                  />
+                </th>
+              )}
               <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[250px]">O'qituvchi</th>
               <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[150px]">Kodi</th>
               <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[150px]">Mutaxassislik</th>
@@ -110,13 +114,15 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
                 className="hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-950/20 dark:hover:to-pink-950/20 transition-all duration-200"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <td className="p-3">
-                  <Checkbox
-                    checked={selectedIds.includes(teacher.id)}
-                    onCheckedChange={(checked) => handleSelectOne(teacher.id, checked as boolean)}
-                    className="data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
-                  />
-                </td>
+                {canBulkAction && (
+                  <td className="p-3">
+                    <Checkbox
+                      checked={selectedIds.includes(teacher.id)}
+                      onCheckedChange={(checked) => handleSelectOne(teacher.id, checked as boolean)}
+                      className="data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                    />
+                  </td>
+                )}
                 <td className="p-3">
                   <div className="flex items-center gap-2">
                     <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 shadow-lg border-2 border-white">
@@ -297,11 +303,13 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
             <div className="p-4 space-y-4">
               {/* Header */}
               <div className="flex items-start gap-3">
-                <Checkbox
-                  checked={selectedIds.includes(teacher.id)}
-                  onCheckedChange={(checked) => handleSelectOne(teacher.id, checked as boolean)}
-                  className="mt-2 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
-                />
+                {canBulkAction && (
+                  <Checkbox
+                    checked={selectedIds.includes(teacher.id)}
+                    onCheckedChange={(checked) => handleSelectOne(teacher.id, checked as boolean)}
+                    className="mt-2 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                  />
+                )}
                 <div className="w-12 h-12 rounded-full overflow-hidden shadow-lg shrink-0 border-2 border-white">
                   {teacher.user.avatar ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -457,10 +465,10 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
       <BulkActionsToolbar
         selectedCount={selectedIds.length}
         onClearSelection={() => setSelectedIds([])}
-        onExport={handleExport}
-        onDelete={handleBulkDelete}
-        onStatusChange={handleBulkDeactivate}
-        statusOptions={[]}
+        onExport={canRead ? handleExport : undefined}
+        onDelete={canDelete ? handleBulkDelete : undefined}
+        onStatusChange={canUpdate ? handleBulkDeactivate : undefined}
+        statusOptions={canUpdate ? [] : undefined}
         entityName="o'qituvchi"
       />
     </>

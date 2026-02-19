@@ -15,6 +15,7 @@ import { AddPartialPaymentModal } from '@/components/add-partial-payment-modal'
 import { ResponsiveTableWrapper } from '@/components/responsive-table-wrapper'
 import { Card, CardContent } from '@/components/ui/card'
 import { useToast } from '@/components/ui/use-toast'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 import {
   Collapsible,
   CollapsibleContent,
@@ -57,6 +58,12 @@ interface Payment {
 export function PaymentsTable({ payments }: { payments: Payment[] }) {
   const router = useRouter()
   const { toast } = useToast()
+  const { can } = useAdminPermissions()
+  const canRead = can('payments', 'READ')
+  const canCreate = can('payments', 'CREATE')
+  const canUpdate = can('payments', 'UPDATE')
+  const canDelete = can('payments', 'DELETE')
+  const canBulkAction = canRead || canUpdate || canDelete
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [expandedPayments, setExpandedPayments] = useState<Set<string>>(new Set())
   const [partialPaymentModal, setPartialPaymentModal] = useState<{
@@ -232,12 +239,14 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
         <table className="w-full">
           <thead className="border-b bg-muted/50">
             <tr>
-              <th className="p-4 text-left w-12">
-                <Checkbox
-                  checked={selectedIds.length === payments.length && payments.length > 0}
-                  onCheckedChange={handleSelectAll}
-                />
-              </th>
+              {canBulkAction && (
+                <th className="p-4 text-left w-12">
+                  <Checkbox
+                    checked={selectedIds.length === payments.length && payments.length > 0}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </th>
+              )}
               <th className="p-4 text-left text-sm font-medium w-[140px]">Invoice</th>
               <th className="p-4 text-left text-sm font-medium w-[180px]">O'quvchi</th>
               <th className="p-4 text-left text-sm font-medium w-[140px]">Summasi</th>
@@ -253,12 +262,14 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
               
               return (
                 <tr key={payment.id} className="hover:bg-muted/50">
-                  <td className="p-4">
-                    <Checkbox
-                      checked={selectedIds.includes(payment.id)}
-                      onCheckedChange={(checked) => handleSelectOne(payment.id, checked as boolean)}
-                    />
-                  </td>
+                  {canBulkAction && (
+                    <td className="p-4">
+                      <Checkbox
+                        checked={selectedIds.includes(payment.id)}
+                        onCheckedChange={(checked) => handleSelectOne(payment.id, checked as boolean)}
+                      />
+                    </td>
+                  )}
                   <td className="p-4">
                     <code className="text-sm">{payment.invoiceNumber}</code>
                   </td>
@@ -329,7 +340,7 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                       )}
                       
                       {/* Add Payment Button */}
-                      {progress.percentage < 100 && (
+                      {canCreate && progress.percentage < 100 && (
                         <Button 
                           variant="default" 
                           size="sm"
@@ -486,11 +497,13 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
               {/* Header with checkbox and status - Compact */}
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-start gap-2">
-                  <Checkbox
-                    checked={selectedIds.includes(payment.id)}
-                    onCheckedChange={(checked) => handleSelectOne(payment.id, checked as boolean)}
-                    className="mt-0.5"
-                  />
+                  {canBulkAction && (
+                    <Checkbox
+                      checked={selectedIds.includes(payment.id)}
+                      onCheckedChange={(checked) => handleSelectOne(payment.id, checked as boolean)}
+                      className="mt-0.5"
+                    />
+                  )}
                   <div className="flex-1">
                     <code className="text-[10px] sm:text-xs bg-white/80 backdrop-blur-sm px-2 py-1 rounded border font-mono font-semibold">
                       {payment.invoiceNumber}
@@ -588,7 +601,7 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
               </div>
 
               {/* Payment Button - Responsive */}
-              {progress.percentage < 100 && (
+              {canCreate && progress.percentage < 100 && (
                 <Button 
                   variant="default" 
                   size="lg"
@@ -724,10 +737,10 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
       <BulkActionsToolbar
         selectedCount={selectedIds.length}
         onClearSelection={() => setSelectedIds([])}
-        onExport={handleExport}
-        onDelete={handleBulkDelete}
-        onStatusChange={handleBulkStatusChange}
-        statusOptions={statusOptions}
+        onExport={canRead ? handleExport : undefined}
+        onDelete={canDelete ? handleBulkDelete : undefined}
+        onStatusChange={canUpdate ? handleBulkStatusChange : undefined}
+        statusOptions={canUpdate ? statusOptions : undefined}
         entityName="to'lov"
       />
 

@@ -54,9 +54,12 @@ interface Student {
 export function StudentsTable({ students }: { students: Student[] }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const { can } = useAdminPermissions()
+  const canRead = can('students', 'READ')
   const canCreate = can('students', 'CREATE')
   const canUpdate = can('students', 'UPDATE')
   const canDelete = can('students', 'DELETE')
+  // Checkbox shows only when at least one bulk action is available
+  const canBulkAction = canRead || canUpdate || canDelete
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -113,13 +116,15 @@ export function StudentsTable({ students }: { students: Student[] }) {
           <table className="w-full min-w-max table-fixed">
             <thead className="border-b-2 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-purple-950/30">
               <tr>
-                <th className="p-3 text-left w-12">
-                  <Checkbox
-                    checked={selectedIds.length === students.length && students.length > 0}
-                    onCheckedChange={handleSelectAll}
-                    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                  />
-                </th>
+                {canBulkAction && (
+                  <th className="p-3 text-left w-12">
+                    <Checkbox
+                      checked={selectedIds.length === students.length && students.length > 0}
+                      onCheckedChange={handleSelectAll}
+                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                    />
+                  </th>
+                )}
                 <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[250px]">O'quvchi</th>
                 <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[150px]">Kodi</th>
                 <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[100px]">Sinf</th>
@@ -135,13 +140,15 @@ export function StudentsTable({ students }: { students: Student[] }) {
                   className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-950/20 dark:hover:to-indigo-950/20 transition-all duration-200"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <td className="p-3">
-                    <Checkbox
-                      checked={selectedIds.includes(student.id)}
-                      onCheckedChange={(checked) => handleSelectOne(student.id, checked as boolean)}
-                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                    />
-                  </td>
+                  {canBulkAction && (
+                    <td className="p-3">
+                      <Checkbox
+                        checked={selectedIds.includes(student.id)}
+                        onCheckedChange={(checked) => handleSelectOne(student.id, checked as boolean)}
+                        className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                      />
+                    </td>
+                  )}
                   <td className="p-3">
                     <div className="flex items-center gap-2">
                       <div className="w-9 h-9 rounded-full overflow-hidden shadow-lg shrink-0 relative">
@@ -345,11 +352,13 @@ export function StudentsTable({ students }: { students: Student[] }) {
             <div className="p-4 space-y-4">
               {/* Header with Avatar, Name and Actions */}
               <div className="flex items-start gap-3">
-                <Checkbox
-                  checked={selectedIds.includes(student.id)}
-                  onCheckedChange={(checked) => handleSelectOne(student.id, checked as boolean)}
-                  className="mt-2 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                />
+                {canBulkAction && (
+                  <Checkbox
+                    checked={selectedIds.includes(student.id)}
+                    onCheckedChange={(checked) => handleSelectOne(student.id, checked as boolean)}
+                    className="mt-2 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                  />
+                )}
                 <div className="w-12 h-12 rounded-full overflow-hidden shadow-lg shrink-0 relative">
                   {student.user?.avatar ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -543,10 +552,10 @@ export function StudentsTable({ students }: { students: Student[] }) {
       <BulkActionsToolbar
         selectedCount={selectedIds.length}
         onClearSelection={() => setSelectedIds([])}
-        onExport={handleExport}
-        onDelete={handleBulkDelete}
-        onStatusChange={handleBulkStatusChange}
-        statusOptions={statusOptions}
+        onExport={canRead ? handleExport : undefined}
+        onDelete={canDelete ? handleBulkDelete : undefined}
+        onStatusChange={canUpdate ? handleBulkStatusChange : undefined}
+        statusOptions={canUpdate ? statusOptions : undefined}
         entityName="o'quvchi"
       />
     </>
