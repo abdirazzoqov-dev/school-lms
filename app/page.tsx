@@ -15,12 +15,16 @@ export default async function HomePage() {
       redirect('/super-admin')
     case 'ADMIN':
       redirect('/admin')
+    case 'MODERATOR':
+      redirect('/admin')
     case 'TEACHER':
       redirect('/teacher')
     case 'PARENT':
       redirect('/parent')
     case 'STUDENT':
       redirect('/student')
+    case 'COOK':
+      redirect('/cook')
     default:
       redirect('/login')
   }
