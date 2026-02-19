@@ -77,6 +77,10 @@ export function Icon3D({ name, size = 40, className }: Icon3DProps) {
     'ChartBar':        'from-purple-400 via-violet-500 to-indigo-600',
     'Building':        'from-slate-400 via-blue-500 to-indigo-600',
     'Building2':       'from-slate-400 via-blue-500 to-indigo-600',
+    'Menu':            'from-slate-400 via-gray-500 to-zinc-500',             // Menyu
+    'MoreHorizontal':  'from-slate-400 via-gray-500 to-zinc-500',
+    'Grid':            'from-indigo-400 via-blue-500 to-sky-600',
+    'Grid3x3':         'from-indigo-400 via-blue-500 to-sky-600',
   }
 
   const gradient = iconColors[name] || 'from-gray-400 via-gray-500 to-gray-600'

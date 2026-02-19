@@ -65,22 +65,8 @@ export function TeacherMobileBottomNav({ items, initialUnreadCount = 0 }: Teache
     return pathname.startsWith(href)
   }
 
-  // map3D: simplified icon name for Icon3D component
-  const get3DIconName = (iconName: string): string => {
-    const iconMap: Record<string, string> = {
-      'Home': 'home',
-      'LayoutDashboard': 'dashboard',
-      'Calendar': 'calendar',
-      'Users': 'users',
-      'ClipboardCheck': 'clipboard-check',
-      'Award': 'award',
-      'DollarSign': 'dollar',
-      'FileText': 'file-text',
-      'BookOpen': 'book',
-      'MessageSquare': 'message',
-    }
-    return iconMap[iconName] || 'home'
-  }
+  // Pass icon name directly — already PascalCase from navItems
+  const get3DIconName = (iconName: string): string => iconName
 
   return (
     <>
@@ -99,7 +85,7 @@ export function TeacherMobileBottomNav({ items, initialUnreadCount = 0 }: Teache
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted',
               )}
             >
-              <Icon3D name="home" size={28} />
+              <Icon3D name="Home" size={28} />
               <span className="text-xs font-medium">Bosh sahifa</span>
             </Button>
           </Link>
@@ -116,7 +102,7 @@ export function TeacherMobileBottomNav({ items, initialUnreadCount = 0 }: Teache
               )}
             >
               <div className="relative">
-                <Icon3D name="message" size={28} />
+                <Icon3D name="MessageSquare" size={28} />
                 {unreadCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center shadow-lg shadow-red-500/40 animate-bounce-slow">
                     {unreadCount > 99 ? '99+' : unreadCount}
@@ -134,7 +120,7 @@ export function TeacherMobileBottomNav({ items, initialUnreadCount = 0 }: Teache
                 variant="ghost"
                 className="flex flex-col items-center gap-1 h-auto py-2 px-4 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-300"
               >
-                <Icon3D name="menu" size={28} />
+                <Icon3D name="Menu" size={28} />
                 <span className="text-xs font-medium">Menyu</span>
               </Button>
             </SheetTrigger>
