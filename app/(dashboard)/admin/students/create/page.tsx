@@ -751,20 +751,13 @@ export default function CreateStudentPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Tekin o'quvchi toggle */}
-            <div className={`flex items-start gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
-              formData.isFreeStudent
-                ? 'border-emerald-400 bg-emerald-50'
-                : 'border-dashed border-gray-300 hover:border-emerald-300 hover:bg-emerald-50/50'
-            }`}
-              onClick={() => {
-                const newVal = !formData.isFreeStudent
-                setFormData(prev => ({
-                  ...prev,
-                  isFreeStudent: newVal,
-                  monthlyTuitionFee: newVal ? 0 : prev.monthlyTuitionFee,
-                  dormitoryMonthlyFee: newVal ? 0 : prev.dormitoryMonthlyFee,
-                }))
-              }}
+            <label
+              htmlFor="isFreeStudent"
+              className={`flex items-start gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer select-none ${
+                formData.isFreeStudent
+                  ? 'border-emerald-400 bg-emerald-50'
+                  : 'border-dashed border-gray-300 hover:border-emerald-300 hover:bg-emerald-50/50'
+              }`}
             >
               <Checkbox
                 id="isFreeStudent"
@@ -781,15 +774,15 @@ export default function CreateStudentPage() {
                 className="mt-0.5"
               />
               <div>
-                <Label htmlFor="isFreeStudent" className="text-base font-semibold cursor-pointer text-emerald-800">
+                <p className="text-base font-semibold text-emerald-800">
                   🎓 Tekin o'quvchi (Imtiyozli)
-                </Label>
+                </p>
                 <p className="text-sm text-emerald-700 mt-0.5">
                   Bu o'quvchi uchun hech qanday o'qish to'lovi va yotoqxona to'lovi 
                   yaratilmaydi. Moliya bo'limida ko'rinmaydi.
                 </p>
               </div>
-            </div>
+            </label>
 
             {!formData.isFreeStudent && (
               <>
