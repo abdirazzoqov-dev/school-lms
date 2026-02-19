@@ -38,10 +38,12 @@ export const HREF_TO_RESOURCE: Record<string, string> = ADMIN_RESOURCES.reduce(
   {} as Record<string, string>
 )
 
-// Given an href, return the resource key
+// Given an href, return the resource key (most specific match wins)
 export function getResourceFromHref(href?: string): string | null {
   if (!href) return null
-  const match = ADMIN_RESOURCES.find(r => href === r.href || href.startsWith(r.href + '/'))
+  // Sort by href length descending so specific routes match before '/admin' prefix
+  const sorted = [...ADMIN_RESOURCES].sort((a, b) => b.href.length - a.href.length)
+  const match = sorted.find(r => href === r.href || href.startsWith(r.href + '/'))
   return match ? match.key : null
 }
 
