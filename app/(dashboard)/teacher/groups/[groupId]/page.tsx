@@ -211,7 +211,7 @@ export default function TeacherGroupDetailPage() {
           endTime: endTime || undefined,
         }))
 
-      const res = await fetch('/api/teacher/grades', {
+      const res = await fetch('/api/teacher/groups/grades', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ grades: gradesData }),
