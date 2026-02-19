@@ -96,10 +96,11 @@ export default async function TeacherAttendancePage({
     }),
   ])
 
+  type TimeSlot = { startTime: string; endTime: string }
   const timeSlots = Array.from(
-    new Map([
-      ...classTimeSlots.map(s => [`${s.startTime}-${s.endTime}`, s]),
-      ...groupTimeSlots.map(s => [`${s.startTime}-${s.endTime}`, s]),
+    new Map<string, TimeSlot>([
+      ...classTimeSlots.map(s => [`${s.startTime}-${s.endTime}`, s] as [string, TimeSlot]),
+      ...groupTimeSlots.map(s => [`${s.startTime}-${s.endTime}`, s] as [string, TimeSlot]),
     ]).values()
   ).sort((a, b) => a.startTime.localeCompare(b.startTime))
 
