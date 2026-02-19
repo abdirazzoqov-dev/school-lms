@@ -13,7 +13,7 @@ export async function migrateStudentsWithoutUsers() {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Faqat admin foydalanishi mumkin' }
     }
 
@@ -122,7 +122,7 @@ export async function createUserForStudent(studentId: string, fullName: string, 
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Faqat admin foydalanishi mumkin' }
     }
 

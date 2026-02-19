@@ -28,35 +28,42 @@ export default async function AdminDashboard() {
     redirect('/unauthorized')
   }
 
-  // MODERATOR: redirect to first accessible resource they have READ permission for
+  // MODERATOR: check dashboard permission first, then redirect to first accessible resource
   if (session.user.role === 'MODERATOR') {
     const { getUserPermissions, ADMIN_RESOURCES } = await import('@/lib/permissions')
     const perms = await getUserPermissions(session.user.id, session.user.tenantId!)
-    const firstResource = ADMIN_RESOURCES.find(r =>
-      r.key !== 'dashboard' &&
-      perms[r.key]?.some((a: string) => ['READ', 'ALL'].includes(a))
-    )
-    if (firstResource) {
-      redirect(firstResource.href)
-    }
-    // No permissions assigned yet - show welcome page
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Xush kelibsiz!</h1>
-          <p className="text-muted-foreground mt-1">Salom, {session.user.fullName}</p>
+
+    // If MODERATOR has dashboard READ → show dashboard (fall through to the rest of this component)
+    const hasDashboardRead = perms['dashboard']?.some((a: string) => ['READ', 'ALL'].includes(a))
+    if (!hasDashboardRead) {
+      // No dashboard permission → redirect to first accessible non-dashboard resource
+      const firstResource = ADMIN_RESOURCES.find(r =>
+        r.key !== 'dashboard' &&
+        perms[r.key]?.some((a: string) => ['READ', 'ALL'].includes(a))
+      )
+      if (firstResource) {
+        redirect(firstResource.href)
+      }
+      // No permissions assigned yet - show welcome page
+      return (
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Xush kelibsiz!</h1>
+            <p className="text-muted-foreground mt-1">Salom, {session.user.fullName}</p>
+          </div>
+          <Card>
+            <CardContent className="p-8 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-teal-100">
+                <Users className="h-8 w-8 text-teal-600" />
+              </div>
+              <p className="text-lg font-semibold">Sizga hali hech qanday sahifaga kirish ruxsati berilmagan.</p>
+              <p className="text-muted-foreground mt-2">Administrator bilan bog&#39;laning.</p>
+            </CardContent>
+          </Card>
         </div>
-        <Card>
-          <CardContent className="p-8 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-teal-100">
-              <Users className="h-8 w-8 text-teal-600" />
-            </div>
-            <p className="text-lg font-semibold">Sizga hali hech qanday sahifaga kirish ruxsati berilmagan.</p>
-            <p className="text-muted-foreground mt-2">Administrator bilan bog&#39;laning.</p>
-          </CardContent>
-        </Card>
-      </div>
-    )
+      )
+    }
+    // Has dashboard permission → continue to render dashboard below
   }
 
   const tenantId = session.user.tenantId!

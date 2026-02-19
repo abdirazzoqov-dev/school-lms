@@ -12,7 +12,7 @@ export async function createTeacher(data: TeacherFormData) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -107,7 +107,7 @@ export async function updateTeacher(teacherId: string, data: Partial<Omit<Teache
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -208,7 +208,7 @@ export async function deactivateTeacher(teacherId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -243,7 +243,7 @@ export async function deleteTeacher(teacherId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -301,7 +301,7 @@ export async function bulkDeleteTeachers(teacherIds: string[]) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -367,7 +367,7 @@ export async function bulkDeactivateTeachers(teacherIds: string[]) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -404,7 +404,7 @@ export async function resetTeacherPassword(teacherId: string, newPassword: strin
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 

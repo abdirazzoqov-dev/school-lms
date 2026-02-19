@@ -10,7 +10,7 @@ export async function deleteParent(parentId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -77,7 +77,7 @@ export async function deactivateParent(parentId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -118,7 +118,7 @@ export async function activateParent(parentId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 

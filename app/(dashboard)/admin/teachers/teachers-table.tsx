@@ -21,6 +21,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 
 interface Teacher {
   id: string
@@ -44,6 +45,10 @@ interface Teacher {
 
 export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const { can } = useAdminPermissions()
+  const canCreate = can('teachers', 'CREATE')
+  const canUpdate = can('teachers', 'UPDATE')
+  const canDelete = can('teachers', 'DELETE')
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -217,16 +222,18 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
                           <span>Ko'rish</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link 
-                          href={`/admin/teachers/${teacher.id}/edit`}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <Pencil className="h-4 w-4 text-indigo-600" />
-                          <span>Tahrirlash</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      {teacher.user.isActive && (
+                      {canUpdate && (
+                        <DropdownMenuItem asChild>
+                          <Link 
+                            href={`/admin/teachers/${teacher.id}/edit`}
+                            className="flex items-center gap-2 cursor-pointer"
+                          >
+                            <Pencil className="h-4 w-4 text-indigo-600" />
+                            <span>Tahrirlash</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {canUpdate && teacher.user.isActive && (
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
@@ -242,18 +249,22 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
                           </DropdownMenuItem>
                         </>
                       )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                        onClick={async () => {
-                          if (confirm(`${teacher.user.fullName} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
-                            await deleteTeacher(teacher.id)
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span>O'chirish</span>
-                      </DropdownMenuItem>
+                      {canDelete && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                            onClick={async () => {
+                              if (confirm(`${teacher.user.fullName} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
+                                await deleteTeacher(teacher.id)
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span>O'chirish</span>
+                          </DropdownMenuItem>
+                        </>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </td>
@@ -352,16 +363,18 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
                           <span>Ko'rish</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link 
-                          href={`/admin/teachers/${teacher.id}/edit`}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <Pencil className="h-4 w-4 text-indigo-600" />
-                          <span>Tahrirlash</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      {teacher.user.isActive && (
+                      {canUpdate && (
+                        <DropdownMenuItem asChild>
+                          <Link 
+                            href={`/admin/teachers/${teacher.id}/edit`}
+                            className="flex items-center gap-2 cursor-pointer"
+                          >
+                            <Pencil className="h-4 w-4 text-indigo-600" />
+                            <span>Tahrirlash</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {canUpdate && teacher.user.isActive && (
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
@@ -377,18 +390,22 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
                           </DropdownMenuItem>
                         </>
                       )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                        onClick={async () => {
-                          if (confirm(`${teacher.user.fullName} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
-                            await deleteTeacher(teacher.id)
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span>O'chirish</span>
-                      </DropdownMenuItem>
+                      {canDelete && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                            onClick={async () => {
+                              if (confirm(`${teacher.user.fullName} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
+                                await deleteTeacher(teacher.id)
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span>O'chirish</span>
+                          </DropdownMenuItem>
+                        </>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>

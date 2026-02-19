@@ -11,7 +11,7 @@ export async function createClass(data: ClassFormData) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -61,7 +61,7 @@ export async function updateClass(classId: string, data: Partial<ClassFormData>)
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -110,7 +110,7 @@ export async function deleteClass(classId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -179,7 +179,7 @@ export async function addClassSubject(data: {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -222,7 +222,7 @@ export async function removeClassSubject(classSubjectId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 

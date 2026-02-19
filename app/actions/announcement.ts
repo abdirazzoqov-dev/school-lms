@@ -10,7 +10,7 @@ export async function createAnnouncement(data: AnnouncementFormData) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -54,7 +54,7 @@ export async function updateAnnouncement(announcementId: string, data: Partial<A
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -103,7 +103,7 @@ export async function deleteAnnouncement(announcementId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -137,7 +137,7 @@ export async function toggleAnnouncementPin(announcementId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -173,7 +173,7 @@ export async function bulkDeleteAnnouncements(announcementIds: string[]) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 

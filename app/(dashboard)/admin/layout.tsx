@@ -8,6 +8,8 @@ import { TenantStatusBanner } from '@/components/tenant-status-banner'
 import { GraduationCap } from 'lucide-react'
 import { db } from '@/lib/db'
 import { getUserPermissions, filterNavByPermissions } from '@/lib/permissions'
+import { AdminPermissionsProvider } from '@/components/admin/permissions-provider'
+import type { AdminPerms } from '@/components/admin/permissions-provider'
 
 export default async function AdminLayout({
   children,
@@ -54,6 +56,13 @@ export default async function AdminLayout({
       userPermissions = await getUserPermissions(session.user.id, session.user.tenantId!)
     } catch (e) { /* ignore */ }
   }
+
+  // Build context perms for client components
+  // ADMIN/SUPER_ADMIN get __role:['ADMIN'] (full access marker)
+  // MODERATOR gets their actual permissions map
+  const contextPerms: AdminPerms = isModerator
+    ? { ...userPermissions, __role: ['MODERATOR'] }
+    : { __role: ['ADMIN'] }
 
   const allNavItems = [
     {
@@ -232,7 +241,11 @@ export default async function AdminLayout({
               </div>
             </aside>
             {/* Main Content */}
-            <main className="flex-1 min-w-0 animate-fade-in">{children}</main>
+            <main className="flex-1 min-w-0 animate-fade-in">
+              <AdminPermissionsProvider permissions={contextPerms}>
+                {children}
+              </AdminPermissionsProvider>
+            </main>
           </div>
         </div>
       </div>

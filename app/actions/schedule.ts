@@ -48,7 +48,7 @@ export async function saveSchedules(
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    if (!session || ((session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR') && session.user.role !== 'SUPER_ADMIN')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -204,7 +204,7 @@ export async function createSchedule(data: {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    if (!session || ((session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR') && session.user.role !== 'SUPER_ADMIN')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -408,7 +408,7 @@ export async function deleteSchedule(scheduleId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    if (!session || ((session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR') && session.user.role !== 'SUPER_ADMIN')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 

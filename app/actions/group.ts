@@ -11,7 +11,7 @@ export async function createGroup(data: GroupFormData) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -77,7 +77,7 @@ export async function updateGroup(groupId: string, data: Partial<GroupFormData>)
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -143,7 +143,7 @@ export async function deleteGroup(groupId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 

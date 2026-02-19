@@ -10,7 +10,7 @@ export async function createAttendance(data: AttendanceFormData) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
+    if (!session || (session.user.role !== 'TEACHER' && (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR'))) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -89,7 +89,7 @@ export async function createBulkAttendance(data: BulkAttendanceFormData) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
+    if (!session || (session.user.role !== 'TEACHER' && (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR'))) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -154,7 +154,7 @@ export async function updateAttendance(attendanceId: string, data: Partial<Atten
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
+    if (!session || (session.user.role !== 'TEACHER' && (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR'))) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -194,7 +194,7 @@ export async function deleteAttendance(attendanceId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
+    if (!session || (session.user.role !== 'TEACHER' && (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR'))) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 

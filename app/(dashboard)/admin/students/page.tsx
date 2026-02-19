@@ -12,6 +12,7 @@ import { ClearFilters } from '@/components/clear-filters'
 import { Pagination } from '@/components/pagination'
 import { PageSizeSelector } from '@/components/page-size-selector'
 import { StudentsTable } from './students-table'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 // Optimized caching: Cache for 60 seconds - faster page loads ⚡
 export const revalidate = 60
@@ -199,27 +200,31 @@ export default async function StudentsPage({
               </div>
             </div>
             <div className="flex gap-2">
-              <Button 
-                variant="secondary" 
-                asChild 
-                className="flex-1 sm:flex-none bg-white/20 hover:bg-white/30 backdrop-blur-sm border-white/30 text-white"
-              >
-                <Link href="/admin/students/migrate">
-                  <Users className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Migration</span>
-                  <span className="sm:hidden">Migrate</span>
-                </Link>
-              </Button>
-              <Button 
-                asChild 
-                className="flex-1 sm:flex-none bg-white text-indigo-700 hover:bg-white/90 shadow-lg"
-              >
-                <Link href="/admin/students/create">
-                  <Plus className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Yangi O'quvchi</span>
-                  <span className="sm:hidden">Yangi</span>
-                </Link>
-              </Button>
+              <PermissionGate resource="students" action="CREATE">
+                <Button 
+                  variant="secondary" 
+                  asChild 
+                  className="flex-1 sm:flex-none bg-white/20 hover:bg-white/30 backdrop-blur-sm border-white/30 text-white"
+                >
+                  <Link href="/admin/students/migrate">
+                    <Users className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">Migration</span>
+                    <span className="sm:hidden">Migrate</span>
+                  </Link>
+                </Button>
+              </PermissionGate>
+              <PermissionGate resource="students" action="CREATE">
+                <Button 
+                  asChild 
+                  className="flex-1 sm:flex-none bg-white text-indigo-700 hover:bg-white/90 shadow-lg"
+                >
+                  <Link href="/admin/students/create">
+                    <Plus className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">Yangi O'quvchi</span>
+                    <span className="sm:hidden">Yangi</span>
+                  </Link>
+                </Button>
+              </PermissionGate>
             </div>
           </div>
         </div>

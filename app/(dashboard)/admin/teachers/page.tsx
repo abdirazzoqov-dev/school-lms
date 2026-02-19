@@ -11,6 +11,7 @@ import { ClearFilters } from '@/components/clear-filters'
 import { Pagination } from '@/components/pagination'
 import { PageSizeSelector } from '@/components/page-size-selector'
 import { TeachersTable } from './teachers-table'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 // Optimized caching: Cache for 60 seconds - faster page loads ⚡
 export const revalidate = 60
@@ -132,16 +133,18 @@ export default async function TeachersPage({
                 </div>
               </div>
             </div>
-            <Button 
-              asChild 
-              className="flex-1 sm:flex-none bg-white text-purple-700 hover:bg-white/90 shadow-lg"
-            >
-              <Link href="/admin/teachers/create">
-                <Plus className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Yangi O'qituvchi</span>
-                <span className="sm:hidden">Yangi</span>
-              </Link>
-            </Button>
+            <PermissionGate resource="teachers" action="CREATE">
+              <Button 
+                asChild 
+                className="flex-1 sm:flex-none bg-white text-purple-700 hover:bg-white/90 shadow-lg"
+              >
+                <Link href="/admin/teachers/create">
+                  <Plus className="mr-2 h-4 w-4" />
+                  <span className="hidden sm:inline">Yangi O'qituvchi</span>
+                  <span className="sm:hidden">Yangi</span>
+                </Link>
+              </Button>
+            </PermissionGate>
           </div>
         </div>
       </div>
@@ -298,12 +301,14 @@ export default async function TeachersPage({
             </p>
             {searchParams.search && <ClearFilters />}
             {!searchParams.search && (
-              <Button asChild className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg">
-                <Link href="/admin/teachers/create">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Birinchi o'qituvchini qo'shing
-                </Link>
-              </Button>
+              <PermissionGate resource="teachers" action="CREATE">
+                <Button asChild className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg">
+                  <Link href="/admin/teachers/create">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Birinchi o'qituvchini qo'shing
+                  </Link>
+                </Button>
+              </PermissionGate>
             )}
           </CardContent>
         </Card>

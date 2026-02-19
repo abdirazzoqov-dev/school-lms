@@ -19,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 
 interface Student {
   id: string
@@ -52,6 +53,10 @@ interface Student {
 
 export function StudentsTable({ students }: { students: Student[] }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const { can } = useAdminPermissions()
+  const canCreate = can('students', 'CREATE')
+  const canUpdate = can('students', 'UPDATE')
+  const canDelete = can('students', 'DELETE')
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -266,16 +271,18 @@ export function StudentsTable({ students }: { students: Student[] }) {
                             <span>Ko'rish</span>
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link 
-                            href={`/admin/students/${student.id}/edit`}
-                            className="flex items-center gap-2 cursor-pointer"
-                          >
-                            <Pencil className="h-4 w-4 text-indigo-600" />
-                            <span>Tahrirlash</span>
-                          </Link>
-                        </DropdownMenuItem>
-                        {student.status === 'ACTIVE' && (
+                        {canUpdate && (
+                          <DropdownMenuItem asChild>
+                            <Link 
+                              href={`/admin/students/${student.id}/edit`}
+                              className="flex items-center gap-2 cursor-pointer"
+                            >
+                              <Pencil className="h-4 w-4 text-indigo-600" />
+                              <span>Tahrirlash</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
+                        {canUpdate && student.status === 'ACTIVE' && (
                           <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
@@ -291,27 +298,31 @@ export function StudentsTable({ students }: { students: Student[] }) {
                             </DropdownMenuItem>
                           </>
                         )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                          onClick={async () => {
-                            if (confirm(`${student.user?.fullName || 'N/A'} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
-                              try {
-                                const result = await deleteStudent(student.id)
-                                if (result.success) {
-                                  window.location.reload()
-                                } else {
-                                  alert(result.error || 'Xatolik yuz berdi')
+                        {canDelete && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                              onClick={async () => {
+                                if (confirm(`${student.user?.fullName || 'N/A'} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
+                                  try {
+                                    const result = await deleteStudent(student.id)
+                                    if (result.success) {
+                                      window.location.reload()
+                                    } else {
+                                      alert(result.error || 'Xatolik yuz berdi')
+                                    }
+                                  } catch (error: any) {
+                                    alert(error.message || 'Xatolik yuz berdi')
+                                  }
                                 }
-                              } catch (error: any) {
-                                alert(error.message || 'Xatolik yuz berdi')
-                              }
-                            }
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span>O'chirish</span>
-                        </DropdownMenuItem>
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              <span>O'chirish</span>
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
@@ -394,16 +405,18 @@ export function StudentsTable({ students }: { students: Student[] }) {
                           <span>Ko'rish</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link 
-                          href={`/admin/students/${student.id}/edit`}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <Pencil className="h-4 w-4 text-indigo-600" />
-                          <span>Tahrirlash</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      {student.status === 'ACTIVE' && (
+                      {canUpdate && (
+                        <DropdownMenuItem asChild>
+                          <Link 
+                            href={`/admin/students/${student.id}/edit`}
+                            className="flex items-center gap-2 cursor-pointer"
+                          >
+                            <Pencil className="h-4 w-4 text-indigo-600" />
+                            <span>Tahrirlash</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {canUpdate && student.status === 'ACTIVE' && (
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
@@ -419,27 +432,31 @@ export function StudentsTable({ students }: { students: Student[] }) {
                           </DropdownMenuItem>
                         </>
                       )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                        onClick={async () => {
-                          if (confirm(`${student.user?.fullName || 'N/A'} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
-                            try {
-                              const result = await deleteStudent(student.id)
-                              if (result.success) {
-                                window.location.reload()
-                              } else {
-                                alert(result.error || 'Xatolik yuz berdi')
+                      {canDelete && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                            onClick={async () => {
+                              if (confirm(`${student.user?.fullName || 'N/A'} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
+                                try {
+                                  const result = await deleteStudent(student.id)
+                                  if (result.success) {
+                                    window.location.reload()
+                                  } else {
+                                    alert(result.error || 'Xatolik yuz berdi')
+                                  }
+                                } catch (error: any) {
+                                  alert(error.message || 'Xatolik yuz berdi')
+                                }
                               }
-                            } catch (error: any) {
-                              alert(error.message || 'Xatolik yuz berdi')
-                            }
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span>O'chirish</span>
-                      </DropdownMenuItem>
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span>O'chirish</span>
+                          </DropdownMenuItem>
+                        </>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>

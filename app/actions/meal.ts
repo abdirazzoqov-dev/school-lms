@@ -19,7 +19,7 @@ export async function createMeal(data: {
 }) {
   const session = await getServerSession(authOptions)
   
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
     throw new Error('Unauthorized')
   }
 
@@ -55,7 +55,7 @@ export async function updateMeal(
 ) {
   const session = await getServerSession(authOptions)
   
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
     throw new Error('Unauthorized')
   }
 
@@ -78,7 +78,7 @@ export async function updateMeal(
 export async function deleteMeal(id: string) {
   const session = await getServerSession(authOptions)
   
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
     throw new Error('Unauthorized')
   }
 
@@ -98,7 +98,7 @@ export async function deleteMeal(id: string) {
 export async function toggleMealStatus(id: string) {
   const session = await getServerSession(authOptions)
   
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
     throw new Error('Unauthorized')
   }
 

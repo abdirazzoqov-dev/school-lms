@@ -10,7 +10,7 @@ export async function createMaterial(data: MaterialFormData) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
+    if (!session || (session.user.role !== 'TEACHER' && (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR'))) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -57,7 +57,7 @@ export async function updateMaterial(materialId: string, data: Partial<MaterialF
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
+    if (!session || (session.user.role !== 'TEACHER' && (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR'))) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -98,7 +98,7 @@ export async function deleteMaterial(materialId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
+    if (!session || (session.user.role !== 'TEACHER' && (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR'))) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -135,7 +135,7 @@ export async function bulkDeleteMaterials(materialIds: string[]) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
+    if (!session || (session.user.role !== 'TEACHER' && (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR'))) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 

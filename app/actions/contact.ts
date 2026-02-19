@@ -16,7 +16,7 @@ export async function createContactPerson(data: {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       throw new Error('Ruxsat berilmagan')
     }
 
@@ -58,7 +58,7 @@ export async function updateContactPerson(
 ) {
   const session = await getServerSession(authOptions)
   
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
     throw new Error('Ruxsat berilmagan')
   }
 
@@ -88,7 +88,7 @@ export async function updateContactPerson(
 export async function deleteContactPerson(id: string) {
   const session = await getServerSession(authOptions)
   
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
     throw new Error('Ruxsat berilmagan')
   }
 
@@ -110,7 +110,7 @@ export async function deleteContactPerson(id: string) {
 export async function toggleContactStatus(id: string) {
   const session = await getServerSession(authOptions)
   
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
     throw new Error('Ruxsat berilmagan')
   }
 

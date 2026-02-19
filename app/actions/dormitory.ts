@@ -28,7 +28,7 @@ export async function createBuilding(data: BuildingFormData) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -76,7 +76,7 @@ export async function updateBuilding(buildingId: string, data: Partial<BuildingF
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -117,7 +117,7 @@ export async function deleteBuilding(buildingId: string) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -159,7 +159,7 @@ export async function createRoom(data: RoomFormData) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -225,7 +225,7 @@ export async function updateRoom(roomId: string, data: Partial<RoomFormData>) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -268,7 +268,7 @@ export async function deleteRoom(roomId: string) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -328,7 +328,7 @@ export async function createAssignment(data: AssignmentFormData) {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -481,7 +481,7 @@ export async function updateAssignment(
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -552,7 +552,7 @@ export async function fixRoomsWithZeroPrice() {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Unauthorized' }
     }
 
@@ -637,7 +637,7 @@ export async function getAvailableRooms(gender?: 'MALE' | 'FEMALE') {
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
       return { success: false, error: 'Unauthorized' }
     }
 

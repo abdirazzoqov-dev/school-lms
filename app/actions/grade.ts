@@ -11,7 +11,7 @@ export async function createGrade(data: GradeFormData) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
+    if (!session || (session.user.role !== 'TEACHER' && (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR'))) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -65,7 +65,7 @@ export async function createBulkGrades(data: BulkGradeFormData) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
+    if (!session || (session.user.role !== 'TEACHER' && (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR'))) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -119,7 +119,7 @@ export async function updateGrade(gradeId: string, data: Partial<GradeFormData>)
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
+    if (!session || (session.user.role !== 'TEACHER' && (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR'))) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -176,7 +176,7 @@ export async function deleteGrade(gradeId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
+    if (!session || (session.user.role !== 'TEACHER' && (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR'))) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
