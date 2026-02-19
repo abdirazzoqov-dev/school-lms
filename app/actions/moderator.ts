@@ -2,7 +2,6 @@
 
 import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/auth'
-import { ResourceType, ActionType } from '@/lib/permissions'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
