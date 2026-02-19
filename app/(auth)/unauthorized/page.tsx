@@ -1,9 +1,30 @@
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ShieldAlert } from 'lucide-react'
 
-export default function UnauthorizedPage() {
+export default async function UnauthorizedPage() {
+  // If user is MODERATOR (staff) they should be in /admin — redirect them automatically
+  const session = await getServerSession(authOptions)
+  if (session?.user?.role === 'MODERATOR') {
+    redirect('/admin')
+  }
+  if (session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN') {
+    redirect('/admin')
+  }
+  if (session?.user?.role === 'TEACHER') {
+    redirect('/teacher')
+  }
+  if (session?.user?.role === 'PARENT') {
+    redirect('/parent')
+  }
+  if (session?.user?.role === 'COOK') {
+    redirect('/cook')
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 to-orange-100 p-4">
       <Card className="w-full max-w-md">
@@ -20,11 +41,10 @@ export default function UnauthorizedPage() {
         </CardHeader>
         <CardContent>
           <Button asChild className="w-full">
-            <Link href="/">Bosh sahifaga qaytish</Link>
+            <Link href="/login">Loginga qaytish</Link>
           </Button>
         </CardContent>
       </Card>
     </div>
   )
 }
-
