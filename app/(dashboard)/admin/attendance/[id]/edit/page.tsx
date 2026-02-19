@@ -43,6 +43,11 @@ export default async function EditAttendancePage({ params }: PageProps) {
           name: true,
         },
       },
+      group: {
+        select: {
+          name: true,
+        },
+      },
       subject: {
         select: {
           name: true,

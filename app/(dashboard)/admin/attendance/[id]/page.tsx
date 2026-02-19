@@ -55,6 +55,11 @@ export default async function AttendanceDetailPage({ params }: PageProps) {
           name: true,
         },
       },
+      group: {
+        select: {
+          name: true,
+        },
+      },
       subject: {
         select: {
           name: true,
