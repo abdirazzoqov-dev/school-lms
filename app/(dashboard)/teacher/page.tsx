@@ -119,7 +119,7 @@ export default async function TeacherDashboard() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           <Card className="border-none shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 card-hover">
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
@@ -127,13 +127,22 @@ export default async function TeacherDashboard() {
                   <Users className="h-6 w-6" />
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-blue-600">{totalClasses + totalGroups}</div>
-                  <p className="text-sm text-muted-foreground font-medium">
-                    Sinflar/Guruhlar
-                    {totalGroups > 0 && (
-                      <span className="ml-1 text-purple-600 text-xs">({totalGroups} guruh)</span>
-                    )}
-                  </p>
+                  <div className="text-3xl font-bold text-blue-600">{totalClasses}</div>
+                  <p className="text-sm text-muted-foreground font-medium">Sinflar</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-lg bg-gradient-to-br from-fuchsia-50 to-purple-50 dark:from-fuchsia-950/20 dark:to-purple-950/20 card-hover">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-fuchsia-500 to-purple-600 text-white shadow-lg">
+                  <Users className="h-6 w-6" />
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-fuchsia-600">{totalGroups}</div>
+                  <p className="text-sm text-muted-foreground font-medium">Guruhlar</p>
                 </div>
               </div>
             </CardContent>
