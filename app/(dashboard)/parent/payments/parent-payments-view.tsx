@@ -339,6 +339,7 @@ function PaymentCardModern({ payment, monthNames }: { payment: Payment; monthNam
   const getPaymentTypeInfo = (type: string) => {
     const types = {
       'TUITION': { icon: '📚', label: 'O\'qish haqi', color: 'from-blue-500 to-indigo-600' },
+      'DORMITORY': { icon: '🏠', label: 'Yotoqxona', color: 'from-orange-500 to-amber-600' },
       'BOOKS': { icon: '📖', label: 'Darsliklar', color: 'from-purple-500 to-pink-600' },
       'UNIFORM': { icon: '👔', label: 'Forma', color: 'from-green-500 to-emerald-600' },
       'OTHER': { icon: '📦', label: 'Boshqa', color: 'from-gray-500 to-slate-600' },

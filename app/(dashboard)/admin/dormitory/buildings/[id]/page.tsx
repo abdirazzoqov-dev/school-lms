@@ -313,7 +313,10 @@ export default async function BuildingDetailPage({ params }: PageProps) {
                                 </div>
 
                                 <div className="text-xs text-muted-foreground">
-                                  {Number(room.pricePerMonth).toLocaleString()} so'm/oy
+                                  {Number(room.pricePerMonth) === 0
+                                    ? <span className="text-emerald-600 font-semibold">🎓 Bepul</span>
+                                    : `${Number(room.pricePerMonth).toLocaleString()} so'm/oy`
+                                  }
                                 </div>
                               </div>
 

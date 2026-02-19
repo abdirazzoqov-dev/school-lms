@@ -211,6 +211,7 @@ export default async function PaymentDetailPage({ params }: { params: { id: stri
               <p className="text-sm text-muted-foreground">To'lov Maqsadi</p>
               <Badge variant="outline" className="font-medium text-base">
                 {payment.paymentType === 'TUITION' && "O'qish haqi"}
+                {payment.paymentType === 'DORMITORY' && '🏠 Yotoqxona'}
                 {payment.paymentType === 'BOOKS' && 'Kitoblar'}
                 {payment.paymentType === 'UNIFORM' && 'Forma'}
                 {payment.paymentType === 'OTHER' && 'Boshqa'}

@@ -25,7 +25,7 @@ export const roomSchema = z.object({
   floor: z.number().min(1, 'Qavat raqami majburiy'),
   capacity: z.number().min(1, 'Kamida 1 ta joy').max(20, 'Maksimal 20 ta joy'),
   roomType: z.enum(['STANDARD', 'LUXURY', 'SUITE']).default('STANDARD'),
-  pricePerMonth: z.number().min(1, 'Oylik narx kamida 1 so\'m bo\'lishi kerak').positive('Oylik narx musbat son bo\'lishi kerak'),
+  pricePerMonth: z.number().min(0, 'Oylik narx 0 yoki undan katta bo\'lishi kerak'),
   gender: z.enum(['MALE', 'FEMALE', 'MIXED']).optional(),
   description: z.string().optional().or(z.literal('')),
   amenities: z.array(z.string()).optional(),

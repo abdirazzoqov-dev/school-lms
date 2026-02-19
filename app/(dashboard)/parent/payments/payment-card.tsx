@@ -62,6 +62,9 @@ export function PaymentCard({ payment, monthNames }: PaymentCardProps) {
                 {payment.paymentType === 'TUITION' && (
                   <Badge className="bg-blue-600">📚 O'qish haqi</Badge>
                 )}
+                {payment.paymentType === 'DORMITORY' && (
+                  <Badge className="bg-orange-500">🏠 Yotoqxona</Badge>
+                )}
                 {payment.paymentType === 'BOOKS' && (
                   <Badge className="bg-purple-600">📖 Darsliklar</Badge>
                 )}
@@ -169,6 +172,7 @@ export function PaymentCard({ payment, monthNames }: PaymentCardProps) {
                   </div>
                   <p className="text-xs opacity-80">
                     {payment.paymentType === 'TUITION' && "O'qish haqi"}
+                    {payment.paymentType === 'DORMITORY' && 'Yotoqxona'}
                     {payment.paymentType === 'BOOKS' && 'Kitoblar'}
                     {payment.paymentType === 'UNIFORM' && 'Forma'}
                     {payment.paymentType === 'OTHER' && 'Boshqa'}

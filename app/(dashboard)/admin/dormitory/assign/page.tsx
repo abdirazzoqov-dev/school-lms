@@ -27,7 +27,11 @@ export default async function AssignStudentPage() {
       status: 'ACTIVE',
       dormitoryAssignment: null, // Students not assigned to any dormitory
     },
-    include: {
+    select: {
+      id: true,
+      studentCode: true,
+      gender: true,
+      isFreeStudent: true,
       user: {
         select: {
           fullName: true,

@@ -22,6 +22,7 @@ interface Student {
   id: string
   studentCode: string
   gender: 'MALE' | 'FEMALE'
+  isFreeStudent: boolean
   user: {
     fullName: string
   } | null
@@ -231,16 +232,19 @@ export function AssignStudentForm({ students }: AssignStudentFormProps) {
                     }`}
                     onClick={() => {
                       setSelectedRoom(room)
-                      const fee = Number(room.pricePerMonth) || 0
-                      console.log('🏠 Room selected:', room.roomNumber, 'pricePerMonth:', room.pricePerMonth, 'parsed:', fee)
+                      const roomFee = Number(room.pricePerMonth) || 0
+                      // Tekin o'quvchi bo'lsa har qanday xona ham 0 so'm
+                      const fee = selectedStudent?.isFreeStudent ? 0 : roomFee
+                      console.log('🏠 Room selected:', room.roomNumber, 'pricePerMonth:', room.pricePerMonth, 'parsed:', fee, 'isFree:', selectedStudent?.isFreeStudent)
                       setMonthlyFee(fee)
                       setSelectedBedId('') // Reset bed selection
                       
                       if (fee === 0) {
                         toast({
-                          variant: 'destructive',
-                          title: 'Ogohlantirish!',
-                          description: `${room.roomNumber}-xonaning oylik to'lovi 0 ga teng. To'lov yaratilmaydi!`,
+                          title: '🎓 Bepul joylashtirish',
+                          description: selectedStudent?.isFreeStudent
+                            ? 'Bu tekin o\'quvchi — yotoqxona to\'lovi 0 so\'m (bepul).'
+                            : `${room.roomNumber}-xona bepul — bu o'quvchidan hech qanday yotoqxona to'lovi olinmaydi.`,
                         })
                       }
                     }}
@@ -259,12 +263,15 @@ export function AssignStudentForm({ students }: AssignStudentFormProps) {
 
                     <div className="flex items-center justify-between text-sm mb-3">
                       <span className="text-muted-foreground">Narx:</span>
-                      <span className={`font-semibold ${Number(room.pricePerMonth) === 0 ? 'text-red-600' : ''}`}>
-                        {Number(room.pricePerMonth).toLocaleString()} so'm/oy
-                        {Number(room.pricePerMonth) === 0 && (
-                          <span className="text-xs text-red-600 ml-1">⚠️ To'lov yaratilmaydi</span>
-                        )}
-                      </span>
+                      {Number(room.pricePerMonth) === 0 ? (
+                        <span className="font-semibold text-emerald-600">
+                          🎓 Bepul (0 so'm)
+                        </span>
+                      ) : (
+                        <span className="font-semibold">
+                          {Number(room.pricePerMonth).toLocaleString()} so'm/oy
+                        </span>
+                      )}
                     </div>
 
                     {/* Bed selection */}

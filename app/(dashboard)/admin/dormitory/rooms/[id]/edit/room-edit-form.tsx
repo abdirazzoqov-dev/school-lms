@@ -262,6 +262,12 @@ export function RoomEditForm({ room, buildings }: RoomEditFormProps) {
                         }
                       />
                     </FormControl>
+                    <FormDescription>
+                      {field.value === 0 
+                        ? '🎓 Bepul xona — bu xonada yashovchilardan to\'lov olinmaydi'
+                        : `${Number(field.value).toLocaleString('uz-UZ')} so'm/oy`
+                      }
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

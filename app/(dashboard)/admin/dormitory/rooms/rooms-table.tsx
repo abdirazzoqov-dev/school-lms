@@ -328,10 +328,18 @@ export function RoomsTable({ rooms, buildings, searchParams }: RoomsTableProps) 
                     </TableCell>
 
                     <TableCell>
-                      <p className="font-semibold text-sm">
-                        {Number(room.pricePerMonth).toLocaleString()} so'm
-                      </p>
-                      <p className="text-xs text-muted-foreground">oyiga</p>
+                      {Number(room.pricePerMonth) === 0 ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          🎓 Bepul
+                        </span>
+                      ) : (
+                        <>
+                          <p className="font-semibold text-sm">
+                            {Number(room.pricePerMonth).toLocaleString()} so'm
+                          </p>
+                          <p className="text-xs text-muted-foreground">oyiga</p>
+                        </>
+                      )}
                     </TableCell>
 
                     <TableCell>

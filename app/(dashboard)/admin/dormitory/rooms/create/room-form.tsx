@@ -53,7 +53,7 @@ export function RoomForm({ buildings }: RoomFormProps) {
       floor: 1,
       capacity: 4,
       roomType: 'STANDARD',
-      pricePerMonth: 250000, // Default oylik narx
+      pricePerMonth: 0, // Default: 0 (bepul yoki alohida belgilanadi)
       gender: undefined,
       description: '',
       amenities: [],
@@ -266,13 +266,19 @@ export function RoomForm({ buildings }: RoomFormProps) {
                       <Input
                         type="number"
                         min="0"
+                        step="1000"
                         {...field}
                         onChange={(e) =>
                           field.onChange(parseFloat(e.target.value) || 0)
                         }
                       />
                     </FormControl>
-                    <FormDescription>so'mda</FormDescription>
+                    <FormDescription>
+                      {field.value === 0 
+                        ? '🎓 Bepul xona — bu xonada yashovchilardan to\'lov olinmaydi'
+                        : `so'mda (${Number(field.value).toLocaleString('uz-UZ')} so'm/oy)`
+                      }
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
