@@ -11,6 +11,7 @@ import { ClearFilters } from '@/components/clear-filters'
 import { Pagination } from '@/components/pagination'
 import { PageSizeSelector } from '@/components/page-size-selector'
 import { StaffTable } from './staff-table'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 // Optimized caching
 export const revalidate = 60
@@ -120,16 +121,18 @@ export default async function StaffPage({
                   </div>
                 </div>
               </div>
-              <Button 
-                asChild 
-                className="flex-1 sm:flex-none bg-white text-cyan-700 hover:bg-white/90 shadow-lg"
-              >
-                <Link href="/admin/staff/create">
-                  <Plus className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Yangi Xodim</span>
-                  <span className="sm:hidden">Yangi</span>
-                </Link>
-              </Button>
+              <PermissionGate resource="staff" action="CREATE">
+                <Button 
+                  asChild 
+                  className="flex-1 sm:flex-none bg-white text-cyan-700 hover:bg-white/90 shadow-lg"
+                >
+                  <Link href="/admin/staff/create">
+                    <Plus className="mr-2 h-4 w-4" />
+                    <span className="hidden sm:inline">Yangi Xodim</span>
+                    <span className="sm:hidden">Yangi</span>
+                  </Link>
+                </Button>
+              </PermissionGate>
             </div>
           </div>
         </div>
@@ -264,12 +267,14 @@ export default async function StaffPage({
               </p>
               {searchParams.search && <ClearFilters />}
               {!searchParams.search && (
-                <Button asChild className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 shadow-lg">
-                  <Link href="/admin/staff/create">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Birinchi xodimni qo'shing
-                  </Link>
-                </Button>
+                <PermissionGate resource="staff" action="CREATE">
+                  <Button asChild className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 shadow-lg">
+                    <Link href="/admin/staff/create">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Birinchi xodimni qo'shing
+                    </Link>
+                  </Button>
+                </PermissionGate>
               )}
             </CardContent>
           </Card>

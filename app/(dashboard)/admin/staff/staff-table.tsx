@@ -17,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 
 interface Staff {
   id: string
@@ -43,6 +44,12 @@ interface Staff {
 
 export function StaffTable({ staff }: { staff: Staff[] }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const { can } = useAdminPermissions()
+  const canRead = can('staff', 'READ')
+  const canCreate = can('staff', 'CREATE')
+  const canUpdate = can('staff', 'UPDATE')
+  const canDelete = can('staff', 'DELETE')
+  const canBulkAction = canRead || canUpdate || canDelete
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -66,13 +73,15 @@ export function StaffTable({ staff }: { staff: Staff[] }) {
         <table className="w-full min-w-max table-fixed">
           <thead className="border-b-2 bg-gradient-to-r from-cyan-50 via-blue-50 to-indigo-50 dark:from-cyan-950/30 dark:via-blue-950/30 dark:to-indigo-950/30">
             <tr>
-              <th className="p-3 text-left w-12">
-                <Checkbox
-                  checked={selectedIds.length === staff.length && staff.length > 0}
-                  onCheckedChange={handleSelectAll}
-                  className="data-[state=checked]:bg-cyan-600 data-[state=checked]:border-cyan-600"
-                />
-              </th>
+              {canBulkAction && (
+                <th className="p-3 text-left w-12">
+                  <Checkbox
+                    checked={selectedIds.length === staff.length && staff.length > 0}
+                    onCheckedChange={handleSelectAll}
+                    className="data-[state=checked]:bg-cyan-600 data-[state=checked]:border-cyan-600"
+                  />
+                </th>
+              )}
               <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[250px]">Xodim</th>
               <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[120px]">Kodi</th>
               <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[150px]">Lavozim</th>
@@ -88,13 +97,15 @@ export function StaffTable({ staff }: { staff: Staff[] }) {
                 className="hover:bg-gradient-to-r hover:from-cyan-50 hover:to-blue-50 dark:hover:from-cyan-950/20 dark:hover:to-blue-950/20 transition-all duration-200"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <td className="p-3">
-                  <Checkbox
-                    checked={selectedIds.includes(member.id)}
-                    onCheckedChange={(checked) => handleSelectOne(member.id, checked as boolean)}
-                    className="data-[state=checked]:bg-cyan-600 data-[state=checked]:border-cyan-600"
-                  />
-                </td>
+                {canBulkAction && (
+                  <td className="p-3">
+                    <Checkbox
+                      checked={selectedIds.includes(member.id)}
+                      onCheckedChange={(checked) => handleSelectOne(member.id, checked as boolean)}
+                      className="data-[state=checked]:bg-cyan-600 data-[state=checked]:border-cyan-600"
+                    />
+                  </td>
+                )}
                 <td className="p-3">
                   <div className="flex items-center gap-2">
                     <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 shadow-lg border-2 border-white">
@@ -204,34 +215,51 @@ export function StaffTable({ staff }: { staff: Staff[] }) {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link 
-                          href={`/admin/staff/${member.id}/edit`}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <Pencil className="h-4 w-4 text-indigo-600" />
-                          <span>Tahrirlash</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link 
                           href={`/admin/staff/${member.id}`}
                           className="flex items-center gap-2 cursor-pointer"
                         >
-                          <ShieldCheck className="h-4 w-4 text-purple-600" />
-                          <span>Ruxsatlar</span>
+                          <Eye className="h-4 w-4 text-blue-600" />
+                          <span>Ko'rish</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                        onClick={async () => {
-                          if (confirm(`${member.user.fullName} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
-                            await deleteStaff(member.id)
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span>O'chirish</span>
-                      </DropdownMenuItem>
+                      {canUpdate && (
+                        <DropdownMenuItem asChild>
+                          <Link 
+                            href={`/admin/staff/${member.id}/edit`}
+                            className="flex items-center gap-2 cursor-pointer"
+                          >
+                            <Pencil className="h-4 w-4 text-indigo-600" />
+                            <span>Tahrirlash</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {canUpdate && (
+                        <DropdownMenuItem asChild>
+                          <Link 
+                            href={`/admin/staff/${member.id}`}
+                            className="flex items-center gap-2 cursor-pointer"
+                          >
+                            <ShieldCheck className="h-4 w-4 text-purple-600" />
+                            <span>Ruxsatlar</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {canDelete && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                            onClick={async () => {
+                              if (confirm(`${member.user.fullName} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
+                                await deleteStaff(member.id)
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span>O'chirish</span>
+                          </DropdownMenuItem>
+                        </>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </td>
@@ -255,11 +283,13 @@ export function StaffTable({ staff }: { staff: Staff[] }) {
           <div className="p-4 space-y-4">
             {/* Header */}
             <div className="flex items-start gap-3">
-              <Checkbox
-                checked={selectedIds.includes(member.id)}
-                onCheckedChange={(checked) => handleSelectOne(member.id, checked as boolean)}
-                className="mt-2 data-[state=checked]:bg-cyan-600 data-[state=checked]:border-cyan-600"
-              />
+              {canBulkAction && (
+                <Checkbox
+                  checked={selectedIds.includes(member.id)}
+                  onCheckedChange={(checked) => handleSelectOne(member.id, checked as boolean)}
+                  className="mt-2 data-[state=checked]:bg-cyan-600 data-[state=checked]:border-cyan-600"
+                />
+              )}
               <div className="w-12 h-12 rounded-full overflow-hidden shadow-lg shrink-0 border-2 border-white">
                 {member.user.avatar ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -314,34 +344,51 @@ export function StaffTable({ staff }: { staff: Staff[] }) {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link 
-                        href={`/admin/staff/${member.id}/edit`}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <Pencil className="h-4 w-4 text-indigo-600" />
-                        <span>Tahrirlash</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link 
                         href={`/admin/staff/${member.id}`}
                         className="flex items-center gap-2 cursor-pointer"
                       >
-                        <ShieldCheck className="h-4 w-4 text-purple-600" />
-                        <span>Ruxsatlar</span>
+                        <Eye className="h-4 w-4 text-blue-600" />
+                        <span>Ko'rish</span>
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                      onClick={async () => {
-                        if (confirm(`${member.user.fullName} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
-                          await deleteStaff(member.id)
-                        }
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span>O'chirish</span>
-                    </DropdownMenuItem>
+                    {canUpdate && (
+                      <DropdownMenuItem asChild>
+                        <Link 
+                          href={`/admin/staff/${member.id}/edit`}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <Pencil className="h-4 w-4 text-indigo-600" />
+                          <span>Tahrirlash</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {canUpdate && (
+                      <DropdownMenuItem asChild>
+                        <Link 
+                          href={`/admin/staff/${member.id}`}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <ShieldCheck className="h-4 w-4 text-purple-600" />
+                          <span>Ruxsatlar</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {canDelete && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                          onClick={async () => {
+                            if (confirm(`${member.user.fullName} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
+                              await deleteStaff(member.id)
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span>O'chirish</span>
+                        </DropdownMenuItem>
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
