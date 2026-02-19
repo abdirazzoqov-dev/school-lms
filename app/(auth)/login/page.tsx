@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { signIn, useSession } from 'next-auth/react'
+import { signIn, getSession, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -106,8 +106,24 @@ export default function LoginPage() {
           title: 'Muvaffaqiyatli!',
           description: 'Tizimga kirildi',
         })
-        router.push('/')
-        router.refresh()
+        // Get fresh session to know the exact role, then redirect directly
+        const session = await getSession()
+        const role = session?.user?.role
+        if (role === 'SUPER_ADMIN') {
+          window.location.href = '/super-admin'
+        } else if (role === 'ADMIN') {
+          window.location.href = '/admin'
+        } else if (role === 'MODERATOR') {
+          window.location.href = '/admin'
+        } else if (role === 'TEACHER') {
+          window.location.href = '/teacher'
+        } else if (role === 'PARENT') {
+          window.location.href = '/parent'
+        } else if (role === 'COOK') {
+          window.location.href = '/cook'
+        } else {
+          window.location.href = '/'
+        }
       }
     } catch (error) {
       toast({
