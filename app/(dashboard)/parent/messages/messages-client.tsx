@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { deleteMessage, markMessageAsRead, replyToMessage, editMessage } from '@/app/actions/message'
+import { deleteMessage, markMessageAsRead, markAllMessagesAsRead, replyToMessage, editMessage } from '@/app/actions/message'
 import {
   Dialog,
   DialogContent,
@@ -130,6 +130,12 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
   const [isSending, setIsSending] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // ── Mark ALL unread messages as read immediately on page open ────────────────
+  useEffect(() => {
+    markAllMessagesAsRead().catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // ── Auto-polling ──────────────────────────────────────────────────────────
   useEffect(() => {

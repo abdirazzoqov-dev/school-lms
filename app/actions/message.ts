@@ -339,6 +339,38 @@ export async function getUnreadCount() {
   }
 }
 
+/**
+ * Mark ALL unread received messages as read for the current user at once.
+ * Called when the user opens the messages page to immediately clear the badge.
+ */
+export async function markAllMessagesAsRead() {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session) {
+      return { success: false, error: 'Ruxsat berilmagan' }
+    }
+
+    const tenantId = session.user.tenantId!
+    const userId = session.user.id
+
+    await db.message.updateMany({
+      where: {
+        tenantId,
+        receiverId: userId,
+        readAt: null,
+        deletedByReceiver: false,
+      },
+      data: { readAt: new Date() },
+    })
+
+    return { success: true }
+  } catch (error: any) {
+    console.error('Mark all messages as read error:', error)
+    return { success: false, error: error.message || 'Xatolik yuz berdi' }
+  }
+}
+
 export async function bulkDeleteMessages(messageIds: string[]) {
   try {
     const session = await getServerSession(authOptions)
