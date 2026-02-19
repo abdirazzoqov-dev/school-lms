@@ -34,20 +34,28 @@ interface TimeSlot {
   label: string // e.g., "08:00 - 08:55"
 }
 
+interface Group {
+  id: string
+  name: string
+  _count: { students: number }
+}
+
 interface AttendanceFiltersProps {
   classes: Class[]
+  groups: Group[]
   subjects: Subject[]
   timeSlots: TimeSlot[]
   searchParams: {
     date?: string
     period?: string
     classId?: string
+    groupId?: string
     subjectId?: string
     timeSlot?: string
   }
 }
 
-export function AttendanceFilters({ classes, subjects, timeSlots, searchParams }: AttendanceFiltersProps) {
+export function AttendanceFilters({ classes, groups, subjects, timeSlots, searchParams }: AttendanceFiltersProps) {
   const router = useRouter()
   const pathname = usePathname()
   const urlSearchParams = useSearchParams()
@@ -67,7 +75,7 @@ export function AttendanceFilters({ classes, subjects, timeSlots, searchParams }
     router.push(`${pathname}?date=${today}&period=day`)
   }
 
-  const hasActiveFilters = searchParams.classId || searchParams.subjectId || searchParams.timeSlot ||
+  const hasActiveFilters = searchParams.classId || searchParams.groupId || searchParams.subjectId || searchParams.timeSlot ||
     (searchParams.period && searchParams.period !== 'day')
 
   return (
@@ -91,7 +99,7 @@ export function AttendanceFilters({ classes, subjects, timeSlots, searchParams }
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {/* Date */}
             <div className="space-y-2">
               <Label className="text-xs">Sana</Label>
@@ -138,7 +146,28 @@ export function AttendanceFilters({ classes, subjects, timeSlots, searchParams }
                   <SelectItem value="all">Barcha sinflar</SelectItem>
                   {classes.map((cls) => (
                     <SelectItem key={cls.id} value={cls.id}>
-                      {cls.name} ({cls._count.students} o'quvchi)
+                      {cls.name} ({cls._count.students})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Group Filter */}
+            <div className="space-y-2">
+              <Label className="text-xs">Guruh</Label>
+              <Select
+                value={searchParams.groupId || 'all'}
+                onValueChange={(value) => updateSearchParams('groupId', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Barcha guruhlar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Barcha guruhlar</SelectItem>
+                  {groups.map((grp) => (
+                    <SelectItem key={grp.id} value={grp.id}>
+                      {grp.name} ({grp._count.students})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -200,6 +229,11 @@ export function AttendanceFilters({ classes, subjects, timeSlots, searchParams }
               {searchParams.classId && (
                 <Badge variant="secondary">
                   {classes.find(c => c.id === searchParams.classId)?.name}
+                </Badge>
+              )}
+              {searchParams.groupId && (
+                <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                  Guruh: {groups.find(g => g.id === searchParams.groupId)?.name}
                 </Badge>
               )}
               {searchParams.subjectId && (

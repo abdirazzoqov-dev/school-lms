@@ -12,6 +12,7 @@ type SearchParams = {
   date?: string
   period?: 'day' | 'week' | 'month'
   classId?: string
+  groupId?: string
   subjectId?: string
   timeSlot?: string
 }
@@ -38,53 +39,64 @@ export default async function TeacherGradesPage({
     redirect('/unauthorized')
   }
 
-  // Get teacher's classes and subjects from Schedule (constructor-based)
-  const teacherSchedules = await db.schedule.findMany({
-    where: {
-      tenantId,
-      teacherId: teacher.id,
-      academicYear: getCurrentAcademicYear(),
-      type: 'LESSON'
-    },
-    include: {
-      class: true,
-      subject: true
-    },
-    distinct: ['classId', 'subjectId']
-  })
+  // Get teacher's classes, groups and subjects from schedules
+  const [teacherSchedules, groupSchedules] = await Promise.all([
+    db.schedule.findMany({
+      where: { tenantId, teacherId: teacher.id, academicYear: getCurrentAcademicYear(), type: 'LESSON' },
+      include: { class: true, subject: true },
+      distinct: ['classId', 'subjectId'],
+    }),
+    db.groupSchedule.findMany({
+      where: { tenantId, teacherId: teacher.id, type: 'LESSON' },
+      include: {
+        group: { select: { id: true, name: true, _count: { select: { students: true } } } },
+        subject: true,
+      },
+      distinct: ['groupId', 'subjectId'],
+    }),
+  ])
 
-  // Extract unique classes and subjects (filter out nulls)
   const classes = Array.from(
     new Map(
-      teacherSchedules
-        .filter(s => s.class !== null)
-        .map(s => [s.classId, s.class!])
+      teacherSchedules.filter(s => s.class !== null).map(s => [s.classId, s.class!])
+    ).values()
+  )
+
+  const groups = Array.from(
+    new Map(
+      groupSchedules.filter(s => s.group !== null).map(s => [s.groupId, s.group!])
     ).values()
   )
 
   const subjects = Array.from(
-    new Map(
-      teacherSchedules
-        .filter(s => s.subject !== null)
-        .map(s => [s.subjectId, s.subject!])
-    ).values()
-  )
+    new Map([
+      ...teacherSchedules.filter(s => s.subject !== null).map(s => [s.subjectId, s.subject!]),
+      ...groupSchedules.filter(s => s.subject !== null).map(s => [s.subjectId, s.subject!]),
+    ])
+  ).map(([, v]) => v)
 
-  // Get unique time slots from teacher's schedule
-  const timeSlots = await db.schedule.findMany({
-    where: {
-      tenantId,
-      teacherId: teacher.id,
-      academicYear: getCurrentAcademicYear(),
-      type: 'LESSON'
-    },
-    select: {
-      startTime: true,
-      endTime: true
-    },
-    distinct: ['startTime', 'endTime'],
-    orderBy: { startTime: 'asc' }
-  })
+  // Get unique time slots from teacher's schedules
+  const [classTimeSlots, groupTimeSlots] = await Promise.all([
+    db.schedule.findMany({
+      where: { tenantId, teacherId: teacher.id, academicYear: getCurrentAcademicYear(), type: 'LESSON' },
+      select: { startTime: true, endTime: true },
+      distinct: ['startTime', 'endTime'],
+      orderBy: { startTime: 'asc' },
+    }),
+    db.groupSchedule.findMany({
+      where: { tenantId, teacherId: teacher.id, type: 'LESSON' },
+      select: { startTime: true, endTime: true },
+      distinct: ['startTime', 'endTime'],
+      orderBy: { startTime: 'asc' },
+    }),
+  ])
+
+  const timeSlots = Array.from(
+    new Map([
+      ...classTimeSlots.map(s => [`${s.startTime}-${s.endTime}`, s]),
+      ...groupTimeSlots.map(s => [`${s.startTime}-${s.endTime}`, s]),
+    ]).values()
+  ).sort((a, b) => a.startTime.localeCompare(b.startTime))
 
   // Parse filters
   const period = searchParams.period || 'day'
@@ -119,9 +131,15 @@ export default async function TeacherGradesPage({
   }
 
   if (searchParams.classId && searchParams.classId !== 'all') {
-    whereClause.student = {
-      classId: searchParams.classId
-    }
+    whereClause.student = { classId: searchParams.classId }
+  }
+
+  if (searchParams.groupId && searchParams.groupId !== 'all') {
+    const groupStudents = await db.student.findMany({
+      where: { tenantId, groupId: searchParams.groupId, status: 'ACTIVE' },
+      select: { id: true },
+    })
+    whereClause.studentId = { in: groupStudents.map((s) => s.id) }
   }
 
   if (searchParams.subjectId && searchParams.subjectId !== 'all') {
@@ -206,6 +224,7 @@ export default async function TeacherGradesPage({
         <div className="order-2 lg:order-1 mb-6">
           <TeacherGradesFilters 
             classes={classes}
+            groups={groups}
             subjects={subjects}
             timeSlots={timeSlots}
           />

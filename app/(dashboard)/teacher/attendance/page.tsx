@@ -12,6 +12,7 @@ type SearchParams = {
   date?: string
   period?: 'day' | 'week' | 'month'
   classId?: string
+  groupId?: string
   subjectId?: string
   timeSlot?: string
 }
@@ -38,20 +39,22 @@ export default async function TeacherAttendancePage({
     redirect('/unauthorized')
   }
 
-  // Get teacher's classes and subjects from Schedule (constructor-based)
-  const teacherSchedules = await db.schedule.findMany({
-    where: {
-      tenantId,
-      teacherId: teacher.id,
-      academicYear: getCurrentAcademicYear(),
-      type: 'LESSON'
-    },
-    include: {
-      class: true,
-      subject: true
-    },
-    distinct: ['classId', 'subjectId']
-  })
+  // Get teacher's classes, groups and subjects from schedules
+  const [teacherSchedules, groupSchedules] = await Promise.all([
+    db.schedule.findMany({
+      where: { tenantId, teacherId: teacher.id, academicYear: getCurrentAcademicYear(), type: 'LESSON' },
+      include: { class: true, subject: true },
+      distinct: ['classId', 'subjectId'],
+    }),
+    db.groupSchedule.findMany({
+      where: { tenantId, teacherId: teacher.id, type: 'LESSON' },
+      include: {
+        group: { select: { id: true, name: true, _count: { select: { students: true } } } },
+        subject: true,
+      },
+      distinct: ['groupId', 'subjectId'],
+    }),
+  ])
 
   // Extract unique classes and subjects (filter out nulls)
   const classes = Array.from(
@@ -62,29 +65,43 @@ export default async function TeacherAttendancePage({
     ).values()
   )
 
-  const subjects = Array.from(
+  const groups = Array.from(
     new Map(
-      teacherSchedules
-        .filter(s => s.subject !== null)
-        .map(s => [s.subjectId, s.subject!])
+      groupSchedules
+        .filter(s => s.group !== null)
+        .map(s => [s.groupId, s.group!])
     ).values()
   )
 
-  // Get unique time slots from teacher's schedule
-  const timeSlots = await db.schedule.findMany({
-    where: {
-      tenantId,
-      teacherId: teacher.id,
-      academicYear: getCurrentAcademicYear(),
-      type: 'LESSON'
-    },
-    select: {
-      startTime: true,
-      endTime: true
-    },
-    distinct: ['startTime', 'endTime'],
-    orderBy: { startTime: 'asc' }
-  })
+  const subjects = Array.from(
+    new Map([
+      ...teacherSchedules.filter(s => s.subject !== null).map(s => [s.subjectId, s.subject!]),
+      ...groupSchedules.filter(s => s.subject !== null).map(s => [s.subjectId, s.subject!]),
+    ])
+  ).map(([, v]) => v)
+
+  // Get unique time slots from teacher's schedules
+  const [classTimeSlots, groupTimeSlots] = await Promise.all([
+    db.schedule.findMany({
+      where: { tenantId, teacherId: teacher.id, academicYear: getCurrentAcademicYear(), type: 'LESSON' },
+      select: { startTime: true, endTime: true },
+      distinct: ['startTime', 'endTime'],
+      orderBy: { startTime: 'asc' },
+    }),
+    db.groupSchedule.findMany({
+      where: { tenantId, teacherId: teacher.id, type: 'LESSON' },
+      select: { startTime: true, endTime: true },
+      distinct: ['startTime', 'endTime'],
+      orderBy: { startTime: 'asc' },
+    }),
+  ])
+
+  const timeSlots = Array.from(
+    new Map([
+      ...classTimeSlots.map(s => [`${s.startTime}-${s.endTime}`, s]),
+      ...groupTimeSlots.map(s => [`${s.startTime}-${s.endTime}`, s]),
+    ]).values()
+  ).sort((a, b) => a.startTime.localeCompare(b.startTime))
 
   // Parse filters
   const period = searchParams.period || 'day'
@@ -120,6 +137,14 @@ export default async function TeacherAttendancePage({
 
   if (searchParams.classId) {
     whereClause.classId = searchParams.classId
+  }
+
+  if (searchParams.groupId) {
+    const groupStudents = await db.student.findMany({
+      where: { tenantId, groupId: searchParams.groupId, status: 'ACTIVE' },
+      select: { id: true },
+    })
+    whereClause.studentId = { in: groupStudents.map((s) => s.id) }
   }
 
   if (searchParams.subjectId) {
@@ -192,6 +217,7 @@ export default async function TeacherAttendancePage({
         <div className="order-2 lg:order-1 mb-6">
           <TeacherAttendanceFilters 
             classes={classes}
+            groups={groups}
             subjects={subjects}
             timeSlots={timeSlots}
           />

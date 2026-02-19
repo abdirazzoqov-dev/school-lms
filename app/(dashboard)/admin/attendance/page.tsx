@@ -14,8 +14,9 @@ interface SearchParams {
   date?: string
   period?: 'day' | 'week' | 'month'
   classId?: string
+  groupId?: string
   subjectId?: string
-  timeSlot?: string // NEW: time slot filter (e.g., "08:00-08:55")
+  timeSlot?: string
 }
 
 // Optimized caching: Cache for 30 seconds for attendance data ⚡
@@ -39,8 +40,9 @@ export default async function AttendancePage({
   const selectedDate = searchParams.date || new Date().toISOString().split('T')[0]
   const period = searchParams.period || 'day'
   const classId = searchParams.classId
+  const groupId = searchParams.groupId
   const subjectId = searchParams.subjectId
-  const timeSlot = searchParams.timeSlot // NEW: time slot
+  const timeSlot = searchParams.timeSlot
 
   // Calculate date range based on period
   let startDate: Date
@@ -80,8 +82,17 @@ export default async function AttendancePage({
     whereClause.subjectId = subjectId
   }
 
+  // If groupId filter, get student IDs from that group first
+  if (groupId) {
+    const groupStudents = await db.student.findMany({
+      where: { tenantId, groupId, status: 'ACTIVE' },
+      select: { id: true },
+    })
+    whereClause.studentId = { in: groupStudents.map((s) => s.id) }
+  }
+
   // Get attendance records
-  const [attendances, classes, subjects, totalStudents, timeSlots] = await Promise.all([
+  const [attendances, classes, groups, subjects, totalStudents, timeSlots] = await Promise.all([
     db.attendance.findMany({
       where: whereClause,
       include: {
@@ -126,9 +137,16 @@ export default async function AttendancePage({
       select: {
         id: true,
         name: true,
-        _count: {
-          select: { students: true },
-        },
+        _count: { select: { students: true } },
+      },
+      orderBy: { name: 'asc' },
+    }),
+    db.group.findMany({
+      where: { tenantId },
+      select: {
+        id: true,
+        name: true,
+        _count: { select: { students: true } },
       },
       orderBy: { name: 'asc' },
     }),
@@ -303,6 +321,7 @@ export default async function AttendancePage({
       {/* Filters */}
       <AttendanceFilters
         classes={classes}
+        groups={groups}
         subjects={subjects}
         timeSlots={uniqueTimeSlots}
         searchParams={searchParams}

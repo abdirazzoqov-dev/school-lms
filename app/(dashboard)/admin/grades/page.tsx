@@ -13,6 +13,7 @@ interface SearchParams {
   date?: string
   period?: 'day' | 'week' | 'month'
   classId?: string
+  groupId?: string
   subjectId?: string
   quarter?: string
   gradeType?: string
@@ -72,9 +73,15 @@ export default async function GradesPage({
   }
 
   if (searchParams.classId) {
-    whereClause.student = {
-      classId: searchParams.classId,
-    }
+    whereClause.student = { classId: searchParams.classId }
+  }
+
+  if (searchParams.groupId) {
+    const groupStudents = await db.student.findMany({
+      where: { tenantId, groupId: searchParams.groupId, status: 'ACTIVE' },
+      select: { id: true },
+    })
+    whereClause.studentId = { in: groupStudents.map((s) => s.id) }
   }
 
   if (searchParams.subjectId) {
@@ -108,7 +115,7 @@ export default async function GradesPage({
   }
 
   // Get grades
-  const [grades, classes, subjects, schedules] = await Promise.all([
+  const [grades, classes, groups, subjects, schedules] = await Promise.all([
     db.grade.findMany({
       where: whereClause,
       include: {
@@ -152,9 +159,16 @@ export default async function GradesPage({
       select: {
         id: true,
         name: true,
-        _count: {
-          select: { students: true },
-        },
+        _count: { select: { students: true } },
+      },
+      orderBy: { name: 'asc' },
+    }),
+    db.group.findMany({
+      where: { tenantId },
+      select: {
+        id: true,
+        name: true,
+        _count: { select: { students: true } },
       },
       orderBy: { name: 'asc' },
     }),
@@ -316,6 +330,7 @@ export default async function GradesPage({
       {/* Filters */}
       <GradesFilters
         classes={classes}
+        groups={groups}
         subjects={subjects}
         timeSlots={uniqueTimeSlots}
         searchParams={searchParams}

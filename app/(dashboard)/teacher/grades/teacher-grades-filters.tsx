@@ -18,11 +18,12 @@ import { Filter, X, Calendar, Clock, BookOpen, Users, FileSpreadsheet } from 'lu
 
 type Props = {
   classes: Array<{ id: string; name: string }>
+  groups: Array<{ id: string; name: string; _count: { students: number } }>
   subjects: Array<{ id: string; name: string }>
   timeSlots: Array<{ startTime: string; endTime: string }>
 }
 
-export function TeacherGradesFilters({ classes, subjects, timeSlots }: Props) {
+export function TeacherGradesFilters({ classes, groups, subjects, timeSlots }: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -30,6 +31,7 @@ export function TeacherGradesFilters({ classes, subjects, timeSlots }: Props) {
   const [date, setDate] = useState(searchParams.get('date') || new Date().toISOString().split('T')[0])
   const [period, setPeriod] = useState(searchParams.get('period') || 'day')
   const [classId, setClassId] = useState(searchParams.get('classId') || 'all')
+  const [groupId, setGroupId] = useState(searchParams.get('groupId') || 'all')
   const [subjectId, setSubjectId] = useState(searchParams.get('subjectId') || 'all')
   const [timeSlot, setTimeSlot] = useState(searchParams.get('timeSlot') || 'all')
 
@@ -58,6 +60,11 @@ export function TeacherGradesFilters({ classes, subjects, timeSlots }: Props) {
     updateSearchParams('classId', newClassId)
   }
 
+  const handleGroupChange = (newGroupId: string) => {
+    setGroupId(newGroupId)
+    updateSearchParams('groupId', newGroupId)
+  }
+
   const handleSubjectChange = (newSubjectId: string) => {
     setSubjectId(newSubjectId)
     updateSearchParams('subjectId', newSubjectId)
@@ -72,6 +79,7 @@ export function TeacherGradesFilters({ classes, subjects, timeSlots }: Props) {
     setDate(new Date().toISOString().split('T')[0])
     setPeriod('day')
     setClassId('all')
+    setGroupId('all')
     setSubjectId('all')
     setTimeSlot('all')
     router.push(pathname)
@@ -88,7 +96,7 @@ export function TeacherGradesFilters({ classes, subjects, timeSlots }: Props) {
     window.location.href = `/api/teacher/grades/export?${params.toString()}`
   }
 
-  const hasActiveFilters = (classId && classId !== 'all') || (subjectId && subjectId !== 'all') || (timeSlot && timeSlot !== 'all') || period !== 'day'
+  const hasActiveFilters = (classId && classId !== 'all') || (groupId && groupId !== 'all') || (subjectId && subjectId !== 'all') || (timeSlot && timeSlot !== 'all') || period !== 'day'
 
   // Get label for period
   const periodLabels: Record<string, string> = {
@@ -138,7 +146,7 @@ export function TeacherGradesFilters({ classes, subjects, timeSlots }: Props) {
           </div>
 
           {/* Filter Grid */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
             {/* Date */}
             <div className="space-y-2">
               <Label htmlFor="date" className="flex items-center gap-2 text-sm font-medium">
@@ -187,6 +195,27 @@ export function TeacherGradesFilters({ classes, subjects, timeSlots }: Props) {
                   {classes.map((cls) => (
                     <SelectItem key={cls.id} value={cls.id}>
                       {cls.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Group */}
+            <div className="space-y-2">
+              <Label htmlFor="group" className="flex items-center gap-2 text-sm font-medium">
+                <Users className="h-4 w-4 text-purple-500" />
+                Guruh
+              </Label>
+              <Select value={groupId} onValueChange={handleGroupChange}>
+                <SelectTrigger id="group">
+                  <SelectValue placeholder="Barcha guruhlar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Barcha guruhlar</SelectItem>
+                  {groups.map((grp) => (
+                    <SelectItem key={grp.id} value={grp.id}>
+                      {grp.name} ({grp._count.students})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -255,10 +284,15 @@ export function TeacherGradesFilters({ classes, subjects, timeSlots }: Props) {
                 {classId && classId !== 'all' && (
                   <Badge variant="secondary" className="gap-1">
                     Sinf: {classes.find(c => c.id === classId)?.name}
-                    <button
-                      onClick={() => handleClassChange('all')}
-                      className="ml-1 hover:bg-secondary-foreground/20 rounded-full"
-                    >
+                    <button onClick={() => handleClassChange('all')} className="ml-1 hover:bg-secondary-foreground/20 rounded-full">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )}
+                {groupId && groupId !== 'all' && (
+                  <Badge variant="secondary" className="gap-1 bg-purple-100 text-purple-700">
+                    Guruh: {groups.find(g => g.id === groupId)?.name}
+                    <button onClick={() => handleGroupChange('all')} className="ml-1 hover:bg-secondary-foreground/20 rounded-full">
                       <X className="h-3 w-3" />
                     </button>
                   </Badge>
