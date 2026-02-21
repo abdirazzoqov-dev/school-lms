@@ -319,12 +319,12 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
         return
       }
       const result = await replyToMessage(refMsg.id, { content: replyText.trim() })
-      if (result.success) {
+    if (result.success) {
         setReplyText('')
         toast.success('Xabar yuborildi')
-        router.refresh()
-      } else {
-        toast.error(result.error || 'Xatolik yuz berdi')
+      router.refresh()
+    } else {
+      toast.error(result.error || 'Xatolik yuz berdi')
       }
     } catch {
       toast.error('Xatolik yuz berdi')
@@ -561,7 +561,7 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
                   const prevSameSender = prev && prev.sender.id === msg.sender.id && !showDate
                   const isEditing = editingId === msg.id
 
-                  return (
+  return (
                     <div key={msg.id}>
                       {/* Date separator */}
                       {showDate && (
