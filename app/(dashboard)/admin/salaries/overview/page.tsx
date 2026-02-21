@@ -15,7 +15,7 @@ const MONTHS = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyun', 'Iyul', 'Avg', 'Sen',
 
 export default async function SalariesOverviewPage() {
   const session = await getServerSession(authOptions)
-  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) redirect('/unauthorized')
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'MODERATOR')) redirect('/unauthorized')
 
   const tenantId = session.user.tenantId!
   const currentYear = new Date().getFullYear()

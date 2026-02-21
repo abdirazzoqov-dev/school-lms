@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import Link from 'next/link'
 import * as XLSX from 'xlsx'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 
 interface Attendance {
   id: string
@@ -57,6 +58,10 @@ interface AttendanceTableProps {
 }
 
 export function AttendanceTable({ attendances, period, uniqueDates }: AttendanceTableProps) {
+  const { can } = useAdminPermissions()
+  const canRead   = can('attendance', 'READ')
+  const canUpdate = can('attendance', 'UPDATE')
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PRESENT':
@@ -175,12 +180,14 @@ export function AttendanceTable({ attendances, period, uniqueDates }: Attendance
         <p className="text-muted-foreground mb-4">
           Tanlangan filtrlar uchun davomat yozuvlari topilmadi
         </p>
-        <Link href="/admin/attendance/mark">
-          <Button>
-            <ClipboardCheck className="h-4 w-4 mr-2" />
-            Davomat belgilash
-          </Button>
-        </Link>
+        {can('attendance', 'CREATE') && (
+          <Link href="/admin/attendance/mark">
+            <Button>
+              <ClipboardCheck className="h-4 w-4 mr-2" />
+              Davomat belgilash
+            </Button>
+          </Link>
+        )}
       </div>
     )
   }
@@ -299,12 +306,14 @@ export function AttendanceTable({ attendances, period, uniqueDates }: Attendance
   return (
     <div className="space-y-4">
       {/* Excel Export Button */}
-      <div className="flex justify-end">
-        <Button onClick={exportToExcel} variant="outline" className="gap-2">
-          <FileDown className="h-4 w-4" />
-          Excel yuklab olish
-        </Button>
-      </div>
+      {canRead && (
+        <div className="flex justify-end">
+          <Button onClick={exportToExcel} variant="outline" className="gap-2">
+            <FileDown className="h-4 w-4" />
+            Excel yuklab olish
+          </Button>
+        </div>
+      )}
 
       <div className="border rounded-lg overflow-hidden">
         <Table>
@@ -382,29 +391,35 @@ export function AttendanceTable({ attendances, period, uniqueDates }: Attendance
               </TableCell>
 
               <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Amallar</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href={`/admin/attendance/${attendance.id}`}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        Ko'rish
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href={`/admin/attendance/${attendance.id}/edit`}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Tahrirlash
-                      </Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {(canRead || canUpdate) && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Amallar</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {canRead && (
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/attendance/${attendance.id}`}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Ko'rish
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {canUpdate && (
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/attendance/${attendance.id}/edit`}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Tahrirlash
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </TableCell>
             </TableRow>
           ))}

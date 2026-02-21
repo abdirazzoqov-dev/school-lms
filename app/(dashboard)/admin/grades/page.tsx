@@ -8,6 +8,7 @@ import { Award, Plus, TrendingUp, BarChart3, GraduationCap, FileText } from 'luc
 import Link from 'next/link'
 import { GradesFilters } from './grades-filters'
 import { GradesTable } from './grades-table'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 interface SearchParams {
   date?: string
@@ -31,7 +32,7 @@ export default async function GradesPage({
 }) {
   const session = await getServerSession(authOptions)
 
-  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'MODERATOR')) {
     redirect('/unauthorized')
   }
 
@@ -240,18 +241,22 @@ export default async function GradesPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/admin/grades/mark">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Baho Qo'yish
-            </Button>
-          </Link>
-          <Link href="/admin/grades/reports">
-            <Button variant="outline" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Hisobotlar
-            </Button>
-          </Link>
+          <PermissionGate resource="grades" action="CREATE">
+            <Link href="/admin/grades/mark">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Baho Qo'yish
+              </Button>
+            </Link>
+          </PermissionGate>
+          <PermissionGate resource="grades" action="READ">
+            <Link href="/admin/grades/reports">
+              <Button variant="outline" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Hisobotlar
+              </Button>
+            </Link>
+          </PermissionGate>
         </div>
       </div>
 

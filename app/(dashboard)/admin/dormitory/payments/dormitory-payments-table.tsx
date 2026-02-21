@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { DollarSign, Building2, Bed, User, Calendar, CheckCircle2 } from 'lucide-react'
 import { addPartialPayment } from '@/app/actions/payment'
 import { toast } from 'sonner'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 
 interface DormitoryPaymentsTableProps {
   payments: any[]
@@ -21,6 +22,8 @@ interface DormitoryPaymentsTableProps {
 
 export function DormitoryPaymentsTable({ payments }: DormitoryPaymentsTableProps) {
   const router = useRouter()
+  const { can } = useAdminPermissions()
+  const canUpdate = can('dormitory', 'UPDATE')
   const [selectedPayment, setSelectedPayment] = useState<any>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -181,7 +184,7 @@ export function DormitoryPaymentsTable({ payments }: DormitoryPaymentsTableProps
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    {payment.status !== 'COMPLETED' && (
+                    {canUpdate && payment.status !== 'COMPLETED' && (
                       <Button
                         size="sm"
                         onClick={() => openDialog(payment)}

@@ -24,6 +24,7 @@ import { checkOutStudent } from '@/app/actions/dormitory'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/use-toast'
 import { useState } from 'react'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 
 interface Assignment {
   id: string
@@ -65,6 +66,9 @@ export function AssignmentsTable({ assignments }: AssignmentsTableProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [processingId, setProcessingId] = useState<string | null>(null)
+  const { can } = useAdminPermissions()
+  const canRead   = can('dormitory', 'READ')
+  const canUpdate = can('dormitory', 'UPDATE')
 
   const handleCheckOut = async (assignmentId: string) => {
     if (!confirm('O\'quvchini yotoqxonadan chiqarishni tasdiqlaysizmi?')) return
@@ -113,12 +117,14 @@ export function AssignmentsTable({ assignments }: AssignmentsTableProps) {
         <p className="text-muted-foreground mb-4">
           Hozircha hech kim yotoqxonaga joylashtirilmagan
         </p>
-        <Link href="/admin/dormitory/assign">
-          <Button>
-            <Users className="h-4 w-4 mr-2" />
-            Birinchi joylashtirishni qilish
-          </Button>
-        </Link>
+        {can('dormitory', 'CREATE') && (
+          <Link href="/admin/dormitory/assign">
+            <Button>
+              <Users className="h-4 w-4 mr-2" />
+              Birinchi joylashtirishni qilish
+            </Button>
+          </Link>
+        )}
       </div>
     )
   }
@@ -201,36 +207,40 @@ export function AssignmentsTable({ assignments }: AssignmentsTableProps) {
               </TableCell>
 
               <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Amallar</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href={`/admin/students/${assignment.student.id}`}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        O'quvchini ko'rish
-                      </Link>
-                    </DropdownMenuItem>
-                    {assignment.status === 'ACTIVE' && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-orange-600"
-                          onClick={() => handleCheckOut(assignment.id)}
-                          disabled={processingId === assignment.id}
-                        >
-                          <LogOut className="h-4 w-4 mr-2" />
-                          {processingId === assignment.id ? 'Chiqarilmoqda...' : 'Chiqarish'}
+                {(canRead || canUpdate) && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Amallar</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {canRead && (
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/students/${assignment.student.id}`}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            O'quvchini ko'rish
+                          </Link>
                         </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      )}
+                      {canUpdate && assignment.status === 'ACTIVE' && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-orange-600"
+                            onClick={() => handleCheckOut(assignment.id)}
+                            disabled={processingId === assignment.id}
+                          >
+                            <LogOut className="h-4 w-4 mr-2" />
+                            {processingId === assignment.id ? 'Chiqarilmoqda...' : 'Chiqarish'}
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </TableCell>
             </TableRow>
           ))}

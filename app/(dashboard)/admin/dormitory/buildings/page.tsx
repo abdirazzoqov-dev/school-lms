@@ -15,7 +15,7 @@ export const dynamic = 'auto' // Optimized for better caching
 export default async function BuildingsPage() {
   const session = await getServerSession(authOptions)
 
-  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'MODERATOR')) {
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'MODERATOR')) {
     redirect('/unauthorized')
   }
 

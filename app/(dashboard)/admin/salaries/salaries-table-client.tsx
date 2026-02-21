@@ -11,6 +11,7 @@ import { SalaryPaymentHistory } from '@/components/salary-payment-history'
 import { monthNames } from '@/lib/validations/salary'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import * as XLSX from 'xlsx'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 
 interface SalaryPayment {
   id: string
@@ -54,6 +55,10 @@ interface SalariesTableClientProps {
 }
 
 export function SalariesTableClient({ salaryPayments, groupedByEmployee = false }: SalariesTableClientProps) {
+  const { can } = useAdminPermissions()
+  const canRead   = can('salaries', 'READ')
+  const canUpdate = can('salaries', 'UPDATE')
+
   // Group payments by employee and month
   const groupPaymentsByEmployee = () => {
     const grouped = new Map<string, SalaryPayment[]>()
@@ -280,7 +285,7 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
   return (
     <>
       {/* Excel Export Button */}
-      {employeeGroups.length > 0 && (
+      {canRead && employeeGroups.length > 0 && (
         <div className="mb-4 flex justify-end">
           <Button
             onClick={exportToExcel}
@@ -582,7 +587,7 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                               
                               {/* Action button */}
                               <div className="text-right">
-                                {Number(p.paidAmount || 0) < Number(p.amount) && (
+                                {canUpdate && Number(p.paidAmount || 0) < Number(p.amount) && (
                                   <div className="space-y-2">
                                     <Button
                                       size="sm"

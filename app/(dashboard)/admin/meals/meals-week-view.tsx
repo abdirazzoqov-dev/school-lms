@@ -9,6 +9,7 @@ import { deleteMeal } from '@/app/actions/meal'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
+import { useAdminPermissions } from '@/components/admin/permissions-provider'
 
 const DAYS = [
   { value: 0, label: 'Yakshanba' },
@@ -45,6 +46,10 @@ type Meal = {
 
 export function MealsWeekView({ meals }: { meals: Meal[] }) {
   const router = useRouter()
+  const { can } = useAdminPermissions()
+  const canCreate = can('meals', 'CREATE')
+  const canUpdate = can('meals', 'UPDATE')
+  const canDelete = can('meals', 'DELETE')
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [selectedMeal, setSelectedMeal] = useState<number | null>(null)
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null)
@@ -119,25 +124,31 @@ export function MealsWeekView({ meals }: { meals: Meal[] }) {
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                           
                           {/* Action buttons on image */}
-                          <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              className="h-8 w-8 p-0 rounded-full backdrop-blur-sm bg-white/90 hover:bg-white"
-                              onClick={() => handleEditMeal(mealData)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              className="h-8 w-8 p-0 rounded-full backdrop-blur-sm bg-white/90 hover:bg-destructive hover:text-destructive-foreground"
-                              onClick={() => handleDeleteMeal(mealData.id)}
-                              disabled={isDeleting}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          {(canUpdate || canDelete) && (
+                            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              {canUpdate && (
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 rounded-full backdrop-blur-sm bg-white/90 hover:bg-white"
+                                  onClick={() => handleEditMeal(mealData)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {canDelete && (
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 rounded-full backdrop-blur-sm bg-white/90 hover:bg-destructive hover:text-destructive-foreground"
+                                  onClick={() => handleDeleteMeal(mealData.id)}
+                                  disabled={isDeleting}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          )}
                           
                           {/* Meal label on image */}
                           <div className="absolute bottom-2 left-2">
@@ -162,25 +173,29 @@ export function MealsWeekView({ meals }: { meals: Meal[] }) {
                             <CardTitle className="text-sm font-medium">
                               {meal.label}
                             </CardTitle>
-                            {mealData && (
+                            {mealData && (canUpdate || canDelete) && (
                               <div className="flex gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 w-7 p-0"
-                                  onClick={() => handleEditMeal(mealData)}
-                                >
-                                  <Edit className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 w-7 p-0 text-destructive"
-                                  onClick={() => handleDeleteMeal(mealData.id)}
-                                  disabled={isDeleting}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
+                                {canUpdate && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 w-7 p-0"
+                                    onClick={() => handleEditMeal(mealData)}
+                                  >
+                                    <Edit className="h-3.5 w-3.5" />
+                                  </Button>
+                                )}
+                                {canDelete && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 w-7 p-0 text-destructive"
+                                    onClick={() => handleDeleteMeal(mealData.id)}
+                                    disabled={isDeleting}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                )}
                               </div>
                             )}
                           </div>
@@ -236,7 +251,7 @@ export function MealsWeekView({ meals }: { meals: Meal[] }) {
                               </div>
                             )}
                           </div>
-                        ) : (
+                        ) : canCreate ? (
                           <Button
                             variant="outline"
                             className="w-full h-32 hover:bg-primary/5 hover:border-primary/50 transition-colors"
@@ -247,6 +262,10 @@ export function MealsWeekView({ meals }: { meals: Meal[] }) {
                               <span className="text-sm font-medium">Ovqat qo'shish</span>
                             </div>
                           </Button>
+                        ) : (
+                          <div className="w-full h-32 flex items-center justify-center text-muted-foreground text-sm border rounded-lg bg-muted/30">
+                            <UtensilsCrossed className="h-6 w-6" />
+                          </div>
                         )}
                       </CardContent>
                     </Card>
