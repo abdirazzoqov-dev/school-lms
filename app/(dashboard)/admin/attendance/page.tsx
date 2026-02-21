@@ -56,14 +56,21 @@ export default async function AttendancePage({
     const day = baseDate.getDay()
     const diff = baseDate.getDate() - day + (day === 0 ? -6 : 1)
     startDate = new Date(baseDate.setDate(diff))
+    startDate.setHours(0, 0, 0, 0)
     endDate = new Date(startDate)
     endDate.setDate(startDate.getDate() + 6)
+    endDate.setHours(23, 59, 59, 999)
   } else if (period === 'month') {
     startDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1)
+    startDate.setHours(0, 0, 0, 0)
     endDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0)
+    endDate.setHours(23, 59, 59, 999)
   } else {
-    startDate = baseDate
-    endDate = baseDate
+    // Day: cover full 24 hours so records stored at any time are found
+    startDate = new Date(selectedDate)
+    startDate.setHours(0, 0, 0, 0)
+    endDate = new Date(selectedDate)
+    endDate.setHours(23, 59, 59, 999)
   }
 
   // Build where clause
