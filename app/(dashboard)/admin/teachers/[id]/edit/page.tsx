@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { updateTeacher, resetTeacherPassword } from '@/app/actions/teacher'
+import { CurrencyInput } from '@/components/ui/currency-input'
 import { useToast } from '@/components/ui/use-toast'
 import { ArrowLeft, UserPlus, Loader2, Key, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
@@ -36,7 +37,7 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
     specialization: '',
     education: '',
     experienceYears: 0,
-    monthlySalary: '',
+    monthlySalary: 0,
   })
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false)
   const [newPassword, setNewPassword] = useState('')
@@ -57,7 +58,7 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
             specialization: data.teacher.specialization,
             education: data.teacher.education || '',
             experienceYears: data.teacher.experienceYears || 0,
-            monthlySalary: data.teacher.monthlySalary ? data.teacher.monthlySalary.toString() : '',
+            monthlySalary: data.teacher.monthlySalary ? Number(data.teacher.monthlySalary) : 0,
           })
           setUserId(data.teacher.user.id || '')
           setCurrentAvatar(data.teacher.user.avatar || null)
@@ -81,7 +82,7 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
     try {
       const submitData = {
         ...formData,
-        monthlySalary: formData.monthlySalary ? parseFloat(formData.monthlySalary) : undefined,
+        monthlySalary: formData.monthlySalary > 0 ? formData.monthlySalary : undefined,
       }
       const result = await updateTeacher(params.id, submitData)
 
@@ -276,14 +277,12 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
 
             <div className="space-y-2">
               <Label htmlFor="monthlySalary">💰 Oylik Maosh (so'm)</Label>
-              <Input
+              <CurrencyInput
                 id="monthlySalary"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="Masalan: 5000000"
+                placeholder="5 000 000"
                 value={formData.monthlySalary}
-                onChange={(e) => setFormData(prev => ({ ...prev, monthlySalary: e.target.value }))}
+                onChange={(val) => setFormData(prev => ({ ...prev, monthlySalary: val }))}
+                currency="so'm"
               />
               <p className="text-xs text-muted-foreground">
                 O'qituvchining oylik maoshi (so'm)

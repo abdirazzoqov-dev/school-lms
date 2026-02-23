@@ -11,6 +11,7 @@ import { createTeacher } from '@/app/actions/teacher'
 import { uploadAvatar } from '@/app/actions/upload-avatar'
 import { useToast } from '@/components/ui/use-toast'
 import { ArrowLeft, UserPlus, Loader2, Key } from 'lucide-react'
+import { CurrencyInput } from '@/components/ui/currency-input'
 import Link from 'next/link'
 import { ProfilePhotoUpload } from '@/components/profile-photo-upload'
 
@@ -252,15 +253,12 @@ export default function CreateTeacherPage() {
 
             <div className="space-y-2">
               <Label htmlFor="monthlySalary">Oylik Maosh (so'm) *</Label>
-              <Input
+              <CurrencyInput
                 id="monthlySalary"
-                type="number"
-                inputMode="numeric"
-                min="0"
-                step="1"
-                placeholder="5000000"
-                value={formData.monthlySalary || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, monthlySalary: parseFloat(e.target.value) || 0 }))}
+                placeholder="5 000 000"
+                value={formData.monthlySalary}
+                onChange={(val) => setFormData(prev => ({ ...prev, monthlySalary: val }))}
+                currency="so'm"
                 required
               />
               {formData.monthlySalary > 0 && (

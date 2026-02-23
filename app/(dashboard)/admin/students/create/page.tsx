@@ -12,6 +12,7 @@ import { createStudent } from '@/app/actions/student'
 import { uploadAvatar } from '@/app/actions/upload-avatar'
 import { useToast } from '@/components/ui/use-toast'
 import { ArrowLeft, UserPlus, Loader2, Users, Home, Plus, X, Radio } from 'lucide-react'
+import { CurrencyInput } from '@/components/ui/currency-input'
 import Link from 'next/link'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
@@ -790,19 +791,12 @@ export default function CreateStudentPage() {
                   <Label htmlFor="monthlyTuitionFee">
                     Oylik O'qish To'lov Summasi (so'm) *
                   </Label>
-                  <Input
+                  <CurrencyInput
                     id="monthlyTuitionFee"
-                    type="number"
-                    inputMode="numeric"
-                    min="0"
-                    max="200000000"
-                    step="1"
-                    placeholder="Masalan: 500000 (0 dan 200,000,000 gacha)"
-                    value={formData.monthlyTuitionFee || ''}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      monthlyTuitionFee: parseFloat(e.target.value) || 0 
-                    }))}
+                    placeholder="500 000"
+                    value={formData.monthlyTuitionFee}
+                    onChange={(val) => setFormData(prev => ({ ...prev, monthlyTuitionFee: val }))}
+                    currency="so'm"
                     required
                   />
                   {formData.monthlyTuitionFee > 0 && (

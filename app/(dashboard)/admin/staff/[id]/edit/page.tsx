@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { updateStaff, resetStaffPassword } from '@/app/actions/staff'
 import { useToast } from '@/components/ui/use-toast'
 import { ArrowLeft, UserPlus, Loader2, Key, Eye, EyeOff } from 'lucide-react'
+import { CurrencyInput } from '@/components/ui/currency-input'
 import Link from 'next/link'
 import { ProfilePhotoUpload } from '@/components/profile-photo-upload'
 import {
@@ -36,7 +37,7 @@ export default function EditStaffPage({ params }: { params: { id: string } }) {
     position: '',
     department: '',
     education: '',
-    monthlySalary: '',
+    monthlySalary: 0,
   })
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false)
   const [newPassword, setNewPassword] = useState('')
@@ -57,7 +58,7 @@ export default function EditStaffPage({ params }: { params: { id: string } }) {
             position: data.staff.position,
             department: data.staff.department || '',
             education: data.staff.education || '',
-            monthlySalary: data.staff.monthlySalary ? data.staff.monthlySalary.toString() : '',
+            monthlySalary: data.staff.monthlySalary ? Number(data.staff.monthlySalary) : 0,
           })
           setUserId(data.staff.user.id || '')
           setCurrentAvatar(data.staff.user.avatar || null)
@@ -81,7 +82,7 @@ export default function EditStaffPage({ params }: { params: { id: string } }) {
     try {
       const submitData = {
         ...formData,
-        monthlySalary: formData.monthlySalary ? parseFloat(formData.monthlySalary) : undefined,
+        monthlySalary: formData.monthlySalary > 0 ? formData.monthlySalary : undefined,
       }
       const result = await updateStaff(params.id, submitData)
 
@@ -274,17 +275,16 @@ export default function EditStaffPage({ params }: { params: { id: string } }) {
 
             <div className="space-y-2">
               <Label htmlFor="monthlySalary">Oylik Maosh (so'm)</Label>
-              <Input
+              <CurrencyInput
                 id="monthlySalary"
-                type="number"
-                min="0"
-                placeholder="3000000"
+                placeholder="3 000 000"
                 value={formData.monthlySalary}
-                onChange={(e) => setFormData(prev => ({ ...prev, monthlySalary: e.target.value }))}
+                onChange={(val) => setFormData(prev => ({ ...prev, monthlySalary: val }))}
+                currency="so'm"
               />
-              {formData.monthlySalary && parseFloat(formData.monthlySalary) > 0 && (
+              {formData.monthlySalary > 0 && (
                 <p className="text-sm text-muted-foreground">
-                  {parseFloat(formData.monthlySalary).toLocaleString('uz-UZ')} so'm/oy
+                  {formData.monthlySalary.toLocaleString('uz-UZ')} so'm/oy
                 </p>
               )}
             </div>

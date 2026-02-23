@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/select'
 import { useToast } from '@/components/ui/use-toast'
 import { Loader2 } from 'lucide-react'
+import { CurrencyInput } from '@/components/ui/currency-input'
 import { roomSchema, type RoomFormData } from '@/lib/validations/dormitory'
 import { createRoom } from '@/app/actions/dormitory'
 
@@ -263,20 +264,17 @@ export function RoomForm({ buildings }: RoomFormProps) {
                   <FormItem>
                     <FormLabel>Oylik narx *</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="1000"
-                        {...field}
-                        onChange={(e) =>
-                          field.onChange(parseFloat(e.target.value) || 0)
-                        }
+                      <CurrencyInput
+                        placeholder="500 000"
+                        value={Number(field.value)}
+                        onChange={(val) => field.onChange(val)}
+                        currency="so'm"
                       />
                     </FormControl>
                     <FormDescription>
                       {field.value === 0 
                         ? '🎓 Bepul xona — bu xonada yashovchilardan to\'lov olinmaydi'
-                        : `so'mda (${Number(field.value).toLocaleString('uz-UZ')} so'm/oy)`
+                        : `${Number(field.value).toLocaleString('uz-UZ')} so'm/oy`
                       }
                     </FormDescription>
                     <FormMessage />

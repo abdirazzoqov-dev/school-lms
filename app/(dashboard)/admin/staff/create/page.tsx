@@ -12,6 +12,7 @@ import { saveStaffPermissions } from '@/app/actions/staff-permissions'
 import { uploadAvatar } from '@/app/actions/upload-avatar'
 import { useToast } from '@/components/ui/use-toast'
 import { ArrowLeft, UserPlus, Loader2, Key, Briefcase } from 'lucide-react'
+import { CurrencyInput } from '@/components/ui/currency-input'
 import Link from 'next/link'
 import { ProfilePhotoUpload } from '@/components/profile-photo-upload'
 import { StaffPermissionMatrix, matrixToPermissionInputs } from '@/components/admin/staff-permission-matrix'
@@ -257,13 +258,12 @@ export default function CreateStaffPage() {
 
             <div className="space-y-2">
               <Label htmlFor="monthlySalary">Oylik Maosh (so'm)</Label>
-              <Input
+              <CurrencyInput
                 id="monthlySalary"
-                type="number"
-                min="0"
-                placeholder="3000000"
-                value={formData.monthlySalary || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, monthlySalary: parseFloat(e.target.value) || 0 }))}
+                placeholder="3 000 000"
+                value={formData.monthlySalary}
+                onChange={(val) => setFormData(prev => ({ ...prev, monthlySalary: val }))}
+                currency="so'm"
               />
               {formData.monthlySalary > 0 && (
                 <p className="text-sm text-muted-foreground">
