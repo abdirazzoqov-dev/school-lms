@@ -13,6 +13,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { formatNumber } from '@/lib/utils'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 export const revalidate = 30
 export const dynamic = 'force-dynamic'
@@ -218,18 +219,22 @@ export default async function ClassDetailPage({ params }: PageProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" asChild>
-            <Link href={`/admin/students/create?classId=${classItem.id}`}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              O'quvchi qo'shish
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href={`/admin/classes/${classItem.id}/edit`}>
-              <Edit className="mr-2 h-4 w-4" />
-              Tahrirlash
-            </Link>
-          </Button>
+          <PermissionGate resource="students" action="CREATE">
+            <Button variant="outline" asChild>
+              <Link href={`/admin/students/create?classId=${classItem.id}`}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                O'quvchi qo'shish
+              </Link>
+            </Button>
+          </PermissionGate>
+          <PermissionGate resource="classes" action="UPDATE">
+            <Button asChild>
+              <Link href={`/admin/classes/${classItem.id}/edit`}>
+                <Edit className="mr-2 h-4 w-4" />
+                Tahrirlash
+              </Link>
+            </Button>
+          </PermissionGate>
         </div>
       </div>
 
@@ -355,11 +360,13 @@ export default async function ClassDetailPage({ params }: PageProps) {
                 <p className="text-sm text-muted-foreground mb-3">
                   Sinf rahbari tayinlanmagan
                 </p>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/admin/classes/${classItem.id}/edit`}>
-                    Tayinlash
-                  </Link>
-                </Button>
+                <PermissionGate resource="classes" action="UPDATE">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/admin/classes/${classItem.id}/edit`}>
+                      Tayinlash
+                    </Link>
+                  </Button>
+                </PermissionGate>
               </div>
             )}
           </CardContent>
@@ -541,12 +548,14 @@ export default async function ClassDetailPage({ params }: PageProps) {
               <p className="text-sm text-muted-foreground mb-4">
                 Sinfga birinchi o'quvchini qo'shing
               </p>
-              <Button asChild>
-                <Link href={`/admin/students/create?classId=${classItem.id}`}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  O'quvchi qo'shish
-                </Link>
-              </Button>
+              <PermissionGate resource="students" action="CREATE">
+                <Button asChild>
+                  <Link href={`/admin/students/create?classId=${classItem.id}`}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    O'quvchi qo'shish
+                  </Link>
+                </Button>
+              </PermissionGate>
             </div>
           )}
         </CardContent>

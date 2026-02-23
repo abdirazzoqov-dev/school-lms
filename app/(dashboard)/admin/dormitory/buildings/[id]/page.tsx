@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, Building2, Edit, DoorClosed, BedDouble, Users, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 interface PageProps {
   params: {
@@ -122,12 +123,14 @@ export default async function BuildingDetailPage({ params }: PageProps) {
             </p>
           </div>
         </div>
-        <Link href={`/admin/dormitory/buildings/${building.id}/edit`}>
-          <Button variant="outline" className="gap-2">
-            <Edit className="h-4 w-4" />
-            Tahrirlash
-          </Button>
-        </Link>
+        <PermissionGate resource="dormitory" action="UPDATE">
+          <Link href={`/admin/dormitory/buildings/${building.id}/edit`}>
+            <Button variant="outline" className="gap-2">
+              <Edit className="h-4 w-4" />
+              Tahrirlash
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       {/* Statistics Cards */}
@@ -356,12 +359,14 @@ export default async function BuildingDetailPage({ params }: PageProps) {
               <p className="text-muted-foreground">
                 Bu binoda hozircha xonalar yo'q
               </p>
-              <Link href="/admin/dormitory/rooms/create">
-                <Button className="mt-4">
-                  <DoorClosed className="h-4 w-4 mr-2" />
-                  Xona qo'shish
-                </Button>
-              </Link>
+              <PermissionGate resource="dormitory" action="CREATE">
+                <Link href="/admin/dormitory/rooms/create">
+                  <Button className="mt-4">
+                    <DoorClosed className="h-4 w-4 mr-2" />
+                    Xona qo'shish
+                  </Button>
+                </Link>
+              </PermissionGate>
             </div>
           )}
         </CardContent>

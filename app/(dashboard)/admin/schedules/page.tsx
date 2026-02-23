@@ -224,12 +224,14 @@ export default async function SchedulesPage({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/admin/schedules/builder">
-              <Calendar className="mr-2 h-4 w-4" />
-              Constructor
-            </Link>
-          </Button>
+          <PermissionGate resource="schedules" action="CREATE">
+            <Button variant="outline" asChild>
+              <Link href="/admin/schedules/builder">
+                <Calendar className="mr-2 h-4 w-4" />
+                Constructor
+              </Link>
+            </Button>
+          </PermissionGate>
           <PermissionGate resource="schedules" action="CREATE">
             <Button asChild>
               <Link href="/admin/schedules/create">

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { formatNumber } from '@/lib/utils'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 export const revalidate = 60
 export const dynamic = 'auto' // Optimized for better caching
@@ -122,47 +123,53 @@ export default async function KitchenDashboardPage() {
 
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Link href="/admin/kitchen/cooks/create">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-orange-300">
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="p-3 rounded-full bg-orange-100">
-                <Plus className="h-6 w-6 text-orange-600" />
-              </div>
-              <div>
-                <p className="font-semibold">Oshpaz Qo'shish</p>
-                <p className="text-sm text-muted-foreground">Yangi xodim yaratish</p>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+        <PermissionGate resource="kitchen" action="CREATE">
+          <Link href="/admin/kitchen/cooks/create">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-orange-300">
+              <CardContent className="flex items-center gap-4 p-6">
+                <div className="p-3 rounded-full bg-orange-100">
+                  <Plus className="h-6 w-6 text-orange-600" />
+                </div>
+                <div>
+                  <p className="font-semibold">Oshpaz Qo'shish</p>
+                  <p className="text-sm text-muted-foreground">Yangi xodim yaratish</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </PermissionGate>
 
-        <Link href="/admin/kitchen/categories/create">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-blue-300">
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="p-3 rounded-full bg-blue-100">
-                <Plus className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="font-semibold">Xarajat Turi</p>
-                <p className="text-sm text-muted-foreground">Yangi kategoriya</p>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+        <PermissionGate resource="kitchen" action="CREATE">
+          <Link href="/admin/kitchen/categories/create">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-blue-300">
+              <CardContent className="flex items-center gap-4 p-6">
+                <div className="p-3 rounded-full bg-blue-100">
+                  <Plus className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-semibold">Xarajat Turi</p>
+                  <p className="text-sm text-muted-foreground">Yangi kategoriya</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </PermissionGate>
 
-        <Link href="/admin/kitchen/expenses/create">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-green-300">
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="p-3 rounded-full bg-green-100">
-                <Plus className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="font-semibold">Xarajat Kiritish</p>
-                <p className="text-sm text-muted-foreground">Yangi xarajat</p>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+        <PermissionGate resource="kitchen" action="CREATE">
+          <Link href="/admin/kitchen/expenses/create">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-green-300">
+              <CardContent className="flex items-center gap-4 p-6">
+                <div className="p-3 rounded-full bg-green-100">
+                  <Plus className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="font-semibold">Xarajat Kiritish</p>
+                  <p className="text-sm text-muted-foreground">Yangi xarajat</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </PermissionGate>
       </div>
 
       {/* Statistics Cards */}

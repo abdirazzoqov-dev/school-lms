@@ -20,6 +20,7 @@ import {
 import Link from 'next/link'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { formatNumber } from '@/lib/utils'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 // Optimized caching: Cache for 30 seconds for detail pages ⚡
 export const revalidate = 30
@@ -152,12 +153,14 @@ export default async function ParentDetailPage({ params }: PageProps) {
             </p>
           </div>
         </div>
-        <Link href={`/admin/parents/${parent.id}/edit`}>
-          <Button className="gap-2">
-            <Edit className="h-4 w-4" />
-            Tahrirlash
-          </Button>
-        </Link>
+        <PermissionGate resource="parents" action="UPDATE">
+          <Link href={`/admin/parents/${parent.id}/edit`}>
+            <Button className="gap-2">
+              <Edit className="h-4 w-4" />
+              Tahrirlash
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, Edit, Calendar, User, BookOpen, GraduationCap } from 'lucide-react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 interface PageProps {
   params: {
@@ -119,12 +120,14 @@ export default async function AttendanceDetailPage({ params }: PageProps) {
             </p>
           </div>
         </div>
-        <Link href={`/admin/attendance/${attendance.id}/edit`}>
-          <Button className="gap-2">
-            <Edit className="h-4 w-4" />
-            Tahrirlash
-          </Button>
-        </Link>
+        <PermissionGate resource="attendance" action="UPDATE">
+          <Link href={`/admin/attendance/${attendance.id}/edit`}>
+            <Button className="gap-2">
+              <Edit className="h-4 w-4" />
+              Tahrirlash
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       {/* Status Card */}

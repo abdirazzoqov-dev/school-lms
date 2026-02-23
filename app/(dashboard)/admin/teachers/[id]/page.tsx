@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, GraduationCap, Edit, BookOpen, Users, Calendar, Mail, Phone } from 'lucide-react'
 import Link from 'next/link'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 // Optimized caching: Cache for 30 seconds for detail pages ⚡
 export const revalidate = 30
@@ -88,12 +89,14 @@ export default async function TeacherDetailPage({ params }: { params: { id: stri
             <p className="text-muted-foreground">ID: {teacher.teacherCode}</p>
           </div>
         </div>
-        <Link href={`/admin/teachers/${teacher.id}/edit`}>
-          <Button>
-            <Edit className="mr-2 h-4 w-4" />
-            Tahrirlash
-          </Button>
-        </Link>
+        <PermissionGate resource="teachers" action="UPDATE">
+          <Link href={`/admin/teachers/${teacher.id}/edit`}>
+            <Button>
+              <Edit className="mr-2 h-4 w-4" />
+              Tahrirlash
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">

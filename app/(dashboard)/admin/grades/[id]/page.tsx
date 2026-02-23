@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, Edit, Award, User, BookOpen, GraduationCap, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 interface PageProps {
   params: {
@@ -120,12 +121,14 @@ export default async function GradeDetailPage({ params }: PageProps) {
             </p>
           </div>
         </div>
-        <Link href={`/admin/grades/${grade.id}/edit`}>
-          <Button className="gap-2">
-            <Edit className="h-4 w-4" />
-            Tahrirlash
-          </Button>
-        </Link>
+        <PermissionGate resource="grades" action="UPDATE">
+          <Link href={`/admin/grades/${grade.id}/edit`}>
+            <Button className="gap-2">
+              <Edit className="h-4 w-4" />
+              Tahrirlash
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       {/* Score Card */}

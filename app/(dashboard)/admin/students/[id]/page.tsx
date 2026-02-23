@@ -11,6 +11,7 @@ import { formatNumber } from '@/lib/utils'
 import { ConvertTrialButton } from './convert-trial-button'
 import { getUpcomingPaymentSchedule } from '@/lib/utils/payment-helper'
 import { MonthlyPaymentProgress } from '@/components/monthly-payment-progress'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 // Optimized caching: Cache for 30 seconds for detail pages ⚡
 export const revalidate = 30
@@ -175,12 +176,14 @@ export default async function StudentDetailPage({ params }: { params: { id: stri
               studentName={student.user?.fullName || student.parents[0]?.parent.user.fullName || `O'quvchi ${student.studentCode}`}
             />
           )}
-          <Link href={`/admin/students/${student.id}/edit`}>
-            <Button>
-              <Edit className="mr-2 h-4 w-4" />
-              Tahrirlash
-            </Button>
-          </Link>
+          <PermissionGate resource="students" action="UPDATE">
+            <Link href={`/admin/students/${student.id}/edit`}>
+              <Button>
+                <Edit className="mr-2 h-4 w-4" />
+                Tahrirlash
+              </Button>
+            </Link>
+          </PermissionGate>
         </div>
       </div>
 

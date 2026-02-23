@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, DoorClosed, Edit, BedDouble, Users, DollarSign, Building2 } from 'lucide-react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 interface PageProps {
   params: {
@@ -118,12 +119,14 @@ export default async function RoomDetailPage({ params }: PageProps) {
             </p>
           </div>
         </div>
-        <Link href={`/admin/dormitory/rooms/${room.id}/edit`}>
-          <Button variant="outline" className="gap-2">
-            <Edit className="h-4 w-4" />
-            Tahrirlash
-          </Button>
-        </Link>
+        <PermissionGate resource="dormitory" action="UPDATE">
+          <Link href={`/admin/dormitory/rooms/${room.id}/edit`}>
+            <Button variant="outline" className="gap-2">
+              <Edit className="h-4 w-4" />
+              Tahrirlash
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       {/* Statistics Cards */}
@@ -386,12 +389,14 @@ export default async function RoomDetailPage({ params }: PageProps) {
             <p className="text-muted-foreground text-center mb-4">
               Bu xonada hozircha hech kim yashamaydi
             </p>
-            <Link href="/admin/dormitory/assign">
-              <Button>
-                <Users className="h-4 w-4 mr-2" />
-                O'quvchi joylashtirish
-              </Button>
-            </Link>
+            <PermissionGate resource="dormitory" action="CREATE">
+              <Link href="/admin/dormitory/assign">
+                <Button>
+                  <Users className="h-4 w-4 mr-2" />
+                  O'quvchi joylashtirish
+                </Button>
+              </Link>
+            </PermissionGate>
           </CardContent>
         </Card>
       )}

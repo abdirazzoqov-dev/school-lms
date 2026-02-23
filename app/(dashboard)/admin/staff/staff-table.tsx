@@ -213,15 +213,17 @@ export function StaffTable({ staff }: { staff: Staff[] }) {
                     <DropdownMenuContent align="end" className="w-48">
                       <DropdownMenuLabel className="font-semibold">Harakatlar</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link 
-                          href={`/admin/staff/${member.id}`}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <Eye className="h-4 w-4 text-blue-600" />
-                          <span>Ko'rish</span>
-                        </Link>
-                      </DropdownMenuItem>
+                      {canRead && (
+                        <DropdownMenuItem asChild>
+                          <Link 
+                            href={`/admin/staff/${member.id}`}
+                            className="flex items-center gap-2 cursor-pointer"
+                          >
+                            <Eye className="h-4 w-4 text-blue-600" />
+                            <span>Ko'rish</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       {canUpdate && (
                         <DropdownMenuItem asChild>
                           <Link 
@@ -342,15 +344,17 @@ export function StaffTable({ staff }: { staff: Staff[] }) {
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuLabel className="font-semibold">Harakatlar</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link 
-                        href={`/admin/staff/${member.id}`}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <Eye className="h-4 w-4 text-blue-600" />
-                        <span>Ko'rish</span>
-                      </Link>
-                    </DropdownMenuItem>
+                    {canRead && (
+                      <DropdownMenuItem asChild>
+                        <Link 
+                          href={`/admin/staff/${member.id}`}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <Eye className="h-4 w-4 text-blue-600" />
+                          <span>Ko'rish</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     {canUpdate && (
                       <DropdownMenuItem asChild>
                         <Link 

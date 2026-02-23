@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Users, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { AssignmentsTable } from './assignments-table'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 export const revalidate = 30 // Optimized for faster loads
 export const dynamic = 'auto' // Optimized for better caching
@@ -83,12 +84,14 @@ export default async function AssignmentsPage() {
             O'quvchilarning yotoqxonaga joylashtirilgan ro'yxati
           </p>
         </div>
-        <Link href="/admin/dormitory/assign">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Yangi Joylashtirish
-          </Button>
-        </Link>
+        <PermissionGate resource="dormitory" action="CREATE">
+          <Link href="/admin/dormitory/assign">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Yangi Joylashtirish
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       {/* Statistics Cards */}

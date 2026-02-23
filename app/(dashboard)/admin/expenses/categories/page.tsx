@@ -12,6 +12,7 @@ import { EXPENSE_PERIODS } from '@/lib/validations/expense'
 import { getCategoryExpenseTotal, getWarningLevel } from '@/lib/expense-helpers'
 import { Progress } from '@/components/ui/progress'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 // Cache for 2 minutes
 export const revalidate = 120
@@ -66,12 +67,14 @@ export default async function ExpenseCategoriesPage() {
             Xarajat turlarini va limitlarni boshqaring
           </p>
         </div>
-        <Link href="/admin/expenses/categories/create">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Yangi Tur
-          </Button>
-        </Link>
+        <PermissionGate resource="expenses" action="CREATE">
+          <Link href="/admin/expenses/categories/create">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Yangi Tur
+            </Button>
+          </Link>
+        </PermissionGate>
       </div>
 
       {/* Statistics */}
@@ -137,12 +140,14 @@ export default async function ExpenseCategoriesPage() {
             <p className="text-muted-foreground mb-6">
               Birinchi xarajat turini yarating
             </p>
-            <Link href="/admin/expenses/categories/create">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Yangi Tur Yaratish
-              </Button>
-            </Link>
+            <PermissionGate resource="expenses" action="CREATE">
+              <Link href="/admin/expenses/categories/create">
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Yangi Tur Yaratish
+                </Button>
+              </Link>
+            </PermissionGate>
           </CardContent>
         </Card>
       ) : (
@@ -224,11 +229,13 @@ export default async function ExpenseCategoriesPage() {
                     {category._count.expenses} ta xarajat
                   </span>
                   <div className="flex gap-2">
-                    <Link href={`/admin/expenses/categories/${category.id}/edit`}>
-                      <Button variant="ghost" size="sm">
-                        Tahrirlash
-                      </Button>
-                    </Link>
+                    <PermissionGate resource="expenses" action="UPDATE">
+                      <Link href={`/admin/expenses/categories/${category.id}/edit`}>
+                        <Button variant="ghost" size="sm">
+                          Tahrirlash
+                        </Button>
+                      </Link>
+                    </PermissionGate>
                   </div>
                 </div>
               </CardContent>

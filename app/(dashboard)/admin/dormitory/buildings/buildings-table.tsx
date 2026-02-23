@@ -53,6 +53,8 @@ export function BuildingsTable({ buildings }: BuildingsTableProps) {
   const { toast } = useToast()
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const { can } = useAdminPermissions()
+  const canRead = can('dormitory', 'READ')
+  const canCreate = can('dormitory', 'CREATE')
   const canUpdate = can('dormitory', 'UPDATE')
   const canDelete = can('dormitory', 'DELETE')
 
@@ -88,12 +90,14 @@ export function BuildingsTable({ buildings }: BuildingsTableProps) {
         <p className="text-muted-foreground mb-4">
           Hozircha yotoqxona binolari mavjud emas
         </p>
-        <Link href="/admin/dormitory/buildings/create">
-          <Button>
-            <Building2 className="h-4 w-4 mr-2" />
-            Birinchi binoni qo'shish
-          </Button>
-        </Link>
+        {canCreate && (
+          <Link href="/admin/dormitory/buildings/create">
+            <Button>
+              <Building2 className="h-4 w-4 mr-2" />
+              Birinchi binoni qo'shish
+            </Button>
+          </Link>
+        )}
       </div>
     )
   }
@@ -200,12 +204,14 @@ export function BuildingsTable({ buildings }: BuildingsTableProps) {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Amallar</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href={`/admin/dormitory/buildings/${building.id}`}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          Ko'rish
-                        </Link>
-                      </DropdownMenuItem>
+                      {canRead && (
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/dormitory/buildings/${building.id}`}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Ko'rish
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       {canUpdate && (
                         <DropdownMenuItem asChild>
                           <Link href={`/admin/dormitory/buildings/${building.id}/edit`}>

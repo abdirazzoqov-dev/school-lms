@@ -21,6 +21,7 @@ type Contact = {
 
 export function ContactsTable({ contacts }: { contacts: Contact[] }) {
   const { can } = useAdminPermissions()
+  const canCreate = can('contacts', 'CREATE')
   const canUpdate = can('contacts', 'UPDATE')
   const canDelete = can('contacts', 'DELETE')
 
@@ -52,11 +53,13 @@ export function ContactsTable({ contacts }: { contacts: Contact[] }) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground mb-4">Hozircha ma'sul xodimlar yo'q</p>
-        <Button asChild>
-          <Link href="/admin/contacts/create">
-            Birinchi xodimni qo'shish
-          </Link>
-        </Button>
+        {canCreate && (
+          <Button asChild>
+            <Link href="/admin/contacts/create">
+              Birinchi xodimni qo'shish
+            </Link>
+          </Button>
+        )}
       </div>
     )
   }

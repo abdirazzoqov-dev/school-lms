@@ -169,19 +169,21 @@ export default async function DormitoryDashboardPage() {
           </Link>
         </PermissionGate>
 
-        <Link href="/admin/dormitory/assign">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-green-300">
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="p-3 rounded-full bg-green-100">
-                <UserPlus className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="font-semibold">Joylashtirish</p>
-                <p className="text-sm text-muted-foreground">O'quvchini xonaga joylashtirish</p>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+        <PermissionGate resource="dormitory" action="CREATE">
+          <Link href="/admin/dormitory/assign">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-green-300">
+              <CardContent className="flex items-center gap-4 p-6">
+                <div className="p-3 rounded-full bg-green-100">
+                  <UserPlus className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="font-semibold">Joylashtirish</p>
+                  <p className="text-sm text-muted-foreground">O'quvchini xonaga joylashtirish</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </PermissionGate>
       </div>
 
       {/* Statistics Cards */}

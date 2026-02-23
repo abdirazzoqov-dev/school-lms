@@ -65,6 +65,8 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const { can } = useAdminPermissions()
+  const canRead = can('contracts', 'READ')
+  const canCreate = can('contracts', 'CREATE')
   const canUpdate = can('contracts', 'UPDATE')
   const canDelete = can('contracts', 'DELETE')
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
@@ -179,9 +181,11 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
           <p className="text-muted-foreground mb-4">
             Hali hech qanday shartnoma yuklanmagan
           </p>
-          <Button onClick={() => router.push('/admin/contracts/create')}>
-            Birinchi shartnomani yuklash
-          </Button>
+          {canCreate && (
+            <Button onClick={() => router.push('/admin/contracts/create')}>
+              Birinchi shartnomani yuklash
+            </Button>
+          )}
         </CardContent>
       </Card>
     )
@@ -255,16 +259,18 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
 
               {/* Actions */}
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 gap-1"
-                  onClick={() => handleDownload(contract.id, contract.fileName)}
-                  disabled={downloadingId === contract.id}
-                >
-                  <Download className="h-3 w-3" />
-                  {downloadingId === contract.id ? 'Yuklanmoqda...' : 'Yuklab olish'}
-                </Button>
+                {canRead && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 gap-1"
+                    onClick={() => handleDownload(contract.id, contract.fileName)}
+                    disabled={downloadingId === contract.id}
+                  >
+                    <Download className="h-3 w-3" />
+                    {downloadingId === contract.id ? 'Yuklanmoqda...' : 'Yuklab olish'}
+                  </Button>
+                )}
                 {canUpdate && (
                   <Button
                     variant="outline"

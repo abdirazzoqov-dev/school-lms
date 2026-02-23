@@ -54,7 +54,10 @@ export default async function AdminLayout({
   if (isModerator) {
     try {
       userPermissions = await getUserPermissions(session.user.id, session.user.tenantId!)
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      console.error('[Layout] getUserPermissions error:', e)
+      // On error, userPermissions stays {} → MODERATOR sees no permissions (safe default: deny)
+    }
   }
 
   // Build context perms for client components

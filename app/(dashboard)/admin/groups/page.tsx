@@ -196,16 +196,20 @@ export default async function GroupsPage({
 
                     {/* Actions */}
                     <div className="flex gap-2 pt-2">
-                      <Button asChild variant="outline" size="sm" className="flex-1">
-                        <Link href={`/admin/groups/${group.id}`}>
-                          Ko'rish
-                        </Link>
-                      </Button>
-                      <Button asChild variant="default" size="sm" className="flex-1">
-                        <Link href={`/admin/groups/${group.id}/edit`}>
-                          Tahrirlash
-                        </Link>
-                      </Button>
+                      <PermissionGate resource="groups" action="READ">
+                        <Button asChild variant="outline" size="sm" className="flex-1">
+                          <Link href={`/admin/groups/${group.id}`}>
+                            Ko'rish
+                          </Link>
+                        </Button>
+                      </PermissionGate>
+                      <PermissionGate resource="groups" action="UPDATE">
+                        <Button asChild variant="default" size="sm" className="flex-1">
+                          <Link href={`/admin/groups/${group.id}/edit`}>
+                            Tahrirlash
+                          </Link>
+                        </Button>
+                      </PermissionGate>
                     </div>
                   </CardContent>
                 </Card>

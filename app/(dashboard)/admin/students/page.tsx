@@ -442,12 +442,14 @@ export default async function StudentsPage({
               <ClearFilters />
             )}
             {!searchParams.search && !searchParams.status && !searchParams.classId && (
-              <Button asChild className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg">
-                <Link href="/admin/students/create">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Birinchi o'quvchini qo'shing
-                </Link>
-              </Button>
+              <PermissionGate resource="students" action="CREATE">
+                <Button asChild className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg">
+                  <Link href="/admin/students/create">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Birinchi o'quvchini qo'shing
+                  </Link>
+                </Button>
+              </PermissionGate>
             )}
           </CardContent>
         </Card>

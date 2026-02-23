@@ -89,6 +89,8 @@ export function RoomsTable({ rooms, buildings, searchParams }: RoomsTableProps) 
   const urlSearchParams = useSearchParams()
   const { toast } = useToast()
   const { can } = useAdminPermissions()
+  const canRead = can('dormitory', 'READ')
+  const canCreate = can('dormitory', 'CREATE')
   const canUpdate = can('dormitory', 'UPDATE')
   const canDelete = can('dormitory', 'DELETE')
   const [showFilters, setShowFilters] = useState(false)
@@ -217,12 +219,14 @@ export function RoomsTable({ rooms, buildings, searchParams }: RoomsTableProps) 
           <p className="text-muted-foreground mb-4">
             Hozircha xonalar ro'yxati bo'sh
           </p>
-          <Link href="/admin/dormitory/rooms/create">
-            <Button>
-              <DoorClosed className="h-4 w-4 mr-2" />
-              Birinchi xonani qo'shish
-            </Button>
-          </Link>
+          {canCreate && (
+            <Link href="/admin/dormitory/rooms/create">
+              <Button>
+                <DoorClosed className="h-4 w-4 mr-2" />
+                Birinchi xonani qo'shish
+              </Button>
+            </Link>
+          )}
         </div>
       ) : (
         <div className="border rounded-lg overflow-hidden">
@@ -356,12 +360,14 @@ export function RoomsTable({ rooms, buildings, searchParams }: RoomsTableProps) 
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Amallar</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem asChild>
-                            <Link href={`/admin/dormitory/rooms/${room.id}`}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              Ko'rish
-                            </Link>
-                          </DropdownMenuItem>
+                          {canRead && (
+                            <DropdownMenuItem asChild>
+                              <Link href={`/admin/dormitory/rooms/${room.id}`}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                Ko'rish
+                              </Link>
+                            </DropdownMenuItem>
+                          )}
                           {canUpdate && (
                             <DropdownMenuItem asChild>
                               <Link href={`/admin/dormitory/rooms/${room.id}/edit`}>

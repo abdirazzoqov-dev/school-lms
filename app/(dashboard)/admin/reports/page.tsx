@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FileText, Download, TrendingUp, Users, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 // Optimized caching  
 export const revalidate = 300
@@ -76,12 +77,14 @@ export default async function ReportsPage() {
                 <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
                   {report.description}
                 </p>
-                <Link href={report.href}>
-                  <Button className="w-full" size="sm">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Hisobotni ko\'rish
-                  </Button>
-                </Link>
+                <PermissionGate resource="reports" action="READ">
+                  <Link href={report.href}>
+                    <Button className="w-full" size="sm">
+                      <FileText className="mr-2 h-4 w-4" />
+                      Hisobotni ko\'rish
+                    </Button>
+                  </Link>
+                </PermissionGate>
               </CardContent>
             </Card>
           )
@@ -99,32 +102,36 @@ export default async function ReportsPage() {
               <p className="text-xs md:text-sm text-muted-foreground">
                 Oxirgi oy uchun avtomatik hisobotlar
               </p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1 md:flex-none">
-                  <Download className="mr-2 h-4 w-4" />
-                  PDF
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 md:flex-none">
-                  <Download className="mr-2 h-4 w-4" />
-                  Excel
-                </Button>
-              </div>
+              <PermissionGate resource="reports" action="READ">
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="flex-1 md:flex-none">
+                    <Download className="mr-2 h-4 w-4" />
+                    PDF
+                  </Button>
+                  <Button variant="outline" size="sm" className="flex-1 md:flex-none">
+                    <Download className="mr-2 h-4 w-4" />
+                    Excel
+                  </Button>
+                </div>
+              </PermissionGate>
             </div>
             <div className="space-y-2">
               <h3 className="font-semibold text-sm md:text-base">Choraklik hisobotlar</h3>
               <p className="text-xs md:text-sm text-muted-foreground">
                 Oxirgi chorak uchun umumiy hisobot
               </p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1 md:flex-none">
-                  <Download className="mr-2 h-4 w-4" />
-                  PDF
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 md:flex-none">
-                  <Download className="mr-2 h-4 w-4" />
-                  Excel
-                </Button>
-              </div>
+              <PermissionGate resource="reports" action="READ">
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="flex-1 md:flex-none">
+                    <Download className="mr-2 h-4 w-4" />
+                    PDF
+                  </Button>
+                  <Button variant="outline" size="sm" className="flex-1 md:flex-none">
+                    <Download className="mr-2 h-4 w-4" />
+                    Excel
+                  </Button>
+                </div>
+              </PermissionGate>
             </div>
           </div>
         </CardContent>

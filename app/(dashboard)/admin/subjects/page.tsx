@@ -52,12 +52,14 @@ export default async function SubjectsPage() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
-          <Link href="/admin/subjects/quick-setup" className="flex-1 sm:flex-none">
-            <Button variant="outline" className="w-full">
-              <BookOpen className="mr-2 h-4 w-4" />
-              Tez sozlash
-            </Button>
-          </Link>
+          <PermissionGate resource="subjects" action="CREATE">
+            <Link href="/admin/subjects/quick-setup" className="flex-1 sm:flex-none">
+              <Button variant="outline" className="w-full">
+                <BookOpen className="mr-2 h-4 w-4" />
+                Tez sozlash
+              </Button>
+            </Link>
+          </PermissionGate>
           <PermissionGate resource="subjects" action="CREATE">
             <Link href="/admin/subjects/create" className="flex-1 sm:flex-none">
               <Button className="w-full">
@@ -112,12 +114,14 @@ export default async function SubjectsPage() {
               Hali birorta fan qo'shilmagan. Yangi fan qo'shish yoki tez sozlash orqali boshlang.
             </p>
             <div className="flex gap-2">
-              <Link href="/admin/subjects/quick-setup">
-                <Button variant="outline">
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  Tez sozlash
-                </Button>
-              </Link>
+              <PermissionGate resource="subjects" action="CREATE">
+                <Link href="/admin/subjects/quick-setup">
+                  <Button variant="outline">
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    Tez sozlash
+                  </Button>
+                </Link>
+              </PermissionGate>
               <PermissionGate resource="subjects" action="CREATE">
                 <Link href="/admin/subjects/create">
                   <Button>

@@ -11,6 +11,7 @@ import {
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 export const revalidate = 30
 export const dynamic = 'force-dynamic'
@@ -152,35 +153,43 @@ export default async function GroupDetailPage({ params }: PageProps) {
           )}
         </div>
         <div className="flex gap-2">
-          <Button asChild variant="outline" className="hidden md:flex">
-            <Link href={`/admin/groups/${group.id}/edit`}>
-              <Edit className="mr-2 h-4 w-4" />
-              Tahrirlash
-            </Link>
-          </Button>
-          <Button asChild className="hidden md:flex">
-            <Link href={`/admin/students/create?groupId=${group.id}`}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              O'quvchi qo'shish
-            </Link>
-          </Button>
+          <PermissionGate resource="groups" action="UPDATE">
+            <Button asChild variant="outline" className="hidden md:flex">
+              <Link href={`/admin/groups/${group.id}/edit`}>
+                <Edit className="mr-2 h-4 w-4" />
+                Tahrirlash
+              </Link>
+            </Button>
+          </PermissionGate>
+          <PermissionGate resource="students" action="CREATE">
+            <Button asChild className="hidden md:flex">
+              <Link href={`/admin/students/create?groupId=${group.id}`}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                O'quvchi qo'shish
+              </Link>
+            </Button>
+          </PermissionGate>
         </div>
       </div>
 
       {/* Mobile Actions */}
       <div className="flex gap-2 md:hidden">
-        <Button asChild variant="outline" size="sm" className="flex-1">
-          <Link href={`/admin/groups/${group.id}/edit`}>
-            <Edit className="mr-2 h-4 w-4" />
-            Tahrirlash
-          </Link>
-        </Button>
-        <Button asChild size="sm" className="flex-1">
-          <Link href={`/admin/students/create?groupId=${group.id}`}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            O'quvchi qo'shish
-          </Link>
-        </Button>
+        <PermissionGate resource="groups" action="UPDATE">
+          <Button asChild variant="outline" size="sm" className="flex-1">
+            <Link href={`/admin/groups/${group.id}/edit`}>
+              <Edit className="mr-2 h-4 w-4" />
+              Tahrirlash
+            </Link>
+          </Button>
+        </PermissionGate>
+        <PermissionGate resource="students" action="CREATE">
+          <Button asChild size="sm" className="flex-1">
+            <Link href={`/admin/students/create?groupId=${group.id}`}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              O'quvchi qo'shish
+            </Link>
+          </Button>
+        </PermissionGate>
       </div>
 
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
@@ -338,12 +347,14 @@ export default async function GroupDetailPage({ params }: PageProps) {
                 <div className="text-center py-8 text-muted-foreground">
                   <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
                   <p className="mb-4">Hozircha o'quvchilar yo'q</p>
-                  <Button asChild size="sm">
-                    <Link href={`/admin/students/create?groupId=${group.id}`}>
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      O'quvchi qo'shish
-                    </Link>
-                  </Button>
+                  <PermissionGate resource="students" action="CREATE">
+                    <Button asChild size="sm">
+                      <Link href={`/admin/students/create?groupId=${group.id}`}>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        O'quvchi qo'shish
+                      </Link>
+                    </Button>
+                  </PermissionGate>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -443,18 +454,22 @@ export default async function GroupDetailPage({ params }: PageProps) {
               <CardTitle className="text-lg">Tezkor harakatlar</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button asChild variant="outline" className="w-full justify-start">
-                <Link href={`/admin/groups/${group.id}/edit`}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Guruhni tahrirlash
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full justify-start">
-                <Link href={`/admin/students/create?groupId=${group.id}`}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  O'quvchi qo'shish
-                </Link>
-              </Button>
+              <PermissionGate resource="groups" action="UPDATE">
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <Link href={`/admin/groups/${group.id}/edit`}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Guruhni tahrirlash
+                  </Link>
+                </Button>
+              </PermissionGate>
+              <PermissionGate resource="students" action="CREATE">
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <Link href={`/admin/students/create?groupId=${group.id}`}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    O'quvchi qo'shish
+                  </Link>
+                </Button>
+              </PermissionGate>
               <Button asChild variant="outline" className="w-full justify-start">
                 <Link href="/admin/subjects">
                   <BookOpen className="mr-2 h-4 w-4" />

@@ -103,6 +103,8 @@ export function ParentsTable({ parents, classes, searchParams }: ParentsTablePro
   const urlSearchParams = useSearchParams()
   const { toast } = useToast()
   const { can } = useAdminPermissions()
+  const canRead = can('parents', 'READ')
+  const canCreate = can('parents', 'CREATE')
   const canUpdate = can('parents', 'UPDATE')
   const canDelete = can('parents', 'DELETE')
 
@@ -274,12 +276,14 @@ export function ParentsTable({ parents, classes, searchParams }: ParentsTablePro
           <p className="text-muted-foreground mb-4">
             Hozircha ota-onalar ro'yxati bo'sh
           </p>
-          <Link href="/admin/parents/create">
-            <Button>
-              <Users className="h-4 w-4 mr-2" />
-              Birinchi ota-onani qo'shish
-            </Button>
-          </Link>
+          {canCreate && (
+            <Link href="/admin/parents/create">
+              <Button>
+                <Users className="h-4 w-4 mr-2" />
+                Birinchi ota-onani qo'shish
+              </Button>
+            </Link>
+          )}
         </div>
       ) : (
         <div className="border rounded-lg overflow-hidden">
@@ -410,12 +414,14 @@ export function ParentsTable({ parents, classes, searchParams }: ParentsTablePro
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Amallar</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                          <Link href={`/admin/parents/${parent.id}`}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            Ko'rish
-                          </Link>
-                        </DropdownMenuItem>
+                        {canRead && (
+                          <DropdownMenuItem asChild>
+                            <Link href={`/admin/parents/${parent.id}`}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              Ko'rish
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
                         {canUpdate && (
                           <DropdownMenuItem asChild>
                             <Link href={`/admin/parents/${parent.id}/edit`}>

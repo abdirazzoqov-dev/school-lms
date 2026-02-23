@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { formatNumber } from '@/lib/utils'
 import { PaymentPDFButton } from '@/components/payment-pdf-button'
 import { Badge } from '@/components/ui/badge'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 // Optimized caching: Cache for 30 seconds for detail pages ⚡
 export const revalidate = 30
@@ -155,12 +156,14 @@ export default async function PaymentDetailPage({ params }: { params: { id: stri
             schoolPhone={tenant?.phone}
           />
           {payment.status !== 'COMPLETED' && (
-            <Link href={`/admin/payments/${payment.id}/edit`}>
-              <Button>
-                <Edit className="mr-2 h-4 w-4" />
-                Tahrirlash
-              </Button>
-            </Link>
+            <PermissionGate resource="payments" action="UPDATE">
+              <Link href={`/admin/payments/${payment.id}/edit`}>
+                <Button>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Tahrirlash
+                </Button>
+              </Link>
+            </PermissionGate>
           )}
         </div>
       </div>

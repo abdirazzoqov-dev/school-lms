@@ -64,6 +64,7 @@ interface GradesTableProps {
 export function GradesTable({ grades }: GradesTableProps) {
   const { can } = useAdminPermissions()
   const canUpdate = can('grades', 'UPDATE')
+  const canRead = can('grades', 'READ')
 
   const getGradeTypeBadge = (type: string) => {
     const types: Record<string, { label: string; color: string }> = {
@@ -181,10 +182,12 @@ export function GradesTable({ grades }: GradesTableProps) {
   return (
     <div className="border rounded-lg overflow-hidden">
       <div className="flex justify-end p-4 border-b bg-muted/30">
-        <Button onClick={exportToExcel} className="gap-2" variant="outline">
-          <Download className="h-4 w-4" />
-          Excel yuklab olish
-        </Button>
+        {canRead && (
+          <Button onClick={exportToExcel} className="gap-2" variant="outline">
+            <Download className="h-4 w-4" />
+            Excel yuklab olish
+          </Button>
+        )}
       </div>
       <Table>
         <TableHeader>
@@ -292,12 +295,14 @@ export function GradesTable({ grades }: GradesTableProps) {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Amallar</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href={`/admin/grades/${grade.id}`}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          Ko'rish
-                        </Link>
-                      </DropdownMenuItem>
+                      {canRead && (
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/grades/${grade.id}`}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Ko'rish
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       {canUpdate && (
                         <DropdownMenuItem asChild>
                           <Link href={`/admin/grades/${grade.id}/edit`}>
