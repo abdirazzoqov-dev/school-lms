@@ -334,7 +334,8 @@ export async function deleteTenantWithData(tenantId: string) {
       // 9. Delete schedules
       await tx.schedule.deleteMany({ where: { tenantId } })
       
-      // 10. Delete payments and payment plans
+      // 10. Delete payments, transactions and payment plans
+      await tx.paymentTransaction.deleteMany({ where: { tenantId } })
       await tx.payment.deleteMany({ where: { tenantId } })
       await tx.paymentPlan.deleteMany({ where: { tenantId } })
       
@@ -352,41 +353,60 @@ export async function deleteTenantWithData(tenantId: string) {
       // 14. Delete contracts (uploadedById references users)
       await tx.contract.deleteMany({ where: { tenantId } })
 
-      // 15. Delete salaries
-      await tx.salary.deleteMany({ where: { tenantId } })
+      // 15. Delete salary payments
+      await tx.salaryPayment.deleteMany({ where: { tenantId } })
 
-      // 16. Delete expenses
+      // 16. Delete expenses and categories
       await tx.expense.deleteMany({ where: { tenantId } })
+      await tx.expenseCategory.deleteMany({ where: { tenantId } })
 
-      // 17. Delete dormitory assignments
+      // 17. Delete kitchen expenses and categories
+      await tx.kitchenExpense.deleteMany({ where: { tenantId } })
+      await tx.kitchenExpenseCategory.deleteMany({ where: { tenantId } })
+      await tx.meal.deleteMany({ where: { tenantId } })
+
+      // 18. Delete dormitory assignments
       await tx.dormitoryAssignment.deleteMany({ where: { tenantId } })
 
-      // 18. Delete rooms
-      await tx.room.deleteMany({ where: { tenantId } })
+      // 19. Delete dormitory beds
+      await tx.dormitoryBed.deleteMany({ where: { tenantId } })
 
-      // 19. Delete buildings
-      await tx.building.deleteMany({ where: { tenantId } })
+      // 20. Delete dormitory rooms
+      await tx.dormitoryRoom.deleteMany({ where: { tenantId } })
 
-      // 20. Delete students
+      // 21. Delete dormitory buildings
+      await tx.dormitoryBuilding.deleteMany({ where: { tenantId } })
+
+      // 22. Delete contacts
+      await tx.contactPerson.deleteMany({ where: { tenantId } })
+
+      // 23. Delete students
       await tx.student.deleteMany({ where: { tenantId } })
       
-      // 21. Delete staff
+      // 24. Delete staff
       await tx.staff.deleteMany({ where: { tenantId } })
 
-      // 22. Delete teachers
+      // 25. Delete teachers
       await tx.teacher.deleteMany({ where: { tenantId } })
+
+      // 26. Delete cooks
+      await tx.cook.deleteMany({ where: { tenantId } })
       
-      // 23. Delete subjects
+      // 27. Delete subjects
       await tx.subject.deleteMany({ where: { tenantId } })
       
-      // 24. Delete classes and groups
+      // 28. Delete groups and classes
+      await tx.groupSchedule.deleteMany({ where: { tenantId } })
+      await tx.groupSubject.deleteMany({ where: { group: { tenantId } } })
       await tx.group.deleteMany({ where: { tenantId } })
+      await tx.classSubject.deleteMany({ where: { class: { tenantId } } })
       await tx.class.deleteMany({ where: { tenantId } })
       
-      // 25. Delete users
+      // 29. Delete permissions and users
+      await tx.permission.deleteMany({ where: { user: { tenantId } } })
       await tx.user.deleteMany({ where: { tenantId } })
       
-      // 26. Finally, delete tenant
+      // 30. Finally, delete tenant
       await tx.tenant.delete({ where: { id: tenantId } })
     })
 
