@@ -142,7 +142,12 @@ export function PaymentFormClient({
           title: 'Muvaffaqiyatli!',
           description: 'To\'lov muvaffaqiyatli yaratildi',
         })
-        router.push('/admin/payments')
+        // Panoramadan kelgan bo'lsa — orqaga panoramaga qaytish
+        if (preSelectedStudentId) {
+          router.push('/admin/payments/student-overview')
+        } else {
+          router.push('/admin/payments')
+        }
       } else {
         toast({
           title: 'Xato!',
@@ -591,7 +596,10 @@ export function PaymentFormClient({
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push('/admin/payments')}
+              onClick={() => preSelectedStudentId
+                ? router.push('/admin/payments/student-overview')
+                : router.push('/admin/payments')
+              }
               disabled={isPending}
               className="flex-1"
             >
