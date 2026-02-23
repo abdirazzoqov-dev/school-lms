@@ -3,6 +3,10 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { AdminMessagesClient } from './messages-admin-client'
+import { Button } from '@/components/ui/button'
+import { Send } from 'lucide-react'
+import Link from 'next/link'
+import { PermissionGate } from '@/components/admin/permission-gate'
 
 export const revalidate = 30
 export const dynamic = 'auto'
@@ -43,13 +47,23 @@ export default async function AdminMessagesPage() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          Xabarlar Tizimi
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          O'qituvchilar va ota-onalar o'rtasidagi barcha xabarlarni kuzating
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Xabarlar Tizimi
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            O'qituvchilar va ota-onalar o'rtasidagi barcha xabarlarni kuzating
+          </p>
+        </div>
+        <PermissionGate resource="messages" action="CREATE">
+          <Button asChild className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+            <Link href="/admin/messages/compose">
+              <Send className="h-4 w-4" />
+              Xabar Yuborish
+            </Link>
+          </Button>
+        </PermissionGate>
       </div>
 
       <AdminMessagesClient

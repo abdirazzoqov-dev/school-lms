@@ -5,13 +5,22 @@ import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { messageSchema, MessageFormData, messageReplySchema, MessageReplyData } from '@/lib/validations/message'
 import { revalidatePath } from 'next/cache'
+import { getUserPermissions } from '@/lib/permissions'
 
 export async function sendMessage(data: MessageFormData) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || !['TEACHER', 'PARENT', 'ADMIN'].includes(session.user.role)) {
+    if (!session || !['TEACHER', 'PARENT', 'ADMIN', 'SUPER_ADMIN', 'MODERATOR'].includes(session.user.role)) {
       return { success: false, error: 'Ruxsat berilmagan' }
+    }
+
+    // MODERATOR permission check
+    if (session.user.role === 'MODERATOR') {
+      const perms = await getUserPermissions(session.user.id, session.user.tenantId!)
+      if (!perms.messages?.includes('CREATE') && !perms.messages?.includes('ALL')) {
+        return { success: false, error: 'Xabar yuborish uchun ruxsat yo\'q' }
+      }
     }
 
     const tenantId = session.user.tenantId!
@@ -399,6 +408,78 @@ export async function bulkDeleteMessages(messageIds: string[]) {
     return { success: true, deleted: messageIds.length }
   } catch (error: any) {
     console.error('Bulk delete messages error:', error)
+    return { success: false, error: error.message || 'Xatolik yuz berdi' }
+  }
+}
+
+/**
+ * Send a message from admin/moderator to multiple recipients at once.
+ * Used for bulk messaging: all parents in a class/group, all staff, all teachers, etc.
+ */
+export async function sendBulkMessage(data: {
+  recipientIds: string[]
+  subject?: string
+  content: string
+}) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session || !['ADMIN', 'SUPER_ADMIN', 'MODERATOR'].includes(session.user.role)) {
+      return { success: false, error: 'Ruxsat berilmagan' }
+    }
+
+    // MODERATOR permission check
+    if (session.user.role === 'MODERATOR') {
+      const perms = await getUserPermissions(session.user.id, session.user.tenantId!)
+      if (!perms.messages?.includes('CREATE') && !perms.messages?.includes('ALL')) {
+        return { success: false, error: 'Xabar yuborish uchun ruxsat yo\'q' }
+      }
+    }
+
+    const tenantId = session.user.tenantId!
+
+    if (!data.content?.trim()) {
+      return { success: false, error: 'Xabar matni bo\'sh bo\'lishi mumkin emas' }
+    }
+    if (!data.recipientIds?.length) {
+      return { success: false, error: 'Kamida bitta qabul qiluvchi tanlanishi shart' }
+    }
+    if (data.subject && data.subject.length > 200) {
+      return { success: false, error: 'Mavzu 200 belgidan oshmasligi kerak' }
+    }
+    if (data.content.length > 5000) {
+      return { success: false, error: 'Xabar 5000 belgidan oshmasligi kerak' }
+    }
+
+    // Verify all recipients exist in same tenant
+    const recipients = await db.user.findMany({
+      where: { id: { in: data.recipientIds }, tenantId },
+      select: { id: true },
+    })
+
+    if (!recipients.length) {
+      return { success: false, error: 'Qabul qiluvchilar topilmadi' }
+    }
+
+    // Create individual messages for each recipient
+    await db.message.createMany({
+      data: recipients.map(r => ({
+        tenantId,
+        senderId: session.user.id,
+        receiverId: r.id,
+        subject: data.subject?.trim() || null,
+        content: data.content.trim(),
+        status: 'SENT' as const,
+      })),
+    })
+
+    revalidatePath('/admin/messages')
+    revalidatePath('/teacher/messages')
+    revalidatePath('/parent/messages')
+
+    return { success: true, count: recipients.length }
+  } catch (error: any) {
+    console.error('Bulk send message error:', error)
     return { success: false, error: error.message || 'Xatolik yuz berdi' }
   }
 }
