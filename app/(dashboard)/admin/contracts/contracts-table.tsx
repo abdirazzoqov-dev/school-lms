@@ -37,7 +37,7 @@ interface Contract {
   createdAt: Date
   uploadedBy: {
     fullName: string
-  }
+  } | null
   teacher: {
     user: {
       fullName: string
@@ -253,7 +253,7 @@ export function ContractsTable({ contracts }: ContractsTableProps) {
               {/* Metadata */}
               <div className="text-xs text-muted-foreground mb-4 space-y-1">
                 <p>📦 Hajmi: {formatFileSize(contract.fileSize)}</p>
-                <p>👤 Yuklagan: {contract.uploadedBy.fullName}</p>
+                <p>👤 Yuklagan: {contract.uploadedBy?.fullName ?? '—'}</p>
                 <p>📅 {new Date(contract.createdAt).toLocaleDateString('uz-UZ')}</p>
               </div>
 
