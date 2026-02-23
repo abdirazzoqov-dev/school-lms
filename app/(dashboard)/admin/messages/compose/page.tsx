@@ -32,7 +32,7 @@ export default async function ComposeMessagePage() {
       name: true,
       gradeLevel: true,
       students: {
-        where: { isActive: true },
+        where: { status: 'ACTIVE' },
         select: {
           id: true,
           parents: {
@@ -58,7 +58,7 @@ export default async function ComposeMessagePage() {
       id: true,
       name: true,
       students: {
-        where: { isActive: true },
+        where: { status: 'ACTIVE' },
         select: {
           id: true,
           parents: {
