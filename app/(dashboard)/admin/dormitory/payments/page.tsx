@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
-import { Building2, Bed, DollarSign, TrendingUp, Users, Calendar, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
+import { Building2, Bed, DollarSign, TrendingUp, Users, Calendar, CheckCircle2, Clock, AlertCircle, LayoutGrid } from 'lucide-react'
 import Link from 'next/link'
 import { DormitoryPaymentsTable } from './dormitory-payments-table'
 import { DormitoryPaymentsFilters } from './filters'
@@ -103,13 +103,19 @@ export default async function DormitoryPaymentsPage({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-3xl font-bold">Yotoqxona To&apos;lovlari</h1>
           <p className="text-muted-foreground mt-1">
             Yotoqxonada yashaydigan o&apos;quvchilarning to&apos;lovlarini boshqaring
           </p>
         </div>
+        <Button asChild variant="outline" className="border-teal-400 text-teal-700 hover:bg-teal-50">
+          <Link href="/admin/dormitory/payments/student-overview">
+            <LayoutGrid className="mr-2 h-4 w-4" />
+            O'quvchi Panoramasi
+          </Link>
+        </Button>
       </div>
 
       {/* Statistics Cards */}
