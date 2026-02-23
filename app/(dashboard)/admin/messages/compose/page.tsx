@@ -100,7 +100,7 @@ export default async function ComposeMessagePage() {
 
   // Fetch all teachers
   const allTeachers = await db.teacher.findMany({
-    where: { tenantId, isActive: true },
+    where: { tenantId, user: { isActive: true } },
     select: {
       id: true,
       user: { select: { id: true, fullName: true } },
@@ -114,7 +114,7 @@ export default async function ComposeMessagePage() {
 
   // Fetch all staff
   const allStaff = await db.staff.findMany({
-    where: { tenantId, isActive: true },
+    where: { tenantId, user: { isActive: true } },
     select: {
       id: true,
       position: true,
