@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
@@ -459,7 +458,7 @@ export function ComposeMessageForm({
                           </button>
                         </div>
                       </div>
-                      <ScrollArea className="h-[260px] rounded-md border">
+                      <div className="h-[260px] rounded-md border overflow-y-auto">
                         <div className="p-2 space-y-1">
                           {filteredParents.length === 0 ? (
                             <p className="text-center text-sm text-muted-foreground py-8">
@@ -478,7 +477,7 @@ export function ComposeMessageForm({
                             ))
                           )}
                         </div>
-                      </ScrollArea>
+                      </div>
                     </div>
                   )}
                 </TabsContent>
@@ -563,7 +562,7 @@ export function ComposeMessageForm({
                         </button>
                       </div>
                     </div>
-                    <ScrollArea className="h-[220px] rounded-md border">
+                    <div className="h-[220px] rounded-md border overflow-y-auto">
                       <div className="p-2 space-y-1">
                         {combinedList.length === 0 ? (
                           <p className="text-center text-sm text-muted-foreground py-8">
@@ -606,7 +605,7 @@ export function ComposeMessageForm({
                           ))
                         )}
                       </div>
-                    </ScrollArea>
+                    </div>
                   </div>
                 </TabsContent>
               </Tabs>
