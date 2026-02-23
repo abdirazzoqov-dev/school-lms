@@ -36,6 +36,7 @@ interface StudentPaymentOverviewClientProps {
   students: Student[]
   currentYear: number
   tenantId: string
+  preSelectedStudentId?: string
 }
 
 interface MonthPaymentStatus {
@@ -56,11 +57,18 @@ interface MonthPaymentStatus {
 export function StudentPaymentOverviewClient({ 
   students, 
   currentYear,
-  tenantId
+  tenantId,
+  preSelectedStudentId,
 }: StudentPaymentOverviewClientProps) {
   const router = useRouter()
-  const [selectedStudentId, setSelectedStudentId] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
+
+  // Pre-select student from URL param (e.g. after payment creation)
+  const preStudent = preSelectedStudentId
+    ? students.find(s => s.id === preSelectedStudentId) ?? null
+    : null
+
+  const [selectedStudentId, setSelectedStudentId] = useState(preSelectedStudentId ?? '')
+  const [searchQuery, setSearchQuery] = useState(preStudent?.user?.fullName ?? '')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [selectedYear, setSelectedYear] = useState(currentYear)
   const [monthlyStatuses, setMonthlyStatuses] = useState<MonthPaymentStatus[]>([])

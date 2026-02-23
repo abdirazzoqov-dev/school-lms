@@ -7,7 +7,11 @@ import { StudentPaymentOverviewClient } from './student-overview-client'
 export const revalidate = 0
 export const dynamic = 'force-dynamic'
 
-export default async function StudentPaymentOverviewPage() {
+export default async function StudentPaymentOverviewPage({
+  searchParams,
+}: {
+  searchParams: { studentId?: string }
+}) {
   const session = await getServerSession(authOptions)
 
   if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'MODERATOR')) {
@@ -53,6 +57,7 @@ export default async function StudentPaymentOverviewPage() {
         students={students}
         currentYear={currentYear}
         tenantId={tenantId}
+        preSelectedStudentId={searchParams.studentId}
       />
     </div>
   )
