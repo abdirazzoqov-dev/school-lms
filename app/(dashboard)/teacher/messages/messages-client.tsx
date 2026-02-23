@@ -46,6 +46,7 @@ interface MessagesClientProps {
   receivedMessages: Message[]
   sentMessages: Message[]
   currentUserId: string
+  composePath?: string
 }
 
 interface Conversation {
@@ -107,7 +108,7 @@ function sameDay(a: Date | string, b: Date | string): boolean {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function MessagesClient({ receivedMessages, sentMessages, currentUserId }: MessagesClientProps) {
+export function MessagesClient({ receivedMessages, sentMessages, currentUserId, composePath = '/teacher/messages/compose' }: MessagesClientProps) {
   const router = useRouter()
 
   // Local deleted ids (optimistic)
@@ -400,7 +401,7 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
                 className="pl-8 h-8 text-sm bg-muted border-none rounded-xl focus-visible:ring-0"
               />
             </div>
-            <Link href="/teacher/messages/compose">
+            <Link href={composePath}>
               <Button
                 size="sm"
                 className="h-8 w-8 p-0 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-none shadow"
@@ -431,7 +432,7 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
                 <p className="text-sm text-center">
                   {search ? 'Topilmadi' : "Xabarlar yo'q"}
                 </p>
-                <Link href="/teacher/messages/compose">
+                <Link href={composePath}>
                   <Button size="sm" variant="outline" className="mt-2 gap-1.5 rounded-xl">
                     <Plus className="w-3.5 h-3.5" /> Yangi xabar
                   </Button>
@@ -515,7 +516,7 @@ export function MessagesClient({ receivedMessages, sentMessages, currentUserId }
                 <p className="font-semibold text-lg text-foreground">Suhbatni tanlang</p>
                 <p className="text-sm mt-1">Chap paneldan suhbatni bosing</p>
               </div>
-              <Link href="/teacher/messages/compose">
+              <Link href={composePath}>
                 <Button className="mt-2 gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white">
                   <Plus className="w-4 h-4" /> Yangi xabar yozing
                 </Button>

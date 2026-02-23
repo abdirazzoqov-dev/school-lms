@@ -163,6 +163,7 @@ export async function markMessageAsRead(messageId: string) {
 
     revalidatePath('/teacher/messages')
     revalidatePath('/parent/messages')
+    revalidatePath('/admin/messages')
     
     return { success: true }
   } catch (error: any) {
