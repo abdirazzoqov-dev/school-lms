@@ -349,22 +349,44 @@ export async function deleteTenantWithData(tenantId: string) {
       // 13. Delete parents
       await tx.parent.deleteMany({ where: { tenantId } })
       
-      // 14. Delete students
+      // 14. Delete contracts (uploadedById references users)
+      await tx.contract.deleteMany({ where: { tenantId } })
+
+      // 15. Delete salaries
+      await tx.salary.deleteMany({ where: { tenantId } })
+
+      // 16. Delete expenses
+      await tx.expense.deleteMany({ where: { tenantId } })
+
+      // 17. Delete dormitory assignments
+      await tx.dormitoryAssignment.deleteMany({ where: { tenantId } })
+
+      // 18. Delete rooms
+      await tx.room.deleteMany({ where: { tenantId } })
+
+      // 19. Delete buildings
+      await tx.building.deleteMany({ where: { tenantId } })
+
+      // 20. Delete students
       await tx.student.deleteMany({ where: { tenantId } })
       
-      // 15. Delete teachers
+      // 21. Delete staff
+      await tx.staff.deleteMany({ where: { tenantId } })
+
+      // 22. Delete teachers
       await tx.teacher.deleteMany({ where: { tenantId } })
       
-      // 16. Delete subjects
+      // 23. Delete subjects
       await tx.subject.deleteMany({ where: { tenantId } })
       
-      // 17. Delete classes
+      // 24. Delete classes and groups
+      await tx.group.deleteMany({ where: { tenantId } })
       await tx.class.deleteMany({ where: { tenantId } })
       
-      // 18. Delete users
+      // 25. Delete users
       await tx.user.deleteMany({ where: { tenantId } })
       
-      // 19. Finally, delete tenant
+      // 26. Finally, delete tenant
       await tx.tenant.delete({ where: { id: tenantId } })
     })
 
