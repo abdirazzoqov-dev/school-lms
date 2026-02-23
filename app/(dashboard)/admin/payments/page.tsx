@@ -178,19 +178,23 @@ export default async function PaymentsPage({
     .filter(p => Number(p.paidAmount) > 0)
     .reduce((sum, p) => sum + Number(p.paidAmount), 0)
 
-  // ✅ Barcha PENDING to'lovlar summasi (tekin o'quvchilar chiqarilgan)
+  // ✅ Barcha PENDING + PARTIALLY_PAID to'lovlar summasi (tekin o'quvchilar chiqarilgan)
   const allPendingPayments = await db.payment.findMany({
     where: {
       tenantId,
-      status: 'PENDING',
+      status: { in: ['PENDING', 'PARTIALLY_PAID'] },
       student: { isFreeStudent: false },
     },
     select: {
-      remainingAmount: true
+      amount: true,
+      paidAmount: true,
     }
   })
 
-  const pendingAmount = allPendingPayments.reduce((sum, p) => sum + Number(p.remainingAmount), 0)
+  const pendingAmount = allPendingPayments.reduce((sum, p) => {
+    const remaining = Number(p.amount) - Number(p.paidAmount || 0)
+    return sum + (remaining > 0 ? remaining : 0)
+  }, 0)
 
   // ✅ Barcha COMPLETED to'lovlar soni (tekin o'quvchilar chiqarilgan)
   const totalCompletedPayments = await db.payment.count({
@@ -201,11 +205,12 @@ export default async function PaymentsPage({
     }
   })
 
-  // ✅ Barcha PENDING to'lovlar soni (filter qo'llanmasdan)
+  // ✅ Barcha PENDING + PARTIALLY_PAID to'lovlar soni
   const totalPendingPayments = await db.payment.count({
     where: {
       tenantId,
-      status: 'PENDING'
+      status: { in: ['PENDING', 'PARTIALLY_PAID'] },
+      student: { isFreeStudent: false },
     }
   })
 
