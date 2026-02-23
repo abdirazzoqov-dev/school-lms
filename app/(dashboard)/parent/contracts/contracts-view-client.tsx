@@ -19,7 +19,7 @@ interface Contract {
   createdAt: Date
   uploadedBy: {
     fullName: string
-  }
+  } | null
 }
 
 interface ContractsViewClientProps {
@@ -132,7 +132,7 @@ export function ContractsViewClient({ contracts }: ContractsViewClientProps) {
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Yuklagan:</span>
-                <span className="font-medium">{contract.uploadedBy.fullName}</span>
+                <span className="font-medium">{contract.uploadedBy?.fullName ?? '—'}</span>
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Sana:</span>
