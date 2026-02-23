@@ -2,7 +2,6 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { StudentPaymentOverviewClient } from './student-overview-client'
 
 export const revalidate = 0
@@ -50,21 +49,11 @@ export default async function StudentPaymentOverviewPage() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">O'quvchilar To'lov Panoramasi</CardTitle>
-          <CardDescription>
-            Har bir o'quvchining yil bo'yicha to'lovlarini ko'ring va to'lov qabul qiling
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <StudentPaymentOverviewClient 
-            students={students}
-            currentYear={currentYear}
-            tenantId={tenantId}
-          />
-        </CardContent>
-      </Card>
+      <StudentPaymentOverviewClient 
+        students={students}
+        currentYear={currentYear}
+        tenantId={tenantId}
+      />
     </div>
   )
 }
