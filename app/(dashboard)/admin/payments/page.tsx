@@ -132,7 +132,8 @@ export default async function PaymentsPage({
           enrollmentDate: true,
           user: {
             select: {
-              fullName: true
+              fullName: true,
+              avatar: true
             }
           },
           class: {

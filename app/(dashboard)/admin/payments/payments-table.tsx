@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Receipt, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react'
@@ -38,6 +39,7 @@ interface Payment {
   student: {
     user: {
       fullName: string
+      avatar: string | null
     } | null
     monthlyTuitionFee: any | null
   }
@@ -232,6 +234,14 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
     return 'text-emerald-600'
   }
 
+  const formatDate = (date: Date | string) => {
+    const d = new Date(date)
+    const day = d.getDate().toString().padStart(2, '0')
+    const month = (d.getMonth() + 1).toString().padStart(2, '0')
+    const year = d.getFullYear()
+    return `${day}/${month}/${year}`
+  }
+
   const getMethodLabel = (method: string) => {
     const map: Record<string, string> = { CASH: 'Naqd', CLICK: 'Click', PAYME: 'Payme', UZUM: 'Uzum' }
     return map[method] || method
@@ -312,12 +322,28 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                 {/* Student */}
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm ${
-                      progress.percentage === 100 ? 'bg-emerald-500' :
-                      isOverdue ? 'bg-red-500' :
-                      progress.percentage > 0 ? 'bg-amber-500' : 'bg-slate-400'
+                    <div className={`w-8 h-8 rounded-full shrink-0 shadow-sm overflow-hidden ${
+                      progress.percentage === 100 ? 'ring-2 ring-emerald-400' :
+                      isOverdue ? 'ring-2 ring-red-400' :
+                      progress.percentage > 0 ? 'ring-2 ring-amber-400' : 'ring-1 ring-slate-300'
                     }`}>
-                      {payment.student?.user?.fullName?.charAt(0) ?? '?'}
+                      {payment.student?.user?.avatar ? (
+                        <Image
+                          src={payment.student.user.avatar}
+                          alt={payment.student.user.fullName ?? ''}
+                          width={32}
+                          height={32}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className={`w-full h-full flex items-center justify-center text-white text-xs font-bold ${
+                          progress.percentage === 100 ? 'bg-emerald-500' :
+                          isOverdue ? 'bg-red-500' :
+                          progress.percentage > 0 ? 'bg-amber-500' : 'bg-slate-400'
+                        }`}>
+                          {payment.student?.user?.fullName?.charAt(0) ?? '?'}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-foreground leading-tight">
@@ -338,12 +364,12 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
 
                 {/* Due date */}
                 <td className="px-4 py-3">
-                  <p className={`text-xs font-medium ${isOverdue ? 'text-red-600' : 'text-foreground'}`}>
-                    {new Date(payment.dueDate).toLocaleDateString('uz-UZ', { day: '2-digit', month: 'short', year: '2-digit' })}
+                  <p className={`text-xs font-medium tabular-nums ${isOverdue ? 'text-red-600' : 'text-foreground'}`}>
+                    {formatDate(payment.dueDate)}
                   </p>
                   {payment.paidDate && (
-                    <p className="text-[11px] text-emerald-600 mt-0.5">
-                      ✓ {new Date(payment.paidDate).toLocaleDateString('uz-UZ', { day: '2-digit', month: 'short' })}
+                    <p className="text-[11px] text-emerald-600 mt-0.5 tabular-nums">
+                      ✓ {formatDate(payment.paidDate)}
                     </p>
                   )}
                 </td>
@@ -393,7 +419,7 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                           <div key={tx.id} className="flex items-center justify-between text-[11px] bg-white border border-blue-100 rounded px-2 py-1.5">
                             <div className="flex items-center gap-1.5">
                               <span className="text-blue-500 font-bold">#{i + 1}</span>
-                              <span>{new Date(tx.transactionDate).toLocaleDateString('uz-UZ', { day: '2-digit', month: 'short' })}</span>
+                              <span>{formatDate(tx.transactionDate)}</span>
                               <span className="text-muted-foreground">·</span>
                               <span>{getMethodLabel(tx.paymentMethod)}</span>
                             </div>
@@ -518,12 +544,27 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
               {/* Student Name - Compact */}
               <div className="mb-3 pb-3 border-b">
                 <div className="flex items-center gap-2">
-                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-lg ${
-                    progress.percentage === 100 ? 'bg-gradient-to-br from-green-500 to-emerald-600' :
-                    progress.percentage > 0 ? 'bg-gradient-to-br from-yellow-500 to-amber-600' :
-                    'bg-gradient-to-br from-blue-500 to-cyan-600'
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden shadow-lg shrink-0 ${
+                    progress.percentage === 100 ? 'ring-2 ring-emerald-400' :
+                    progress.percentage > 0 ? 'ring-2 ring-amber-400' : 'ring-2 ring-blue-400'
                   }`}>
-                    {payment.student?.user?.fullName?.charAt(0) || '?'}
+                    {payment.student?.user?.avatar ? (
+                      <Image
+                        src={payment.student.user.avatar}
+                        alt={payment.student.user.fullName ?? ''}
+                        width={40}
+                        height={40}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className={`w-full h-full flex items-center justify-center text-white font-bold text-base sm:text-lg ${
+                        progress.percentage === 100 ? 'bg-gradient-to-br from-green-500 to-emerald-600' :
+                        progress.percentage > 0 ? 'bg-gradient-to-br from-yellow-500 to-amber-600' :
+                        'bg-gradient-to-br from-blue-500 to-cyan-600'
+                      }`}>
+                        {payment.student?.user?.fullName?.charAt(0) || '?'}
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-sm sm:text-base text-gray-900 truncate">
@@ -612,11 +653,8 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                 </div>
                 <div className="space-y-0.5">
                   <p className="text-gray-500">📅 Muddat:</p>
-                  <p className={`font-semibold text-xs sm:text-sm ${isOverdue ? 'text-red-600' : 'text-gray-900'}`}>
-                    {new Date(payment.dueDate).toLocaleDateString('uz-UZ', {
-                      day: '2-digit',
-                      month: 'short'
-                    })}
+                  <p className={`font-semibold text-xs sm:text-sm tabular-nums ${isOverdue ? 'text-red-600' : 'text-gray-900'}`}>
+                    {formatDate(payment.dueDate)}
                   </p>
                 </div>
               </div>
@@ -661,11 +699,8 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
                           <div className="space-y-1.5 text-xs sm:text-sm">
                             <div className="flex items-center justify-between p-1.5 bg-white/60 rounded">
                               <span className="text-gray-600">📅 Sana:</span>
-                              <span className="font-bold text-gray-900">
-                                {new Date(transaction.transactionDate).toLocaleDateString('uz-UZ', {
-                                  day: '2-digit',
-                                  month: 'short'
-                                })}
+                              <span className="font-bold text-gray-900 tabular-nums">
+                                {formatDate(transaction.transactionDate)}
                               </span>
                             </div>
 
