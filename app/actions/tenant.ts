@@ -334,8 +334,7 @@ export async function deleteTenantWithData(tenantId: string) {
       // 9. Delete schedules
       await tx.schedule.deleteMany({ where: { tenantId } })
       
-      // 10. Delete payments, transactions and payment plans
-      await tx.paymentTransaction.deleteMany({ where: { tenantId } })
+      // 10. Delete payments and payment plans (transactions cascade from payment)
       await tx.payment.deleteMany({ where: { tenantId } })
       await tx.paymentPlan.deleteMany({ where: { tenantId } })
       
