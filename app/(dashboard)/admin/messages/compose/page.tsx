@@ -26,7 +26,7 @@ export default async function ComposeMessagePage() {
 
   // Fetch classes with parent data
   const classes = await db.class.findMany({
-    where: { tenantId, isActive: true },
+    where: { tenantId },
     select: {
       id: true,
       name: true,
@@ -53,7 +53,7 @@ export default async function ComposeMessagePage() {
 
   // Fetch groups with parent data
   const groups = await db.group.findMany({
-    where: { tenantId, isActive: true },
+    where: { tenantId },
     select: {
       id: true,
       name: true,
