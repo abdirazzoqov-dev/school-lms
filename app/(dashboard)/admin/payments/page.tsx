@@ -175,43 +175,38 @@ export default async function PaymentsPage({
     }
   })
 
+  // ✅ All 4 stats are derived from the current filter (whereClause) so they stay in sync
   const totalRevenue = payments
     .filter(p => Number(p.paidAmount) > 0)
     .reduce((sum, p) => sum + Number(p.paidAmount), 0)
 
-  // ✅ Barcha PENDING + PARTIALLY_PAID to'lovlar summasi (tekin o'quvchilar chiqarilgan)
-  const allPendingPayments = await db.payment.findMany({
+  // Pending/partially-paid remaining amount — respect active filter
+  const filteredPendingPayments = await db.payment.findMany({
     where: {
-      tenantId,
+      ...whereClause,
       status: { in: ['PENDING', 'PARTIALLY_PAID'] },
-      student: { isFreeStudent: false },
     },
-    select: {
-      amount: true,
-      paidAmount: true,
-    }
+    select: { amount: true, paidAmount: true }
   })
 
-  const pendingAmount = allPendingPayments.reduce((sum, p) => {
+  const pendingAmount = filteredPendingPayments.reduce((sum, p) => {
     const remaining = Number(p.amount) - Number(p.paidAmount || 0)
     return sum + (remaining > 0 ? remaining : 0)
   }, 0)
 
-  // ✅ Barcha COMPLETED to'lovlar soni (tekin o'quvchilar chiqarilgan)
+  // Completed count — respect active filter
   const totalCompletedPayments = await db.payment.count({
     where: {
-      tenantId,
+      ...whereClause,
       status: 'COMPLETED',
-      student: { isFreeStudent: false },
     }
   })
 
-  // ✅ Barcha PENDING + PARTIALLY_PAID to'lovlar soni
+  // Pending + partially-paid count — respect active filter
   const totalPendingPayments = await db.payment.count({
     where: {
-      tenantId,
+      ...whereClause,
       status: { in: ['PENDING', 'PARTIALLY_PAID'] },
-      student: { isFreeStudent: false },
     }
   })
 
