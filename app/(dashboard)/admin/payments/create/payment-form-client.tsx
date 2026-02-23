@@ -40,9 +40,12 @@ interface Class {
 interface PaymentFormClientProps {
   initialStudents: Student[]
   initialClasses: Class[]
-  preSelectedStudentId?: string // ✅ URL'dan kelgan studentId
-  preSelectedMonth?: number // ✅ URL'dan kelgan month
-  preSelectedYear?: number // ✅ URL'dan kelgan year
+  preSelectedStudentId?: string
+  preSelectedMonth?: number
+  preSelectedYear?: number
+  preSelectedPaymentType?: string
+  fromDormOverview?: boolean
+  preSelectedDormitoryFee?: number
 }
 
 export function PaymentFormClient({ 
@@ -50,7 +53,10 @@ export function PaymentFormClient({
   initialClasses,
   preSelectedStudentId,
   preSelectedMonth,
-  preSelectedYear
+  preSelectedYear,
+  preSelectedPaymentType,
+  fromDormOverview,
+  preSelectedDormitoryFee,
 }: PaymentFormClientProps) {
   const router = useRouter()
   const { toast } = useToast()
@@ -71,10 +77,20 @@ export function PaymentFormClient({
     preStudent?.class?.id ?? ''
   )
 
+  // Determine initial amount: dorm fee (if from dorm overview) > tuition fee > 0
+  const initialAmount = fromDormOverview && preSelectedDormitoryFee
+    ? preSelectedDormitoryFee
+    : preStudent
+    ? Number(preStudent.monthlyTuitionFee || 0)
+    : 0
+
+  // Determine initial payment type
+  const initialPaymentType = (preSelectedPaymentType as any) || 'TUITION'
+
   const [formData, setFormData] = useState({
     studentId: preSelectedStudentId || '',
-    amount: preStudent ? Number(preStudent.monthlyTuitionFee || 0) : 0,
-    paymentType: 'TUITION' as 'TUITION' | 'BOOKS' | 'UNIFORM' | 'OTHER',
+    amount: initialAmount,
+    paymentType: initialPaymentType as 'TUITION' | 'DORMITORY' | 'BOOKS' | 'UNIFORM' | 'OTHER',
     paymentMethod: 'CASH' as 'CASH' | 'CLICK' | 'PAYME' | 'UZUM',
     dueDate: preSelectedMonth && preSelectedYear
       ? new Date(preSelectedYear, preSelectedMonth - 1, 5).toISOString().split('T')[0]
@@ -82,7 +98,7 @@ export function PaymentFormClient({
     paidDate: '',
     receiptNumber: '',
     notes: preSelectedMonth && preSelectedYear
-      ? `${preSelectedYear}-${String(preSelectedMonth).padStart(2, '0')} oyi uchun to'lov`
+      ? `${preSelectedYear}-${String(preSelectedMonth).padStart(2, '0')} oyi uchun ${fromDormOverview ? 'yotoqxona' : 'o\'qish'} to'lovi`
       : '',
     discountAmount: 0,
     discountPercentage: 0,
@@ -142,8 +158,10 @@ export function PaymentFormClient({
           title: 'Muvaffaqiyatli!',
           description: 'To\'lov muvaffaqiyatli yaratildi',
         })
-        // Panoramadan kelgan bo'lsa — o'quvchi tanlangan holda panoramaga qaytish
-        if (preSelectedStudentId) {
+        // Redirect back to the relevant panorama or payments list
+        if (fromDormOverview && preSelectedStudentId) {
+          router.push(`/admin/dormitory/payments/student-overview?studentId=${preSelectedStudentId}`)
+        } else if (preSelectedStudentId) {
           router.push(`/admin/payments/student-overview?studentId=${preSelectedStudentId}`)
         } else {
           router.push('/admin/payments')
@@ -185,9 +203,15 @@ export function PaymentFormClient({
           {preStudent ? (
             <div className="space-y-3">
               {/* Student card */}
-              <div className="flex items-center justify-between p-4 rounded-xl border-2 bg-blue-500 border-blue-600 shadow-md">
+              <div className={`flex items-center justify-between p-4 rounded-xl border-2 shadow-md ${
+                fromDormOverview
+                  ? 'bg-teal-600 border-teal-700'
+                  : 'bg-blue-500 border-blue-600'
+              }`}>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg bg-white text-blue-600">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg bg-white ${
+                    fromDormOverview ? 'text-teal-600' : 'text-blue-600'
+                  }`}>
                     {(preStudent.user?.fullName || preStudent.studentCode).charAt(0).toUpperCase()}
                   </div>
                   <div className="text-left">
@@ -195,12 +219,21 @@ export function PaymentFormClient({
                       {preStudent.user?.fullName || `O'quvchi ${preStudent.studentCode}`}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-blue-100">📝 {preStudent.studentCode}</span>
-                      <span className="text-xs text-blue-100">🏫 {preStudent.class?.name ?? '—'}</span>
+                      <span className={`text-xs ${fromDormOverview ? 'text-teal-100' : 'text-blue-100'}`}>
+                        📝 {preStudent.studentCode}
+                      </span>
+                      <span className={`text-xs ${fromDormOverview ? 'text-teal-100' : 'text-blue-100'}`}>
+                        🏫 {preStudent.class?.name ?? '—'}
+                      </span>
+                      {fromDormOverview && (
+                        <span className="text-xs text-teal-100">🛏 Yotoqxona</span>
+                      )}
                     </div>
                   </div>
                 </div>
-                <div className="bg-white text-blue-600 rounded-full p-2 shadow-md">
+                <div className={`rounded-full p-2 shadow-md bg-white ${
+                  fromDormOverview ? 'text-teal-600' : 'text-blue-600'
+                }`}>
                   <CheckCircle className="w-6 h-6" />
                 </div>
               </div>
@@ -359,6 +392,7 @@ export function PaymentFormClient({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="TUITION">O'qish haqi</SelectItem>
+                  <SelectItem value="DORMITORY">Yotoqxona to'lovi</SelectItem>
                   <SelectItem value="BOOKS">Kitoblar</SelectItem>
                   <SelectItem value="UNIFORM">Forma</SelectItem>
                   <SelectItem value="OTHER">Boshqa</SelectItem>
@@ -596,10 +630,15 @@ export function PaymentFormClient({
             <Button
               type="button"
               variant="outline"
-              onClick={() => preSelectedStudentId
-                ? router.push(`/admin/payments/student-overview?studentId=${preSelectedStudentId}`)
-                : router.push('/admin/payments')
-              }
+              onClick={() => {
+                if (fromDormOverview && preSelectedStudentId) {
+                  router.push(`/admin/dormitory/payments/student-overview?studentId=${preSelectedStudentId}`)
+                } else if (preSelectedStudentId) {
+                  router.push(`/admin/payments/student-overview?studentId=${preSelectedStudentId}`)
+                } else {
+                  router.push('/admin/payments')
+                }
+              }}
               disabled={isPending}
               className="flex-1"
             >

@@ -13,7 +13,13 @@ export const dynamic = 'force-dynamic'
 export default async function CreatePaymentPage({
   searchParams
 }: {
-  searchParams: { studentId?: string; month?: string; year?: string }
+  searchParams: {
+    studentId?: string
+    month?: string
+    year?: string
+    paymentType?: string
+    fromDormOverview?: string
+  }
 }) {
   const session = await getServerSession(authOptions)
 
@@ -22,6 +28,21 @@ export default async function CreatePaymentPage({
   }
 
   const tenantId = session.user.tenantId!
+
+  const fromDormOverview = searchParams.fromDormOverview === '1'
+  const prePaymentType = searchParams.paymentType || 'TUITION'
+
+  // If coming from dormitory overview, fetch dormitory fee for the student
+  let preSelectedDormitoryFee: number | undefined
+  if (fromDormOverview && searchParams.studentId) {
+    const assignment = await db.dormitoryAssignment.findFirst({
+      where: { studentId: searchParams.studentId, tenantId, status: 'ACTIVE' },
+      select: { monthlyFee: true }
+    })
+    if (assignment) {
+      preSelectedDormitoryFee = Number(assignment.monthlyFee)
+    }
+  }
 
   // Fetch students and classes server-side (no API needed)
   const [students, classes] = await Promise.all([
@@ -80,6 +101,9 @@ export default async function CreatePaymentPage({
         preSelectedStudentId={searchParams.studentId}
         preSelectedMonth={searchParams.month ? parseInt(searchParams.month) : undefined}
         preSelectedYear={searchParams.year ? parseInt(searchParams.year) : undefined}
+        preSelectedPaymentType={prePaymentType}
+        fromDormOverview={fromDormOverview}
+        preSelectedDormitoryFee={preSelectedDormitoryFee}
       />
     </div>
   )
