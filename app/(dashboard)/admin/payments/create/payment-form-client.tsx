@@ -55,50 +55,46 @@ export function PaymentFormClient({
   const { toast } = useToast()
   const [isPending, startTransition] = useTransition()
   
-  const [students, setStudents] = useState<Student[]>(initialStudents)
   const [allStudents] = useState<Student[]>(initialStudents)
   const [classes] = useState<Class[]>(initialClasses)
-  const [selectedClass, setSelectedClass] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [acceptPayment, setAcceptPayment] = useState(true)
-  const [hasDiscount, setHasDiscount] = useState(false) // ✅ Chegirma flag
-  
+  const [hasDiscount, setHasDiscount] = useState(false)
+
+  // Pre-select class immediately from initial render (no useEffect needed)
+  const preStudent = preSelectedStudentId
+    ? initialStudents.find(s => s.id === preSelectedStudentId) ?? null
+    : null
+
+  const [selectedClass, setSelectedClass] = useState<string>(
+    preStudent?.class?.id ?? ''
+  )
+
   const [formData, setFormData] = useState({
-    studentId: preSelectedStudentId || '', // ✅ Pre-fill
-    amount: 0,
+    studentId: preSelectedStudentId || '',
+    amount: preStudent ? Number(preStudent.monthlyTuitionFee || 0) : 0,
     paymentType: 'TUITION' as 'TUITION' | 'BOOKS' | 'UNIFORM' | 'OTHER',
     paymentMethod: 'CASH' as 'CASH' | 'CLICK' | 'PAYME' | 'UZUM',
-    dueDate: preSelectedMonth && preSelectedYear 
-      ? new Date(preSelectedYear, preSelectedMonth - 1, 5).toISOString().split('T')[0] // ✅ Pre-fill due date
+    dueDate: preSelectedMonth && preSelectedYear
+      ? new Date(preSelectedYear, preSelectedMonth - 1, 5).toISOString().split('T')[0]
       : new Date().toISOString().split('T')[0],
     paidDate: '',
     receiptNumber: '',
     notes: preSelectedMonth && preSelectedYear
-      ? `${preSelectedYear}-${String(preSelectedMonth).padStart(2, '0')} oyi uchun to'lov` // ✅ Pre-fill notes
+      ? `${preSelectedYear}-${String(preSelectedMonth).padStart(2, '0')} oyi uchun to'lov`
       : '',
-    discountAmount: 0,        // ✅ Chegirma summasi
-    discountPercentage: 0,    // ✅ Chegirma foizi
-    discountReason: '',       // ✅ Chegirma sababi
-    originalAmount: 0         // ✅ Chegirmadan oldingi asl summa
+    discountAmount: 0,
+    discountPercentage: 0,
+    discountReason: '',
+    originalAmount: 0,
   })
 
-  // Pre-select student's class when studentId comes from URL
-  useEffect(() => {
-    if (preSelectedStudentId) {
-      const student = allStudents.find(s => s.id === preSelectedStudentId)
-      if (student?.class?.id) {
-        setSelectedClass(student.class.id)
-        // Pre-fill amount from student's monthly fee
-        if (student.monthlyTuitionFee) {
-          setFormData(prev => ({
-            ...prev,
-            amount: Number(student.monthlyTuitionFee),
-          }))
-        }
-      }
+  const [students, setStudents] = useState<Student[]>(() => {
+    if (preStudent?.class?.id) {
+      return initialStudents.filter(s => s.class?.id === preStudent.class!.id)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    return initialStudents
+  })
 
   // Filter students by class and search
   useEffect(() => {
