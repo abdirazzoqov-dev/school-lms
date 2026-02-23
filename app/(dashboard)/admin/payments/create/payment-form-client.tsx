@@ -82,6 +82,24 @@ export function PaymentFormClient({
     originalAmount: 0         // ✅ Chegirmadan oldingi asl summa
   })
 
+  // Pre-select student's class when studentId comes from URL
+  useEffect(() => {
+    if (preSelectedStudentId) {
+      const student = allStudents.find(s => s.id === preSelectedStudentId)
+      if (student?.class?.id) {
+        setSelectedClass(student.class.id)
+        // Pre-fill amount from student's monthly fee
+        if (student.monthlyTuitionFee) {
+          setFormData(prev => ({
+            ...prev,
+            amount: Number(student.monthlyTuitionFee),
+          }))
+        }
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Filter students by class and search
   useEffect(() => {
     let filtered = allStudents
