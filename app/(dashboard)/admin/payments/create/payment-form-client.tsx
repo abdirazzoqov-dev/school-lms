@@ -14,6 +14,7 @@ import { ArrowLeft, DollarSign, Loader2, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 import { Checkbox } from '@/components/ui/checkbox'
 import { formatNumber } from '@/lib/utils'
+import { CurrencyInput } from '@/components/ui/currency-input'
 
 interface Student {
   id: string
@@ -174,152 +175,169 @@ export function PaymentFormClient({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Student Selection */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Class Filter */}
-              <div className="space-y-2">
-                <Label className="text-base font-semibold">1️⃣ Sinfni tanlang *</Label>
-                <Select
-                  value={selectedClass}
-                  onValueChange={(value) => {
-                    setSelectedClass(value)
-                    setFormData(prev => ({ ...prev, studentId: '' }))
-                  }}
-                >
-                  <SelectTrigger className="h-12 border-2">
-                    <SelectValue placeholder="Sinf tanlang..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {classes.length === 0 ? (
-                      <SelectItem value="empty" disabled>Sinflar yo'q</SelectItem>
-                    ) : (
-                      classes.map((cls) => (
-                        <SelectItem key={cls.id} value={cls.id}>
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold">{cls.name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              ({cls._count?.students || 0} o'quvchi)
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  ℹ️ Avval sinfni tanlang, o'quvchilar avtomatik chiqadi
-                </p>
-              </div>
 
-              {/* Search */}
-              {selectedClass && (
-                <div className="space-y-2">
-                  <Label className="text-base font-semibold">🔍 Qidirish (ixtiyoriy)</Label>
-                  <Input
-                    placeholder="Ism yoki kod bo'yicha..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="h-12 border-2"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    📊 {students.length} ta o'quvchi topildi
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Students List */}
-          {selectedClass && (
+          {/* ── Pre-selected student (from panorama) ── */}
+          {preStudent ? (
             <div className="space-y-3">
-              <Label className="text-base font-semibold">
-                2️⃣ O'quvchini tanlang * 
-                {formData.studentId && <span className="text-green-600 ml-2">✓ Tanlandi</span>}
-              </Label>
-              
-              {students.length > 0 ? (
-                <div className="max-h-[400px] overflow-y-auto border-2 rounded-xl border-blue-200 bg-blue-50/30">
-                  <div className="grid gap-2 p-3">
-                    {students.map((student) => {
-                      const isSelected = formData.studentId === student.id
-                      const monthlyFee = student.monthlyTuitionFee ? Number(student.monthlyTuitionFee) : 0
-                      
-                      return (
-                        <button
-                          key={student.id}
-                          type="button"
-                          onClick={() => {
-                            setFormData(prev => ({ 
-                              ...prev, 
-                              studentId: student.id,
-                              amount: monthlyFee > 0 ? monthlyFee : prev.amount
-                            }))
-                          }}
-                          className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
-                            isSelected
-                              ? 'bg-blue-500 border-blue-600 shadow-lg scale-[1.02]' 
-                              : 'bg-white border-gray-200 hover:bg-blue-50 hover:border-blue-300 hover:scale-[1.01]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
-                              isSelected ? 'bg-white text-blue-600' : 'bg-blue-100 text-blue-600'
-                            }`}>
-                              {(student.user?.fullName || student.studentCode).charAt(0).toUpperCase()}
-                            </div>
-                            
-                            <div className="text-left">
-                              <p className={`font-semibold text-base ${isSelected ? 'text-white' : 'text-gray-900'}`}>
-                                {student.user?.fullName || `O'quvchi ${student.studentCode}`}
-                              </p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className={`text-xs ${isSelected ? 'text-blue-100' : 'text-muted-foreground'}`}>
-                                  📝 {student.studentCode}
-                                </span>
-                                {monthlyFee > 0 && (
-                                  <span className={`text-xs font-medium ${isSelected ? 'text-blue-100' : 'text-green-600'}`}>
-                                    💰 {formatNumber(monthlyFee)} so'm/oy
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {isSelected && (
-                            <div className="bg-white text-blue-600 rounded-full p-2 shadow-md">
-                              <CheckCircle className="w-6 h-6" />
-                            </div>
-                          )}
-                        </button>
-                      )
-                    })}
+              {/* Student card */}
+              <div className="flex items-center justify-between p-4 rounded-xl border-2 bg-blue-500 border-blue-600 shadow-md">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg bg-white text-blue-600">
+                    {(preStudent.user?.fullName || preStudent.studentCode).charAt(0).toUpperCase()}
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-base text-white">
+                      {preStudent.user?.fullName || `O'quvchi ${preStudent.studentCode}`}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-blue-100">📝 {preStudent.studentCode}</span>
+                      <span className="text-xs text-blue-100">🏫 {preStudent.class?.name ?? '—'}</span>
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <div className="p-6 bg-yellow-50 border-2 border-yellow-200 rounded-xl text-center">
-                  <div className="text-4xl mb-2">📚</div>
-                  <p className="text-sm font-medium text-yellow-800">
-                    {searchQuery ? 'Qidiruv natijalari topilmadi' : 'Ushbu sinfda o\'quvchilar yo\'q'}
+                <div className="bg-white text-blue-600 rounded-full p-2 shadow-md">
+                  <CheckCircle className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* ── Manual student selection ── */
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Class Filter */}
+                <div className="space-y-2">
+                  <Label className="text-base font-semibold">1️⃣ Sinfni tanlang *</Label>
+                  <Select
+                    value={selectedClass}
+                    onValueChange={(value) => {
+                      setSelectedClass(value)
+                      setFormData(prev => ({ ...prev, studentId: '' }))
+                    }}
+                  >
+                    <SelectTrigger className="h-12 border-2">
+                      <SelectValue placeholder="Sinf tanlang..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classes.length === 0 ? (
+                        <SelectItem value="empty" disabled>Sinflar yo'q</SelectItem>
+                      ) : (
+                        classes.map((cls) => (
+                          <SelectItem key={cls.id} value={cls.id}>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">{cls.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                ({cls._count?.students || 0} o'quvchi)
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    ℹ️ Avval sinfni tanlang, o'quvchilar avtomatik chiqadi
                   </p>
-                  <p className="text-xs text-yellow-600 mt-1">
-                    {searchQuery ? 'Boshqa nom yoki kod bilan qidiring' : 'Avval sinfga o\'quvchi qo\'shing'}
+                </div>
+
+                {/* Search */}
+                {selectedClass && (
+                  <div className="space-y-2">
+                    <Label className="text-base font-semibold">🔍 Qidirish (ixtiyoriy)</Label>
+                    <Input
+                      placeholder="Ism yoki kod bo'yicha..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="h-12 border-2"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      📊 {students.length} ta o'quvchi topildi
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Students List */}
+              {selectedClass && (
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold">
+                    2️⃣ O'quvchini tanlang *
+                    {formData.studentId && <span className="text-green-600 ml-2">✓ Tanlandi</span>}
+                  </Label>
+
+                  {students.length > 0 ? (
+                    <div className="max-h-[400px] overflow-y-auto border-2 rounded-xl border-blue-200 bg-blue-50/30">
+                      <div className="grid gap-2 p-3">
+                        {students.map((student) => {
+                          const isSelected = formData.studentId === student.id
+                          const monthlyFee = student.monthlyTuitionFee ? Number(student.monthlyTuitionFee) : 0
+                          return (
+                            <button
+                              key={student.id}
+                              type="button"
+                              onClick={() => setFormData(prev => ({
+                                ...prev,
+                                studentId: student.id,
+                                amount: monthlyFee > 0 ? monthlyFee : prev.amount,
+                              }))}
+                              className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                                isSelected
+                                  ? 'bg-blue-500 border-blue-600 shadow-lg scale-[1.02]'
+                                  : 'bg-white border-gray-200 hover:bg-blue-50 hover:border-blue-300 hover:scale-[1.01]'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
+                                  isSelected ? 'bg-white text-blue-600' : 'bg-blue-100 text-blue-600'
+                                }`}>
+                                  {(student.user?.fullName || student.studentCode).charAt(0).toUpperCase()}
+                                </div>
+                                <div className="text-left">
+                                  <p className={`font-semibold text-base ${isSelected ? 'text-white' : 'text-gray-900'}`}>
+                                    {student.user?.fullName || `O'quvchi ${student.studentCode}`}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className={`text-xs ${isSelected ? 'text-blue-100' : 'text-muted-foreground'}`}>
+                                      📝 {student.studentCode}
+                                    </span>
+                                    {monthlyFee > 0 && (
+                                      <span className={`text-xs font-medium ${isSelected ? 'text-blue-100' : 'text-green-600'}`}>
+                                        💰 {formatNumber(monthlyFee)} so'm/oy
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              {isSelected && (
+                                <div className="bg-white text-blue-600 rounded-full p-2 shadow-md">
+                                  <CheckCircle className="w-6 h-6" />
+                                </div>
+                              )}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-6 bg-yellow-50 border-2 border-yellow-200 rounded-xl text-center">
+                      <div className="text-4xl mb-2">📚</div>
+                      <p className="text-sm font-medium text-yellow-800">
+                        {searchQuery ? 'Qidiruv natijalari topilmadi' : "Ushbu sinfda o'quvchilar yo'q"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Class not selected */}
+              {!selectedClass && (
+                <div className="p-8 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-dashed border-blue-300 rounded-xl text-center">
+                  <div className="text-5xl mb-3">🎓</div>
+                  <p className="text-lg font-semibold text-blue-900 mb-1">Sinf tanlang</p>
+                  <p className="text-sm text-blue-600">
+                    Yuqoridagi dropdown'dan sinfni tanlang, o'quvchilar avtomatik chiqadi
                   </p>
                 </div>
               )}
-            </div>
-          )}
-          
-          {/* Class not selected */}
-          {!selectedClass && (
-            <div className="p-8 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-dashed border-blue-300 rounded-xl text-center">
-              <div className="text-5xl mb-3">🎓</div>
-              <p className="text-lg font-semibold text-blue-900 mb-1">
-                Sinf tanlang
-              </p>
-              <p className="text-sm text-blue-600">
-                Yuqoridagi dropdown'dan sinfni tanlang, o'quvchilar avtomatik chiqadi
-              </p>
             </div>
           )}
 
@@ -345,13 +363,13 @@ export function PaymentFormClient({
 
             <div className="space-y-2">
               <Label htmlFor="amount">Summa (so'm) *</Label>
-              <Input
+              <CurrencyInput
                 id="amount"
-                type="number"
+                placeholder="1 800 000"
                 value={formData.amount}
-                onChange={(e) => setFormData(prev => ({ ...prev, amount: Number(e.target.value) }))}
+                onChange={(val) => setFormData(prev => ({ ...prev, amount: val }))}
+                currency="so'm"
                 required
-                min="0"
               />
             </div>
 
