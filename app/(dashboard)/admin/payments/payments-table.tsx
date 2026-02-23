@@ -226,257 +226,240 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
     return 'bg-green-500'
   }
 
-  // Get progress text color
   const getProgressTextColor = (percentage: number) => {
-    if (percentage === 0) return 'text-red-700'
-    if (percentage < 100) return 'text-yellow-700'
-    return 'text-green-700'
+    if (percentage === 0) return 'text-red-600'
+    if (percentage < 100) return 'text-amber-600'
+    return 'text-emerald-600'
   }
 
+  const getMethodLabel = (method: string) => {
+    const map: Record<string, string> = { CASH: 'Naqd', CLICK: 'Click', PAYME: 'Payme', UZUM: 'Uzum' }
+    return map[method] || method
+  }
+
+  // Sort: least paid (0%) → most paid (100%)
+  const sortedPayments = [...payments].sort((a, b) =>
+    calculateProgress(a).percentage - calculateProgress(b).percentage
+  )
+
   const renderDesktopTable = () => (
-    <div className="rounded-md border overflow-x-auto">
-      <div className="min-w-[1200px]">
-        <table className="w-full">
-          <thead className="border-b bg-muted/50">
-            <tr>
-              {canBulkAction && (
-                <th className="p-4 text-left w-12">
-                  <Checkbox
-                    checked={selectedIds.length === payments.length && payments.length > 0}
-                    onCheckedChange={handleSelectAll}
-                  />
-                </th>
-              )}
-              <th className="p-4 text-left text-sm font-medium w-[140px]">Invoice</th>
-              <th className="p-4 text-left text-sm font-medium w-[180px]">O'quvchi</th>
-              <th className="p-4 text-left text-sm font-medium w-[140px]">Summasi</th>
-              <th className="p-4 text-left text-sm font-medium w-[320px]">To'lov Holati</th>
-              <th className="p-4 text-left text-sm font-medium w-[120px]">Usuli</th>
-              <th className="p-4 text-left text-sm font-medium w-[120px]">Muddat</th>
-              <th className="p-4 text-left text-sm font-medium w-[120px]">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {payments.map((payment) => {
-              const progress = calculateProgress(payment)
-              
-              return (
-                <tr key={payment.id} className="hover:bg-muted/50">
-                  {canBulkAction && (
-                    <td className="p-4">
-                      <Checkbox
-                        checked={selectedIds.includes(payment.id)}
-                        onCheckedChange={(checked) => handleSelectOne(payment.id, checked as boolean)}
-                      />
-                    </td>
-                  )}
-                  <td className="p-4">
-                    <code className="text-sm">{payment.invoiceNumber}</code>
+    <div className="w-full rounded-xl border border-border overflow-hidden shadow-sm">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="bg-muted/60 border-b border-border">
+            {canBulkAction && (
+              <th className="px-4 py-3 w-10">
+                <Checkbox
+                  checked={selectedIds.length === payments.length && payments.length > 0}
+                  onCheckedChange={handleSelectAll}
+                />
+              </th>
+            )}
+            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[130px]">Invoice</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">O'quvchi</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[110px]">Turi · Usul</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[110px]">Muddat</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">To'lov Holati ↑%</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-[110px]">Status</th>
+            <th className="px-4 py-3 w-[150px]" />
+          </tr>
+        </thead>
+        <tbody>
+          {sortedPayments.map((payment, idx) => {
+            const progress = calculateProgress(payment)
+            const isOverdue = payment.status === 'PENDING' && new Date(payment.dueDate) < new Date()
+            const isSelected = selectedIds.includes(payment.id)
+
+            const rowBg =
+              progress.percentage === 100
+                ? 'bg-emerald-50/40 hover:bg-emerald-50/70'
+                : isOverdue
+                ? 'bg-red-50/40 hover:bg-red-50/70'
+                : progress.percentage > 0
+                ? 'bg-amber-50/30 hover:bg-amber-50/60'
+                : 'bg-white hover:bg-slate-50/80'
+
+            const leftBorder =
+              progress.percentage === 100
+                ? 'border-l-4 border-l-emerald-400'
+                : isOverdue
+                ? 'border-l-4 border-l-red-400'
+                : progress.percentage > 0
+                ? 'border-l-4 border-l-amber-400'
+                : 'border-l-4 border-l-slate-300'
+
+            return (
+              <tr
+                key={payment.id}
+                className={`${rowBg} ${leftBorder} border-b border-border/60 transition-colors ${isSelected ? 'ring-1 ring-inset ring-blue-400' : ''}`}
+              >
+                {canBulkAction && (
+                  <td className="px-4 py-3">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={(checked) => handleSelectOne(payment.id, checked as boolean)}
+                    />
                   </td>
-                  <td className="p-4">
-                    <div className="font-medium">
-                      {payment.student?.user?.fullName || 'N/A'}
+                )}
+
+                {/* Invoice */}
+                <td className="px-4 py-3">
+                  <code className="text-xs font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-700 block truncate max-w-[120px]" title={payment.invoiceNumber}>
+                    {payment.invoiceNumber}
+                  </code>
+                </td>
+
+                {/* Student */}
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm ${
+                      progress.percentage === 100 ? 'bg-emerald-500' :
+                      isOverdue ? 'bg-red-500' :
+                      progress.percentage > 0 ? 'bg-amber-500' : 'bg-slate-400'
+                    }`}>
+                      {payment.student?.user?.fullName?.charAt(0) ?? '?'}
                     </div>
-                  </td>
-                  <td className="p-4">
                     <div>
-                      <div className="font-medium">
+                      <p className="text-sm font-semibold text-foreground leading-tight">
+                        {payment.student?.user?.fullName || 'N/A'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
                         {formatNumber(Number(payment.amount))} so'm
-                      </div>
-                      {payment.paidAmount && Number(payment.paidAmount) > 0 && (
-                        <div className="text-sm text-muted-foreground">
-                          To'langan: {formatNumber(Number(payment.paidAmount))}
-                        </div>
-                      )}
+                      </p>
                     </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="space-y-2 max-w-[320px]">
-                      {/* Progress Bar */}
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1">
-                          <Progress 
-                            value={progress.percentage} 
-                            className="h-2"
-                            indicatorClassName={getProgressColor(progress.percentage)}
-                          />
-                        </div>
-                        <span className={`text-sm font-semibold ${getProgressTextColor(progress.percentage)}`}>
-                          {progress.percentage}%
-                        </span>
+                  </div>
+                </td>
+
+                {/* Type · Method */}
+                <td className="px-4 py-3">
+                  <p className="text-xs font-medium text-foreground">{getPaymentTypeLabel(payment.paymentType)}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{getMethodLabel(payment.paymentMethod)}</p>
+                </td>
+
+                {/* Due date */}
+                <td className="px-4 py-3">
+                  <p className={`text-xs font-medium ${isOverdue ? 'text-red-600' : 'text-foreground'}`}>
+                    {new Date(payment.dueDate).toLocaleDateString('uz-UZ', { day: '2-digit', month: 'short', year: '2-digit' })}
+                  </p>
+                  {payment.paidDate && (
+                    <p className="text-[11px] text-emerald-600 mt-0.5">
+                      ✓ {new Date(payment.paidDate).toLocaleDateString('uz-UZ', { day: '2-digit', month: 'short' })}
+                    </p>
+                  )}
+                </td>
+
+                {/* Progress */}
+                <td className="px-4 py-3">
+                  <div className="space-y-1.5 min-w-[200px]">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <Progress
+                          value={progress.percentage}
+                          className="h-2 bg-slate-200"
+                          indicatorClassName={getProgressColor(progress.percentage)}
+                        />
                       </div>
-                      
-                      {/* Amount Display */}
-                      <div className="flex items-center justify-between text-xs">
-                        <span className={`font-medium ${getProgressTextColor(progress.percentage)}`}>
-                          {formatNumber(progress.paid)} so'm
-                        </span>
-                        <span className="text-muted-foreground">/ {formatNumber(progress.total)} so'm</span>
-                      </div>
-                      
-                      {/* Remaining Amount (if partial) */}
-                      {progress.percentage > 0 && progress.percentage < 100 && (
-                        <div className="flex items-center gap-1 text-xs text-orange-600">
-                          <span>Qoldi:</span>
-                          <span className="font-semibold">{formatNumber(progress.remaining)} so'm</span>
-                        </div>
-                      )}
-                      
-                      {/* Status Indicator */}
-                      {progress.percentage === 0 && (
-                        <div className="text-xs text-red-600 font-medium">
-                          ⚠️ To'lov kutilmoqda
-                        </div>
-                      )}
-                      {progress.percentage === 100 && (
-                        <div className="text-xs text-green-600 font-medium">
-                          ✓ To'liq to'langan
-                        </div>
-                      )}
-                      {progress.percentage > 0 && progress.percentage < 100 && (
-                        <div className="text-xs text-yellow-600 font-medium">
-                          ⏳ Qisman to'langan
-                        </div>
-                      )}
-                      
-                      {/* Add Payment Button */}
-                      {canCreate && progress.percentage < 100 && (
-                        <Button 
-                          variant="default" 
-                          size="sm"
-                          onClick={() => handleAddPartialPayment(payment)}
-                          className="bg-green-600 hover:bg-green-700 w-full mt-2"
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          To'lov qo'shish
-                        </Button>
-                      )}
-                      
-                      {/* Transactions History Toggle */}
-                      {payment.transactions && payment.transactions.length > 0 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleExpanded(payment.id)}
-                          className="w-full mt-2 text-xs"
-                        >
-                          <Receipt className="h-3 w-3 mr-1" />
-                          {expandedPayments.has(payment.id) ? 'Yashirish' : `Tarixi (${payment.transactions.length})`}
-                          {expandedPayments.has(payment.id) ? (
-                            <ChevronUp className="h-3 w-3 ml-1" />
-                          ) : (
-                            <ChevronDown className="h-3 w-3 ml-1" />
-                          )}
-                        </Button>
-                      )}
+                      <span className={`text-xs font-bold w-9 text-right tabular-nums ${getProgressTextColor(progress.percentage)}`}>
+                        {progress.percentage}%
+                      </span>
                     </div>
-                    
-                    {/* Transactions Expanded - Compact Design */}
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className={`font-semibold ${getProgressTextColor(progress.percentage)}`}>
+                        {formatNumber(progress.paid)} so'm
+                      </span>
+                      <span className="text-muted-foreground">/ {formatNumber(progress.total)} so'm</span>
+                    </div>
+                    {progress.percentage > 0 && progress.percentage < 100 && (
+                      <p className="text-[11px] text-amber-600 font-medium">
+                        Qarz: {formatNumber(progress.remaining)} so'm
+                      </p>
+                    )}
+                    {/* Transaction history toggle */}
+                    {payment.transactions && payment.transactions.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => toggleExpanded(payment.id)}
+                        className="flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-800 transition-colors mt-0.5"
+                      >
+                        <Receipt className="h-3 w-3" />
+                        {expandedPayments.has(payment.id) ? 'Yashirish' : `Tarix (${payment.transactions.length})`}
+                        {expandedPayments.has(payment.id) ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                      </button>
+                    )}
+                    {/* Transactions expanded */}
                     {expandedPayments.has(payment.id) && payment.transactions && payment.transactions.length > 0 && (
-                      <div className="mt-3 p-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg space-y-1.5 max-w-[300px]">
-                        <div className="flex items-center gap-1.5 mb-1.5 pb-1.5 border-b border-blue-200">
-                          <Receipt className="h-3.5 w-3.5 text-blue-600" />
-                          <p className="text-[10px] font-semibold text-blue-900">
-                            Tarixi ({payment.transactions.length})
-                          </p>
-                        </div>
-                        {payment.transactions.map((transaction, index) => (
-                          <div 
-                            key={transaction.id}
-                            className="p-1.5 bg-white border border-blue-200 rounded space-y-1"
-                          >
-                            <div className="flex items-center justify-between gap-1">
-                              <Badge className="bg-blue-600 text-white text-[9px] px-1.5 py-0.5 h-4">
-                                #{index + 1}
-                              </Badge>
-                              <span className="text-xs font-bold text-green-600">
-                                {formatNumber(Number(transaction.amount))}
-                              </span>
+                      <div className="mt-2 space-y-1.5 bg-blue-50 border border-blue-200 rounded-lg p-2">
+                        {payment.transactions.map((tx, i) => (
+                          <div key={tx.id} className="flex items-center justify-between text-[11px] bg-white border border-blue-100 rounded px-2 py-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-blue-500 font-bold">#{i + 1}</span>
+                              <span>{new Date(tx.transactionDate).toLocaleDateString('uz-UZ', { day: '2-digit', month: 'short' })}</span>
+                              <span className="text-muted-foreground">·</span>
+                              <span>{getMethodLabel(tx.paymentMethod)}</span>
                             </div>
-                            <div className="space-y-0.5 text-[10px]">
-                              <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Sana:</span>
-                                <span className="font-medium">
-                                  {new Date(transaction.transactionDate).toLocaleDateString('uz-UZ', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: '2-digit'
-                                  })}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-muted-foreground">Usul:</span>
-                                <span className="font-medium">
-                                  {transaction.paymentMethod === 'CASH' && 'Naqd'}
-                                  {transaction.paymentMethod === 'CLICK' && 'Click'}
-                                  {transaction.paymentMethod === 'PAYME' && 'Payme'}
-                                  {transaction.paymentMethod === 'UZUM' && 'Uzum'}
-                                </span>
-                              </div>
-                              {transaction.receivedBy && (
-                                <div className="flex items-center justify-between">
-                                  <span className="text-muted-foreground">Admin:</span>
-                                  <span className="font-medium truncate max-w-[120px]" title={transaction.receivedBy.fullName}>
-                                    {transaction.receivedBy.fullName}
-                                  </span>
-                                </div>
-                              )}
-                              {transaction.notes && (
-                                <div className="pt-1 border-t border-gray-200">
-                                  <p className="text-[9px] text-muted-foreground mb-0.5">Izoh:</p>
-                                  <p className="text-[10px] font-medium line-clamp-2">{transaction.notes}</p>
-                                </div>
-                              )}
-                            </div>
+                            <span className="font-semibold text-emerald-600">{formatNumber(Number(tx.amount))}</span>
                           </div>
                         ))}
                       </div>
                     )}
-                  </td>
-                  <td className="p-4">
-                    <div>
-                      <div className="text-sm">{getPaymentTypeLabel(payment.paymentType)}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {payment.paymentMethod}
-                      </div>
-                    </div>
-                  </td>
-                <td className="p-4">
-                  <div className="text-sm">
-                    {new Date(payment.dueDate).toLocaleDateString('uz-UZ')}
                   </div>
-                  {payment.paidDate && (
-                    <div className="text-xs text-muted-foreground">
-                      To'langan: {new Date(payment.paidDate).toLocaleDateString('uz-UZ')}
-                    </div>
-                  )}
                 </td>
-                <td className="p-4">
-                  <Badge variant={
-                    payment.status === 'COMPLETED' ? 'default' : 
-                    payment.status === 'PARTIALLY_PAID' ? 'outline' :
-                    payment.status === 'PENDING' ? 'secondary' : 
-                    'destructive'
-                  }>
-                    {payment.status === 'COMPLETED' ? 'To\'langan' :
-                     payment.status === 'PARTIALLY_PAID' ? 'Qisman to\'langan' :
-                     payment.status === 'PENDING' ? 'Kutilmoqda' : 
-                     payment.status === 'REFUNDED' ? 'Qaytarilgan' :
-                     'Muvaffaqiyatsiz'}
-                  </Badge>
+
+                {/* Status badge */}
+                <td className="px-4 py-3">
+                  <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${
+                    payment.status === 'COMPLETED'
+                      ? 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-300'
+                      : payment.status === 'PARTIALLY_PAID'
+                      ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-300'
+                      : payment.status === 'PENDING'
+                      ? isOverdue
+                        ? 'bg-red-100 text-red-700 ring-1 ring-red-300'
+                        : 'bg-orange-100 text-orange-700 ring-1 ring-orange-300'
+                      : 'bg-slate-100 text-slate-600 ring-1 ring-slate-300'
+                  }`}>
+                    {payment.status === 'COMPLETED' && '✓ To\'langan'}
+                    {payment.status === 'PARTIALLY_PAID' && '⏳ Qisman'}
+                    {payment.status === 'PENDING' && (isOverdue ? '⚠ Kechikkan' : '○ Kutilmoqda')}
+                    {payment.status === 'REFUNDED' && '↩ Qaytarilgan'}
+                    {payment.status === 'FAILED' && '✕ Xato'}
+                  </span>
+                </td>
+
+                {/* Action */}
+                <td className="px-4 py-3">
+                  {canCreate && progress.percentage < 100 ? (
+                    <Button
+                      size="sm"
+                      onClick={() => handleAddPartialPayment(payment)}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8 gap-1.5 shadow-sm"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      To'lov qo'sh
+                    </Button>
+                  ) : progress.percentage === 100 ? (
+                    <div className="flex items-center gap-1.5 text-emerald-600 text-xs font-semibold justify-center">
+                      <CheckCircle2 className="h-4 w-4" />
+                      To'liq
+                    </div>
+                  ) : null}
                 </td>
               </tr>
             )
-            })}
-          </tbody>
-        </table>
-      </div>
+          })}
+        </tbody>
+      </table>
+      {sortedPayments.length === 0 && (
+        <div className="py-16 text-center text-muted-foreground">
+          <p className="text-sm">To'lovlar topilmadi</p>
+        </div>
+      )}
     </div>
   )
 
   const renderMobileCards = () => (
     <div className="space-y-3 sm:space-y-4 pb-20">
-      {payments.map((payment) => {
+      {sortedPayments.map((payment) => {
         const progress = calculateProgress(payment)
         const isOverdue = payment.status === 'PENDING' && new Date(payment.dueDate) < new Date()
         
