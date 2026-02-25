@@ -2,8 +2,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Settings, Lock, Bell, User, AlertCircle } from 'lucide-react'
+import { Settings, Lock, Bell, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 export const revalidate = 0
 export const dynamic = 'force-dynamic'
@@ -88,10 +89,12 @@ export default async function ParentSettingsPage() {
                 <p className="font-semibold">Parolni o'zgartirish</p>
                 <p className="text-sm text-gray-500">Yangi parol o'rnatish</p>
               </div>
-              <Button variant="outline" disabled>
-                <Lock className="mr-2 h-4 w-4" />
-                O'zgartirish
-              </Button>
+              <Link href="/parent/settings/change-password">
+                <Button variant="outline">
+                  <Lock className="mr-2 h-4 w-4" />
+                  O'zgartirish
+                </Button>
+              </Link>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -149,21 +152,6 @@ export default async function ParentSettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Info Card */}
-        <Card className="border-2 border-blue-200 bg-blue-50">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-              <div>
-                <p className="font-semibold text-blue-900">Ma'lumot</p>
-                <p className="text-sm text-blue-700 mt-1">
-                  Sozlamalarni o'zgartirish funksiyasi hozirda ishlab chiqilmoqda. 
-                  Yordam kerak bo'lsa, maktab administratori bilan bog'laning.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )
