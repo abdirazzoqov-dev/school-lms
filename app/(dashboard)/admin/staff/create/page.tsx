@@ -106,8 +106,9 @@ export default function CreateStaffPage() {
         }
 
         toast({
-          title: 'Muvaffaqiyatli!',
-          description: result.message,
+          title: "Xodim qo'shildi!",
+          description: `Login: ${(result as any).credentials?.email} | Parol: ${(result as any).credentials?.password}`,
+          duration: 10000,
         })
         router.push('/admin/staff')
       } else {

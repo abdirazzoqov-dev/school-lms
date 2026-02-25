@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const teacherSchema = z.object({
   fullName: z.string().min(3, 'Ism kamida 3 ta harf bo\'lishi kerak'),
-  email: z.string().email('Email noto\'g\'ri'),
+  email: z.string().email('Email noto\'g\'ri').toLowerCase(),
   phone: z.string().optional(),
   teacherCode: z.string().min(2, 'O\'qituvchi kodi kamida 2 ta belgi'),
   specialization: z.string().min(3, 'Mutaxassislikni kiriting'),

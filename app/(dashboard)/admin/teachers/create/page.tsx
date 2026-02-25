@@ -97,8 +97,9 @@ export default function CreateTeacherPage() {
           await uploadAvatar(result.userId, avatarBase64, avatarFileName || 'avatar.jpg')
         }
         toast({
-          title: 'Muvaffaqiyatli!',
-          description: `O'qituvchi qo'shildi. Login: ${result.credentials?.email}`,
+          title: "O'qituvchi qo'shildi!",
+          description: `Login: ${result.credentials?.email} | Parol: ${result.credentials?.password}`,
+          duration: 10000,
         })
         router.push('/admin/teachers')
       } else {

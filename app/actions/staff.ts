@@ -87,7 +87,11 @@ export async function createStaff(data: StaffFormData) {
       userId: user.id,      // plain string - safe to serialize across server action boundary
       staffId: staff.id,    // plain string
       staff,
-      message: `${validatedData.fullName} muvaffaqiyatli qo'shildi`
+      message: `${validatedData.fullName} muvaffaqiyatli qo'shildi`,
+      credentials: {
+        email: validatedData.email,
+        password: validatedData.password || 'Staff123!',
+      }
     }
   } catch (error: any) {
     console.error('Create staff error:', error)
