@@ -3,6 +3,9 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { DormitoryOverviewClient } from './dormitory-overview-client'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 
 export const revalidate = 0
 export const dynamic = 'force-dynamic'
@@ -60,6 +63,13 @@ export default async function DormitoryPaymentOverviewPage({
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <Link href="/admin/dormitory/payments">
+          <Button variant="ghost" size="icon">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </Link>
+      </div>
       <DormitoryOverviewClient
         students={students}
         currentYear={currentYear}

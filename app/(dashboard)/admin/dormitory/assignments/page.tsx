@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Users, Plus } from 'lucide-react'
+import { Users, Plus, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { AssignmentsTable } from './assignments-table'
 import { PermissionGate } from '@/components/admin/permission-gate'
@@ -75,14 +75,21 @@ export default async function AssignmentsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Users className="h-8 w-8 text-green-500" />
-            Joylashtirishlar
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            O'quvchilarning yotoqxonaga joylashtirilgan ro'yxati
-          </p>
+        <div className="flex items-center gap-3">
+          <Link href="/admin/dormitory">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <Users className="h-8 w-8 text-green-500" />
+              Joylashtirishlar
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              O'quvchilarning yotoqxonaga joylashtirilgan ro'yxati
+            </p>
+          </div>
         </div>
         <PermissionGate resource="dormitory" action="CREATE">
           <Link href="/admin/dormitory/assign">

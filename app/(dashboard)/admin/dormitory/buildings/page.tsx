@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Building2, Plus } from 'lucide-react'
+import { Building2, Plus, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { BuildingsTable } from './buildings-table'
 import { PermissionGate } from '@/components/admin/permission-gate'
@@ -46,14 +46,21 @@ export default async function BuildingsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Building2 className="h-8 w-8 text-indigo-500" />
-            Yotoqxona Binolari
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Barcha yotoqxona binolarini boshqaring
-          </p>
+        <div className="flex items-center gap-3">
+          <Link href="/admin/dormitory">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <Building2 className="h-8 w-8 text-indigo-500" />
+              Yotoqxona Binolari
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Barcha yotoqxona binolarini boshqaring
+            </p>
+          </div>
         </div>
         <PermissionGate resource="dormitory" action="CREATE">
           <Link href="/admin/dormitory/buildings/create">
