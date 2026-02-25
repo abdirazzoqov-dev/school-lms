@@ -10,8 +10,8 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
-    // Allow ADMIN and SUPER_ADMIN
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
+    // Allow ADMIN, SUPER_ADMIN and MODERATOR
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN' && session.user.role !== 'MODERATOR')) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
