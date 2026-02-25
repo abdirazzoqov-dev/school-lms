@@ -103,7 +103,7 @@ export async function createTeacher(data: TeacherFormData) {
   }
 }
 
-export async function updateTeacher(teacherId: string, data: Partial<Omit<TeacherFormData, 'password' | 'email'>>) {
+export async function updateTeacher(teacherId: string, data: Partial<Omit<TeacherFormData, 'password'>> & { email?: string }) {
   try {
     const session = await getServerSession(authOptions)
     
@@ -141,12 +141,27 @@ export async function updateTeacher(teacherId: string, data: Partial<Omit<Teache
     const oldSalary = Number(teacher.monthlySalary || 0)
     const newSalary = data.monthlySalary || 0
 
+    // If email is being changed, check uniqueness
+    if (data.email) {
+      const normalizedEmail = data.email.trim().toLowerCase()
+      const existingUser = await db.user.findFirst({
+        where: {
+          email: { equals: normalizedEmail, mode: 'insensitive' },
+          NOT: { id: teacher.userId }
+        }
+      })
+      if (existingUser) {
+        return { success: false, error: 'Bu email allaqachon boshqa foydalanuvchi tomonidan ishlatilgan' }
+      }
+    }
+
     // Update user
     await db.user.update({
       where: { id: teacher.userId },
       data: {
         fullName: data.fullName,
         phone: data.phone || null,
+        ...(data.email ? { email: data.email.trim().toLowerCase() } : {}),
       }
     })
 

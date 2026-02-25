@@ -61,9 +61,9 @@ export const authOptions: NextAuthOptions = {
             },
           })
         } else {
-          // Email orqali qidiruv (boshqa rollar uchun)
-          user = await db.user.findUnique({
-            where: { email: credentials.email.toLowerCase() },
+          // Email orqali qidiruv — case-insensitive (boshqa rollar uchun)
+          user = await db.user.findFirst({
+            where: { email: { equals: credentials.email.trim(), mode: 'insensitive' } },
             include: {
               tenant: {
                 select: {

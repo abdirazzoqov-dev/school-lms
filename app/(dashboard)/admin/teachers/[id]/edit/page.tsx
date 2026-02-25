@@ -32,6 +32,7 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
   const [currentAvatar, setCurrentAvatar] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     fullName: '',
+    email: '',
     phone: '',
     teacherCode: '',
     specialization: '',
@@ -53,6 +54,7 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
         if (data.teacher) {
           setFormData({
             fullName: data.teacher.user.fullName,
+            email: data.teacher.user.email || '',
             phone: data.teacher.user.phone || '',
             teacherCode: data.teacher.teacherCode,
             specialization: data.teacher.specialization,
@@ -218,6 +220,21 @@ export default function EditTeacherPage({ params }: { params: { id: string } }) 
                   onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
                   required
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Login (Email) *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="teacher@school.uz"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  O'qituvchi tizimga kirish uchun foydalanadigan email
+                </p>
               </div>
 
               <div className="space-y-2">
