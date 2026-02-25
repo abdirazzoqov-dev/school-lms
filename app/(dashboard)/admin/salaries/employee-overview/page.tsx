@@ -3,6 +3,9 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 import { SalaryOverviewClient } from './salary-overview-client'
 
 export const revalidate = 0
@@ -64,6 +67,13 @@ export default async function SalaryOverviewPage() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <Link href="/admin/salaries">
+          <Button variant="ghost" size="icon">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        </Link>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Xodimlar Maosh Panoramasi</CardTitle>
