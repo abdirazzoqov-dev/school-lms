@@ -205,20 +205,6 @@ export default function LoginPage() {
             </Button>
           </form>
           
-          <div className="mt-4 sm:mt-6 border-t pt-4 sm:pt-6">
-            <div className="text-center text-xs sm:text-sm text-muted-foreground space-y-1.5 sm:space-y-2">
-              <p className="font-medium">Demo hisoblar:</p>
-              <p>
-                <strong>Admin:</strong><br />
-                <span className="font-mono text-[10px] sm:text-xs">admin@schoollms.uz</span>
-              </p>
-              <p>
-                <strong>Qarindosh:</strong><br />
-                <span className="font-mono text-[10px] sm:text-xs">+998901234567</span><br />
-                <span className="text-[9px] sm:text-xs">(Telefon raqam bilan)</span>
-              </p>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>
