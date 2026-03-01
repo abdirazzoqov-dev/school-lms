@@ -114,7 +114,7 @@ export default async function ExpensesPage({
       </div>
 
       {/* Total Summary */}
-      <Card className="border-l-4 border-l-red-500 bg-gradient-to-br from-red-50/50 to-white">
+      <Card className="border-l-4 border-l-red-500 bg-gradient-to-br from-red-50/50 to-white dark:from-red-950/30 dark:to-card">
         <CardContent className="pt-4 md:pt-6">
           <div className="flex items-center gap-3 md:gap-4">
             <div className="p-2 md:p-3 bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg shrink-0">
@@ -266,7 +266,7 @@ export default async function ExpensesPage({
                       <tr 
                         key={expense.id} 
                         className={`border-b hover:bg-muted/50 transition-colors ${
-                          index % 2 === 0 ? 'bg-white' : 'bg-muted/20'
+                          index % 2 === 0 ? 'bg-card' : 'bg-muted/20'
                         }`}
                       >
                         <td className="p-3 text-sm">
@@ -341,8 +341,8 @@ export default async function ExpensesPage({
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot className="bg-gradient-to-r from-red-50 to-red-100/50">
-                    <tr className="border-t-2 border-red-200">
+                  <tfoot className="bg-gradient-to-r from-red-50 to-red-100/50 dark:from-red-950/30 dark:to-red-950/20">
+                    <tr className="border-t-2 border-red-200 dark:border-red-800">
                       <td colSpan={4} className="p-4 text-right font-semibold text-sm">
                         Jami Xarajat:
                       </td>

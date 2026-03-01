@@ -165,33 +165,28 @@ export function SalaryOverviewClient({
 
   const getStatusColor = (status: MonthSalaryStatus['status']) => {
     switch (status) {
-      case 'paid':
-        return 'bg-green-50 border-green-200'
-      case 'partially_paid':
-        return 'bg-yellow-50 border-yellow-200'
-      case 'overdue':
-        return 'bg-red-50 border-red-200'
-      case 'pending':
-        return 'bg-orange-50 border-orange-200'
-      default:
-        return 'bg-gray-50 border-gray-200'
+      case 'paid':           return 'bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-800'
+      case 'partially_paid': return 'bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 dark:border-yellow-800'
+      case 'overdue':        return 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800'
+      case 'pending':        return 'bg-orange-50 dark:bg-orange-950/40 border-orange-200 dark:border-orange-800'
+      default:               return 'bg-gray-50 dark:bg-gray-900/40 border-gray-200 dark:border-gray-700'
     }
   }
 
   const getStatusBadge = (status: MonthSalaryStatus) => {
     if (status.isFullyPaid) {
-      return <Badge className="bg-green-500"><CheckCircle2 className="h-3 w-3 mr-1" />To'landi</Badge>
+      return <Badge className="bg-green-500 dark:bg-green-700"><CheckCircle2 className="h-3 w-3 mr-1" />To'landi</Badge>
     }
     if (status.isOverdue) {
       return <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" />Kechikkan</Badge>
     }
     if (status.totalPaid > 0) {
-      return <Badge variant="secondary" className="bg-yellow-500 text-white"><Clock className="h-3 w-3 mr-1" />Qisman</Badge>
+      return <Badge variant="secondary" className="bg-yellow-500 dark:bg-yellow-700 text-white"><Clock className="h-3 w-3 mr-1" />Qisman</Badge>
     }
     if (status.isPending) {
       return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />Kutilmoqda</Badge>
     }
-    return <Badge variant="outline" className="text-gray-500">Muddat yo'q</Badge>
+    return <Badge variant="outline" className="text-gray-500 dark:text-gray-400">Muddat yo'q</Badge>
   }
 
   const years = [currentYear - 1, currentYear, currentYear + 1]
@@ -268,8 +263,8 @@ export function SalaryOverviewClient({
 
       {/* Show selected employee info when auto-selected */}
       {searchQuery && filteredEmployees.length === 1 && selectedEmployeeId && (
-        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-green-700">
+        <div className="bg-green-50 dark:bg-green-950/40 border-2 border-green-200 dark:border-green-800 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
             <CheckCircle2 className="h-5 w-5" />
             <p className="font-medium">
               Tanlandi: <span className="font-bold">{selectedEmployee?.user?.fullName}</span>
@@ -280,8 +275,8 @@ export function SalaryOverviewClient({
 
       {/* Show "not found" message when no results */}
       {searchQuery && filteredEmployees.length === 0 && (
-        <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-orange-700">
+        <div className="bg-orange-50 dark:bg-orange-950/40 border-2 border-orange-200 dark:border-orange-800 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
             <AlertCircle className="h-5 w-5" />
             <p className="font-medium">
               Hech qanday natija topilmadi
@@ -292,7 +287,7 @@ export function SalaryOverviewClient({
 
       {/* Employee Info & Stats */}
       {selectedEmployee && (
-        <Card className="bg-gradient-to-r from-purple-50 to-pink-50">
+        <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/50 dark:to-pink-950/50 border-purple-200 dark:border-purple-800">
           <CardContent className="pt-6">
             <div className="grid gap-4 md:grid-cols-3">
               <div>
@@ -325,7 +320,7 @@ export function SalaryOverviewClient({
               <CardTitle className="text-sm font-medium text-muted-foreground">Jami to'langan</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-green-600">{formatMoney(totalPaid)} so'm</p>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatMoney(totalPaid)} so'm</p>
             </CardContent>
           </Card>
           
@@ -334,7 +329,7 @@ export function SalaryOverviewClient({
               <CardTitle className="text-sm font-medium text-muted-foreground">To'langan oylar</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-blue-600">{totalCompleted} / 12</p>
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{totalCompleted} / 12</p>
             </CardContent>
           </Card>
 
@@ -343,7 +338,7 @@ export function SalaryOverviewClient({
               <CardTitle className="text-sm font-medium text-muted-foreground">Kechikkan</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-red-600">{totalOverdue}</p>
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{totalOverdue}</p>
             </CardContent>
           </Card>
 
@@ -352,7 +347,7 @@ export function SalaryOverviewClient({
               <CardTitle className="text-sm font-medium text-muted-foreground">Jami kerak</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-gray-600">{formatMoney(totalRequired)} so'm</p>
+              <p className="text-2xl font-bold text-gray-600 dark:text-gray-400">{formatMoney(totalRequired)} so'm</p>
             </CardContent>
           </Card>
         </div>
@@ -418,46 +413,46 @@ export function SalaryOverviewClient({
                                         return { 
                                           label: 'To\'liq Oylik', 
                                           icon: DollarSign, 
-                                          bgColor: 'bg-blue-50',
-                                          borderColor: 'border-blue-200',
-                                          textColor: 'text-blue-700',
-                                          badgeColor: 'bg-blue-100 text-blue-700'
+                                          bgColor: 'bg-blue-50 dark:bg-blue-950/40',
+                                          borderColor: 'border-blue-200 dark:border-blue-800',
+                                          textColor: 'text-blue-700 dark:text-blue-300',
+                                          badgeColor: 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'
                                         }
                                       case 'ADVANCE':
                                         return { 
                                           label: 'Avans', 
                                           icon: TrendingUp, 
-                                          bgColor: 'bg-green-50',
-                                          borderColor: 'border-green-200',
-                                          textColor: 'text-green-700',
-                                          badgeColor: 'bg-green-100 text-green-700'
+                                          bgColor: 'bg-green-50 dark:bg-green-950/40',
+                                          borderColor: 'border-green-200 dark:border-green-800',
+                                          textColor: 'text-green-700 dark:text-green-300',
+                                          badgeColor: 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
                                         }
                                       case 'BONUS':
                                         return { 
                                           label: 'Mukofot', 
                                           icon: Gift, 
-                                          bgColor: 'bg-purple-50',
-                                          borderColor: 'border-purple-200',
-                                          textColor: 'text-purple-700',
-                                          badgeColor: 'bg-purple-100 text-purple-700'
+                                          bgColor: 'bg-purple-50 dark:bg-purple-950/40',
+                                          borderColor: 'border-purple-200 dark:border-purple-800',
+                                          textColor: 'text-purple-700 dark:text-purple-300',
+                                          badgeColor: 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300'
                                         }
                                       case 'DEDUCTION':
                                         return { 
                                           label: 'Ushlab Qolish', 
                                           icon: TrendingDown, 
-                                          bgColor: 'bg-red-50',
-                                          borderColor: 'border-red-200',
-                                          textColor: 'text-red-700',
-                                          badgeColor: 'bg-red-100 text-red-700'
+                                          bgColor: 'bg-red-50 dark:bg-red-950/40',
+                                          borderColor: 'border-red-200 dark:border-red-800',
+                                          textColor: 'text-red-700 dark:text-red-300',
+                                          badgeColor: 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300'
                                         }
                                       default:
                                         return { 
                                           label: type, 
                                           icon: DollarSign, 
-                                          bgColor: 'bg-gray-50',
-                                          borderColor: 'border-gray-200',
-                                          textColor: 'text-gray-700',
-                                          badgeColor: 'bg-gray-100 text-gray-700'
+                                          bgColor: 'bg-gray-50 dark:bg-gray-900/40',
+                                          borderColor: 'border-gray-200 dark:border-gray-700',
+                                          textColor: 'text-gray-700 dark:text-gray-300',
+                                          badgeColor: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                                         }
                                     }
                                   }
@@ -475,12 +470,12 @@ export function SalaryOverviewClient({
                                         <div className="absolute left-[21px] top-[45px] w-0.5 h-[calc(100%+12px)] bg-gradient-to-b from-primary/30 to-transparent" />
                                       )}
                                       
-                                      <div className={`relative rounded-lg border-2 ${typeInfo.borderColor} ${typeInfo.bgColor} p-4 hover:shadow-md transition-all`}>
+                                      <div className={`relative rounded-lg border-2 ${typeInfo.borderColor} ${typeInfo.bgColor} dark:bg-opacity-20 p-4 hover:shadow-md transition-all`}>
                                         {/* Header */}
                                         <div className="flex items-start gap-3 mb-3">
                                           {/* Icon with timeline dot */}
                                           <div className="relative flex-shrink-0">
-                                            <div className={`p-2 rounded-full ${typeInfo.badgeColor} ring-4 ring-white`}>
+                                            <div className={`p-2 rounded-full ${typeInfo.badgeColor} ring-4 ring-white dark:ring-card`}>
                                               <TypeIcon className="h-4 w-4" />
                                             </div>
                                           </div>
@@ -513,15 +508,15 @@ export function SalaryOverviewClient({
                                             )}
 
                                             {/* Amount - Large and prominent */}
-                                            <div className="bg-white rounded-md p-3 mb-3 border shadow-sm">
+                                            <div className="bg-white dark:bg-card rounded-md p-3 mb-3 border shadow-sm">
                                               {/* Show base salary for FULL_SALARY type */}
                                               {payment.type === 'FULL_SALARY' && selectedEmployee && (
-                                                <div className="flex items-center justify-between mb-2 pb-2 border-b bg-blue-50 -mx-3 -mt-3 px-3 py-2 rounded-t-md">
-                                                  <span className="text-xs font-medium text-blue-700 flex items-center gap-1">
+                                                <div className="flex items-center justify-between mb-2 pb-2 border-b bg-blue-50 dark:bg-blue-950/50 -mx-3 -mt-3 px-3 py-2 rounded-t-md">
+                                                  <span className="text-xs font-medium text-blue-700 dark:text-blue-300 flex items-center gap-1">
                                                     <DollarSign className="h-3.5 w-3.5" />
                                                     Asosiy maosh:
                                                   </span>
-                                                  <span className="text-sm font-bold text-blue-600">
+                                                  <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
                                                     {formatMoney(Number(selectedEmployee.monthlySalary))} so'm
                                                   </span>
                                                 </div>
@@ -529,7 +524,7 @@ export function SalaryOverviewClient({
                                               
                                               <div className="flex items-center justify-between">
                                                 <span className="text-xs font-medium text-muted-foreground">To'langan:</span>
-                                                <span className="text-xl font-bold text-green-600">
+                                                <span className="text-xl font-bold text-green-600 dark:text-green-400">
                                                   {formatMoney(payment.paidAmount)} <span className="text-sm">so'm</span>
                                                 </span>
                                               </div>
@@ -537,16 +532,16 @@ export function SalaryOverviewClient({
                                               {payment.amount !== payment.paidAmount && (
                                                 <div className="flex items-center justify-between mt-2 pt-2 border-t">
                                                   <span className="text-xs text-muted-foreground">Jami summa:</span>
-                                                  <span className="text-sm font-semibold text-gray-700">
+                                                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                                     {formatMoney(payment.amount)} so'm
                                                   </span>
                                                 </div>
                                               )}
 
                                               {payment.remainingAmount > 0 && (
-                                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-orange-200 bg-orange-50 -mx-3 -mb-3 px-3 py-2 rounded-b-md">
-                                                  <span className="text-xs font-medium text-orange-700">Qoldi:</span>
-                                                  <span className="text-sm font-bold text-orange-600">
+                                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/50 -mx-3 -mb-3 px-3 py-2 rounded-b-md">
+                                                  <span className="text-xs font-medium text-orange-700 dark:text-orange-300">Qoldi:</span>
+                                                  <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
                                                     {formatMoney(payment.remainingAmount)} so'm
                                                   </span>
                                                 </div>
@@ -557,24 +552,24 @@ export function SalaryOverviewClient({
                                             {(payment.bonusAmount > 0 || payment.deductionAmount > 0) && (
                                               <div className="space-y-2">
                                                 {payment.bonusAmount > 0 && (
-                                                  <div className="flex items-center justify-between text-xs bg-purple-50 border border-purple-200 rounded-md px-3 py-2">
-                                                    <span className="flex items-center gap-1.5 text-purple-700 font-medium">
+                                                  <div className="flex items-center justify-between text-xs bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 rounded-md px-3 py-2">
+                                                    <span className="flex items-center gap-1.5 text-purple-700 dark:text-purple-300 font-medium">
                                                       <Gift className="h-3.5 w-3.5" />
                                                       Bonus:
                                                     </span>
-                                                    <span className="font-bold text-purple-600">
+                                                    <span className="font-bold text-purple-600 dark:text-purple-400">
                                                       +{formatMoney(payment.bonusAmount)} so'm
                                                     </span>
                                                   </div>
                                                 )}
 
                                                 {payment.deductionAmount > 0 && (
-                                                  <div className="flex items-center justify-between text-xs bg-red-50 border border-red-200 rounded-md px-3 py-2">
-                                                    <span className="flex items-center gap-1.5 text-red-700 font-medium">
+                                                  <div className="flex items-center justify-between text-xs bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-md px-3 py-2">
+                                                    <span className="flex items-center gap-1.5 text-red-700 dark:text-red-300 font-medium">
                                                       <TrendingDown className="h-3.5 w-3.5" />
                                                       Ushlab qolish:
                                                     </span>
-                                                    <span className="font-bold text-red-600">
+                                                    <span className="font-bold text-red-600 dark:text-red-400">
                                                       -{formatMoney(payment.deductionAmount)} so'm
                                                     </span>
                                                   </div>
@@ -598,18 +593,18 @@ export function SalaryOverviewClient({
                             </div>
 
                             {/* Summary Footer */}
-                            <div className="pt-3 border-t-2 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 -mx-4 px-4 py-3 -mb-4 rounded-b-lg border-t-green-200">
+                            <div className="pt-3 border-t-2 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-950/50 dark:via-emerald-950/50 dark:to-teal-950/50 -mx-4 px-4 py-3 -mb-4 rounded-b-lg border-t-green-200 dark:border-t-green-800">
                               <div className="flex items-center justify-between">
                                 <div>
                                   <p className="text-xs text-muted-foreground">Jami to'langan summa:</p>
-                                  <p className="text-2xl font-bold text-green-600">
+                                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                                     {formatMoney(status.totalPaid)} <span className="text-sm">so'm</span>
                                   </p>
                                 </div>
                                 {status.requiredAmount > status.totalPaid && (
                                   <div className="text-right">
                                     <p className="text-xs text-muted-foreground">Qolgan:</p>
-                                    <p className="text-lg font-bold text-orange-600">
+                                    <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
                                       {formatMoney(status.requiredAmount - status.totalPaid)} <span className="text-xs">so'm</span>
                                     </p>
                                   </div>

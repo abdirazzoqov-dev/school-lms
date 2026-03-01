@@ -114,45 +114,45 @@ export default async function KitchenExpensesPage() {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900/80 border-red-200 dark:border-red-800">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-red-200">
-                <TrendingDown className="h-5 w-5 text-red-600" />
+              <div className="p-2 rounded-lg bg-red-200 dark:bg-red-900/60">
+                <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-red-700">
+                <p className="text-2xl font-bold text-red-700 dark:text-red-300">
                   {formatNumber(thisMonthTotal._sum.amount?.toNumber() || 0)}
                 </p>
-                <p className="text-xs text-red-600">Bu oyda sarflangan</p>
+                <p className="text-xs text-red-600 dark:text-red-400">Bu oyda sarflangan</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900/80 border-orange-200 dark:border-orange-800">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-orange-200">
-                <Calendar className="h-5 w-5 text-orange-600" />
+              <div className="p-2 rounded-lg bg-orange-200 dark:bg-orange-900/60">
+                <Calendar className="h-5 w-5 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-orange-700">
+                <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">
                   {formatNumber(todayTotal._sum.amount?.toNumber() || 0)}
                 </p>
-                <p className="text-xs text-orange-600">Bugun sarflangan</p>
+                <p className="text-xs text-orange-600 dark:text-orange-400">Bugun sarflangan</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900/80 border-blue-200 dark:border-blue-800">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-200">
-                <ShoppingCart className="h-5 w-5 text-blue-600" />
+              <div className="p-2 rounded-lg bg-blue-200 dark:bg-blue-900/60">
+                <ShoppingCart className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-blue-700">{thisMonthCount}</p>
-                <p className="text-xs text-blue-600">Bu oyda xaridlar</p>
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{thisMonthCount}</p>
+                <p className="text-xs text-blue-600 dark:text-blue-400">Bu oyda xaridlar</p>
               </div>
             </div>
           </CardContent>

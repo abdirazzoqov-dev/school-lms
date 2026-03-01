@@ -109,7 +109,7 @@ export function AttendanceFilters({ classes, groups, subjects, timeSlots, search
                   type="date"
                   value={searchParams.date || new Date().toISOString().split('T')[0]}
                   onChange={(e) => updateSearchParams('date', e.target.value)}
-                  className="pl-8"
+                  className="pl-8 dark:[color-scheme:dark]"
                 />
               </div>
             </div>

@@ -67,7 +67,7 @@ async function EmployeeSalarySummary({ tenantId, currentYear }: { tenantId: stri
         const monthsPaid = emp.payments.filter(p => p.type === 'FULL_SALARY' && p.status === 'PAID').length
         
         return (
-          <div key={idx} className="p-4 bg-white rounded-lg border-2 hover:shadow-lg transition-all">
+          <div key={idx} className="p-4 bg-white dark:bg-card rounded-lg border-2 dark:border-border hover:shadow-lg transition-all">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold shrink-0">
@@ -86,21 +86,21 @@ async function EmployeeSalarySummary({ tenantId, currentYear }: { tenantId: stri
             </div>
 
             <div className="grid grid-cols-4 gap-2 text-center">
-              <div className="p-2 bg-blue-50 rounded border border-blue-200">
+              <div className="p-2 bg-blue-50 dark:bg-blue-950/40 rounded border border-blue-200 dark:border-blue-800">
                 <p className="text-xs text-muted-foreground">Oylik</p>
-                <p className="font-bold text-blue-600">{(emp.salary / 1000000).toFixed(1)}M</p>
+                <p className="font-bold text-blue-600 dark:text-blue-400">{(emp.salary / 1000000).toFixed(1)}M</p>
               </div>
-              <div className="p-2 bg-green-50 rounded border border-green-200">
+              <div className="p-2 bg-green-50 dark:bg-green-950/40 rounded border border-green-200 dark:border-green-800">
                 <p className="text-xs text-muted-foreground">To'langan</p>
-                <p className="font-bold text-green-600">{(totalPaid / 1000000).toFixed(1)}M</p>
+                <p className="font-bold text-green-600 dark:text-green-400">{(totalPaid / 1000000).toFixed(1)}M</p>
               </div>
-              <div className="p-2 bg-orange-50 rounded border border-orange-200">
+              <div className="p-2 bg-orange-50 dark:bg-orange-950/40 rounded border border-orange-200 dark:border-orange-800">
                 <p className="text-xs text-muted-foreground">Qolgan</p>
-                <p className="font-bold text-orange-600">{(totalDebt / 1000000).toFixed(1)}M</p>
+                <p className="font-bold text-orange-600 dark:text-orange-400">{(totalDebt / 1000000).toFixed(1)}M</p>
               </div>
-              <div className="p-2 bg-purple-50 rounded border border-purple-200">
+              <div className="p-2 bg-purple-50 dark:bg-purple-950/40 rounded border border-purple-200 dark:border-purple-800">
                 <p className="text-xs text-muted-foreground">Oylar</p>
-                <p className="font-bold text-purple-600">{monthsPaid}/12</p>
+                <p className="font-bold text-purple-600 dark:text-purple-400">{monthsPaid}/12</p>
               </div>
             </div>
 
@@ -115,10 +115,10 @@ async function EmployeeSalarySummary({ tenantId, currentYear }: { tenantId: stri
                   <div
                     key={i}
                     className={`flex-1 p-1 rounded text-center ${
-                      status === 'paid' ? 'bg-green-500 text-white' :
+                      status === 'paid' ?                     'bg-green-500 text-white' :
                       status === 'partial' ? 'bg-yellow-500 text-white' :
                       status === 'pending' ? 'bg-orange-500 text-white' :
-                      'bg-gray-200 text-gray-500'
+                      'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                     }`}
                     title={`${month}: ${status === 'paid' ? 'To\'langan' : status === 'partial' ? 'Qisman' : status === 'pending' ? 'Kutilmoqda' : 'Berilmagan'}`}
                   >
@@ -256,59 +256,27 @@ export default async function SalariesPage({
     ]
   })
 
-  // Calculate statistics based on filtered data
-  // 1. Total salary amount that should be paid (FULL_SALARY amount)
-  const totalSalaryAmount = salaryPayments
+  // ─── 1. Jami Oylik Maosh: barcha aktiv o'qituvchi + xodimlarning monthlySalary summasi ───
+  // Bu payments jadvalidan emas, to'g'ridan-to'g'ri employee jadvallaridan olinadi
+  const [allTeacherSalaries, allStaffSalaries] = await Promise.all([
+    db.teacher.findMany({
+      where: { tenantId },
+      select: { monthlySalary: true }
+    }),
+    db.staff.findMany({
+      where: { tenantId },
+      select: { monthlySalary: true }
+    })
+  ])
+
+  const totalMonthlyObligation =
+    allTeacherSalaries.reduce((sum, t) => sum + Number(t.monthlySalary || 0), 0) +
+    allStaffSalaries.reduce((sum, s) => sum + Number(s.monthlySalary || 0), 0)
+
+  // ─── 2. Berilgan Oylik Maosh: filtr bo'yicha faktik to'langan FULL_SALARY summasi ───
+  const totalPaidSalaryAmount = salaryPayments
     .filter(p => p.type === 'FULL_SALARY')
-    .reduce((sum, p) => sum + Number(p.amount), 0)
-
-  // 2. Unpaid salary amount - CORRECT CALCULATION
-  // For each employee/month, calculate: requiredAmount - totalPaid
-  // Group by employee + month + year
-  const employeeMonthMap = new Map<string, {
-    requiredAmount: number
-    totalPaid: number
-    employeeId: string
-    month: number
-    year: number
-  }>()
-
-  salaryPayments.forEach(payment => {
-    const employeeId = payment.teacher?.id || payment.staff?.id || ''
-    const month = payment.month || 0
-    const year = payment.year || 0
-    const key = `${employeeId}-${month}-${year}`
-
-    if (!employeeMonthMap.has(key)) {
-      employeeMonthMap.set(key, {
-        requiredAmount: 0,
-        totalPaid: 0,
-        employeeId,
-        month,
-        year
-      })
-    }
-
-    const record = employeeMonthMap.get(key)!
-
-    // Set requiredAmount from FULL_SALARY
-    if (payment.type === 'FULL_SALARY') {
-      record.requiredAmount = Number(payment.amount)
-    }
-
-    // Add all paid amounts (FULL_SALARY, ADVANCE, BONUS, etc.)
-    // For DEDUCTION, we don't add to totalPaid (it's already subtracted from FULL_SALARY.amount)
-    if (payment.type !== 'DEDUCTION') {
-      record.totalPaid += Number(payment.paidAmount || 0)
-    }
-  })
-
-  // Calculate total unpaid amount across all employees/months
-  let unpaidSalaryAmount = 0
-  employeeMonthMap.forEach(record => {
-    const unpaid = Math.max(0, record.requiredAmount - record.totalPaid)
-    unpaidSalaryAmount += unpaid
-  })
+    .reduce((sum, p) => sum + Number(p.paidAmount || 0), 0)
 
   // 3. Total deductions - include both DEDUCTION type and deductionAmount from FULL_SALARY
   const totalDeductions = salaryPayments
@@ -396,71 +364,71 @@ export default async function SalariesPage({
       {/* First Row - Primary Metrics (3 cards) */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* 1. Total Salary Amount - Primary */}
-        <Card className="relative overflow-hidden border-2 border-blue-200 bg-gradient-to-br from-blue-50 via-blue-100 to-blue-50 hover:shadow-xl transition-all group">
+        <Card className="relative overflow-hidden border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 via-blue-100 to-blue-50 dark:from-blue-950 dark:via-blue-900/80 dark:to-blue-950 hover:shadow-xl transition-all group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400/10 rounded-full -mr-16 -mt-16" />
           <CardContent className="pt-6 relative z-10">
             <div className="flex items-start justify-between mb-4">
               <div className="p-3 bg-blue-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
                 <DollarSign className="h-6 w-6 text-white" />
               </div>
-              <Badge className="bg-blue-100 text-blue-700 border-0 text-xs font-semibold">
+              <Badge className="bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 border-0 text-xs font-semibold">
                 Bu oy
               </Badge>
             </div>
             <div>
-              <p className="text-sm font-medium text-blue-600 mb-1">Jami Oylik Maosh</p>
-              <p className="text-3xl font-bold text-blue-700 mb-1">
-                {formatNumber(totalSalaryAmount)}
+              <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">Jami Oylik Maosh</p>
+              <p className="text-3xl font-bold text-blue-700 dark:text-blue-300 mb-1">
+                {formatNumber(totalMonthlyObligation)}
               </p>
-              <p className="text-xs text-blue-600/70">
+              <p className="text-xs text-blue-600/70 dark:text-blue-400/70">
                 so'm • Berilishi kerak
               </p>
             </div>
           </CardContent>
         </Card>
 
-        {/* 2. Unpaid Salary - Warning */}
-        <Card className="relative overflow-hidden border-2 border-orange-200 bg-gradient-to-br from-orange-50 via-orange-100 to-orange-50 hover:shadow-xl transition-all group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-orange-400/10 rounded-full -mr-16 -mt-16" />
+        {/* 2. Paid Salary - Success */}
+        <Card className="relative overflow-hidden border-2 border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50 via-emerald-100 to-emerald-50 dark:from-emerald-950 dark:via-emerald-900/80 dark:to-emerald-950 hover:shadow-xl transition-all group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-full -mr-16 -mt-16" />
           <CardContent className="pt-6 relative z-10">
             <div className="flex items-start justify-between mb-4">
-              <div className="p-3 bg-orange-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
-                <Clock className="h-6 w-6 text-white" />
+              <div className="p-3 bg-emerald-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
+                <CheckCircle2 className="h-6 w-6 text-white" />
               </div>
-              <Badge className="bg-orange-100 text-orange-700 border-0 text-xs font-semibold">
-                Qolgan
+              <Badge className="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border-0 text-xs font-semibold">
+                To'langan
               </Badge>
             </div>
             <div>
-              <p className="text-sm font-medium text-orange-600 mb-1">Berilmagan Maosh</p>
-              <p className="text-3xl font-bold text-orange-700 mb-1">
-                {formatNumber(unpaidSalaryAmount)}
+              <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-1">Berilgan Oylik Maosh</p>
+              <p className="text-3xl font-bold text-emerald-700 dark:text-emerald-300 mb-1">
+                {formatNumber(totalPaidSalaryAmount)}
               </p>
-              <p className="text-xs text-orange-600/70">
-                so'm • To'lanishi kerak
+              <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">
+                so'm • Hisoblangan to'lovlar
               </p>
             </div>
           </CardContent>
         </Card>
 
         {/* 3. Total Deductions */}
-        <Card className="relative overflow-hidden border-2 border-red-200 bg-gradient-to-br from-red-50 via-red-100 to-red-50 hover:shadow-xl transition-all group">
+        <Card className="relative overflow-hidden border-2 border-red-200 dark:border-red-800 bg-gradient-to-br from-red-50 via-red-100 to-red-50 dark:from-red-950 dark:via-red-900/80 dark:to-red-950 hover:shadow-xl transition-all group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-red-400/10 rounded-full -mr-16 -mt-16" />
           <CardContent className="pt-6 relative z-10">
             <div className="flex items-start justify-between mb-4">
               <div className="p-3 bg-red-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
                 <XCircle className="h-6 w-6 text-white" />
               </div>
-              <Badge className="bg-red-100 text-red-700 border-0 text-xs font-semibold">
+              <Badge className="bg-red-100 dark:bg-red-900/60 text-red-700 dark:text-red-300 border-0 text-xs font-semibold">
                 Ushlab qolish
               </Badge>
             </div>
             <div>
-              <p className="text-sm font-medium text-red-600 mb-1">Ushlab Qolish</p>
-              <p className="text-3xl font-bold text-red-700 mb-1">
+              <p className="text-sm font-medium text-red-600 dark:text-red-400 mb-1">Ushlab Qolish</p>
+              <p className="text-3xl font-bold text-red-700 dark:text-red-300 mb-1">
                 {formatNumber(totalDeductions)}
               </p>
-              <p className="text-xs text-red-600/70">
+              <p className="text-xs text-red-600/70 dark:text-red-400/70">
                 so'm • Jami kamayish
               </p>
             </div>
@@ -471,23 +439,23 @@ export default async function SalariesPage({
       {/* Second Row - Secondary Metrics (2 cards) */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* 4. Total Advances */}
-        <Card className="relative overflow-hidden border-2 border-green-200 bg-gradient-to-br from-green-50 via-green-100 to-green-50 hover:shadow-xl transition-all group">
+        <Card className="relative overflow-hidden border-2 border-green-200 dark:border-green-800 bg-gradient-to-br from-green-50 via-green-100 to-green-50 dark:from-green-950 dark:via-green-900/80 dark:to-green-950 hover:shadow-xl transition-all group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-green-400/10 rounded-full -mr-16 -mt-16" />
           <CardContent className="pt-6 relative z-10">
             <div className="flex items-start justify-between mb-4">
               <div className="p-3 bg-green-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
                 <TrendingUp className="h-6 w-6 text-white" />
               </div>
-              <Badge className="bg-green-100 text-green-700 border-0 text-xs font-semibold">
+              <Badge className="bg-green-100 dark:bg-green-900/60 text-green-700 dark:text-green-300 border-0 text-xs font-semibold">
                 Avans
               </Badge>
             </div>
             <div>
-              <p className="text-sm font-medium text-green-600 mb-1">Avanslar</p>
-              <p className="text-3xl font-bold text-green-700 mb-1">
+              <p className="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Avanslar</p>
+              <p className="text-3xl font-bold text-green-700 dark:text-green-300 mb-1">
                 {formatNumber(totalAdvances)}
               </p>
-              <p className="text-xs text-green-600/70">
+              <p className="text-xs text-green-600/70 dark:text-green-400/70">
                 so'm • Oldindan berilgan
               </p>
             </div>
@@ -495,23 +463,23 @@ export default async function SalariesPage({
         </Card>
 
         {/* 5. Total Bonuses */}
-        <Card className="relative overflow-hidden border-2 border-purple-200 bg-gradient-to-br from-purple-50 via-purple-100 to-purple-50 hover:shadow-xl transition-all group">
+        <Card className="relative overflow-hidden border-2 border-purple-200 dark:border-purple-800 bg-gradient-to-br from-purple-50 via-purple-100 to-purple-50 dark:from-purple-950 dark:via-purple-900/80 dark:to-purple-950 hover:shadow-xl transition-all group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-purple-400/10 rounded-full -mr-16 -mt-16" />
           <CardContent className="pt-6 relative z-10">
             <div className="flex items-start justify-between mb-4">
               <div className="p-3 bg-purple-500 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
                 <CreditCard className="h-6 w-6 text-white" />
               </div>
-              <Badge className="bg-purple-100 text-purple-700 border-0 text-xs font-semibold">
+              <Badge className="bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 border-0 text-xs font-semibold">
                 Bonus
               </Badge>
             </div>
             <div>
-              <p className="text-sm font-medium text-purple-600 mb-1">Bonuslar</p>
-              <p className="text-3xl font-bold text-purple-700 mb-1">
+              <p className="text-sm font-medium text-purple-600 dark:text-purple-400 mb-1">Bonuslar</p>
+              <p className="text-3xl font-bold text-purple-700 dark:text-purple-300 mb-1">
                 {formatNumber(totalBonuses)}
               </p>
-              <p className="text-xs text-purple-600/70">
+              <p className="text-xs text-purple-600/70 dark:text-purple-400/70">
                 so'm • Qo'shimcha to'lov
               </p>
             </div>
@@ -520,7 +488,7 @@ export default async function SalariesPage({
       </div>
 
       {/* Search & Filters - Modern Design */}
-      <Card className="border-2 bg-gradient-to-br from-slate-50 to-gray-50">
+      <Card className="border-2 bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-900/50 dark:to-gray-900/50">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <div className="h-8 w-1 bg-gradient-to-b from-green-600 to-emerald-600 rounded-full"></div>
@@ -535,7 +503,7 @@ export default async function SalariesPage({
 
       {/* Employee Summary View - New Feature */}
       {!selectedMonth && !searchQuery && (
-        <Card className="border-2 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <Card className="border-2 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
@@ -553,7 +521,7 @@ export default async function SalariesPage({
 
       {/* Payments List - Modern Design */}
       <Card className="border-2">
-        <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
+        <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30">
           <div>
             <CardTitle className="flex items-center gap-2">
               <div className="h-8 w-1 bg-gradient-to-b from-green-600 to-emerald-600 rounded-full"></div>
@@ -572,7 +540,7 @@ export default async function SalariesPage({
             />
           ) : (
             <div className="text-center py-12">
-              <div className="inline-block p-4 bg-gradient-to-br from-gray-100 to-slate-100 rounded-full mb-4">
+              <div className="inline-block p-4 bg-gradient-to-br from-gray-100 to-slate-100 dark:from-gray-800 dark:to-slate-800 rounded-full mb-4">
                 <AlertCircle className="h-16 w-16 text-muted-foreground opacity-50" />
               </div>
               <p className="text-lg font-semibold text-muted-foreground mb-2">

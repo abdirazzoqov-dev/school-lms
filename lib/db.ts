@@ -4,14 +4,23 @@ import { PrismaClient } from '@prisma/client'
 // exhausting your database connection limit.
 const globalForPrisma = global as unknown as { prisma: PrismaClient }
 
-// Optimized Prisma Client with connection pooling for faster queries
+// Cap connection pool in production to avoid Railway free-tier "too many clients" errors.
+// Railway PostgreSQL free tier allows ~25 connections total.
+function buildDatabaseUrl() {
+  const url = process.env.DATABASE_URL
+  if (!url) return url
+  // Only add limit in production (dev uses local DB with higher limits)
+  if (process.env.NODE_ENV !== 'production') return url
+  // Strip existing connection_limit if already set, then add ours
+  const stripped = url.replace(/[?&]connection_limit=[^&]*/g, '').replace(/[?&]pool_timeout=[^&]*/g, '')
+  const sep = stripped.includes('?') ? '&' : '?'
+  return `${stripped}${sep}connection_limit=10&pool_timeout=20`
+}
+
 export const db = globalForPrisma.prisma || (process.env.DATABASE_URL ? new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'], // Reduced logging for better performance
-  // Connection pool settings for better performance
+  log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
+    db: { url: buildDatabaseUrl() },
   },
 }) : null as any)
 

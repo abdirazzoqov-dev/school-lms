@@ -68,15 +68,15 @@ export function GradesTable({ grades }: GradesTableProps) {
 
   const getGradeTypeBadge = (type: string) => {
     const types: Record<string, { label: string; color: string }> = {
-      ORAL: { label: 'Og\'zaki', color: 'bg-blue-100 text-blue-700' },
-      WRITTEN: { label: 'Yozma', color: 'bg-green-100 text-green-700' },
-      TEST: { label: 'Test', color: 'bg-purple-100 text-purple-700' },
-      EXAM: { label: 'Imtihon', color: 'bg-orange-100 text-orange-700' },
-      QUARTER: { label: 'Chorak', color: 'bg-indigo-100 text-indigo-700' },
-      FINAL: { label: 'Yillik', color: 'bg-pink-100 text-pink-700' },
+      ORAL: { label: 'Og\'zaki', color: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300' },
+      WRITTEN: { label: 'Yozma', color: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' },
+      TEST: { label: 'Test', color: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' },
+      EXAM: { label: 'Imtihon', color: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300' },
+      QUARTER: { label: 'Chorak', color: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300' },
+      FINAL: { label: 'Yillik', color: 'bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300' },
     }
 
-    const typeInfo = types[type] || { label: type, color: 'bg-gray-100 text-gray-700' }
+    const typeInfo = types[type] || { label: type, color: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300' }
 
     return (
       <Badge variant="outline" className={typeInfo.color}>

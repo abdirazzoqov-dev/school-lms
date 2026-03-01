@@ -290,7 +290,7 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
           <Button
             onClick={exportToExcel}
             variant="outline"
-            className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
+            className="bg-green-50 dark:bg-green-950/40 hover:bg-green-100 dark:hover:bg-green-950/60 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400"
           >
             <Download className="h-4 w-4 mr-2" />
             Excel yuklab olish
@@ -333,8 +333,8 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
               <div className="p-4 border-2 rounded-lg hover:bg-muted/50 transition-colors">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3 flex-1">
-                    <div className="p-2 bg-blue-100 rounded-full shrink-0">
-                      <Users className="h-5 w-5 text-blue-600" />
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-full shrink-0">
+                      <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -350,9 +350,9 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                         
                         {/* Show count if multiple payments */}
                         {hasMultiplePayments && (
-                          <Badge variant="outline" className="text-xs bg-blue-50">
-                            {payments.length} ta to'lov
-                          </Badge>
+                            <Badge variant="outline" className="text-xs bg-blue-50 dark:bg-blue-950/40">
+                              {payments.length} ta to'lov
+                            </Badge>
                         )}
                         
                         {/* Show expand toggle if should show details */}
@@ -390,7 +390,7 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                           <div className="flex items-center gap-2">
                             <Progress 
                               value={progress.percentage} 
-                              className="h-3 flex-1 bg-gray-200" 
+                              className="h-3 flex-1 bg-gray-200 dark:bg-gray-700" 
                             />
                             <span className={`text-base font-bold ${getProgressColor(progress.percentage)}`}>
                               {progress.percentage}%
@@ -400,9 +400,9 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                           {/* Payment details - highlighted */}
                           <div className="grid grid-cols-2 gap-2 mt-2">
                             {/* To'langan (Avans) */}
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-2">
-                              <p className="text-xs text-green-600 font-medium mb-1">✓ To'langan (Avans)</p>
-                              <p className="text-lg font-bold text-green-700">
+                            <div className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-lg p-2">
+                              <p className="text-xs text-green-600 dark:text-green-400 font-medium mb-1">✓ To'langan (Avans)</p>
+                              <p className="text-lg font-bold text-green-700 dark:text-green-300">
                                 {formatNumber(progress.paid)}
                               </p>
                               <p className="text-xs text-muted-foreground">so'm</p>
@@ -410,9 +410,9 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                             
                             {/* Qolgan */}
                             {progress.percentage < 100 && (
-                              <div className="bg-orange-50 border border-orange-200 rounded-lg p-2">
-                                <p className="text-xs text-orange-600 font-medium mb-1">⏳ Qolgan</p>
-                                <p className="text-lg font-bold text-orange-700">
+                              <div className="bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 rounded-lg p-2">
+                                <p className="text-xs text-orange-600 dark:text-orange-400 font-medium mb-1">⏳ Qolgan</p>
+                                <p className="text-lg font-bold text-orange-700 dark:text-orange-300">
                                   {formatNumber(progress.remaining)}
                                 </p>
                                 <p className="text-xs text-muted-foreground">so'm</p>
@@ -421,9 +421,9 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                             
                             {/* To'liq to'langan */}
                             {progress.percentage === 100 && (
-                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
-                                <p className="text-xs text-blue-600 font-medium mb-1">✓ To'liq</p>
-                                <p className="text-lg font-bold text-blue-700">
+                              <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-lg p-2">
+                                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">✓ To'liq</p>
+                                <p className="text-lg font-bold text-blue-700 dark:text-blue-300">
                                   {formatNumber(progress.total)}
                                 </p>
                                 <p className="text-xs text-muted-foreground">so'm</p>
@@ -434,7 +434,7 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                           {/* Jami oylik maosh (100% reference) */}
                           <div className="flex items-center justify-between text-xs pt-1 border-t">
                             <span className="text-muted-foreground">Jami oylik maoshi (100%):</span>
-                            <span className="font-bold text-blue-700">
+                            <span className="font-bold text-blue-700 dark:text-blue-300">
                               {formatNumber(progress.total)} so'm
                             </span>
                           </div>
@@ -544,15 +544,15 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                                 
                                 {/* Amount breakdown */}
                                 <div className="grid grid-cols-2 gap-2 max-w-sm">
-                                  <div className="bg-green-50 border border-green-200 rounded px-2 py-1.5">
-                                    <p className="text-xs text-green-600">To'landi</p>
-                                    <p className="text-sm font-bold text-green-700">
+                                  <div className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded px-2 py-1.5">
+                                    <p className="text-xs text-green-600 dark:text-green-400">To'landi</p>
+                                    <p className="text-sm font-bold text-green-700 dark:text-green-300">
                                       {formatNumber(Number(p.paidAmount || 0))}
                                     </p>
                                   </div>
-                                  <div className="bg-gray-50 border border-gray-200 rounded px-2 py-1.5">
+                                  <div className="bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded px-2 py-1.5">
                                     <p className="text-xs text-muted-foreground">Jami</p>
-                                    <p className="text-sm font-bold text-gray-700">
+                                    <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
                                       {formatNumber(Number(p.amount))}
                                     </p>
                                   </div>
@@ -562,17 +562,17 @@ export function SalariesTableClient({ salaryPayments, groupedByEmployee = false 
                                 {p.type === 'FULL_SALARY' && (p.bonusAmount || p.deductionAmount) && (
                                   <div className="grid grid-cols-2 gap-2 max-w-sm mt-2">
                                     {p.bonusAmount && Number(p.bonusAmount) > 0 && (
-                                      <div className="bg-green-50 border border-green-200 rounded px-2 py-1.5">
-                                        <p className="text-xs text-green-600">🎁 Bonus</p>
-                                        <p className="text-sm font-bold text-green-700">
+                                      <div className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded px-2 py-1.5">
+                                        <p className="text-xs text-green-600 dark:text-green-400">🎁 Bonus</p>
+                                        <p className="text-sm font-bold text-green-700 dark:text-green-300">
                                           +{formatNumber(Number(p.bonusAmount))}
                                         </p>
                                       </div>
                                     )}
                                     {p.deductionAmount && Number(p.deductionAmount) > 0 && (
-                                      <div className="bg-red-50 border-2 border-red-300 rounded px-2 py-1.5">
-                                        <p className="text-xs text-red-600">⛔ Ushlab qolish</p>
-                                        <p className="text-sm font-bold text-red-700">
+                                      <div className="bg-red-50 dark:bg-red-950/40 border-2 border-red-300 dark:border-red-700 rounded px-2 py-1.5">
+                                        <p className="text-xs text-red-600 dark:text-red-400">⛔ Ushlab qolish</p>
+                                        <p className="text-sm font-bold text-red-700 dark:text-red-300">
                                           -{formatNumber(Number(p.deductionAmount))}
                                         </p>
                                       </div>

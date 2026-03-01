@@ -249,78 +249,78 @@ export default async function AttendancePage({
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900/80 border-blue-200 dark:border-blue-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-blue-800">
+            <CardTitle className="text-sm font-medium text-blue-800 dark:text-blue-300">
               Jami Yozuvlar
             </CardTitle>
-            <ClipboardCheck className="h-5 w-5 text-blue-600" />
+            <ClipboardCheck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-700">{totalRecords}</div>
-            <p className="text-xs text-blue-600 mt-1">
+            <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">{totalRecords}</div>
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
               {period === 'day' ? 'Bugun' : period === 'week' ? 'Hafta' : 'Oy'}
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900/80 border-green-200 dark:border-green-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-green-800">
+            <CardTitle className="text-sm font-medium text-green-800 dark:text-green-300">
               Kelgan
             </CardTitle>
-            <UserCheck className="h-5 w-5 text-green-600" />
+            <UserCheck className="h-5 w-5 text-green-600 dark:text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-700">{presentCount}</div>
-            <p className="text-xs text-green-600 mt-1">
+            <div className="text-3xl font-bold text-green-700 dark:text-green-300">{presentCount}</div>
+            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
               {totalRecords > 0 ? ((presentCount / totalRecords) * 100).toFixed(1) : 0}%
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900/80 border-red-200 dark:border-red-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-red-800">
+            <CardTitle className="text-sm font-medium text-red-800 dark:text-red-300">
               Kelmagan
             </CardTitle>
-            <UserX className="h-5 w-5 text-red-600" />
+            <UserX className="h-5 w-5 text-red-600 dark:text-red-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-700">{absentCount}</div>
-            <p className="text-xs text-red-600 mt-1">
+            <div className="text-3xl font-bold text-red-700 dark:text-red-300">{absentCount}</div>
+            <p className="text-xs text-red-600 dark:text-red-400 mt-1">
               {totalRecords > 0 ? ((absentCount / totalRecords) * 100).toFixed(1) : 0}%
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900/80 border-orange-200 dark:border-orange-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-orange-800">
+            <CardTitle className="text-sm font-medium text-orange-800 dark:text-orange-300">
               Kech Kelgan
             </CardTitle>
-            <Clock className="h-5 w-5 text-orange-600" />
+            <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-orange-700">{lateCount}</div>
-            <p className="text-xs text-orange-600 mt-1">
+            <div className="text-3xl font-bold text-orange-700 dark:text-orange-300">{lateCount}</div>
+            <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
               {totalRecords > 0 ? ((lateCount / totalRecords) * 100).toFixed(1) : 0}%
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900/80 border-purple-200 dark:border-purple-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-purple-800">
+            <CardTitle className="text-sm font-medium text-purple-800 dark:text-purple-300">
               Davomat Foizi
             </CardTitle>
-            <TrendingUp className="h-5 w-5 text-purple-600" />
+            <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-purple-700">
+            <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">
               {attendanceRate.toFixed(1)}%
             </div>
-            <p className="text-xs text-purple-600 mt-1">
+            <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
               Kelganlar nisbati
             </p>
           </CardContent>

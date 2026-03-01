@@ -85,10 +85,10 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
   }
 
   const renderDesktopTable = () => (
-    <div className="rounded-xl border-2 overflow-hidden shadow-lg">
+    <div className="rounded-xl border-2 overflow-hidden shadow-lg bg-card">
       <div className="overflow-x-auto">
         <table className="w-full min-w-max table-fixed">
-          <thead className="border-b-2 bg-gradient-to-r from-purple-50 via-pink-50 to-red-50 dark:from-purple-950/30 dark:via-pink-950/30 dark:to-red-950/30">
+          <thead className="border-b-2 bg-gradient-to-r from-purple-50 via-pink-50 to-red-50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800">
             <tr>
               {canBulkAction && (
                 <th className="p-3 text-left w-12">
@@ -107,7 +107,7 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
               <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[100px]">Harakatlar</th>
             </tr>
           </thead>
-          <tbody className="divide-y bg-white dark:bg-gray-950">
+          <tbody className="divide-y bg-card">
             {teachers.map((teacher, index) => (
               <tr 
                 key={teacher.id} 
@@ -298,7 +298,7 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
         return (
           <div
             key={teacher.id} 
-            className="relative overflow-hidden rounded-xl border-2 bg-white dark:bg-gray-950 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            className="relative overflow-hidden rounded-xl border-2 bg-card shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
             style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-pink-600 to-red-600" />

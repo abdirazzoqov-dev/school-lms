@@ -139,10 +139,10 @@ export default async function DormitoryDashboardPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <PermissionGate resource="dormitory" action="CREATE">
           <Link href="/admin/dormitory/buildings/create">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-indigo-300">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-indigo-300 dark:hover:border-indigo-700">
               <CardContent className="flex items-center gap-4 p-6">
-                <div className="p-3 rounded-full bg-indigo-100">
-                  <Plus className="h-6 w-6 text-indigo-600" />
+                <div className="p-3 rounded-full bg-indigo-100 dark:bg-indigo-900/40">
+                  <Plus className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <div>
                   <p className="font-semibold">Bino Qo'shish</p>
@@ -155,10 +155,10 @@ export default async function DormitoryDashboardPage() {
 
         <PermissionGate resource="dormitory" action="CREATE">
           <Link href="/admin/dormitory/rooms/create">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-blue-300">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-blue-300 dark:hover:border-blue-700">
               <CardContent className="flex items-center gap-4 p-6">
-                <div className="p-3 rounded-full bg-blue-100">
-                  <Plus className="h-6 w-6 text-blue-600" />
+                <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/40">
+                  <Plus className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
                   <p className="font-semibold">Xona Qo'shish</p>
@@ -171,10 +171,10 @@ export default async function DormitoryDashboardPage() {
 
         <PermissionGate resource="dormitory" action="CREATE">
           <Link href="/admin/dormitory/assign">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-green-300">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-green-300 dark:hover:border-green-700">
               <CardContent className="flex items-center gap-4 p-6">
-                <div className="p-3 rounded-full bg-green-100">
-                  <UserPlus className="h-6 w-6 text-green-600" />
+                <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/40">
+                  <UserPlus className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
                   <p className="font-semibold">Joylashtirish</p>
@@ -188,53 +188,53 @@ export default async function DormitoryDashboardPage() {
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200">
+        <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950 dark:to-indigo-900/80 border-indigo-200 dark:border-indigo-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-indigo-800">Binolar</CardTitle>
-            <Building2 className="h-5 w-5 text-indigo-600" />
+            <CardTitle className="text-sm font-medium text-indigo-800 dark:text-indigo-300">Binolar</CardTitle>
+            <Building2 className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-indigo-700">{totalBuildings}</div>
-            <p className="text-xs text-indigo-600 mt-1">
+            <div className="text-3xl font-bold text-indigo-700 dark:text-indigo-300">{totalBuildings}</div>
+            <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">
               {activeBuildings} ta faol
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900/80 border-blue-200 dark:border-blue-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-blue-800">Xonalar</CardTitle>
-            <DoorClosed className="h-5 w-5 text-blue-600" />
+            <CardTitle className="text-sm font-medium text-blue-800 dark:text-blue-300">Xonalar</CardTitle>
+            <DoorClosed className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-700">{totalRooms}</div>
-            <p className="text-xs text-blue-600 mt-1">
+            <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">{totalRooms}</div>
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
               {activeRooms} ta faol
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900/80 border-green-200 dark:border-green-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-green-800">Joylar</CardTitle>
-            <BedDouble className="h-5 w-5 text-green-600" />
+            <CardTitle className="text-sm font-medium text-green-800 dark:text-green-300">Joylar</CardTitle>
+            <BedDouble className="h-5 w-5 text-green-600 dark:text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-700">{availableBeds}</div>
-            <p className="text-xs text-green-600 mt-1">
+            <div className="text-3xl font-bold text-green-700 dark:text-green-300">{availableBeds}</div>
+            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
               {totalBeds} dan bo'sh
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900/80 border-purple-200 dark:border-purple-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-purple-800">Joylashgan</CardTitle>
-            <Users className="h-5 w-5 text-purple-600" />
+            <CardTitle className="text-sm font-medium text-purple-800 dark:text-purple-300">Joylashgan</CardTitle>
+            <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-purple-700">{activeAssignments}</div>
-            <p className="text-xs text-purple-600 mt-1">
+            <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">{activeAssignments}</div>
+            <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
               {occupancyRate.toFixed(1)}% band
             </p>
           </CardContent>
@@ -255,7 +255,7 @@ export default async function DormitoryDashboardPage() {
                   <span className="text-sm font-medium">O'g'il bolalar</span>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-blue-600">{maleStudents}</p>
+                  <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{maleStudents}</p>
                   <p className="text-xs text-muted-foreground">
                     {activeAssignments > 0 ? ((maleStudents / activeAssignments) * 100).toFixed(1) : 0}%
                   </p>
@@ -268,7 +268,7 @@ export default async function DormitoryDashboardPage() {
                   <span className="text-sm font-medium">Qizlar</span>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-pink-600">{femaleStudents}</p>
+                  <p className="text-lg font-bold text-pink-600 dark:text-pink-400">{femaleStudents}</p>
                   <p className="text-xs text-muted-foreground">
                     {activeAssignments > 0 ? ((femaleStudents / activeAssignments) * 100).toFixed(1) : 0}%
                   </p>
@@ -367,7 +367,7 @@ export default async function DormitoryDashboardPage() {
                         <div className="space-y-4">
                           <div className="flex items-start justify-between">
                             <div>
-                              <h3 className="font-semibold text-lg group-hover:text-indigo-600 transition-colors">
+                              <h3 className="font-semibold text-lg group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                                 {building.name}
                               </h3>
                               <p className="text-sm text-muted-foreground">
@@ -377,8 +377,8 @@ export default async function DormitoryDashboardPage() {
                             {building.gender && (
                               <Badge variant="outline" className={
                                 building.gender === 'MALE' 
-                                  ? 'bg-blue-50 text-blue-700' 
-                                  : 'bg-pink-50 text-pink-700'
+                                  ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 dark:border-blue-800' 
+                                  : 'bg-pink-50 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300 dark:border-pink-800'
                               }>
                                 {building.gender === 'MALE' ? 'O\'g\'il bolalar' : 'Qizlar'}
                               </Badge>
@@ -387,19 +387,19 @@ export default async function DormitoryDashboardPage() {
 
                           <div className="grid grid-cols-3 gap-2 text-center">
                             <div>
-                              <p className="text-2xl font-bold text-indigo-600">
+                              <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
                                 {building.rooms.length}
                               </p>
                               <p className="text-xs text-muted-foreground">Xonalar</p>
                             </div>
                             <div>
-                              <p className="text-2xl font-bold text-green-600">
+                              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                                 {buildingAvailable}
                               </p>
                               <p className="text-xs text-muted-foreground">Bo'sh</p>
                             </div>
                             <div>
-                              <p className="text-2xl font-bold text-orange-600">
+                              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                                 {buildingOccupied}
                               </p>
                               <p className="text-xs text-muted-foreground">Band</p>
@@ -412,7 +412,7 @@ export default async function DormitoryDashboardPage() {
                               <span>Band bo'lish</span>
                               <span className="font-semibold">{buildingOccupancyRate.toFixed(1)}%</span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                               <div
                                 className={`h-2 rounded-full transition-all ${
                                   buildingOccupancyRate > 90
@@ -457,8 +457,8 @@ export default async function DormitoryDashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-indigo-100 group-hover:bg-indigo-200 transition-colors">
-                    <Building2 className="h-6 w-6 text-indigo-600" />
+                  <div className="p-3 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-900/60 transition-colors">
+                    <Building2 className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
                   </div>
                   <div>
                     <p className="font-semibold text-lg">Binolar</p>
@@ -476,8 +476,8 @@ export default async function DormitoryDashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-blue-100 group-hover:bg-blue-200 transition-colors">
-                    <DoorClosed className="h-6 w-6 text-blue-600" />
+                  <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/40 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/60 transition-colors">
+                    <DoorClosed className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
                     <p className="font-semibold text-lg">Xonalar</p>
@@ -495,8 +495,8 @@ export default async function DormitoryDashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-green-100 group-hover:bg-green-200 transition-colors">
-                    <Users className="h-6 w-6 text-green-600" />
+                  <div className="p-3 rounded-xl bg-green-100 dark:bg-green-900/40 group-hover:bg-green-200 dark:group-hover:bg-green-900/60 transition-colors">
+                    <Users className="h-6 w-6 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
                     <p className="font-semibold text-lg">Joylashtirishlar</p>
@@ -514,8 +514,8 @@ export default async function DormitoryDashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-emerald-100 group-hover:bg-emerald-200 transition-colors">
-                    <DollarSign className="h-6 w-6 text-emerald-600" />
+                  <div className="p-3 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-900/60 transition-colors">
+                    <DollarSign className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div>
                     <p className="font-semibold text-lg">To&apos;lovlar</p>

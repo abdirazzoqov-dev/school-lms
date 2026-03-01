@@ -406,7 +406,7 @@ export default async function PaymentsPage({
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t">
               <PageSizeSelector currentPageSize={pageSize} />
               <div className="text-xs sm:text-sm text-muted-foreground">
-                <span className="font-bold text-gray-900 text-sm sm:text-base">{totalPayments}</span> ta to'lov
+                <span className="font-bold text-gray-900 dark:text-foreground text-sm sm:text-base">{totalPayments}</span> ta to'lov
               </div>
             </div>
           </div>
@@ -415,7 +415,7 @@ export default async function PaymentsPage({
 
       {/* Student Statistics (if filtered) */}
       {studentStats && (
-        <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg">
+        <Card className="border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950/80 shadow-lg">
           <CardContent className="p-4 md:p-6">
             <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-6">
               <div className="flex items-start gap-3">
@@ -423,15 +423,15 @@ export default async function PaymentsPage({
                   {studentStats.student?.user?.fullName?.charAt(0) || '?'}
                 </div>
                 <div>
-                  <h3 className="text-lg md:text-xl font-bold text-blue-900">
+                  <h3 className="text-lg md:text-xl font-bold text-blue-900 dark:text-blue-300">
                     {studentStats.student?.user?.fullName || studentStats.student?.studentCode}
                   </h3>
-                  <p className="text-sm text-blue-700">
+                  <p className="text-sm text-blue-700 dark:text-blue-400">
                     {studentStats.student?.class?.name || 'Sinfsiz'} • {studentStats.student?.studentCode}
                   </p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" asChild className="w-full sm:w-auto bg-white hover:bg-blue-50">
+              <Button variant="outline" size="sm" asChild className="w-full sm:w-auto bg-white dark:bg-card hover:bg-blue-50 dark:hover:bg-blue-950/30">
                 <Link href="/admin/payments">
                   <XCircle className="h-4 w-4 mr-2" />
                   <span>Filterni tozalash</span>
@@ -440,52 +440,52 @@ export default async function PaymentsPage({
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
-              <div className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
+              <div className="bg-white dark:bg-card rounded-xl p-4 shadow-sm border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs md:text-sm text-muted-foreground font-medium">Oylik to'lov</p>
-                  <div className="p-1.5 bg-blue-100 rounded-lg">
-                    <DollarSign className="h-4 w-4 text-blue-600" />
+                  <div className="p-1.5 bg-blue-100 dark:bg-blue-900/40 rounded-lg">
+                    <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </div>
                 </div>
-                <p className="text-xl md:text-2xl font-bold text-blue-600 mb-1">
+                <p className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
                   {formatNumber(studentStats.monthlyTuitionFee)}
                 </p>
-                <p className="text-xs text-blue-500">{studentStats.monthsEnrolled} oy</p>
+                <p className="text-xs text-blue-500 dark:text-blue-400">{studentStats.monthsEnrolled} oy</p>
               </div>
 
-              <div className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-l-purple-500 hover:shadow-md transition-shadow">
+              <div className="bg-white dark:bg-card rounded-xl p-4 shadow-sm border-l-4 border-l-purple-500 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs md:text-sm text-muted-foreground font-medium">To'lashi kerak</p>
-                  <div className="p-1.5 bg-purple-100 rounded-lg">
-                    <Clock className="h-4 w-4 text-purple-600" />
+                  <div className="p-1.5 bg-purple-100 dark:bg-purple-900/40 rounded-lg">
+                    <Clock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                   </div>
                 </div>
-                <p className="text-xl md:text-2xl font-bold text-purple-600 mb-1">
+                <p className="text-xl md:text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1">
                   {formatNumber(studentStats.expectedTotal)}
                 </p>
-                <p className="text-xs text-purple-500">Jami ({studentStats.monthsEnrolled} oy)</p>
+                <p className="text-xs text-purple-500 dark:text-purple-400">Jami ({studentStats.monthsEnrolled} oy)</p>
               </div>
               
-              <div className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
+              <div className="bg-white dark:bg-card rounded-xl p-4 shadow-sm border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs md:text-sm text-muted-foreground font-medium">To'langan</p>
-                  <div className="p-1.5 bg-green-100 rounded-lg">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <div className="p-1.5 bg-green-100 dark:bg-green-900/40 rounded-lg">
+                    <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
                   </div>
                 </div>
-                <p className="text-xl md:text-2xl font-bold text-green-600 mb-1">
+                <p className="text-xl md:text-2xl font-bold text-green-600 dark:text-green-400 mb-1">
                   {formatNumber(studentStats.totalPaid)}
                 </p>
-                <p className="text-xs text-green-500">{studentStats.completedCount} ta to'lov</p>
+                <p className="text-xs text-green-500 dark:text-green-400">{studentStats.completedCount} ta to'lov</p>
               </div>
               
-              <div className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
+              <div className="bg-white dark:bg-card rounded-xl p-4 shadow-sm border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs md:text-sm text-muted-foreground font-medium">Qarzi</p>
                   <div className={`p-1.5 rounded-lg ${
                     (studentStats.expectedTotal - studentStats.totalPaid) > 0 
-                      ? 'bg-red-100' 
-                      : 'bg-green-100'
+                      ? 'bg-red-100 dark:bg-red-900/40' 
+                      : 'bg-green-100 dark:bg-green-900/40'
                   }`}>
                     <XCircle className={`h-4 w-4 ${
                       (studentStats.expectedTotal - studentStats.totalPaid) > 0 
@@ -514,8 +514,8 @@ export default async function PaymentsPage({
             </div>
 
             {/* Monthly payments breakdown */}
-            <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm">
-              <h4 className="font-bold text-base md:text-lg text-blue-900 mb-4 flex items-center gap-2">
+            <div className="bg-white dark:bg-card rounded-xl p-4 md:p-6 shadow-sm border dark:border-border">
+              <h4 className="font-bold text-base md:text-lg text-blue-900 dark:text-blue-300 mb-4 flex items-center gap-2">
                 <Clock className="h-5 w-5" />
                 Oylik To'lovlar Taqsimoti
               </h4>
@@ -551,11 +551,11 @@ export default async function PaymentsPage({
                     return (
                       <div key={month} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-2 rounded-xl transition-all ${
                         isCompleted 
-                          ? 'border-green-200 bg-green-50 hover:bg-green-100' 
-                          : 'border-orange-200 bg-orange-50 hover:bg-orange-100'
+                          ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30 hover:bg-green-100 dark:hover:bg-green-950/40' 
+                          : 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30 hover:bg-orange-100 dark:hover:bg-orange-950/40'
                       }`}>
                         <div className="mb-3 sm:mb-0">
-                          <p className="font-semibold text-sm md:text-base text-gray-900">{month}</p>
+                          <p className="font-semibold text-sm md:text-base text-gray-900 dark:text-foreground">{month}</p>
                           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                             <DollarSign className="h-3 w-3" />
                             {data.completed.length + data.pending.length} ta to'lov
@@ -577,9 +577,9 @@ export default async function PaymentsPage({
                             </div>
                           ) : (
                             <div className="text-left sm:text-right flex-1 sm:flex-none">
-                              <div className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 rounded-full">
-                                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                                <span className="text-xs font-medium text-green-700">To'liq</span>
+                              <div className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/40 rounded-full">
+                                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                <span className="text-xs font-medium text-green-700 dark:text-green-300">To'liq</span>
                               </div>
                             </div>
                           )}
@@ -599,11 +599,11 @@ export default async function PaymentsPage({
         <Card className="border-l-4 border-l-green-500 hover:shadow-xl transition-all hover:-translate-y-1">
           <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="p-2 sm:p-2.5 bg-green-100 rounded-lg sm:rounded-xl shadow-md">
-                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+              <div className="p-2 sm:p-2.5 bg-green-100 dark:bg-green-900/40 rounded-lg sm:rounded-xl shadow-md">
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400" />
               </div>
             </div>
-            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600 mb-1 truncate">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600 dark:text-green-400 mb-1 truncate">
               {formatNumber(totalRevenue)}
             </div>
             <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground font-medium">To'langan summa</p>
@@ -613,11 +613,11 @@ export default async function PaymentsPage({
         <Card className="border-l-4 border-l-orange-500 hover:shadow-xl transition-all hover:-translate-y-1">
           <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="p-2 sm:p-2.5 bg-orange-100 rounded-lg sm:rounded-xl shadow-md">
-                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+              <div className="p-2 sm:p-2.5 bg-orange-100 dark:bg-orange-900/40 rounded-lg sm:rounded-xl shadow-md">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 dark:text-orange-400" />
               </div>
             </div>
-            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-600 mb-1 truncate">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-600 dark:text-orange-400 mb-1 truncate">
               {formatNumber(pendingAmount)}
             </div>
             <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground font-medium">Kutilayotgan</p>
@@ -627,11 +627,11 @@ export default async function PaymentsPage({
         <Card className="border-l-4 border-l-blue-500 hover:shadow-xl transition-all hover:-translate-y-1">
           <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="p-2 sm:p-2.5 bg-blue-100 rounded-lg sm:rounded-xl shadow-md">
-                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+              <div className="p-2 sm:p-2.5 bg-blue-100 dark:bg-blue-900/40 rounded-lg sm:rounded-xl shadow-md">
+                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
-            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 mb-1">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
               {totalCompletedPayments}
             </div>
             <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground font-medium">To'langan</p>
@@ -641,11 +641,11 @@ export default async function PaymentsPage({
         <Card className="border-l-4 border-l-red-500 hover:shadow-xl transition-all hover:-translate-y-1">
           <CardContent className="p-3 sm:p-4 md:p-6">
             <div className="flex items-center justify-between mb-2">
-              <div className="p-2 sm:p-2.5 bg-red-100 rounded-lg sm:rounded-xl shadow-md">
-                <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
+              <div className="p-2 sm:p-2.5 bg-red-100 dark:bg-red-900/40 rounded-lg sm:rounded-xl shadow-md">
+                <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 dark:text-red-400" />
               </div>
             </div>
-            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-red-600 mb-1">
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-red-600 dark:text-red-400 mb-1">
               {totalPendingPayments}
             </div>
             <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground font-medium">Kutilmoqda</p>
@@ -671,10 +671,10 @@ export default async function PaymentsPage({
       {payments.length === 0 && (
         <Card className="border-2 border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16 md:py-20">
-            <div className="p-4 md:p-6 bg-green-50 rounded-full mb-4 md:mb-6">
-              <DollarSign className="h-12 w-12 md:h-16 md:w-16 text-green-600" />
+            <div className="p-4 md:p-6 bg-green-50 dark:bg-green-950/40 rounded-full mb-4 md:mb-6">
+              <DollarSign className="h-12 w-12 md:h-16 md:w-16 text-green-600 dark:text-green-400" />
             </div>
-            <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-foreground mb-2">
               {searchParams.search || searchParams.status || searchParams.paymentType
                 ? 'Hech narsa topilmadi'
                 : 'Hozircha to\'lovlar yo\'q'}

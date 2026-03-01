@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { DashboardNav } from '@/components/dashboard-nav'
 import { MobileNav } from '@/components/mobile-nav'
 import { UserNav } from '@/components/user-nav'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { TenantStatusBanner } from '@/components/tenant-status-banner'
 import { GraduationCap } from 'lucide-react'
 import { db } from '@/lib/db'
@@ -124,6 +125,21 @@ export default async function AdminLayout({
       icon: 'Award',
     },
     {
+      title: 'Test Natijalari',
+      href: '/admin/test-results',
+      icon: 'ClipboardList',
+    },
+    {
+      title: 'Imtihonlar',
+      href: '/admin/exams',
+      icon: 'ClipboardCheck',
+    },
+    {
+      title: 'Savollar Bazasi',
+      href: '/admin/question-banks',
+      icon: 'Database',
+    },
+    {
       title: 'Moliya',
       icon: 'Wallet',
       children: [
@@ -198,8 +214,8 @@ export default async function AdminLayout({
     : allNavItems
 
     return (
-      <div className="flex min-h-screen flex-col bg-gradient-to-br from-background via-background to-muted/30">
-        <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 shadow-sm">
+      <div className="flex min-h-screen flex-col bg-background">
+        <header className="admin-header sticky top-0 z-50 w-full backdrop-blur-xl">
           <div className="container flex h-16 items-center justify-between px-4 md:px-6">
             <div className="flex items-center gap-3">
               <MobileNav items={navItems} />
@@ -224,10 +240,13 @@ export default async function AdminLayout({
                 </div>
               </div>
             </div>
-            <UserNav user={{ ...session.user, avatar: currentAvatar }} />
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <UserNav user={{ ...session.user, avatar: currentAvatar }} />
+            </div>
           </div>
         </header>
-        
+
         {/* Tenant Status Banner */}
         {session.user.tenant && (
           <TenantStatusBanner status={session.user.tenant.status} />
@@ -238,7 +257,7 @@ export default async function AdminLayout({
             {/* Desktop Sidebar */}
             <aside className="hidden lg:block w-72 shrink-0">
               <div className="sticky top-24">
-                <div className="rounded-2xl border bg-card/50 backdrop-blur-sm shadow-xl p-3 animate-slide-in">
+                <div className="admin-sidebar rounded-2xl p-3 animate-slide-in">
                   <DashboardNav items={navItems} />
                 </div>
               </div>

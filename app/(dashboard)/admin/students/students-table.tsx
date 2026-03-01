@@ -111,10 +111,10 @@ export function StudentsTable({ students }: { students: Student[] }) {
   return (
     <>
       {/* Desktop Table View with Modern Design */}
-      <div className="hidden md:block rounded-xl border-2 overflow-hidden shadow-lg">
+      <div className="hidden md:block rounded-xl border-2 overflow-hidden shadow-lg bg-card">
         <div className="overflow-x-auto">
           <table className="w-full min-w-max table-fixed">
-            <thead className="border-b-2 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-purple-950/30">
+            <thead className="border-b-2 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800">
               <tr>
                 {canBulkAction && (
                   <th className="p-3 text-left w-12">
@@ -133,7 +133,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
                 <th className="p-3 text-left text-sm font-semibold text-gray-900 dark:text-white w-[160px]">Harakatlar</th>
               </tr>
             </thead>
-            <tbody className="divide-y bg-white dark:bg-gray-950">
+            <tbody className="divide-y bg-card">
               {students.map((student, index) => (
                 <tr 
                   key={student.id} 
@@ -248,7 +248,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
                         )
                       })()}
                       {student.isFreeStudent && (
-                        <Badge className="text-[10px] whitespace-nowrap bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        <Badge className="text-[10px] whitespace-nowrap bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
                           🎓 Tekin
                         </Badge>
                       )}
@@ -311,8 +311,8 @@ export function StudentsTable({ students }: { students: Student[] }) {
                           <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
-                              className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
-                              onClick={async () => {
+                  className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/30"
+                            onClick={async () => {
                                 if (confirm(`${student.user?.fullName || 'N/A'} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
                                   try {
                                     const result = await deleteStudent(student.id)
@@ -347,7 +347,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
         {students.map((student, index) => (
           <div 
             key={student.id} 
-            className="relative overflow-hidden rounded-xl border-2 bg-white dark:bg-gray-950 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            className="relative overflow-hidden rounded-xl border-2 bg-card shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
             style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-600 to-purple-600" />
@@ -449,7 +449,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
-                            className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                            className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950/30"
                             onClick={async () => {
                               if (confirm(`${student.user?.fullName || 'N/A'} ni o'chirishni xohlaysizmi? Bu amalni qaytarib bo'lmaydi!`)) {
                                 try {
@@ -543,7 +543,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
                   )
                 })()}
                 {student.isFreeStudent && (
-                  <Badge className="text-xs bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  <Badge className="text-xs bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
                     🎓 Tekin
                   </Badge>
                 )}

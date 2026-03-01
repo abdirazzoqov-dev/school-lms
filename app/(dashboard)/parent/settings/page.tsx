@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Settings, Lock, Bell, User, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import {
   Dialog,
   DialogContent,
@@ -18,6 +19,8 @@ import {
 import { useToast } from '@/components/ui/use-toast'
 import { changeOwnPassword } from '@/app/actions/user'
 import { useSession } from 'next-auth/react'
+
+const NOTIF_KEY = 'parent_notif_prefs'
 
 export default function ParentSettingsPage() {
   const { data: session } = useSession()
@@ -33,6 +36,31 @@ export default function ParentSettingsPage() {
     newPass: '',
     confirm: '',
   })
+
+  const [notifPrefs, setNotifPrefs] = useState({
+    emailNotifications: true,
+    paymentReminders: false,
+    attendanceAlerts: true,
+  })
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(NOTIF_KEY)
+      if (saved) setNotifPrefs(JSON.parse(saved))
+    } catch {}
+  }, [])
+
+  const toggleNotif = (key: keyof typeof notifPrefs) => {
+    setNotifPrefs(prev => {
+      const updated = { ...prev, [key]: !prev[key] }
+      try { localStorage.setItem(NOTIF_KEY, JSON.stringify(updated)) } catch {}
+      toast({
+        title: updated[key] ? 'Yoqildi' : 'O\'chirildi',
+        description: updated[key] ? 'Bildirishnoma faollashtirildi' : 'Bildirishnoma o\'chirildi',
+      })
+      return updated
+    })
+  }
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -253,28 +281,42 @@ export default function ParentSettingsPage() {
             <CardDescription>Email va push bildirishnomalar</CardDescription>
           </CardHeader>
           <CardContent className="pt-6 space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
               <div>
                 <p className="font-semibold">Email bildirishnomalar</p>
                 <p className="text-sm text-gray-500">Baholar, davomat va xabarlar</p>
               </div>
-              <Button variant="outline" disabled>Faol</Button>
+              <Switch
+                checked={notifPrefs.emailNotifications}
+                onCheckedChange={() => toggleNotif('emailNotifications')}
+              />
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className={`flex items-center justify-between p-4 rounded-lg transition-colors ${
+              notifPrefs.paymentReminders ? 'bg-green-50 hover:bg-green-100' : 'bg-gray-50 hover:bg-gray-100'
+            }`}>
               <div>
                 <p className="font-semibold">To'lov eslatmalari</p>
                 <p className="text-sm text-gray-500">To'lov muddati yaqinlashganda</p>
+                {notifPrefs.paymentReminders && (
+                  <p className="text-xs text-green-600 mt-1 font-medium">✓ Faol — to'lov muddatidan 3 kun oldin eslatma keladi</p>
+                )}
               </div>
-              <Button variant="outline" disabled>Faol</Button>
+              <Switch
+                checked={notifPrefs.paymentReminders}
+                onCheckedChange={() => toggleNotif('paymentReminders')}
+              />
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
               <div>
                 <p className="font-semibold">Davomat bildirishnomasi</p>
                 <p className="text-sm text-gray-500">Farzand maktabga kelmasa</p>
               </div>
-              <Button variant="outline" disabled>Faol</Button>
+              <Switch
+                checked={notifPrefs.attendanceAlerts}
+                onCheckedChange={() => toggleNotif('attendanceAlerts')}
+              />
             </div>
           </CardContent>
         </Card>

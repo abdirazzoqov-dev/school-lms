@@ -51,16 +51,16 @@ function getTimeSlots(schedules: any[]): TimeSlot[] {
   )
 }
 
-// Subject colors matching parent and constructor
+// Subject colors — light + dark mode
 const SUBJECT_COLORS = [
-  { bg: 'bg-blue-100', border: 'border-blue-300', text: 'text-blue-900' },
-  { bg: 'bg-green-100', border: 'border-green-300', text: 'text-green-900' },
-  { bg: 'bg-purple-100', border: 'border-purple-300', text: 'text-purple-900' },
-  { bg: 'bg-orange-100', border: 'border-orange-300', text: 'text-orange-900' },
-  { bg: 'bg-pink-100', border: 'border-pink-300', text: 'text-pink-900' },
-  { bg: 'bg-indigo-100', border: 'border-indigo-300', text: 'text-indigo-900' },
-  { bg: 'bg-teal-100', border: 'border-teal-300', text: 'text-teal-900' },
-  { bg: 'bg-cyan-100', border: 'border-cyan-300', text: 'text-cyan-900' },
+  { bg: 'bg-blue-100 dark:bg-blue-900/40', border: 'border-blue-300 dark:border-blue-700', text: 'text-blue-900 dark:text-blue-200' },
+  { bg: 'bg-green-100 dark:bg-green-900/40', border: 'border-green-300 dark:border-green-700', text: 'text-green-900 dark:text-green-200' },
+  { bg: 'bg-purple-100 dark:bg-purple-900/40', border: 'border-purple-300 dark:border-purple-700', text: 'text-purple-900 dark:text-purple-200' },
+  { bg: 'bg-orange-100 dark:bg-orange-900/40', border: 'border-orange-300 dark:border-orange-700', text: 'text-orange-900 dark:text-orange-200' },
+  { bg: 'bg-pink-100 dark:bg-pink-900/40', border: 'border-pink-300 dark:border-pink-700', text: 'text-pink-900 dark:text-pink-200' },
+  { bg: 'bg-indigo-100 dark:bg-indigo-900/40', border: 'border-indigo-300 dark:border-indigo-700', text: 'text-indigo-900 dark:text-indigo-200' },
+  { bg: 'bg-teal-100 dark:bg-teal-900/40', border: 'border-teal-300 dark:border-teal-700', text: 'text-teal-900 dark:text-teal-200' },
+  { bg: 'bg-cyan-100 dark:bg-cyan-900/40', border: 'border-cyan-300 dark:border-cyan-700', text: 'text-cyan-900 dark:text-cyan-200' },
 ]
 
 export default async function SchedulesPage({
@@ -248,8 +248,8 @@ export default async function SchedulesPage({
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Calendar className="h-6 w-6 text-blue-600" />
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-lg">
+                <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
                 <div className="text-2xl font-bold">{totalSchedules}</div>
@@ -261,8 +261,8 @@ export default async function SchedulesPage({
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Calendar className="h-6 w-6 text-green-600" />
+              <div className="p-2 bg-green-100 dark:bg-green-900/40 rounded-lg">
+                <Calendar className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
               <div>
                 <div className="text-2xl font-bold">{schedulesByClass.length}</div>
@@ -274,8 +274,8 @@ export default async function SchedulesPage({
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Calendar className="h-6 w-6 text-orange-600" />
+              <div className="p-2 bg-orange-100 dark:bg-orange-900/40 rounded-lg">
+                <Calendar className="h-6 w-6 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
                 <div className="text-2xl font-bold">{schedulesByGroup.length}</div>
@@ -287,8 +287,8 @@ export default async function SchedulesPage({
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Calendar className="h-6 w-6 text-purple-600" />
+              <div className="p-2 bg-purple-100 dark:bg-purple-900/40 rounded-lg">
+                <Calendar className="h-6 w-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
                 <div className="text-2xl font-bold">{academicYear}</div>
@@ -388,7 +388,7 @@ export default async function SchedulesPage({
       {/* Schedule Table */}
       {(searchParams.classId || searchParams.groupId) && selectedItem ? (
         <Card className="border-2 shadow-lg">
-          <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50">
+          <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-lg lg:text-xl flex items-center gap-2">
@@ -408,19 +408,19 @@ export default async function SchedulesPage({
             {timeSlots.length > 0 ? (
               <div className="w-full overflow-x-auto rounded-lg">
                 <div className="min-w-[1200px]">
-                  <table className="w-full border-collapse bg-white">
+                  <table className="w-full border-collapse bg-card">
                   <thead>
-                    <tr className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50">
-                      <th className="p-3 text-left font-semibold border-r w-[140px] sticky left-0 bg-white z-20 shadow-sm">
+                    <tr className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800">
+                      <th className="p-3 text-left font-semibold border-r w-[140px] sticky left-0 bg-blue-50 dark:bg-slate-800 z-20 shadow-sm">
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-blue-600" />
                           <span className="text-sm">Vaqt</span>
                         </div>
                       </th>
                       {DAYS.map(day => (
-                        <th key={day.id} className="p-3 text-center font-semibold border-r w-[170px]">
-                          <div className="text-base font-bold">{day.name}</div>
-                          <div className="text-xs text-muted-foreground font-normal">{day.short}</div>
+                        <th key={day.id} className="p-3 text-center font-semibold border-r w-[170px] bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 dark:bg-slate-800 dark:bg-none">
+                          <div className="text-base font-bold dark:text-slate-100">{day.name}</div>
+                          <div className="text-xs text-muted-foreground font-normal dark:text-slate-400">{day.short}</div>
                         </th>
                       ))}
                     </tr>
@@ -429,10 +429,10 @@ export default async function SchedulesPage({
                     {timeSlots.map((slot, slotIndex) => (
                       <tr key={slotIndex} className={cn(
                         "border-t transition-colors",
-                        slotIndex % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                        slotIndex % 2 === 0 ? "bg-card" : "bg-muted/30"
                       )}>
-                        <td className="p-3 border-r bg-gradient-to-r from-gray-50 to-gray-100 sticky left-0 z-10 shadow-sm">
-                          <div className="text-sm font-bold text-blue-900">{slot.period}-dars</div>
+                        <td className="p-3 border-r bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-800 dark:to-slate-700 sticky left-0 z-10 shadow-sm">
+                          <div className="text-sm font-bold text-blue-900 dark:text-blue-300">{slot.period}-dars</div>
                           <div className="text-xs text-muted-foreground font-mono mt-0.5">
                             {slot.startTime.slice(0, 5)}-{slot.endTime.slice(0, 5)}
                           </div>
@@ -456,8 +456,8 @@ export default async function SchedulesPage({
                                         className={cn(
                                           "p-2.5 rounded-lg text-xs space-y-1.5 min-h-[80px] relative",
                                           "border-2 shadow-sm hover:shadow-lg transition-all",
-                                          isBreak && "bg-gradient-to-br from-amber-100 to-amber-200 border-amber-400",
-                                          isLunch && "bg-gradient-to-br from-green-100 to-green-200 border-green-400",
+                                          isBreak && "bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-800/40 border-amber-400 dark:border-amber-600",
+                                          isLunch && "bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/40 dark:to-green-800/40 border-green-400 dark:border-green-600",
                                           !isBreak && !isLunch && `${colorScheme.bg} ${colorScheme.border}`
                                         )}
                                       >
@@ -474,8 +474,8 @@ export default async function SchedulesPage({
                                         {isBreak && (
                                           <div className="flex flex-col items-center justify-center h-full text-center">
                                             <Coffee className="h-7 w-7 text-amber-700 mb-1.5" />
-                                            <div className="font-bold text-sm text-amber-900">{lesson.title || 'Tanafus'}</div>
-                                            <div className="text-xs text-amber-700">Dam olish</div>
+                                            <div className="font-bold text-sm text-amber-900 dark:text-amber-200">{lesson.title || 'Tanafus'}</div>
+                                            <div className="text-xs text-amber-700 dark:text-amber-400">Dam olish</div>
                                           </div>
                                         )}
 
@@ -483,8 +483,8 @@ export default async function SchedulesPage({
                                         {isLunch && (
                                           <div className="flex flex-col items-center justify-center h-full text-center">
                                             <Utensils className="h-7 w-7 text-green-700 mb-1.5" />
-                                            <div className="font-bold text-sm text-green-900">{lesson.title || 'Tushlik'}</div>
-                                            <div className="text-xs text-green-700">Ovqatlanish</div>
+                                            <div className="font-bold text-sm text-green-900 dark:text-green-200">{lesson.title || 'Tushlik'}</div>
+                                            <div className="text-xs text-green-700 dark:text-green-400">Ovqatlanish</div>
                                           </div>
                                         )}
 
@@ -519,8 +519,8 @@ export default async function SchedulesPage({
                                   })}
                                 </div>
                               ) : (
-                                <div className="h-[80px] flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50/50">
-                                  <span className="text-gray-300 text-sm">-</span>
+                                <div className="h-[80px] flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/30">
+                                  <span className="text-gray-300 dark:text-gray-600 text-sm">-</span>
                                 </div>
                               )}
                             </td>

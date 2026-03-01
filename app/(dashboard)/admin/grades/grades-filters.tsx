@@ -113,7 +113,7 @@ export function GradesFilters({ classes, groups, subjects, timeSlots, searchPara
                 type="date"
                 value={selectedDate}
                 onChange={(e) => updateSearchParams('date', e.target.value)}
-                className="w-full"
+                className="w-full dark:[color-scheme:dark]"
               />
             </div>
 

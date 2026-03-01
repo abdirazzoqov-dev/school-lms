@@ -125,10 +125,10 @@ export default async function KitchenDashboardPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <PermissionGate resource="kitchen" action="CREATE">
           <Link href="/admin/kitchen/cooks/create">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-orange-300">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-orange-300 dark:hover:border-orange-700">
               <CardContent className="flex items-center gap-4 p-6">
-                <div className="p-3 rounded-full bg-orange-100">
-                  <Plus className="h-6 w-6 text-orange-600" />
+                <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/40">
+                  <Plus className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
                   <p className="font-semibold">Oshpaz Qo'shish</p>
@@ -141,10 +141,10 @@ export default async function KitchenDashboardPage() {
 
         <PermissionGate resource="kitchen" action="CREATE">
           <Link href="/admin/kitchen/categories/create">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-blue-300">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-blue-300 dark:hover:border-blue-700">
               <CardContent className="flex items-center gap-4 p-6">
-                <div className="p-3 rounded-full bg-blue-100">
-                  <Plus className="h-6 w-6 text-blue-600" />
+                <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/40">
+                  <Plus className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
                   <p className="font-semibold">Xarajat Turi</p>
@@ -157,10 +157,10 @@ export default async function KitchenDashboardPage() {
 
         <PermissionGate resource="kitchen" action="CREATE">
           <Link href="/admin/kitchen/expenses/create">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-green-300">
+            <Card className="hover:shadow-md transition-shadow cursor-pointer border-dashed border-2 hover:border-green-300 dark:hover:border-green-700">
               <CardContent className="flex items-center gap-4 p-6">
-                <div className="p-3 rounded-full bg-green-100">
-                  <Plus className="h-6 w-6 text-green-600" />
+                <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/40">
+                  <Plus className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
                   <p className="font-semibold">Xarajat Kiritish</p>
@@ -174,55 +174,55 @@ export default async function KitchenDashboardPage() {
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900/80 border-orange-200 dark:border-orange-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-orange-800">Oshpazlar</CardTitle>
-            <ChefHat className="h-5 w-5 text-orange-600" />
+            <CardTitle className="text-sm font-medium text-orange-800 dark:text-orange-300">Oshpazlar</CardTitle>
+            <ChefHat className="h-5 w-5 text-orange-600 dark:text-orange-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-orange-700">{totalCooks}</div>
-            <p className="text-xs text-orange-600 mt-1">
+            <div className="text-3xl font-bold text-orange-700 dark:text-orange-300">{totalCooks}</div>
+            <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
               {activeCooks} ta faol
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900/80 border-blue-200 dark:border-blue-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-blue-800">Xarajat Turlari</CardTitle>
-            <Utensils className="h-5 w-5 text-blue-600" />
+            <CardTitle className="text-sm font-medium text-blue-800 dark:text-blue-300">Xarajat Turlari</CardTitle>
+            <Utensils className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-700">{totalCategories}</div>
-            <p className="text-xs text-blue-600 mt-1">
+            <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">{totalCategories}</div>
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
               Faol kategoriyalar
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900/80 border-red-200 dark:border-red-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-red-800">Bu Oylik Xarajat</CardTitle>
-            <TrendingDown className="h-5 w-5 text-red-600" />
+            <CardTitle className="text-sm font-medium text-red-800 dark:text-red-300">Bu Oylik Xarajat</CardTitle>
+            <TrendingDown className="h-5 w-5 text-red-600 dark:text-red-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-700">
+            <div className="text-2xl font-bold text-red-700 dark:text-red-300">
               {formatNumber(Number(thisMonthExpenses._sum.amount || 0))}
             </div>
-            <p className="text-xs text-red-600 mt-1">
+            <p className="text-xs text-red-600 dark:text-red-400 mt-1">
               {thisMonthExpenses._count} ta xarajat
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900/80 border-green-200 dark:border-green-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-green-800">Xaridlar</CardTitle>
-            <ShoppingCart className="h-5 w-5 text-green-600" />
+            <CardTitle className="text-sm font-medium text-green-800 dark:text-green-300">Xaridlar</CardTitle>
+            <ShoppingCart className="h-5 w-5 text-green-600 dark:text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-700">{thisMonthExpenses._count}</div>
-            <p className="text-xs text-green-600 mt-1">
+            <div className="text-3xl font-bold text-green-700 dark:text-green-300">{thisMonthExpenses._count}</div>
+            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
               Bu oyda
             </p>
           </CardContent>
@@ -259,7 +259,7 @@ export default async function KitchenDashboardPage() {
                           {formatNumber(stat.amount)} so'm
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1">
                         <div 
                           className="h-2 rounded-full transition-all duration-300"
                           style={{ 
@@ -342,8 +342,8 @@ export default async function KitchenDashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-orange-100 group-hover:bg-orange-200 transition-colors">
-                    <Users className="h-6 w-6 text-orange-600" />
+                  <div className="p-3 rounded-xl bg-orange-100 dark:bg-orange-900/40 group-hover:bg-orange-200 dark:group-hover:bg-orange-900/60 transition-colors">
+                    <Users className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                   </div>
                   <div>
                     <p className="font-semibold text-lg">Oshpazlar</p>
@@ -361,8 +361,8 @@ export default async function KitchenDashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-blue-100 group-hover:bg-blue-200 transition-colors">
-                    <Utensils className="h-6 w-6 text-blue-600" />
+                  <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/40 group-hover:bg-blue-200 dark:group-hover:bg-blue-900/60 transition-colors">
+                    <Utensils className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
                     <p className="font-semibold text-lg">Xarajat Turlari</p>
@@ -380,8 +380,8 @@ export default async function KitchenDashboardPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-green-100 group-hover:bg-green-200 transition-colors">
-                    <DollarSign className="h-6 w-6 text-green-600" />
+                  <div className="p-3 rounded-xl bg-green-100 dark:bg-green-900/40 group-hover:bg-green-200 dark:group-hover:bg-green-900/60 transition-colors">
+                    <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
                     <p className="font-semibold text-lg">Xarajatlar</p>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import {
   Table,
@@ -31,7 +31,11 @@ import {
   Eye,
   MoreHorizontal,
   Edit,
-  Trash2
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -115,6 +119,13 @@ export function ParentsTable({ parents, classes, searchParams }: ParentsTablePro
     parent: null
   })
   const [deleting, setDeleting] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const PAGE_SIZE = 10
+
+  // Reset to page 1 when parents list changes (search/filter applied)
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [parents.length])
 
   const updateSearchParams = (key: string, value: string) => {
     const params = new URLSearchParams(urlSearchParams.toString())
@@ -168,6 +179,25 @@ export function ParentsTable({ parents, classes, searchParams }: ParentsTablePro
   }
 
   const hasActiveFilters = searchParams.search || searchParams.class || searchParams.status
+
+  // Pagination
+  const totalPages = Math.ceil(parents.length / PAGE_SIZE)
+  const paginatedParents = parents.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
+  const getPageNumbers = () => {
+    const pages: (number | '...')[] = []
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1)
+    }
+    pages.push(1)
+    if (currentPage > 3) pages.push('...')
+    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+      pages.push(i)
+    }
+    if (currentPage < totalPages - 2) pages.push('...')
+    pages.push(totalPages)
+    return pages
+  }
 
   const getInitials = (name: string) => {
     return name
@@ -264,8 +294,18 @@ export function ParentsTable({ parents, classes, searchParams }: ParentsTablePro
       {/* Results Count */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <p>
-          Jami <span className="font-semibold text-foreground">{parents.length}</span> ta ota-ona topildi
+          <span className="font-semibold text-foreground">{(currentPage - 1) * PAGE_SIZE + 1}</span>
+          {' '}dan{' '}
+          <span className="font-semibold text-foreground">{Math.min(currentPage * PAGE_SIZE, parents.length)}</span>
+          {' '}gacha, jami{' '}
+          <span className="font-semibold text-foreground">{parents.length}</span>
+          {' '}ta natija
         </p>
+        {totalPages > 1 && (
+          <p className="text-xs">
+            {currentPage}/{totalPages} sahifa
+          </p>
+        )}
       </div>
 
       {/* Table */}
@@ -301,10 +341,10 @@ export function ParentsTable({ parents, classes, searchParams }: ParentsTablePro
               </TableRow>
             </TableHeader>
             <TableBody>
-              {parents.map((parent, index) => (
+              {paginatedParents.map((parent, index) => (
                 <TableRow key={parent.id} className="hover:bg-muted/50">
                   <TableCell className="font-medium text-muted-foreground">
-                    {index + 1}
+                    {(currentPage - 1) * PAGE_SIZE + index + 1}
                   </TableCell>
 
                   {/* Parent Info */}
@@ -452,6 +492,76 @@ export function ParentsTable({ parents, classes, searchParams }: ParentsTablePro
               ))}
             </TableBody>
           </Table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-2">
+          <p className="text-sm text-muted-foreground">
+            Jami <span className="font-semibold text-foreground">{parents.length}</span> ta,{' '}
+            <span className="font-semibold text-foreground">{PAGE_SIZE}</span> tadan ko'rsatilmoqda
+          </p>
+          <div className="flex items-center gap-1">
+            {/* First */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+            {/* Prev */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            {/* Page numbers */}
+            {getPageNumbers().map((page, i) =>
+              page === '...' ? (
+                <span key={`ellipsis-${i}`} className="px-1.5 text-muted-foreground text-sm select-none">…</span>
+              ) : (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? 'default' : 'outline'}
+                  size="icon"
+                  className="h-8 w-8 text-sm font-semibold"
+                  onClick={() => setCurrentPage(page as number)}
+                >
+                  {page}
+                </Button>
+              )
+            )}
+
+            {/* Next */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            {/* Last */}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
 

@@ -169,10 +169,16 @@ model Tenant {
   dormitoryRooms           DormitoryRoom[]
   dormitoryBeds            DormitoryBed[]
   dormitoryAssignments     DormitoryAssignment[]
+  dormitoryLeaves          DormitoryLeave[]      @relation("TenantDormLeaves")
+  studentPaymentLeaves     StudentPaymentLeave[] @relation("TenantPayLeaves")
   salaryPayments           SalaryPayment[]
   meals                    Meal[]
   contactPersons           ContactPerson[]
   contracts                Contract[] // ✅ Shartnomalar
+  exams                    Exam[]
+  examResults              ExamResult[]
+  questionBanks            QuestionBank[] @relation("TenantQuestionBanks")
+  examVariants             ExamVariant[]  @relation("TenantExamVariants")
 
   @@map("tenants")  // PostgreSQL standard: lowercase, plural
   @@index([slug])
@@ -302,6 +308,8 @@ model User {
   permissions                 Permission[] // Moderator permissions
   paidSalaries                SalaryPayment[]       @relation("SalaryPaidBy")
   uploadedContracts           Contract[]            @relation("ContractUploadedBy") // ✅ Yuklangan shartnomalar
+  createdExams                Exam[]                @relation("ExamCreatedBy")
+  createdQuestionBanks        QuestionBank[]        @relation("QuestionBankCreatedBy")
 
   @@map("users")  // PostgreSQL standard: lowercase, plural
   @@index([email])
@@ -383,7 +391,10 @@ model Student {
   assignmentSubmissions AssignmentSubmission[]
   payments              Payment[]
   dormitoryAssignment   DormitoryAssignment?
+  dormitoryLeaves       DormitoryLeave[]        @relation("StudentDormLeaves")
+  paymentLeaves         StudentPaymentLeave[]   @relation("StudentPayLeaves")
   messages              Message[]         @relation("MessageStudent")
+  examResults           ExamResult[]
 
   @@unique([tenantId, studentCode])
   @@index([tenantId])
@@ -1506,6 +1517,8 @@ model DormitoryAssignment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  leaves    DormitoryLeave[]
+
   @@index([tenantId])
   @@index([studentId])
   @@index([roomId])
@@ -1514,6 +1527,47 @@ model DormitoryAssignment {
   @@index([checkInDate])
   @@index([tenantId, status])
   @@index([studentId, status])
+}
+
+// O'quvchi yotoqxonadan vaqtincha ketgan / ta'til oylar
+// Ushbu oylarda to'lov hisoblanmaydi va kechikkan deb belgilanmaydi
+model DormitoryLeave {
+  id           String   @id @default(cuid())
+  tenant       Tenant   @relation("TenantDormLeaves", fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId     String
+  student      Student  @relation("StudentDormLeaves", fields: [studentId], references: [id], onDelete: Cascade)
+  studentId    String
+  assignment   DormitoryAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  assignmentId String
+
+  year         Int
+  month        Int      // 1-12
+  reason       String?  @db.Text
+
+  createdAt    DateTime @default(now())
+
+  @@unique([studentId, year, month])
+  @@index([tenantId])
+  @@index([studentId])
+}
+
+// O'quvchi vaqtincha o'qimagan oylar (to'lov hisoblanmaydi)
+model StudentPaymentLeave {
+  id        String   @id @default(cuid())
+  tenant    Tenant   @relation("TenantPayLeaves", fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId  String
+  student   Student  @relation("StudentPayLeaves", fields: [studentId], references: [id], onDelete: Cascade)
+  studentId String
+
+  year      Int
+  month     Int      // 1-12
+  reason    String?  @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@unique([studentId, year, month])
+  @@index([tenantId])
+  @@index([studentId])
 }
 
 // ============================================
@@ -1595,6 +1649,172 @@ model SalaryPayment {
   @@index([tenantId, month, year])
   @@index([paymentDate])
   @@index([tenantId, type])
+}
+
+// ============================================
+// QUESTION BANK - Savollar bazasi (Word dan import)
+// ============================================
+
+model QuestionBank {
+  id          String   @id @default(cuid())
+  tenant      Tenant   @relation("TenantQuestionBanks", fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+
+  subjectName String          // Fan nomi
+  description String?  @db.Text
+  fileName    String?         // Asl Word fayl nomi
+  totalCount  Int      @default(0) // Savollar soni
+
+  createdBy   User?    @relation("QuestionBankCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdById String?
+
+  questions     Question[]
+  examSubjects  ExamSubject[] @relation("SubjectQuestionBank")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId])
+}
+
+model Question {
+  id            String       @id @default(cuid())
+  bank          QuestionBank @relation(fields: [bankId], references: [id], onDelete: Cascade)
+  bankId        String
+  tenantId      String
+
+  text          String  @db.Text   // Savol matni
+  optionA       String  @db.Text   // A variant
+  optionB       String  @db.Text   // B variant
+  optionC       String? @db.Text   // C variant
+  optionD       String? @db.Text   // D variant
+  optionE       String? @db.Text   // E variant (ixtiyoriy)
+
+  correctAnswer String? // A, B, C, D, E — admin belgilaydi
+
+  order         Int     @default(0)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([bankId])
+  @@index([tenantId])
+}
+
+// ============================================
+// EXAM SYSTEM - Test/Imtihon tizimi
+// ============================================
+
+enum ExamStatus {
+  DRAFT     // Tayyorlanmoqda
+  PUBLISHED // Nashr etilgan (javob varaqlari chiqarilgan)
+  COMPLETED // Yakunlangan
+  ARCHIVED  // Arxivlangan
+}
+
+model Exam {
+  id          String     @id @default(cuid())
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+
+  title       String
+  description String?    @db.Text
+  date        DateTime?
+  duration    Int?       // Daqiqalarda
+  status      ExamStatus @default(DRAFT)
+
+  // Kim yaratdi
+  createdBy   User?      @relation("ExamCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdById String?
+
+  subjects    ExamSubject[]
+  results     ExamResult[]
+  variants    ExamVariant[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+model ExamSubject {
+  id             String  @id @default(cuid())
+  exam           Exam    @relation(fields: [examId], references: [id], onDelete: Cascade)
+  examId         String
+
+  subjectName    String          // Fan nomi
+  questionCount  Int             // Savollar soni
+  pointsPerQ     Float           @default(1) // Har bir to'g'ri javob uchun ball
+  correctAnswers Json            // {"1":"A","2":"B","3":"C",...}
+  order          Int             @default(0) // Fan tartib raqami
+
+  // Savollar bazasiga havola (ixtiyoriy — kitobcha generatsiyasi uchun)
+  questionBank   QuestionBank?   @relation("SubjectQuestionBank", fields: [questionBankId], references: [id], onDelete: SetNull)
+  questionBankId String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([examId])
+  @@index([questionBankId])
+}
+
+// Imtihon varianti — savollar aralashtirib kitobcha yaratilganda saqlanadi
+model ExamVariant {
+  id          String   @id @default(cuid())
+  exam        Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  examId      String
+  tenant      Tenant   @relation("TenantExamVariants", fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+
+  variantNum  Int      // 1, 2, 3 ...
+  variantName String   // "Variant 1", "Variant A", ...
+
+  // Har bir fan uchun aralashtirilib tanlangan savollar va kalitlar
+  // { "subjectOrder": { "questions": [{id,text,optA,optB,optC,optD,correct},...], "answerKey": {"1":"A",...} } }
+  questionData Json
+
+  createdAt   DateTime @default(now())
+
+  results     ExamResult[] @relation("ExamVariantResults")
+
+  @@index([examId])
+  @@index([tenantId])
+}
+
+model ExamResult {
+  id         String  @id @default(cuid())
+  exam       Exam    @relation(fields: [examId], references: [id], onDelete: Cascade)
+  examId     String
+  student    Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId  String
+  tenant     Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId   String
+
+  // Javoblar: {"subjectOrder": {"1":"A","2":"B",...}, ...}
+  answers    Json    @default("{}")
+  // Natijalar: {"subjectOrder": {"correct":10,"wrong":5,"empty":5,"score":10,"total":20}, ...}
+  scores     Json    @default("{}")
+  totalScore Float   @default(0)
+  totalMax   Float   @default(0)
+  percentage Float   @default(0)
+
+  // Qaysi variant ishlatilgan
+  variant    ExamVariant? @relation("ExamVariantResults", fields: [variantId], references: [id], onDelete: SetNull)
+  variantId  String?
+
+  // Manba: MANUAL (qo'lda), SCAN (skanerlangan)
+  source     String  @default("MANUAL")
+  notes      String? @db.Text
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([examId, studentId])
+  @@index([tenantId])
+  @@index([examId])
+  @@index([studentId])
 }
 
 // CONTRACT - Shartnomalar (Admin yuklaydi, xodim/o'qituvchi/ota-ona ko'radi)

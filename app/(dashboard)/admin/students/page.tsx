@@ -353,7 +353,7 @@ export default async function StudentsPage({
             <div className="flex flex-col gap-3 md:gap-4 md:flex-row">
               <SearchBar 
                 placeholder="O'quvchi qidirish (ism, kod)..." 
-                className="flex-1 bg-white dark:bg-gray-950"
+                className="flex-1 bg-card"
               />
               <div className="grid grid-cols-2 md:flex gap-2">
                 <FilterSelect
@@ -364,13 +364,13 @@ export default async function StudentsPage({
                     { label: 'Chiqarilgan', value: 'EXPELLED' },
                   ]}
                   placeholder="Barcha statuslar"
-                  className="w-full md:w-[200px] bg-white dark:bg-gray-950"
+                  className="w-full md:w-[200px] bg-card"
                 />
                 <FilterSelect
                   paramName="classId"
                   options={classes.map(c => ({ label: c.name, value: c.id }))}
                   placeholder="Barcha sinflar"
-                  className="w-full md:w-[200px] bg-white dark:bg-gray-950"
+                  className="w-full md:w-[200px] bg-card"
                 />
                 <FilterSelect
                   paramName="trialStatus"
@@ -379,7 +379,7 @@ export default async function StudentsPage({
                     { label: 'Asosiy o\'quvchilar', value: 'regular' },
                   ]}
                   placeholder="Sinov holati"
-                  className="w-full md:w-[200px] bg-white dark:bg-gray-950"
+                  className="w-full md:w-[200px] bg-card"
                 />
                 <FilterSelect
                   paramName="freeStatus"
@@ -388,7 +388,7 @@ export default async function StudentsPage({
                     { label: '💰 To\'lovli o\'quvchilar', value: 'paid' },
                   ]}
                   placeholder="To'lov turi"
-                  className="w-full md:w-[200px] col-span-2 md:col-span-1 bg-white dark:bg-gray-950"
+                  className="w-full md:w-[200px] col-span-2 md:col-span-1 bg-card"
                 />
                 <ClearFilters className="col-span-2 md:col-span-1" />
               </div>

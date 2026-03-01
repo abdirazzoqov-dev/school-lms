@@ -4,62 +4,66 @@
 
 @layer base {
   :root {
-    /* Modern LMS Color System - Professional & Cohesive */
-    --background: 0 0% 99%;
+    /* Enterprise LMS Light Mode — Cool slate base with white surfaces */
+    --background: 214 32% 94%;
     --foreground: 222 47% 11%;
-    
-    /* Card System with subtle elevation */
+
+    /* Cards & surfaces — pure white for elevation contrast */
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
-    
+
     /* Popover */
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    
-    /* Primary - Deep Blue (Professional LMS) */
+
+    /* Primary — Deep Blue */
     --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
-    
-    /* Secondary - Soft Purple (Education) */
+
+    /* Secondary — Soft Purple */
     --secondary: 262 52% 47%;
     --secondary-foreground: 0 0% 100%;
-    
-    /* Accent - Teal (Success/Active states) */
+
+    /* Accent — Teal */
     --accent: 173 58% 39%;
     --accent-foreground: 0 0% 100%;
-    
-    /* Muted backgrounds */
-    --muted: 210 40% 98%;
-    --muted-foreground: 215 16% 47%;
-    
-    /* Success - Green */
+
+    /* Muted — slightly lighter than background */
+    --muted: 214 32% 97%;
+    --muted-foreground: 215 20% 45%;
+
+    /* Success */
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
-    
-    /* Warning - Amber */
+
+    /* Warning */
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-    
-    /* Destructive - Red */
+
+    /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    
-    /* Info - Cyan */
+
+    /* Info */
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
-    
-    /* Borders & Inputs */
-    --border: 214 32% 91%;
+
+    /* Sidebar — slightly deeper than background */
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+
+    /* Borders — visible but subtle */
+    --border: 214 32% 87%;
     --input: 214 32% 91%;
     --ring: 221 83% 53%;
-    
-    /* Chart Colors (for dashboards) */
+
+    /* Charts */
     --chart-1: 221 83% 53%;
     --chart-2: 262 52% 47%;
     --chart-3: 173 58% 39%;
     --chart-4: 38 92% 50%;
     --chart-5: 142 76% 36%;
-    
+
     --radius: 0.75rem;
   }
 
@@ -115,6 +119,127 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   Enterprise Light Mode — Admin Panel Styles
+   ═══════════════════════════════════════════ */
+@layer components {
+  /* Header — white with crisp bottom shadow */
+  :root .admin-header {
+    background: hsl(0 0% 100% / 0.95);
+    border-bottom: 1px solid hsl(214 32% 87%);
+    box-shadow: 0 1px 3px 0 hsl(214 32% 80% / 0.4), 0 1px 2px -1px hsl(214 32% 80% / 0.2);
+  }
+
+  /* Sidebar — white card with left accent line */
+  :root .admin-sidebar {
+    background: hsl(0 0% 100%);
+    border: 1px solid hsl(214 32% 87%);
+    box-shadow: 0 4px 24px -4px hsl(221 83% 53% / 0.08), 0 1px 4px hsl(214 32% 80% / 0.3);
+    border-top: 3px solid hsl(221 83% 53%);
+  }
+
+  /* Main content wrapper */
+  :root .admin-content-area {
+    background: transparent;
+  }
+
+  /* Cards — white with soft shadow */
+  :root .card {
+    background-color: hsl(0 0% 100%);
+    box-shadow: 0 1px 4px hsl(214 32% 80% / 0.3), 0 0 0 1px hsl(214 32% 87% / 0.6);
+    border-color: hsl(214 32% 89%);
+  }
+
+  /* Table rows */
+  :root table thead tr {
+    background: hsl(214 32% 97%);
+  }
+
+  /* Inputs — slightly warmer white */
+  :root input,
+  :root textarea,
+  :root select {
+    background: hsl(0 0% 100%);
+  }
+
+  /* Scrollable areas */
+  :root .admin-scroll-area {
+    background: hsl(214 32% 94%);
+  }
+
+  /* ── Global dark mode fixes ── */
+
+  /* Table: thead, tbody, rows */
+  .dark table thead,
+  .dark table thead tr,
+  .dark table thead th {
+    background-color: hsl(217 33% 20%);
+    background-image: none;
+  }
+  .dark table tbody,
+  .dark table tbody tr {
+    background-color: hsl(var(--card)) !important;
+  }
+  .dark table tbody tr:hover {
+    background-color: hsl(217 33% 18%) !important;
+  }
+
+  /* Table wrapper: outer divs with bg-white */
+  .dark .rounded-xl.border-2.overflow-hidden {
+    background-color: hsl(var(--card));
+  }
+
+  /* Search / filter inputs */
+  .dark input[type="text"],
+  .dark input[type="search"],
+  .dark input[type="email"],
+  .dark input[type="password"],
+  .dark input[type="number"],
+  .dark textarea,
+  .dark select,
+  .dark [role="combobox"] {
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--foreground)) !important;
+    border-color: hsl(var(--border)) !important;
+  }
+
+  /* Date input dark mode — native picker icon & calendar */
+  .dark input[type="date"],
+  .dark input[type="time"],
+  .dark input[type="datetime-local"],
+  .dark input[type="month"],
+  .dark input[type="week"] {
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--foreground)) !important;
+    border-color: hsl(var(--border)) !important;
+    color-scheme: dark;
+  }
+
+  /* SearchBar and FilterSelect wrappers */
+  .dark .bg-white {
+    background-color: hsl(var(--card)) !important;
+  }
+
+  /* Dark mode overrides — keep dark surfaces dark */
+  .dark .admin-header {
+    background: hsl(222 47% 13% / 0.95);
+    border-bottom: 1px solid hsl(217 33% 17%);
+    box-shadow: 0 1px 4px hsl(222 47% 5% / 0.5);
+  }
+
+  .dark .admin-sidebar {
+    background: hsl(222 47% 14%);
+    border: 1px solid hsl(217 33% 20%);
+    box-shadow: 0 4px 24px hsl(222 47% 5% / 0.4);
+    border-top: 3px solid hsl(221 83% 53%);
+  }
+
+  .dark .card {
+    background-color: hsl(var(--card));
+    box-shadow: 0 1px 4px hsl(222 47% 5% / 0.4), 0 0 0 1px hsl(217 33% 20% / 0.6);
   }
 }
 

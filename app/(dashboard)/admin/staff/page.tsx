@@ -216,7 +216,7 @@ export default async function StaffPage({
               <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
                 <SearchBar 
                   placeholder="Xodim qidirish..." 
-                  className="flex-1 bg-white dark:bg-gray-950"
+                  className="flex-1 bg-card"
                 />
                 <ClearFilters className="w-full md:w-auto" />
               </div>

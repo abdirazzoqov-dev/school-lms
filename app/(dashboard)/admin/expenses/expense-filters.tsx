@@ -68,7 +68,7 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
           <Input
             id="startDate"
             type="date"
-            className="mt-1.5 h-10"
+            className="mt-1.5 h-10 dark:[color-scheme:dark]"
             value={searchParams.get('startDate') || ''}
             onChange={(e) => handleDateChange('startDate', e.target.value)}
           />
@@ -80,7 +80,7 @@ export function ExpenseFilters({ categories }: ExpenseFiltersProps) {
           <Input
             id="endDate"
             type="date"
-            className="mt-1.5 h-10"
+            className="mt-1.5 h-10 dark:[color-scheme:dark]"
             value={searchParams.get('endDate') || ''}
             onChange={(e) => handleDateChange('endDate', e.target.value)}
           />

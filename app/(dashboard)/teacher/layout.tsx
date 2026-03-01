@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { DashboardNav } from '@/components/dashboard-nav'
 import { UserNav } from '@/components/user-nav'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { TenantStatusBanner } from '@/components/tenant-status-banner'
 import { TeacherMobileBottomNav } from '@/components/teacher-mobile-bottom-nav'
 import { BookOpen } from 'lucide-react'
@@ -121,7 +122,10 @@ export default async function TeacherLayout({
               </div>
             </div>
           </div>
-          <UserNav user={{ ...session.user, avatar: currentAvatar }} />
+          <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <UserNav user={{ ...session.user, avatar: currentAvatar }} />
+            </div>
         </div>
       </header>
       

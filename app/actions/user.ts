@@ -19,14 +19,14 @@ export async function changeOwnPassword(currentPassword: string, newPassword: st
 
     const user = await db.user.findUnique({
       where: { id: session.user.id },
-      select: { id: true, password: true }
+      select: { id: true, passwordHash: true }
     })
 
     if (!user) {
       return { success: false, error: 'Foydalanuvchi topilmadi' }
     }
 
-    const isCurrentValid = await bcrypt.compare(currentPassword, user.password)
+    const isCurrentValid = await bcrypt.compare(currentPassword, user.passwordHash)
     if (!isCurrentValid) {
       return { success: false, error: 'Joriy parol noto\'g\'ri' }
     }
@@ -35,7 +35,7 @@ export async function changeOwnPassword(currentPassword: string, newPassword: st
 
     await db.user.update({
       where: { id: user.id },
-      data: { password: hashedNew }
+      data: { passwordHash: hashedNew }
     })
 
     return { success: true }

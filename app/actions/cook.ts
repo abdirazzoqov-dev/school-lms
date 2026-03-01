@@ -17,6 +17,10 @@ import { revalidatePath } from 'next/cache'
 import { hashPassword } from '@/lib/auth'
 import { handleError } from '@/lib/error-handler'
 
+// Helper: admin-like roles (ADMIN, SUPER_ADMIN, MODERATOR)
+const isAdminLike = (role: string) =>
+  role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'MODERATOR'
+
 // ============================================
 // COOK (OSHPAZ) ACTIONS
 // ============================================
@@ -25,7 +29,7 @@ export async function createCook(data: CookFormData) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !isAdminLike(session.user.role)) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -107,7 +111,7 @@ export async function updateCook(cookId: string, data: UpdateCookFormData) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !isAdminLike(session.user.role)) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -176,7 +180,7 @@ export async function deactivateCook(cookId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !isAdminLike(session.user.role)) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -210,7 +214,7 @@ export async function activateCook(cookId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !isAdminLike(session.user.role)) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -244,7 +248,7 @@ export async function deleteCook(cookId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !isAdminLike(session.user.role)) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -299,7 +303,7 @@ export async function createKitchenExpenseCategory(data: KitchenExpenseCategoryF
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !isAdminLike(session.user.role)) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -349,7 +353,7 @@ export async function updateKitchenExpenseCategory(categoryId: string, data: Par
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !isAdminLike(session.user.role)) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -406,7 +410,7 @@ export async function deleteKitchenExpenseCategory(categoryId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !isAdminLike(session.user.role)) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -455,8 +459,8 @@ export async function createKitchenExpense(data: KitchenExpenseFormData) {
   try {
     const session = await getServerSession(authOptions)
     
-    // Allow both ADMIN and COOK to create expenses
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'COOK')) {
+    // Allow ADMIN, SUPER_ADMIN, MODERATOR and COOK to create expenses
+    if (!session || (!isAdminLike(session.user.role) && session.user.role !== 'COOK')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -521,7 +525,7 @@ export async function updateKitchenExpense(expenseId: string, data: Partial<Kitc
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'COOK')) {
+    if (!session || (!isAdminLike(session.user.role) && session.user.role !== 'COOK')) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 
@@ -568,7 +572,7 @@ export async function deleteKitchenExpense(expenseId: string) {
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !isAdminLike(session.user.role)) {
       return { success: false, error: 'Ruxsat berilmagan' }
     }
 

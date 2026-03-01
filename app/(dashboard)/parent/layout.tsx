@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { DashboardNav } from '@/components/dashboard-nav'
 import { UserNav } from '@/components/user-nav'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { TenantStatusBanner } from '@/components/tenant-status-banner'
 import { ParentMobileBottomNav } from '@/components/parent-mobile-bottom-nav'
 import { Users } from 'lucide-react'
@@ -68,6 +69,16 @@ export default async function ParentLayout({
       title: 'Baholar',
       href: '/parent/grades',
       icon: 'Award',
+    },
+    {
+      title: 'Test Natijalari',
+      href: '/parent/test-results',
+      icon: 'ClipboardList',
+    },
+    {
+      title: 'Imtihon Natijalari',
+      href: '/parent/exams',
+      icon: 'ClipboardCheck',
     },
     {
       title: 'Davomat',
@@ -146,7 +157,10 @@ export default async function ParentLayout({
               </div>
             </div>
           </div>
-          <UserNav user={{ ...session.user, avatar: currentAvatar }} />
+          <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <UserNav user={{ ...session.user, avatar: currentAvatar }} />
+            </div>
         </div>
       </header>
       

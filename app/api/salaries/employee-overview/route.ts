@@ -22,8 +22,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: 'Missing parameters' }, { status: 400 })
     }
 
-    // ✅ Authorization check: Admin can view anyone, teachers/staff can only view themselves
-    if (session.user.role !== 'ADMIN') {
+    // ✅ Authorization check: Admin/SuperAdmin/Moderator can view anyone, teachers/staff can only view themselves
+    const isAdminLike = session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN' || session.user.role === 'MODERATOR'
+    if (!isAdminLike) {
       // Check if user is viewing their own data
       if (employeeType === 'teacher') {
         const teacher = await db.teacher.findUnique({

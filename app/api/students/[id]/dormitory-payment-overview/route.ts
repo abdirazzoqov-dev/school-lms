@@ -20,7 +20,6 @@ export async function GET(
     const searchParams = req.nextUrl.searchParams
     const year = parseInt(searchParams.get('year') || new Date().getFullYear().toString())
 
-    // Verify student belongs to tenant and has a dormitory assignment
     const student = await db.student.findFirst({
       where: { id: studentId, tenantId },
       select: {
@@ -28,8 +27,10 @@ export async function GET(
         paymentDueDay: true,
         dormitoryAssignment: {
           select: {
+            id: true,
             monthlyFee: true,
             checkInDate: true,
+            checkOutDate: true,
             status: true,
             room: {
               select: { roomNumber: true, building: { select: { name: true } } }
@@ -48,14 +49,90 @@ export async function GET(
       return NextResponse.json({ error: 'No dormitory assignment' }, { status: 404 })
     }
 
-    const monthlyFee = Number(student.dormitoryAssignment.monthlyFee)
+    const assignment = student.dormitoryAssignment
+    const monthlyFee = Number(assignment.monthlyFee)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
+
+    // Parse checkIn / checkOut dates — normalise to start of month
+    const checkIn = new Date(assignment.checkInDate)
+    const checkInYear = checkIn.getFullYear()
+    const checkInMonth = checkIn.getMonth() + 1 // 1-indexed
+
+    const checkOut = assignment.checkOutDate ? new Date(assignment.checkOutDate) : null
+    const checkOutYear = checkOut ? checkOut.getFullYear() : null
+    const checkOutMonth = checkOut ? checkOut.getMonth() + 1 : null
+
+    // Fetch leave months for this student in this year
+    const leaveRecords = await db.dormitoryLeave.findMany({
+      where: { studentId, tenantId, year },
+      select: { month: true, reason: true }
+    })
+    const leaveMonthSet = new Set(leaveRecords.map(l => l.month))
+    const leaveReasonMap: Record<number, string | null> = {}
+    for (const l of leaveRecords) leaveReasonMap[l.month] = l.reason ?? null
 
     const monthlyStatuses = []
 
     for (let month = 1; month <= 12; month++) {
-      // Fetch all DORMITORY payments for this student in this month/year
+      // ── 1. Months BEFORE checkIn: not applicable ──────────────────────────
+      const isBeforeCheckIn =
+        year < checkInYear ||
+        (year === checkInYear && month < checkInMonth)
+
+      // ── 2. Months AFTER checkOut (if student left): not applicable ─────────
+      const isAfterCheckOut =
+        checkOut !== null && checkOutYear !== null && checkOutMonth !== null &&
+        (year > checkOutYear || (year === checkOutYear && month > checkOutMonth))
+
+      // ── 3. Leave month: student temporarily away ───────────────────────────
+      const isLeaveMonth = leaveMonthSet.has(month)
+
+      if (isBeforeCheckIn || isAfterCheckOut) {
+        monthlyStatuses.push({
+          month,
+          year,
+          monthName: getMonthNameUz(month),
+          totalPaid: 0,
+          requiredAmount: 0,
+          remainingAmount: 0,
+          percentagePaid: 0,
+          isFullyPaid: false,
+          isPending: false,
+          isOverdue: false,
+          hasPayment: false,
+          paymentId: null,
+          status: 'not_due' as const,
+          isLeave: false,
+          leaveReason: null,
+          isNotApplicable: true, // before enrollment or after checkout
+        })
+        continue
+      }
+
+      if (isLeaveMonth) {
+        monthlyStatuses.push({
+          month,
+          year,
+          monthName: getMonthNameUz(month),
+          totalPaid: 0,
+          requiredAmount: 0,
+          remainingAmount: 0,
+          percentagePaid: 0,
+          isFullyPaid: false,
+          isPending: false,
+          isOverdue: false,
+          hasPayment: false,
+          paymentId: null,
+          status: 'not_due' as const,
+          isLeave: true,
+          leaveReason: leaveReasonMap[month] ?? null,
+          isNotApplicable: false,
+        })
+        continue
+      }
+
+      // ── 4. Normal month — fetch payments ───────────────────────────────────
       const payments = await db.payment.findMany({
         where: {
           studentId,
@@ -82,11 +159,9 @@ export async function GET(
         }
       })
 
-      // Filter by month/year for those without paymentMonth
-      const filteredPayments = payments.filter(p => {
-        if (p.paymentMonth !== null && p.paymentYear !== null) return true
-        return false
-      })
+      const filteredPayments = payments.filter(p =>
+        p.paymentMonth !== null && p.paymentYear !== null
+      )
 
       const totalPaid = filteredPayments.reduce((sum, p) => {
         const paid = p.status === 'COMPLETED' && !p.paidAmount
@@ -135,6 +210,9 @@ export async function GET(
         hasPayment: filteredPayments.length > 0,
         paymentId: primaryPayment?.id ?? null,
         status,
+        isLeave: false,
+        leaveReason: null,
+        isNotApplicable: false,
       })
     }
 
