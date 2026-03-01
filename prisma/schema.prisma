@@ -171,6 +171,7 @@ model Tenant {
   dormitoryAssignments     DormitoryAssignment[]
   dormitoryLeaves          DormitoryLeave[]      @relation("TenantDormLeaves")
   studentPaymentLeaves     StudentPaymentLeave[] @relation("TenantPayLeaves")
+  employeeSalaryLeaves     EmployeeSalaryLeave[] @relation("TenantSalaryLeaves")
   salaryPayments           SalaryPayment[]
   meals                    Meal[]
   contactPersons           ContactPerson[]
@@ -496,6 +497,7 @@ model Teacher {
   materials      Material[]
   salaryPayments SalaryPayment[]
   contracts      Contract[] // ✅ O'qituvchi uchun shartnomalar
+  salaryLeaves   EmployeeSalaryLeave[] @relation("TeacherSalaryLeaves")
 
   @@unique([tenantId, teacherCode])
   @@index([tenantId])
@@ -526,6 +528,7 @@ model Staff {
   // Relations
   salaryPayments SalaryPayment[]
   contracts      Contract[] // ✅ Xodim uchun shartnomalar
+  salaryLeaves   EmployeeSalaryLeave[] @relation("StaffSalaryLeaves")
 
   @@unique([tenantId, staffCode])
   @@index([tenantId])
@@ -1568,6 +1571,29 @@ model StudentPaymentLeave {
   @@unique([studentId, year, month])
   @@index([tenantId])
   @@index([studentId])
+}
+
+// Xodim / o'qituvchi vaqtincha ishlamaglan oylar (maosh hisoblanmaydi)
+model EmployeeSalaryLeave {
+  id           String   @id @default(cuid())
+  tenant       Tenant   @relation("TenantSalaryLeaves", fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId     String
+
+  // Either teacherId or staffId must be set (not both)
+  teacher      Teacher? @relation("TeacherSalaryLeaves", fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId    String?
+  staff        Staff?   @relation("StaffSalaryLeaves", fields: [staffId], references: [id], onDelete: Cascade)
+  staffId      String?
+
+  year         Int
+  month        Int      // 1-12
+  reason       String?  @db.Text
+
+  createdAt    DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([teacherId])
+  @@index([staffId])
 }
 
 // ============================================

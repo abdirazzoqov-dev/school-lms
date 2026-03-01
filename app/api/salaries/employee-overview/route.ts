@@ -22,10 +22,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: 'Missing parameters' }, { status: 400 })
     }
 
-    // ✅ Authorization check: Admin/SuperAdmin/Moderator can view anyone, teachers/staff can only view themselves
+    // Authorization check
     const isAdminLike = session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN' || session.user.role === 'MODERATOR'
     if (!isAdminLike) {
-      // Check if user is viewing their own data
       if (employeeType === 'teacher') {
         const teacher = await db.teacher.findUnique({
           where: { id: employeeId, tenantId },
@@ -45,27 +44,42 @@ export async function GET(request: Request) {
       }
     }
 
-    // Get employee and monthly salary
+    // Get employee, monthly salary and hireDate
     let monthlySalary = 0
+    let hireDate: Date | null = null
+
     if (employeeType === 'teacher') {
       const teacher = await db.teacher.findUnique({
         where: { id: employeeId, tenantId },
-        select: { monthlySalary: true }
+        select: { monthlySalary: true, hireDate: true }
       })
       if (!teacher) {
         return NextResponse.json({ success: false, error: 'Teacher not found' }, { status: 404 })
       }
       monthlySalary = Number(teacher.monthlySalary || 0)
+      hireDate = teacher.hireDate
     } else {
       const staff = await db.staff.findUnique({
         where: { id: employeeId, tenantId },
-        select: { monthlySalary: true }
+        select: { monthlySalary: true, hireDate: true }
       })
       if (!staff) {
         return NextResponse.json({ success: false, error: 'Staff not found' }, { status: 404 })
       }
       monthlySalary = Number(staff.monthlySalary || 0)
+      hireDate = staff.hireDate
     }
+
+    // Fetch salary leave months for this employee & year
+    const leaveRecords = await db.employeeSalaryLeave.findMany({
+      where: {
+        tenantId,
+        year,
+        ...(employeeType === 'teacher' ? { teacherId: employeeId } : { staffId: employeeId }),
+      },
+      select: { month: true, reason: true }
+    })
+    const leaveMap = new Map(leaveRecords.map(l => [l.month, l.reason]))
 
     // Get all salary payments for the year
     const salaryPayments = await db.salaryPayment.findMany({
@@ -93,31 +107,77 @@ export async function GET(request: Request) {
       }
     })
 
-    // Get current date info
     const now = new Date()
     const currentMonth = now.getMonth() + 1
     const currentYear = now.getFullYear()
 
-    // Generate 12-month status array
     const monthNames = [
       'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
       'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'
     ]
 
+    const hireDateNorm = hireDate ? new Date(hireDate) : null
+    if (hireDateNorm) hireDateNorm.setHours(0, 0, 0, 0)
+
     const monthlyStatuses = []
 
     for (let month = 1; month <= 12; month++) {
-      // Filter payments for this month
+      const monthStart = new Date(year, month - 1, 1)
+
+      // Before hire date → not applicable
+      if (hireDateNorm) {
+        const hireMonthStart = new Date(hireDateNorm.getFullYear(), hireDateNorm.getMonth(), 1)
+        if (monthStart < hireMonthStart) {
+          monthlyStatuses.push({
+            month,
+            year,
+            monthName: monthNames[month - 1],
+            totalPaid: 0,
+            requiredAmount: 0,
+            percentagePaid: 0,
+            isFullyPaid: false,
+            isPending: false,
+            isOverdue: false,
+            hasSalary: false,
+            salaryId: null,
+            status: 'not_due' as const,
+            isNotApplicable: true,
+            isLeave: false,
+            leaveReason: null,
+            payments: [],
+          })
+          continue
+        }
+      }
+
+      // Leave month
+      if (leaveMap.has(month)) {
+        monthlyStatuses.push({
+          month,
+          year,
+          monthName: monthNames[month - 1],
+          totalPaid: 0,
+          requiredAmount: 0,
+          percentagePaid: 0,
+          isFullyPaid: false,
+          isPending: false,
+          isOverdue: false,
+          hasSalary: false,
+          salaryId: null,
+          status: 'not_due' as const,
+          isNotApplicable: false,
+          isLeave: true,
+          leaveReason: leaveMap.get(month) ?? null,
+          payments: [],
+        })
+        continue
+      }
+
+      // Normal month
       const monthPayments = salaryPayments.filter(p => p.month === month && p.year === year)
-      
       const totalPaid = monthPayments.reduce((sum, p) => sum + Number(p.paidAmount || 0), 0)
-      
-      // ✅ CRITICAL: Find FULL_SALARY payment - its amount is the 100% target
+
       const fullSalaryPayment = monthPayments.find(p => p.type === 'FULL_SALARY')
-      
-      // Required amount is:
-      // 1. If FULL_SALARY payment exists -> use its amount (includes bonus/deduction)
-      // 2. Otherwise -> use current monthlySalary as default
       const requiredAmount = fullSalaryPayment
         ? Number(fullSalaryPayment.amount)
         : monthlySalary
@@ -125,20 +185,16 @@ export async function GET(request: Request) {
       const percentagePaid = requiredAmount > 0 ? (totalPaid / requiredAmount) * 100 : 0
       const isFullyPaid = totalPaid >= requiredAmount && requiredAmount > 0
 
-      // Find primary salary (PENDING or PARTIALLY_PAID)
       const primarySalary = monthPayments.find(s => s.status === 'PENDING' || s.status === 'PARTIALLY_PAID') || monthPayments[0]
-      
       const hasSalary = monthPayments.length > 0
       const isPending = hasSalary && !isFullyPaid
 
-      // Check if overdue
       const isOverdue = !isFullyPaid && (
         (year < currentYear) ||
         (year === currentYear && month < currentMonth)
       )
 
       let status: 'paid' | 'partially_paid' | 'pending' | 'overdue' | 'not_due'
-      
       if (isFullyPaid) {
         status = 'paid'
       } else if (isOverdue) {
@@ -164,6 +220,9 @@ export async function GET(request: Request) {
         hasSalary,
         salaryId: primarySalary?.id || null,
         status,
+        isNotApplicable: false,
+        isLeave: false,
+        leaveReason: null,
         payments: monthPayments.map(p => ({
           id: p.id,
           type: p.type,
@@ -181,7 +240,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
-      monthlyStatuses
+      monthlyStatuses,
+      hireDate,
     })
 
   } catch (error: any) {
@@ -192,4 +252,3 @@ export async function GET(request: Request) {
     )
   }
 }
-
